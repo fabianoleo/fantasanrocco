@@ -1,21 +1,23 @@
 <section class="hero">
   <div class="hero-santo">
-    <img src="/images/galleria/sanrocco-chiesa.jpg" alt="San Rocco" class="hero-santo-img"
-         onerror="this.style.display='none'">
+    <img src="/images/galleria/sanrocco-chiesa.webp" alt="San Rocco"
+         class="hero-santo-img" onerror="this.style.display='none'">
   </div>
-  <h1>🟠 FantaSanRocco</h1>
-  <p class="lead">Il gioco della festa di <strong>San Rocco</strong> a Siano (SA).<br>
-    Completa le missioni, accumula punti, scala la classifica.</p>
+  <h1>FantaSanRocco</h1>
+  <p class="lead">
+    Il gioco della festa di <strong>San Rocco</strong> a Siano (SA).<br>
+    Completa le missioni, accumula punti, scala la classifica.
+  </p>
   <div class="hero-cta">
     <% if (currentUser) { %>
       <a class="btn" href="/missioni">Vai alle missioni →</a>
     <% } else { %>
       <a class="btn" href="/login">Accedi e gioca</a>
     <% } %>
-    <a class="btn btn-ghost" href="/galleria">Galleria foto →</a>
+    <a class="btn btn-ghost" href="/galleria">Galleria foto</a>
   </div>
   <% if (!currentUser) { %>
-    <p class="muted small">Per registrarti serve il <strong>link personale</strong> che ti dà l'organizzazione.</p>
+    <p class="muted small" style="margin-top:1rem">Per registrarti serve il <strong>link personale</strong> che ti dà l'organizzazione.</p>
   <% } %>
 </section>
 
@@ -26,31 +28,33 @@
     🥈 <strong>PlayStation 5</strong> &nbsp;·&nbsp;
     🥉 <strong>Macchinetta del caffè</strong>
   </p>
-  <a href="/premio">Scopri tutti i premi →</a>
+  <a href="/premio" style="font-weight:600;font-size:.92rem">Scopri tutti i premi →</a>
 </section>
 
 <section class="card">
   <h2>🔥 Podio attuale</h2>
   <% if (topThree.length === 0) { %>
-    <p class="muted">Ancora nessun punto assegnato. Potresti essere tu il primo!</p>
+    <p class="muted" style="margin-top:.4rem">Ancora nessun punto assegnato. Potresti essere tu il primo!</p>
   <% } else { %>
-    <ol class="podium">
+    <ol class="podium" style="margin-top:.5rem">
       <% topThree.forEach((u, i) => { %>
-        <li><span class="medal"><%= ['🥇','🥈','🥉'][i] %></span>
+        <li>
+          <span><%= ['🥇','🥈','🥉'][i] %></span>
           <span class="name"><%= u.nickname %></span>
-          <span class="pts"><%= u.points %> pt</span></li>
+          <span class="pts"><%= u.points %> pt</span>
+        </li>
       <% }) %>
     </ol>
-    <a href="/classifica">Classifica completa →</a>
+    <a href="/classifica" style="font-size:.9rem;display:inline-block;margin-top:.8rem">Classifica completa →</a>
   <% } %>
 </section>
 
 <section class="card how">
   <h2>Come funziona</h2>
-  <ol>
-    <li>Ti registri con un nickname.</li>
-    <li>Completi le missioni durante la festa (es. shot con Zio Max 🥃).</li>
-    <li>Carichi la foto-prova; lo staff la valida.</li>
+  <ol style="margin-top:.5rem">
+    <li>Ti registri con un nickname usando il tuo link personale.</li>
+    <li>Completi le missioni durante la festa (es. foto con Zio Max 📸).</li>
+    <li>Carichi la foto-prova; lo staff la valida in tempo reale.</li>
     <li>I punti finiscono in classifica. Vince chi ne fa di più!</li>
   </ol>
 </section>

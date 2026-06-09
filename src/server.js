@@ -105,9 +105,9 @@ app.get('/', (req, res) => {
 
 // Foto premi — metti i file in public/images/galleria/ e imposta il nome qui.
 // Lascia null finché non hai la foto: comparirà un placeholder.
-const FOTO_PREMIO_EUROPA = null;   // es: 'premio-europa.jpg'
-const FOTO_PREMIO_PS5   = null;   // es: 'premio-ps5.jpg'
-const FOTO_PREMIO_CAFFE = null;   // es: 'premio-caffe.jpg'
+const FOTO_PREMIO_EUROPA = null;
+const FOTO_PREMIO_PS5   = 'ps5.webp';
+const FOTO_PREMIO_CAFFE = 'caffe.webp';
 
 app.get('/premio', (req, res) => {
   res.render('prize', {
@@ -133,10 +133,12 @@ app.get('/premio', (req, res) => {
 // Poi decommentate le righe qui sotto e riavviate il server.
 // ────────────────────────────────────────────────────────────────────────────
 const GALLERIA_PROCESSIONE = [
-  { file: 'processione.jpg', caption: 'San Rocco portato a spalla per le vie di Siano — 2007' },
+  { file: 'sanrocco-chiesa.webp', caption: 'La statua di San Rocco adornata per la festa' },
+  { file: 'processione.jpg',      caption: 'San Rocco portato a spalla per le vie di Siano — 2007' },
 ];
 const GALLERIA_LUOGHI = [
   { file: 'campanile.webp', caption: 'Il campanile di San Rocco, simbolo di Siano' },
+  { file: 'piazza.webp',    caption: 'La Piazza San Rocco nel cuore di Siano' },
   { file: 'fuochi.webp',    caption: 'I fuochi d\'artificio illuminano il campanile nella notte della festa' },
 ];
 
@@ -199,11 +201,15 @@ app.post('/registrati/:token', (req, res) => {
   if (inv.used) return res.status(410).render('error', { title: 'Invito già usato', message: 'Questo link è già stato usato.' });
 
   const nickname = (req.body.nickname || '').trim();
-  const email = (req.body.email || '').trim() || null;
+  const email    = (req.body.email || '').trim().toLowerCase() || null;
   const password = req.body.password || '';
 
   if (nickname.length < 2 || nickname.length > 24) {
     flash(req, 'error', 'Il nickname deve avere tra 2 e 24 caratteri.');
+    return res.redirect('/registrati/' + inv.token);
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    flash(req, 'error', 'Inserisci un indirizzo email valido.');
     return res.redirect('/registrati/' + inv.token);
   }
   if (password.length < 6) {
@@ -653,7 +659,6 @@ app.post('/admin/utenti/:id/ruolo', auth.requireAdmin, (req, res) => {
 app.use((req, res) => res.status(404).render('error', { title: 'Pagina non trovata', message: 'Ops, questa pagina non esiste.' }));
 
 app.listen(PORT, () => {
-  console.log(`\n🎉 FantaSanRocco è attivo su http://localhost:${PORT}`);
-  console.log(`   Dati salvati in: ${DATA_DIR}`);
-  if (!SECURE_COOKIES) console.log('   (cookie non-secure: ok in locale, metti SECURE_COOKIES=true quando esponi in HTTPS)\n');
+  console.log(`\n🎉 FantaSanRocco è attivo — accessibile via Cloudflare Tunnel.`);
+  console.log(`   Dati salvati in: ${DATA_DIR}\n`);
 });

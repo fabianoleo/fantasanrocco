@@ -3,14 +3,14 @@
   <% if (label) { %>
     <p class="muted">Invito per: <strong><%= label %></strong></p>
   <% } %>
-  <p class="muted">Scegli un nickname e una password. L'email è facoltativa.
-    Questo link di registrazione è <strong>personale</strong> e vale una sola volta.</p>
+  <p class="muted">Scegli un nickname e una password. L'email serve per recuperare la password se la dimentichi.
+    Questo link è <strong>personale</strong> e vale una sola volta.</p>
   <form action="/registrati/<%= token %>" method="post" autocomplete="off">
     <label>Nickname / Nome squadra
       <input type="text" name="nickname" required minlength="2" maxlength="24" placeholder="es. I Lupi di Siano">
     </label>
-    <label>Email (facoltativa)
-      <input type="email" name="email" placeholder="solo se vuoi">
+    <label>Email <span style="color:var(--red)">*</span>
+      <input type="email" name="email" required placeholder="la tua email">
     </label>
     <label>Password
       <input type="password" name="password" required minlength="6" placeholder="almeno 6 caratteri">
