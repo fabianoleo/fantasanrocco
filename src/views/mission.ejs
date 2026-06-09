@@ -1,0 +1,49 @@
+<a href="/missioni" class="back">← Tutte le missioni</a>
+
+<section class="card">
+  <div class="mission-head">
+    <h1><%= m.title %></h1>
+    <span class="points-badge big"><%= m.points %> pt</span>
+  </div>
+  <p><%= m.description %></p>
+
+  <div class="mission-meta">
+    <% if (m.repeatable) { %><span class="tag">🔁 Ripetibile</span><% } else { %><span class="tag">1 sola volta</span><% } %>
+    <% if (m.requires_photo) { %><span class="tag">📷 Foto obbligatoria</span><% } else { %><span class="tag">Senza foto</span><% } %>
+    <% if (activeNow) { %><span class="tag tag-live">🟢 Attiva ora</span><% } else { %><span class="tag tag-off">⏰ Non attiva ora</span><% } %>
+  </div>
+
+  <% if (m.active_from || m.active_to) { %>
+    <p class="muted small">Finestra valida:
+      <%= m.active_from || 'sempre' %> → <%= m.active_to || 'sempre' %></p>
+  <% } %>
+</section>
+
+<% if (statuses.includes('approved') && !m.repeatable) { %>
+  <div class="card"><p class="tag-ok">✅ Hai già completato questa missione. Bravo/a!</p></div>
+<% } else if (statuses.includes('pending')) { %>
+  <div class="card"><p class="tag-pending">⏳ Hai una prova in attesa di validazione per questa missione.</p></div>
+<% } %>
+
+<% if (canSubmit && activeNow) { %>
+  <section class="card">
+    <h2>Invia la tua prova</h2>
+    <form action="/missioni/<%= m.id %>/invia" method="post" enctype="multipart/form-data">
+      <% if (m.requires_photo) { %>
+        <label>Foto (obbligatoria)
+          <input type="file" name="foto" accept="image/*" capture="environment" required>
+        </label>
+      <% } else { %>
+        <label>Foto (facoltativa)
+          <input type="file" name="foto" accept="image/*" capture="environment">
+        </label>
+      <% } %>
+      <label>Nota per lo staff (facoltativa)
+        <input type="text" name="note" maxlength="200" placeholder="es. erano le 23, vicino alla cassa">
+      </label>
+      <button class="btn" type="submit">Invia prova</button>
+    </form>
+  </section>
+<% } else if (!activeNow) { %>
+  <div class="card"><p class="muted">Questa missione non è attiva in questo momento: torna nella finestra giusta.</p></div>
+<% } %>

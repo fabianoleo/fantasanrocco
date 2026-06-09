@@ -1,0 +1,17 @@
+<h1>🏆 Classifica generale</h1>
+<p class="muted">Si aggiorna man mano che lo staff valida le prove.</p>
+
+<% if (rows.length === 0) { %>
+  <p class="muted">Ancora nessun partecipante in classifica.</p>
+<% } else { %>
+  <ol class="leaderboard">
+    <% rows.forEach((u, i) => { %>
+      <li class="lb-row <%= i < 3 ? 'top' : '' %>">
+        <span class="rank"><%= i < 3 ? ['🥇','🥈','🥉'][i] : (i + 1) %></span>
+        <span class="lb-name"><%= u.nickname %></span>
+        <span class="lb-done"><%= u.done %> missioni</span>
+        <span class="lb-points"><%= u.points %> pt</span>
+      </li>
+    <% }) %>
+  </ol>
+<% } %>

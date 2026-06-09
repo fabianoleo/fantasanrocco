@@ -1,0 +1,88 @@
+<section class="hero prize-hero">
+  <h1>🏆 I Premi in Palio</h1>
+  <p class="lead">Scala la classifica di <strong>FantaSanRocco</strong> e vinci uno dei tre premi!<br>
+    <span class="muted">I punti si accumulano durante la festa del 16 agosto. Chi ne fa di più vince.</span>
+  </p>
+</section>
+
+<!-- ===== 1° POSTO ===== -->
+<section class="card prize-card prize-gold">
+  <div class="prize-rank">🥇 Primo posto</div>
+  <div class="prize-body">
+    <div class="prize-info">
+      <h2>Weekend in Europa per 2</h2>
+      <p>Una fuga indimenticabile: 2 notti in una città europea a scelta per te e un amico (o il tuo/la tua partner). Volo + hotel inclusi.</p>
+      <ul class="prize-details">
+        <li>✈️ Volo A/R da Napoli</li>
+        <li>🏨 2 notti in hotel</li>
+        <li>👫 Per 2 persone</li>
+      </ul>
+    </div>
+    <figure class="prize-photo">
+      <% if (photoEuropa) { %>
+        <img src="/images/galleria/<%= photoEuropa %>" alt="Weekend in Europa">
+      <% } else { %>
+        <div class="prize-photo-placeholder">✈️<br><span>Foto in arrivo</span></div>
+      <% } %>
+    </figure>
+  </div>
+</section>
+
+<!-- ===== 2° POSTO ===== -->
+<section class="card prize-card prize-silver">
+  <div class="prize-rank">🥈 Secondo posto</div>
+  <div class="prize-body">
+    <div class="prize-info">
+      <h2>PlayStation 5</h2>
+      <p>La console di Sony: giochi next-gen, DualSense con feedback aptico e grafica 4K. Un premio da vero campione.</p>
+      <ul class="prize-details">
+        <li>🎮 PS5 Disc Edition</li>
+        <li>📦 Controller DualSense incluso</li>
+      </ul>
+    </div>
+    <figure class="prize-photo">
+      <% if (photoPs5) { %>
+        <img src="/images/galleria/<%= photoPs5 %>" alt="PlayStation 5">
+      <% } else { %>
+        <div class="prize-photo-placeholder">🎮<br><span>Foto in arrivo</span></div>
+      <% } %>
+    </figure>
+  </div>
+</section>
+
+<!-- ===== 3° POSTO ===== -->
+<section class="card prize-card prize-bronze">
+  <div class="prize-rank">🥉 Terzo posto</div>
+  <div class="prize-body">
+    <div class="prize-info">
+      <h2>Macchinetta del Caffè</h2>
+      <p>Perché dopo tante missioni ci vuole il caffè perfetto. Una macchinetta di qualità per iniziare ogni mattina alla grande.</p>
+      <ul class="prize-details">
+        <li>☕ Macchina espresso automatica</li>
+        <li>🫘 Cialde omaggio incluse</li>
+      </ul>
+    </div>
+    <figure class="prize-photo">
+      <% if (photoCaffe) { %>
+        <img src="/images/galleria/<%= photoCaffe %>" alt="Macchinetta del caffè">
+      <% } else { %>
+        <div class="prize-photo-placeholder">☕<br><span>Foto in arrivo</span></div>
+      <% } %>
+    </figure>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Come si vince</h2>
+  <ol>
+    <li>Completa più missioni che puoi durante la festa di San Rocco.</li>
+    <li>Ogni prova approvata dallo staff ti dà i punti della missione.</li>
+    <li>Chi è in cima alla <a href="/classifica">classifica generale</a> a fine festa porta a casa il primo premio.</li>
+    <li>Il 2° e il 3° classificato vincono PS5 e macchinetta del caffè.</li>
+  </ol>
+  <% if (!currentUser) { %>
+    <a class="btn" href="/login">Accedi e gioca</a>
+  <% } else { %>
+    <a class="btn" href="/missioni">Alle missioni →</a>
+  <% } %>
+</section>

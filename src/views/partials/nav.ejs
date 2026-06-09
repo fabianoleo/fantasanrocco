@@ -1,0 +1,23 @@
+<header class="topbar">
+  <a class="brand" href="/">🟠 Fanta<strong>SanRocco</strong></a>
+  <nav class="nav">
+    <a href="/classifica" class="<%= path === '/classifica' ? 'active' : '' %>">Classifica</a>
+    <a href="/galleria" class="<%= path === '/galleria' ? 'active' : '' %>">Galleria</a>
+    <a href="/premio" class="<%= path === '/premio' ? 'active' : '' %>">Premio</a>
+    <% if (currentUser) { %>
+      <a href="/missioni" class="<%= path.startsWith('/missioni') ? 'active' : '' %>">Missioni</a>
+      <a href="/profilo" class="<%= path === '/profilo' ? 'active' : '' %>">Profilo</a>
+      <% if (currentUser.role === 'moderator' || currentUser.role === 'admin') { %>
+        <a href="/moderazione" class="staff <%= path === '/moderazione' ? 'active' : '' %>">Modera</a>
+      <% } %>
+      <% if (currentUser.role === 'admin') { %>
+        <a href="/admin" class="staff <%= path === '/admin' ? 'active' : '' %>">Admin</a>
+      <% } %>
+      <form action="/logout" method="post" class="inline">
+        <button class="link-btn" type="submit">Esci (<%= currentUser.nickname %>)</button>
+      </form>
+    <% } else { %>
+      <a href="/login" class="btn-mini <%= path === '/login' ? 'active' : '' %>">Accedi</a>
+    <% } %>
+  </nav>
+</header>

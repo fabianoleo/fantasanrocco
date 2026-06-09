@@ -1,0 +1,20 @@
+<section class="card form-card">
+  <h1>Registrati</h1>
+  <% if (label) { %>
+    <p class="muted">Invito per: <strong><%= label %></strong></p>
+  <% } %>
+  <p class="muted">Scegli un nickname e una password. L'email è facoltativa.
+    Questo link di registrazione è <strong>personale</strong> e vale una sola volta.</p>
+  <form action="/registrati/<%= token %>" method="post" autocomplete="off">
+    <label>Nickname / Nome squadra
+      <input type="text" name="nickname" required minlength="2" maxlength="24" placeholder="es. I Lupi di Siano">
+    </label>
+    <label>Email (facoltativa)
+      <input type="email" name="email" placeholder="solo se vuoi">
+    </label>
+    <label>Password
+      <input type="password" name="password" required minlength="6" placeholder="almeno 6 caratteri">
+    </label>
+    <button class="btn" type="submit">Crea account</button>
+  </form>
+</section>

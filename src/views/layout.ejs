@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#e8731c">
+  <title><%= title %> · FantaSanRocco</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <%- include('partials/nav') %>
+
+  <main class="container">
+    <% if (flash) { %>
+      <div class="flash flash-<%= flash.type %>"><%= flash.msg %></div>
+    <% } %>
+    <%- body %>
+  </main>
+
+  <footer class="footer">
+    <p>FantaSanRocco · Festa di San Rocco · Siano (SA) · ad maiora 🎆</p>
+  </footer>
+  <script src="/app.js"></script>
+</body>
+</html>

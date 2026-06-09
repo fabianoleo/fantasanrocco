@@ -1,0 +1,42 @@
+<section class="card profile-head">
+  <h1>👤 <%= currentUser.nickname %></h1>
+  <p class="big-total"><%= total %> <span>punti</span></p>
+</section>
+
+<section class="card">
+  <h2>🔒 Cambia password</h2>
+  <form action="/profilo/cambia-password" method="post" autocomplete="off" class="form-card" style="margin:0;max-width:100%">
+    <label>Password attuale
+      <input type="password" name="current_password" required placeholder="la password che usi adesso">
+    </label>
+    <label>Nuova password
+      <input type="password" name="new_password" required minlength="6" placeholder="almeno 6 caratteri">
+    </label>
+    <label>Conferma nuova password
+      <input type="password" name="confirm_password" required minlength="6" placeholder="ripeti la nuova password">
+    </label>
+    <button class="btn" type="submit" style="margin-top:.6rem">Aggiorna password</button>
+  </form>
+</section>
+
+<h2>Le mie prove</h2>
+<% if (subs.length === 0) { %>
+  <p class="muted">Non hai ancora inviato nessuna prova. <a href="/missioni">Inizia ora →</a></p>
+<% } else { %>
+  <ul class="sub-list">
+    <% subs.forEach((s) => { %>
+      <li class="sub-row">
+        <div>
+          <strong><%= s.title %></strong>
+          <span class="muted small"><%= s.points %> pt · <%= s.created_at %></span>
+          <% if (s.status === 'rejected' && s.review_note) { %>
+            <div class="muted small">Motivo: <%= s.review_note %></div>
+          <% } %>
+        </div>
+        <span class="tag <%= s.status === 'approved' ? 'tag-ok' : (s.status === 'pending' ? 'tag-pending' : 'tag-off') %>">
+          <%= s.status === 'approved' ? '✅ Approvata' : (s.status === 'pending' ? '⏳ In attesa' : '❌ Rifiutata') %>
+        </span>
+      </li>
+    <% }) %>
+  </ul>
+<% } %>

@@ -1,0 +1,43 @@
+<h1>🛡️ Moderazione</h1>
+<p class="muted">Prove in attesa: <strong><%= pending.length %></strong>.
+  Se due moderatori aprono la stessa, vince il primo che clicca: l'altro vedrà un avviso.</p>
+
+<% if (pending.length === 0) { %>
+  <p class="muted">Nessuna prova in attesa. Tutto sotto controllo! ✅</p>
+<% } else { %>
+  <div class="mod-list">
+    <% pending.forEach((s) => { %>
+      <section class="card mod-card">
+        <div class="mod-top">
+          <div>
+            <strong><%= s.nickname %></strong> → <%= s.title %>
+            <span class="points-badge"><%= s.points %> pt</span>
+          </div>
+          <span class="muted small"><%= s.created_at %></span>
+        </div>
+
+        <% if (s.photo_path) { %>
+          <a href="/uploads/<%= s.photo_path %>" target="_blank" rel="noopener">
+            <img class="mod-photo" src="/uploads/<%= s.photo_path %>" alt="prova" loading="lazy">
+          </a>
+        <% } else if (s.requires_photo) { %>
+          <p class="tag-off">⚠️ Manca la foto (anomalia)</p>
+        <% } else { %>
+          <p class="muted small">Missione senza foto (auto-dichiarata).</p>
+        <% } %>
+
+        <% if (s.note) { %><p class="muted small">Nota: <%= s.note %></p><% } %>
+
+        <div class="mod-actions">
+          <form action="/moderazione/<%= s.id %>/approva" method="post" class="inline">
+            <button class="btn btn-ok" type="submit">✅ Approva</button>
+          </form>
+          <form action="/moderazione/<%= s.id %>/rifiuta" method="post" class="inline reject-form">
+            <input type="text" name="review_note" placeholder="motivo (facoltativo)" maxlength="200">
+            <button class="btn btn-no" type="submit">❌ Rifiuta</button>
+          </form>
+        </div>
+      </section>
+    <% }) %>
+  </div>
+<% } %>

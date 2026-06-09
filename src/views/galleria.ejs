@@ -1,0 +1,54 @@
+<section class="hero" style="padding-bottom:.5rem">
+  <h1>📸 Galleria San Rocco</h1>
+  <p class="lead muted">Le immagini della festa di <strong>San Rocco</strong> a Siano (SA).</p>
+</section>
+
+<!-- ===== PROCESSIONE ===== -->
+<section class="card gallery-section">
+  <h2>⛪ La Processione</h2>
+  <p class="muted small">La tradizionale processione in onore di San Rocco che percorre le vie del paese.</p>
+
+  <div class="gallery-grid">
+    <% if (typeof processione !== 'undefined' && processione.length > 0) { %>
+      <% processione.forEach((img) => { %>
+        <figure class="gallery-item">
+          <a href="/images/galleria/<%= img.file %>" target="_blank" rel="noopener">
+            <img src="/images/galleria/<%= img.file %>" alt="<%= img.caption %>" loading="lazy">
+          </a>
+          <figcaption><%= img.caption %></figcaption>
+        </figure>
+      <% }) %>
+    <% } else { %>
+      <div class="gallery-placeholder">
+        <span>🖼️</span>
+        <p>Le foto della processione arriveranno presto.</p>
+        <p class="muted small">Metti i file in <code>public/images/galleria/</code> e aggiorna la lista in <code>server.js</code>.</p>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<!-- ===== CAMPANILE E PIAZZA ===== -->
+<section class="card gallery-section">
+  <h2>🔔 Il Campanile e la Piazza</h2>
+  <p class="muted small">Il campanile e la Piazza San Rocco: i simboli del cuore di Siano.</p>
+
+  <div class="gallery-grid">
+    <% if (typeof luoghi !== 'undefined' && luoghi.length > 0) { %>
+      <% luoghi.forEach((img) => { %>
+        <figure class="gallery-item">
+          <a href="/images/galleria/<%= img.file %>" target="_blank" rel="noopener">
+            <img src="/images/galleria/<%= img.file %>" alt="<%= img.caption %>" loading="lazy">
+          </a>
+          <figcaption><%= img.caption %></figcaption>
+        </figure>
+      <% }) %>
+    <% } else { %>
+      <div class="gallery-placeholder">
+        <span>🖼️</span>
+        <p>Le foto del campanile e della piazza arriveranno presto.</p>
+        <p class="muted small">Metti i file in <code>public/images/galleria/</code> e aggiorna la lista in <code>server.js</code>.</p>
+      </div>
+    <% } %>
+  </div>
+</section>

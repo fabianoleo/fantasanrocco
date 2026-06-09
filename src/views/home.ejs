@@ -1,0 +1,56 @@
+<section class="hero">
+  <div class="hero-santo">
+    <img src="/images/galleria/sanrocco-chiesa.jpg" alt="San Rocco" class="hero-santo-img"
+         onerror="this.style.display='none'">
+  </div>
+  <h1>🟠 FantaSanRocco</h1>
+  <p class="lead">Il gioco della festa di <strong>San Rocco</strong> a Siano (SA).<br>
+    Completa le missioni, accumula punti, scala la classifica.</p>
+  <div class="hero-cta">
+    <% if (currentUser) { %>
+      <a class="btn" href="/missioni">Vai alle missioni →</a>
+    <% } else { %>
+      <a class="btn" href="/login">Accedi e gioca</a>
+    <% } %>
+    <a class="btn btn-ghost" href="/galleria">Galleria foto →</a>
+  </div>
+  <% if (!currentUser) { %>
+    <p class="muted small">Per registrarti serve il <strong>link personale</strong> che ti dà l'organizzazione.</p>
+  <% } %>
+</section>
+
+<section class="card prize-banner">
+  <h2>🏆 In palio</h2>
+  <p>
+    🥇 <strong>Weekend in Europa per 2</strong> &nbsp;·&nbsp;
+    🥈 <strong>PlayStation 5</strong> &nbsp;·&nbsp;
+    🥉 <strong>Macchinetta del caffè</strong>
+  </p>
+  <a href="/premio">Scopri tutti i premi →</a>
+</section>
+
+<section class="card">
+  <h2>🔥 Podio attuale</h2>
+  <% if (topThree.length === 0) { %>
+    <p class="muted">Ancora nessun punto assegnato. Potresti essere tu il primo!</p>
+  <% } else { %>
+    <ol class="podium">
+      <% topThree.forEach((u, i) => { %>
+        <li><span class="medal"><%= ['🥇','🥈','🥉'][i] %></span>
+          <span class="name"><%= u.nickname %></span>
+          <span class="pts"><%= u.points %> pt</span></li>
+      <% }) %>
+    </ol>
+    <a href="/classifica">Classifica completa →</a>
+  <% } %>
+</section>
+
+<section class="card how">
+  <h2>Come funziona</h2>
+  <ol>
+    <li>Ti registri con un nickname.</li>
+    <li>Completi le missioni durante la festa (es. shot con Zio Max 🥃).</li>
+    <li>Carichi la foto-prova; lo staff la valida.</li>
+    <li>I punti finiscono in classifica. Vince chi ne fa di più!</li>
+  </ol>
+</section>

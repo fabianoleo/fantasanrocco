@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    container_name: fantasanrocco
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Dentro al container i dati stanno in /app/data (vedi volume sotto)
+      DATA_DIR: /app/data
+    ports:
+      - "3000:3000"
+    volumes:
+      # I dati (database + foto) vivono sul tuo computer, NON dentro il container:
+      # così sopravvivono a riavvii e aggiornamenti. Backup = copia la cartella ./data
+      - ./data:/app/data
