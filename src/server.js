@@ -634,8 +634,8 @@ app.post('/admin/reset-gioco', auth.requireAdmin, (req, res) => {
   }
   db.transaction(() => {
     db.prepare('DELETE FROM submissions').run();
-    db.prepare("DELETE FROM users WHERE role != 'admin'").run();
     db.prepare('DELETE FROM invites').run();
+    db.prepare("DELETE FROM users WHERE role != 'admin'").run();
   })();
   flash(req, 'success', 'Gioco resettato: utenti, prove e inviti eliminati. Gli admin sono rimasti.');
   res.redirect('/admin');
