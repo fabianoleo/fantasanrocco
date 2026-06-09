@@ -1,0 +1,47 @@
+app = "fantasanrocco"
+primary_region = "mad"
+
+[build]
+
+[env]
+  NODE_ENV     = "production"
+  SECURE_COOKIES = "true"
+  DATA_DIR     = "/data"
+  PORT         = "3000"
+
+[[mounts]]
+  source      = "fantasanrocco_data"
+  destination = "/data"
+
+[[services]]
+  internal_port = 3000
+  protocol      = "tcp"
+  auto_stop_machines  = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[services.ports]]
+    handlers = ["http"]
+    port     = 80
+    force_https = true
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port     = 443
+
+  [services.concurrency]
+    type       = "requests"
+    hard_limit = 100
+    soft_limit = 80
+
+  [[services.http_checks]]
+    interval      = 15000
+    timeout       = 5000
+    grace_period  = "10s"
+    method        = "GET"
+    path          = "/"
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1

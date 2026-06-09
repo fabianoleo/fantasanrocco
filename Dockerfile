@@ -11,7 +11,7 @@ RUN npm install --omit=dev
 COPY . .
 
 # La cartella dati (db + foto) sarà montata come volume
-ENV DATA_DIR=/app/data
+ENV DATA_DIR=/data
 EXPOSE 3000
 
 CMD ["node", "src/server.js"]
