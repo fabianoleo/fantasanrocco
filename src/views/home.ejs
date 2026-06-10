@@ -1,60 +1,176 @@
-<section class="hero">
-  <div class="hero-santo">
-    <img src="/images/galleria/sanrocco-chiesa.webp" alt="San Rocco"
-         class="hero-santo-img" onerror="this.style.display='none'">
-  </div>
-  <h1>FantaSanRocco</h1>
-  <p class="lead">
-    Il gioco della festa di <strong>San Rocco</strong> a Siano (SA).<br>
-    Completa le missioni, accumula punti, scala la classifica.
-  </p>
-  <div class="hero-cta">
-    <% if (currentUser) { %>
-      <a class="btn" href="/missioni">Vai alle missioni →</a>
-    <% } else { %>
-      <a class="btn" href="/login">Accedi e gioca</a>
+<%# ── HERO: full viewport ─────────────────────────────────────────── %>
+<section class="lp-hero">
+  <div class="lp-hero-inner">
+    <div class="lp-santo" data-reveal="scale-in">
+      <img src="/images/galleria/sanrocco-chiesa.webp" alt="San Rocco"
+           class="hero-santo-img" onerror="this.style.display='none'">
+    </div>
+    <h1 class="lp-title" data-reveal="fade-up" data-delay="1">FantaSanRocco</h1>
+    <p class="lp-sub" data-reveal="fade-up" data-delay="2">
+      Il gioco della Festa di <em>San Rocco</em> · Siano (SA)
+    </p>
+    <div class="lp-cta" data-reveal="fade-up" data-delay="3">
+      <% if (currentUser) { %>
+        <a class="btn" href="/missioni">Vai alle missioni →</a>
+      <% } else { %>
+        <a class="btn" href="/login">Accedi e gioca</a>
+      <% } %>
+      <a class="btn btn-ghost" href="/galleria">Galleria</a>
+    </div>
+    <% if (!currentUser) { %>
+      <p class="lp-note" data-reveal="fade-in" data-delay="4">
+        Serve il <strong>link personale</strong> fornito dall'organizzazione.
+      </p>
     <% } %>
-    <a class="btn btn-ghost" href="/galleria">Galleria foto</a>
   </div>
-  <% if (!currentUser) { %>
-    <p class="muted small" style="margin-top:1rem">Per registrarti serve il <strong>link personale</strong> che ti dà l'organizzazione.</p>
-  <% } %>
+  <div class="lp-scroll-hint" id="scrollHint">
+    <span>Scorri</span>
+    <div class="lp-scroll-arrow"></div>
+  </div>
 </section>
 
-<section class="card prize-banner">
-  <h2>🏆 In palio</h2>
-  <p>
-    🥇 <strong>Weekend in Europa per 2</strong> &nbsp;·&nbsp;
-    🥈 <strong>PlayStation 5</strong> &nbsp;·&nbsp;
-    🥉 <strong>Macchinetta del caffè</strong>
-  </p>
-  <a href="/premio" style="font-weight:600;font-size:.92rem">Scopri tutti i premi →</a>
+<%# ── MANIFESTO PIN ────────────────────────────────────────────────── %>
+<div class="manifesto-wrap lp-full" id="manifestoWrap">
+  <div class="manifesto-pin" id="manifestoPin">
+    <p class="manifesto-kicker">Quest'estate a Siano</p>
+    <div class="manifesto-word-stack">
+      <span class="mw mw-active">Missioni.</span>
+      <span class="mw">Punti.</span>
+      <span class="mw">Vittoria.</span>
+    </div>
+    <p class="manifesto-body" id="manifestoBody">
+      Completa le sfide, carica le prove,<br>scala la classifica in tempo reale.
+    </p>
+  </div>
+</div>
+
+<%# ── NUMERI ──────────────────────────────────────────────────────── %>
+<section class="lp-numbers lp-full">
+  <div class="lp-numbers-inner">
+    <div class="lp-num-item" data-reveal="fade-up" data-delay="0">
+      <span class="lp-num-val">105</span>
+      <span class="lp-num-label">missioni</span>
+    </div>
+    <div class="lp-num-item" data-reveal="fade-up" data-delay="1">
+      <span class="lp-num-val">3</span>
+      <span class="lp-num-label">premi in palio</span>
+    </div>
+    <div class="lp-num-item" data-reveal="fade-up" data-delay="2">
+      <span class="lp-num-val">1</span>
+      <span class="lp-num-label">sola estate</span>
+    </div>
+  </div>
 </section>
 
-<section class="card">
-  <h2>🔥 Podio attuale</h2>
-  <% if (topThree.length === 0) { %>
-    <p class="muted" style="margin-top:.4rem">Ancora nessun punto assegnato. Potresti essere tu il primo!</p>
-  <% } else { %>
-    <ol class="podium" style="margin-top:.5rem">
-      <% topThree.forEach((u, i) => { %>
-        <li>
-          <span><%= ['🥇','🥈','🥉'][i] %></span>
-          <span class="name"><%= u.nickname %></span>
-          <span class="pts"><%= u.points %> pt</span>
-        </li>
-      <% }) %>
-    </ol>
-    <a href="/classifica" style="font-size:.9rem;display:inline-block;margin-top:.8rem">Classifica completa →</a>
-  <% } %>
+<%# ── PREMI ────────────────────────────────────────────────────────── %>
+<section class="lp-prizes lp-full">
+  <div class="lp-section-inner">
+    <p class="lp-kicker" data-reveal="fade-in">In palio</p>
+    <h2 class="lp-headline" data-reveal="fade-up">Premi veri.<br>Per chi sa come giocare.</h2>
+    <div class="lp-prizes-grid">
+      <div class="lp-prize-card lp-prize-gold" data-reveal="slide-up" data-delay="0">
+        <span class="lp-prize-icon">🥇</span>
+        <h3>Weekend in Europa</h3>
+        <p>Volo + 2 notti per due persone. La destinazione è una sorpresa.</p>
+      </div>
+      <div class="lp-prize-card lp-prize-silver" data-reveal="slide-up" data-delay="1">
+        <span class="lp-prize-icon">🥈</span>
+        <h3>PlayStation 5</h3>
+        <p>Console next-gen per il secondo classificato.</p>
+      </div>
+      <div class="lp-prize-card lp-prize-bronze" data-reveal="slide-up" data-delay="2">
+        <span class="lp-prize-icon">🥉</span>
+        <h3>Macchinetta del caffè</h3>
+        <p>Perché il caffè campano non si discute.</p>
+      </div>
+    </div>
+    <a href="/premio" class="lp-more-link" data-reveal="fade-in">Scopri tutti i dettagli →</a>
+  </div>
 </section>
 
-<section class="card how">
-  <h2>Come funziona</h2>
-  <ol style="margin-top:.5rem">
-    <li>Ti registri con un nickname usando il tuo link personale.</li>
-    <li>Completi le missioni durante la festa (es. foto con Zio Max 📸).</li>
-    <li>Carichi la foto-prova; lo staff la valida in tempo reale.</li>
-    <li>I punti finiscono in classifica. Vince chi ne fa di più!</li>
-  </ol>
+<%# ── COME FUNZIONA ────────────────────────────────────────────────── %>
+<section class="lp-how lp-full">
+  <div class="lp-section-inner">
+    <p class="lp-kicker" data-reveal="fade-in">Il meccanismo</p>
+    <h2 class="lp-headline" data-reveal="fade-up">Semplice.<br>Competitivo.<br>Divertente.</h2>
+    <div class="lp-steps">
+      <div class="lp-step" data-reveal="slide-right" data-delay="0">
+        <span class="lp-step-num">01</span>
+        <div class="lp-step-body">
+          <h3>Ricevi il link</h3>
+          <p>L'organizzazione ti manda un link personale. Solo tu puoi usarlo.</p>
+        </div>
+      </div>
+      <div class="lp-step" data-reveal="slide-left" data-delay="1">
+        <span class="lp-step-num">02</span>
+        <div class="lp-step-body">
+          <h3>Completa le missioni</h3>
+          <p>Selfie con il parroco, fuochi d'artificio, cibo della festa — 105 sfide ti aspettano.</p>
+        </div>
+      </div>
+      <div class="lp-step" data-reveal="slide-right" data-delay="2">
+        <span class="lp-step-num">03</span>
+        <div class="lp-step-body">
+          <h3>Carica la prova</h3>
+          <p>Una foto vale la missione. Lo staff valida in tempo reale.</p>
+        </div>
+      </div>
+      <div class="lp-step" data-reveal="slide-left" data-delay="3">
+        <span class="lp-step-num">04</span>
+        <div class="lp-step-body">
+          <h3>Scala la classifica</h3>
+          <p>I punti si accumulano live. Vince chi ne fa di più.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ── PODIO ────────────────────────────────────────────────────────── %>
+<section class="lp-podio lp-full">
+  <div class="lp-section-inner">
+    <p class="lp-kicker" data-reveal="fade-in">Live</p>
+    <h2 class="lp-headline" data-reveal="fade-up">Podio attuale</h2>
+    <% if (topThree.length === 0) { %>
+      <p class="lp-podio-empty" data-reveal="fade-up">
+        Ancora nessun punto assegnato.<br>
+        <em>Potresti essere tu il primo.</em>
+      </p>
+    <% } else { %>
+      <ol class="lp-podio-list">
+        <% topThree.forEach((u, i) => { %>
+          <li class="lp-podio-item" data-reveal="slide-up" data-delay="<%= i %>">
+            <span class="lp-podio-medal"><%= ['🥇','🥈','🥉'][i] %></span>
+            <span class="lp-podio-name"><%= u.nickname %></span>
+            <span class="lp-podio-pts"><%= u.points %><small>pt</small></span>
+          </li>
+        <% }) %>
+      </ol>
+      <a href="/classifica" class="lp-more-link" data-reveal="fade-in">Classifica completa →</a>
+    <% } %>
+  </div>
+</section>
+
+<%# ── CTA FINALE ───────────────────────────────────────────────────── %>
+<section class="lp-final lp-full">
+  <div class="lp-section-inner">
+    <% if (!currentUser) { %>
+      <p class="lp-kicker" data-reveal="fade-in">Sei pronto?</p>
+      <h2 class="lp-final-title" data-reveal="fade-up">Hai il link.<br>Usalo.</h2>
+      <p class="lp-final-sub" data-reveal="fade-up" data-delay="1">
+        Ogni link è personale e vale una sola registrazione.
+      </p>
+      <div data-reveal="fade-up" data-delay="2">
+        <a class="btn" href="/login">Accedi e gioca</a>
+      </div>
+    <% } else { %>
+      <p class="lp-kicker" data-reveal="fade-in">Il gioco ti aspetta</p>
+      <h2 class="lp-final-title" data-reveal="fade-up">
+        Buona fortuna,<br><span class="lp-final-name"><%= currentUser.nickname %></span>.
+      </h2>
+      <div data-reveal="fade-up" data-delay="1">
+        <a class="btn" href="/missioni">Vai alle missioni →</a>
+      </div>
+    <% } %>
+  </div>
 </section>
