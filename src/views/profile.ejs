@@ -1,42 +1,86 @@
-<section class="card profile-head">
-  <h1>👤 <%= currentUser.nickname %></h1>
-  <p class="big-total"><%= total %> <span>punti</span></p>
-</section>
+<%
+  const approvedCount = subs.filter(s => s.status === 'approved').length;
+  const pendingCount  = subs.filter(s => s.status === 'pending').length;
+  const avatar = currentUser.nickname.charAt(0).toUpperCase();
+%>
 
-<section class="card">
-  <h2>🔒 Cambia password</h2>
-  <form action="/profilo/cambia-password" method="post" autocomplete="off" class="form-card" style="margin:0;max-width:100%">
-    <label>Password attuale
-      <input type="password" name="current_password" required placeholder="la password che usi adesso">
-    </label>
-    <label>Nuova password
-      <input type="password" name="new_password" required minlength="6" placeholder="almeno 6 caratteri">
-    </label>
-    <label>Conferma nuova password
-      <input type="password" name="confirm_password" required minlength="6" placeholder="ripeti la nuova password">
-    </label>
-    <button class="btn" type="submit" style="margin-top:.6rem">Aggiorna password</button>
-  </form>
-</section>
+<%# ── HERO ────────────────────────────────────────────────────────── %>
+<div class="pf-hero lp-full">
+  <div class="pf-hero-inner">
+    <div class="pf-avatar"><%= avatar %></div>
+    <p class="lp-kicker" style="margin-bottom:.4rem">Il tuo profilo</p>
+    <h1 class="pf-name"><%= currentUser.nickname %></h1>
+    <div class="pf-score-wrap">
+      <span class="pf-pts"><%= total %></span>
+      <span class="pf-pts-label">punti</span>
+    </div>
+  </div>
+</div>
 
-<h2>Le mie prove</h2>
+<%# ── STATS ──────────────────────────────────────────────────────── %>
+<div class="pf-stats-strip lp-full">
+  <div class="pf-stat">
+    <span class="pf-stat-val"><%= approvedCount %></span>
+    <span class="pf-stat-label">completate</span>
+  </div>
+  <div class="pf-stat">
+    <span class="pf-stat-val"><%= pendingCount %></span>
+    <span class="pf-stat-label">in attesa</span>
+  </div>
+  <div class="pf-stat">
+    <span class="pf-stat-val">105</span>
+    <span class="pf-stat-label">missioni totali</span>
+  </div>
+</div>
+
+<%# ── PROVE ──────────────────────────────────────────────────────── %>
+<h2 class="pf-section-title">Le mie prove</h2>
+
 <% if (subs.length === 0) { %>
-  <p class="muted">Non hai ancora inviato nessuna prova. <a href="/missioni">Inizia ora →</a></p>
+  <div class="pf-empty">
+    Non hai ancora inviato nessuna prova.<br>
+    <a href="/missioni" style="color:var(--gold);text-decoration:none;font-style:normal">Inizia ora →</a>
+  </div>
 <% } else { %>
-  <ul class="sub-list">
+  <ul class="pf-sub-list">
     <% subs.forEach((s) => { %>
-      <li class="sub-row">
-        <div>
-          <strong><%= s.title %></strong>
-          <span class="muted small"><%= s.points %> pt · <%= s.created_at %></span>
+      <%
+        const isApproved = s.status === 'approved';
+        const isPending  = s.status === 'pending';
+        const icon     = isApproved ? '✅' : isPending ? '⏳' : '❌';
+        const rowCls   = isApproved ? 'is-approved' : isPending ? 'is-pending' : 'is-rejected';
+        const badgeCls = isApproved ? 'ok' : isPending ? 'wait' : 'no';
+        const badgeTxt = isApproved ? 'Approvata' : isPending ? 'In attesa' : 'Rifiutata';
+      %>
+      <li class="pf-sub-row <%= rowCls %>">
+        <span class="pf-sub-icon"><%= icon %></span>
+        <div class="pf-sub-body">
+          <span class="pf-sub-title"><%= s.title %></span>
+          <span class="pf-sub-meta"><%= s.points %> pt &nbsp;·&nbsp; <%= s.created_at %></span>
           <% if (s.status === 'rejected' && s.review_note) { %>
-            <div class="muted small">Motivo: <%= s.review_note %></div>
+            <div class="pf-sub-note">Motivo: <%= s.review_note %></div>
           <% } %>
         </div>
-        <span class="tag <%= s.status === 'approved' ? 'tag-ok' : (s.status === 'pending' ? 'tag-pending' : 'tag-off') %>">
-          <%= s.status === 'approved' ? '✅ Approvata' : (s.status === 'pending' ? '⏳ In attesa' : '❌ Rifiutata') %>
-        </span>
+        <span class="pf-sub-badge <%= badgeCls %>"><%= badgeTxt %></span>
       </li>
     <% }) %>
   </ul>
 <% } %>
+
+<%# ── CAMBIA PASSWORD ─────────────────────────────────────────────── %>
+<div class="pf-form-card">
+  <p class="pf-form-title">🔒 Cambia password</p>
+  <form action="/profilo/cambia-password" method="post" autocomplete="off" style="max-width:440px">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label>Password attuale
+      <input type="password" name="current_password" required placeholder="la password che usi adesso">
+    </label>
+    <label>Nuova password
+      <input type="password" name="new_password" required minlength="8" placeholder="almeno 8 caratteri">
+    </label>
+    <label>Conferma
+      <input type="password" name="confirm_password" required minlength="8" placeholder="ripeti la nuova password">
+    </label>
+    <button class="btn" type="submit" style="margin-top:1rem">Aggiorna password</button>
+  </form>
+</div>

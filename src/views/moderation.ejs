@@ -30,9 +30,11 @@
 
         <div class="mod-actions">
           <form action="/moderazione/<%= s.id %>/approva" method="post" class="inline">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button class="btn btn-ok" type="submit">✅ Approva</button>
           </form>
           <form action="/moderazione/<%= s.id %>/rifiuta" method="post" class="inline reject-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <input type="text" name="review_note" placeholder="motivo (facoltativo)" maxlength="200">
             <button class="btn btn-no" type="submit">❌ Rifiuta</button>
           </form>

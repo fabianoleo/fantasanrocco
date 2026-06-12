@@ -17,8 +17,16 @@
         <% } %>
         <% if (m.repeatable) { %><span class="tag">🔁 Ripetibile</span><% } %>
         <% if (m.requires_photo) { %><span class="tag">📷 Foto</span><% } %>
-        <% if (!m.activeNow) { %><span class="tag tag-off">⏰ Non attiva ora</span>
-        <% } else { %><span class="tag tag-live">🟢 Attiva</span><% } %>
+        <% if (!m.activeNow) { %>
+          <span class="tag tag-off">⏰ Non attiva ora</span>
+        <% } else { %>
+          <span class="tag tag-live">🟢 Attiva</span>
+        <% } %>
+      </div>
+      <div class="mission-counter">
+        <span class="mc-icon">👥</span>
+        <span class="mc-val"><%= m.completedBy %></span>
+        <span class="mc-label"><%= m.completedBy === 1 ? 'persona ha completato' : 'persone hanno completato' %></span>
       </div>
     </a>
   <% }) %>

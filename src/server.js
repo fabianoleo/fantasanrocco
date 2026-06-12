@@ -35,8 +35,24 @@ app.set('layout', 'layout');
 app.set('trust proxy', 1);
 
 // --- Sicurezza di base + body parser ---------------------------------------
-app.use(helmet({ contentSecurityPolicy: false })); // CSP off: app semplice, niente CDN esterne
-app.use(express.urlencoded({ extended: false }));
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:     ["'self'"],
+      scriptSrc:      ["'self'"],
+      styleSrc:       ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      fontSrc:        ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc:         ["'self'", 'data:', 'blob:'],
+      connectSrc:     ["'self'"],
+      frameAncestors: ["'none'"],
+      objectSrc:      ["'none'"],
+      baseUri:        ["'self'"],
+      formAction:     ["'self'"],
+    },
+  },
+  hsts: { maxAge: 63072000, includeSubDomains: true, preload: true },
+}));
+app.use(express.urlencoded({ extended: false, limit: '16kb' }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // --- Sessioni (persistite su SQLite, sopravvivono ai riavvii) ---------------
@@ -45,13 +61,12 @@ if (!process.env.SESSION_SECRET) {
 }
 app.use(session({
   store: new SqliteStore({ client: db, expired: { clear: true, intervalMs: 900000 } }),
+  name: 'fsr.sid',
   secret: process.env.SESSION_SECRET || 'dev-secret-cambiami',
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    // Con HTTPS (Cloudflare Tunnel) serve sameSite:'none' + secure:true
-    // In locale HTTP basta 'lax' (secure:false)
     sameSite: SECURE_COOKIES ? 'none' : 'lax',
     secure: SECURE_COOKIES,
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 giorni
@@ -66,6 +81,60 @@ app.use((req, res, next) => {
   next();
 });
 app.use(auth.loadCurrentUser);
+
+// --- CSRF protection (synchronizer-token pattern) --------------------------
+app.use((req, res, next) => {
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = crypto.randomBytes(32).toString('hex');
+  }
+  res.locals.csrfToken = req.session.csrfToken;
+  next();
+});
+
+function verifyCsrf(req, res, next) {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  // Multipart form bodies non sono ancora parsate qui: le rotte upload gestiscono
+  // il check manualmente dentro la callback di multer (dopo il parsing).
+  if (req.is('multipart/form-data')) return next();
+  const token = req.body._csrf || req.headers['x-csrf-token'];
+  if (!token || !req.session.csrfToken || token !== req.session.csrfToken) {
+    return res.status(403).render('error', {
+      title: 'Errore di sicurezza',
+      message: 'Token di sicurezza non valido. Ricarica la pagina e riprova.',
+    });
+  }
+  next();
+}
+app.use(verifyCsrf);
+
+// --- Utenti online (in-memory, aggiornato ad ogni richiesta) ---------------
+const _online = new Map(); // sessionId -> { userId, lastSeen }
+const ONLINE_TTL = 5 * 60 * 1000; // 5 minuti di inattività = offline
+
+app.use((req, res, next) => {
+  // Traccia solo richieste di pagine, non asset statici
+  const isPage = req.method === 'GET'
+    && !req.path.startsWith('/images/')
+    && !req.path.endsWith('.js')
+    && !req.path.endsWith('.css')
+    && !req.path.startsWith('/api/');
+  if (isPage && req.session) {
+    // Forza la creazione del cookie anche per non loggati
+    if (!req.session.tracked) req.session.tracked = true;
+    _online.set(req.session.id, { userId: req.session.userId || null, lastSeen: Date.now() });
+  }
+  next();
+});
+setInterval(() => {
+  const cutoff = Date.now() - ONLINE_TTL;
+  for (const [id, d] of _online) if (d.lastSeen < cutoff) _online.delete(id);
+}, 60_000);
+
+app.get('/api/online', (req, res) => {
+  const cutoff = Date.now() - ONLINE_TTL;
+  const count = [..._online.values()].filter(d => d.lastSeen >= cutoff).length;
+  res.json({ count });
+});
 
 // --- Upload foto (multer) ---------------------------------------------------
 const storage = multer.diskStorage({
@@ -105,16 +174,18 @@ app.get('/', (req, res) => {
 
 // Foto premi — metti i file in public/images/galleria/ e imposta il nome qui.
 // Lascia null finché non hai la foto: comparirà un placeholder.
-const FOTO_PREMIO_EUROPA = null;
-const FOTO_PREMIO_PS5   = 'ps5.webp';
+const FOTO_PREMIO_SMARTBOX_COVER = 'smartbox-cover.webp';
+const FOTO_PREMIO_SMARTBOX_DEST  = 'smartbox-destinazioni.webp';
+const FOTO_PREMIO_PS5   = 'switch-lite.avif';
 const FOTO_PREMIO_CAFFE = 'caffe.webp';
 
 app.get('/premio', (req, res) => {
   res.render('prize', {
     title: 'I Premi',
-    photoEuropa: FOTO_PREMIO_EUROPA,
-    photoPs5:    FOTO_PREMIO_PS5,
-    photoCaffe:  FOTO_PREMIO_CAFFE,
+    smartboxCover: FOTO_PREMIO_SMARTBOX_COVER,
+    smartboxDest:  FOTO_PREMIO_SMARTBOX_DEST,
+    photoPs5:      FOTO_PREMIO_PS5,
+    photoCaffe:    FOTO_PREMIO_CAFFE,
   });
 });
 
@@ -133,8 +204,18 @@ app.get('/premio', (req, res) => {
 // Poi decommentate le righe qui sotto e riavviate il server.
 // ────────────────────────────────────────────────────────────────────────────
 const GALLERIA_PROCESSIONE = [
-  { file: 'sanrocco-chiesa.webp', caption: 'La statua di San Rocco adornata per la festa' },
-  { file: 'processione.jpg',      caption: 'San Rocco portato a spalla per le vie di Siano — 2007' },
+  { file: 'sanrocco-processione.jpg',   caption: 'San Rocco pronto ad essere portato in processione — l\'immagine votiva proiettata alle sue spalle' },
+  { file: 'sanrocco-applausi.jpg',      caption: 'San Rocco ricoperto dagli applausi del suo popolo in uscita dalla processione' },
+  { file: 'sanrocco-rientro-fuochi.jpg',caption: 'San Rocco pronto a rientrare in chiesa, acclamato dal suo popolo e onorato con fuochi d\'artificio' },
+  { file: 'processione.jpg',            caption: 'San Rocco portato a spalla per le vie di Siano' },
+  { file: 'sanrocco-chiesa.webp',       caption: 'La statua di San Rocco adornata per la festa' },
+];
+const GALLERIA_DEVOZIONE = [
+  { file: 'sanrocco-popolo.jpg',        caption: 'San Rocco in chiesa: acclamato e immortalato dal suo popolo' },
+  { file: 'sanrocco-chiesa-devoti.jpg', caption: 'San Rocco in chiesa dopo la processione, accolto e applaudito dai devoti' },
+  { file: 'sanrocco-anziane.jpg',       caption: 'Anziane signore devote interloquiscono all\'interno della chiesa' },
+  { file: 'sanrocco-oro.jpg',           caption: 'L\'oro consegnato da generazioni di Sianesi in dono al santo patrono' },
+  { file: 'sanrocco-fuochi-anziani.jpg',caption: 'Anziani di Siano osservano i fuochi d\'artificio in onore del Santo' },
 ];
 const GALLERIA_LUOGHI = [
   { file: 'campanile.webp', caption: 'Il campanile di San Rocco, simbolo di Siano' },
@@ -146,7 +227,8 @@ app.get('/galleria', (req, res) => {
   res.render('galleria', {
     title: 'Galleria',
     processione: GALLERIA_PROCESSIONE,
-    luoghi: GALLERIA_LUOGHI,
+    devozione:   GALLERIA_DEVOZIONE,
+    luoghi:      GALLERIA_LUOGHI,
   });
 });
 
@@ -166,13 +248,16 @@ function leaderboardRows() {
 }
 
 app.get('/classifica', (req, res) => {
-  res.render('leaderboard', { title: 'Classifica', rows: leaderboardRows() });
+  res.render('leaderboard', { title: 'Classifica', rows: leaderboardRows(), currentUserId: req.currentUser?.id ?? null });
 });
 
 // =========================================================================
 //  AUTENTICAZIONE (registrazione leggera: nickname + password, email facoltativa)
 // =========================================================================
-const loginLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 30, standardHeaders: true, legacyHeaders: false });
+const loginLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false });
+const resetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5,  standardHeaders: true, legacyHeaders: false });
+const globalLimiter = rateLimit({ windowMs: 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false });
+app.use(globalLimiter);
 
 // --- Registrazione SOLO su invito personale --------------------------------
 // Ogni persona riceve un link unico /registrati/<token>. Vale una sola volta:
@@ -212,8 +297,8 @@ app.post('/registrati/:token', (req, res) => {
     flash(req, 'error', 'Inserisci un indirizzo email valido.');
     return res.redirect('/registrati/' + inv.token);
   }
-  if (password.length < 6) {
-    flash(req, 'error', 'La password deve avere almeno 6 caratteri.');
+  if (password.length < 8) {
+    flash(req, 'error', 'La password deve avere almeno 8 caratteri.');
     return res.redirect('/registrati/' + inv.token);
   }
   const exists = db.prepare('SELECT id FROM users WHERE nickname = ?').get(nickname);
@@ -257,9 +342,13 @@ app.post('/login', loginLimiter, (req, res) => {
     flash(req, 'error', 'Nickname o password errati.');
     return res.redirect('/login');
   }
-  req.session.userId = user.id;
-  flash(req, 'success', `Bentornato/a ${user.nickname}!`);
-  res.redirect('/missioni');
+  // Rigenera la sessione per prevenire session-fixation attacks
+  req.session.regenerate((err) => {
+    if (err) { flash(req, 'error', 'Errore interno. Riprova.'); return res.redirect('/login'); }
+    req.session.userId = user.id;
+    req.session.flash = { type: 'success', msg: `Bentornato/a ${user.nickname}!` };
+    res.redirect('/missioni');
+  });
 });
 
 app.post('/logout', (req, res) => {
@@ -294,17 +383,25 @@ function makeMailTransporter() {
   return null;
 }
 
+app.get('/programmazione', (req, res) => {
+  res.render('programmazione', { title: 'Programmazione' });
+});
+
+app.get('/storia', (req, res) => {
+  res.render('storia', { title: 'La Storia di San Rocco' });
+});
+
 app.get('/password-dimenticata', (req, res) => {
   if (req.currentUser) return res.redirect('/profilo');
   res.render('forgot-password', { title: 'Password dimenticata' });
 });
 
-app.post('/password-dimenticata', loginLimiter, (req, res) => {
+app.post('/password-dimenticata', resetLimiter, (req, res) => {
   if (req.currentUser) return res.redirect('/profilo');
   const email = (req.body.email || '').trim().toLowerCase();
 
   // Risposta generica per non rivelare se l'email è registrata
-  const genericMsg = 'Se l\'email è registrata riceverai un link di reset entro qualche minuto.';
+  const genericMsg = 'Se l\'email è registrata riceverai un link di reset entro qualche minuto. Controlla anche la cartella spam.';
 
   if (!email) {
     flash(req, 'error', 'Inserisci un indirizzo email.');
@@ -338,9 +435,13 @@ app.post('/password-dimenticata', loginLimiter, (req, res) => {
              <p class="muted">Se non sei stato tu, ignora questa email.</p>`,
     }).catch((err) => console.error('Errore invio email reset:', err));
   } else {
-    // Modalità sviluppo: link visibile in console e nel flash
+    // Modalità sviluppo: link visibile solo in console
     console.log(`\n🔑 RESET LINK (dev): ${resetLink}\n`);
-    flash(req, 'success', `[DEV] Link reset: ${resetLink}`);
+    if (process.env.NODE_ENV !== 'production') {
+      flash(req, 'success', `[DEV] Link reset: ${resetLink}`);
+    } else {
+      flash(req, 'success', genericMsg);
+    }
     return res.redirect('/login');
   }
 
@@ -370,8 +471,8 @@ app.post('/reset-password/:token', (req, res) => {
 
   const password = req.body.password || '';
   const confirm = req.body.confirm || '';
-  if (password.length < 6) {
-    flash(req, 'error', 'La password deve avere almeno 6 caratteri.');
+  if (password.length < 8) {
+    flash(req, 'error', 'La password deve avere almeno 8 caratteri.');
     return res.redirect(`/reset-password/${req.params.token}`);
   }
   if (password !== confirm) {
@@ -391,24 +492,31 @@ app.post('/reset-password/:token', (req, res) => {
 // =========================================================================
 app.get('/missioni', auth.requireLogin, (req, res) => {
   const missions = db.prepare('SELECT * FROM missions WHERE archived = 0 ORDER BY points DESC, id ASC').all();
-  // Stato per ciascuna missione rispetto all'utente
   const mySubs = db.prepare('SELECT mission_id, status FROM submissions WHERE user_id = ?').all(req.currentUser.id);
   const byMission = {};
   for (const s of mySubs) {
     (byMission[s.mission_id] = byMission[s.mission_id] || []).push(s.status);
   }
+  // Contatore completamenti approvati per missione
+  const rows = db.prepare(`
+    SELECT mission_id, COUNT(DISTINCT user_id) AS cnt
+    FROM submissions WHERE status = 'approved'
+    GROUP BY mission_id
+  `).all();
+  const completedCount = {};
+  for (const r of rows) completedCount[r.mission_id] = r.cnt;
+
   const list = missions.map((m) => {
     const statuses = byMission[m.id] || [];
     return {
       ...m,
       activeNow: isMissionActiveNow(m),
-      hasPending: statuses.includes('pending'),
-      hasApproved: statuses.includes('approved'),
-      // Si può inviare se: ripetibile (sempre, se non c'è già un pending) OPPURE
-      // non ripetibile ma mai approvata/in attesa.
+      hasPending:    statuses.includes('pending'),
+      hasApproved:   statuses.includes('approved'),
       canSubmit: m.repeatable
         ? !statuses.includes('pending')
         : !(statuses.includes('pending') || statuses.includes('approved')),
+      completedBy: completedCount[m.id] || 0,
     };
   });
   res.render('missions', { title: 'Missioni', missions: list });
@@ -437,6 +545,12 @@ app.post('/missioni/:id/invia', auth.requireLogin, (req, res) => {
     if (err) {
       flash(req, 'error', err.message || 'Errore nel caricamento della foto.');
       return res.redirect(`/missioni/${m.id}`);
+    }
+    // CSRF check per multipart (body disponibile solo dopo multer)
+    const csrfToken = req.body._csrf || '';
+    if (!csrfToken || csrfToken !== req.session.csrfToken) {
+      if (req.file) fs.unlink(path.join(UPLOADS_DIR, req.file.filename), () => {});
+      return res.status(403).render('error', { title: 'Errore di sicurezza', message: 'Token non valido. Ricarica la pagina.' });
     }
     if (!isMissionActiveNow(m)) {
       flash(req, 'error', 'Questa missione non è attiva in questo momento.');
@@ -490,8 +604,8 @@ app.post('/profilo/cambia-password', auth.requireLogin, (req, res) => {
     flash(req, 'error', 'La password attuale non è corretta.');
     return res.redirect('/profilo');
   }
-  if (newPass.length < 6) {
-    flash(req, 'error', 'La nuova password deve avere almeno 6 caratteri.');
+  if (newPass.length < 8) {
+    flash(req, 'error', 'La nuova password deve avere almeno 8 caratteri.');
     return res.redirect('/profilo');
   }
   if (newPass !== confirm) {
@@ -657,6 +771,16 @@ app.post('/admin/utenti/:id/ruolo', auth.requireAdmin, (req, res) => {
 
 // --- 404 --------------------------------------------------------------------
 app.use((req, res) => res.status(404).render('error', { title: 'Pagina non trovata', message: 'Ops, questa pagina non esiste.' }));
+
+// --- 500 (non espone mai stack trace in produzione) -------------------------
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error('[ERROR]', err);
+  const msg = process.env.NODE_ENV === 'production'
+    ? 'Si è verificato un errore interno. Riprova tra qualche istante.'
+    : err.message;
+  res.status(err.status || 500).render('error', { title: 'Errore', message: msg });
+});
 
 app.listen(PORT, () => {
   console.log(`\n🎉 FantaSanRocco è attivo — accessibile via Cloudflare Tunnel.`);

@@ -1,54 +1,89 @@
-<section class="hero" style="padding-bottom:.5rem">
-  <h1>📸 Galleria San Rocco</h1>
-  <p class="lead muted">Le immagini della festa di <strong>San Rocco</strong> a Siano (SA).</p>
-</section>
+<%# ── HERO ────────────────────────────────────────────────────────── %>
+<div class="gl-hero lp-full">
+  <div class="gl-hero-inner">
+    <p class="lp-kicker" style="margin-bottom:.9rem;letter-spacing:.22em">Siano &nbsp;·&nbsp; Festa di San Rocco</p>
+    <h1 class="gl-title">Galleria</h1>
+    <p class="gl-sub">Le immagini della festa. Ogni scatto, una storia.</p>
+    <div class="gl-hero-count">
+      <span><%= processione.length + devozione.length + luoghi.length %></span> fotografie
+    </div>
+  </div>
+</div>
 
-<!-- ===== PROCESSIONE ===== -->
-<section class="card gallery-section">
-  <h2>⛪ La Processione</h2>
-  <p class="muted small">La tradizionale processione in onore di San Rocco che percorre le vie del paese.</p>
+<%# ── 01 LA PROCESSIONE ──────────────────────────────────────────── %>
+<div class="gl-section lp-full">
+  <div class="gl-section-inner">
+    <div class="gl-section-head">
+      <span class="gl-section-num">01</span>
+      <div>
+        <h2 class="gl-section-title">La Processione</h2>
+        <p class="gl-section-desc">Il Santo portato a spalla tra le vie di Siano, tra applausi, preghiere e fuochi d'artificio.</p>
+      </div>
+    </div>
 
-  <div class="gallery-grid">
-    <% if (typeof processione !== 'undefined' && processione.length > 0) { %>
-      <% processione.forEach((img) => { %>
-        <figure class="gallery-item">
+    <div class="gl-mag-grid">
+      <% processione.forEach((img, i) => { %>
+        <figure class="gl-mag-item <%= i === 0 ? 'gl-featured' : '' %>">
           <a href="/images/galleria/<%= img.file %>" target="_blank" rel="noopener">
-            <img src="/images/galleria/<%= img.file %>" alt="<%= img.caption %>" loading="lazy">
+            <img src="/images/galleria/<%= img.file %>" alt="<%= img.caption %>" loading="<%= i === 0 ? 'eager' : 'lazy' %>">
+            <div class="gl-caption-overlay">
+              <span class="gl-caption-text"><%= img.caption %></span>
+            </div>
           </a>
-          <figcaption><%= img.caption %></figcaption>
         </figure>
       <% }) %>
-    <% } else { %>
-      <div class="gallery-placeholder">
-        <span>🖼️</span>
-        <p>Le foto della processione arriveranno presto.</p>
-        <p class="muted small">Metti i file in <code>public/images/galleria/</code> e aggiorna la lista in <code>server.js</code>.</p>
-      </div>
-    <% } %>
+    </div>
   </div>
-</section>
+</div>
 
-<!-- ===== CAMPANILE E PIAZZA ===== -->
-<section class="card gallery-section">
-  <h2>🔔 Il Campanile e la Piazza</h2>
-  <p class="muted small">Il campanile e la Piazza San Rocco: i simboli del cuore di Siano.</p>
+<%# ── 02 LA DEVOZIONE ────────────────────────────────────────────── %>
+<div class="gl-section gl-section-alt lp-full">
+  <div class="gl-section-inner">
+    <div class="gl-section-head">
+      <span class="gl-section-num">02</span>
+      <div>
+        <h2 class="gl-section-title">Il Popolo e la Devozione</h2>
+        <p class="gl-section-desc">La fede che si tocca con mano: i volti, i gesti, l'oro donato al Santo per generazioni.</p>
+      </div>
+    </div>
 
-  <div class="gallery-grid">
-    <% if (typeof luoghi !== 'undefined' && luoghi.length > 0) { %>
-      <% luoghi.forEach((img) => { %>
-        <figure class="gallery-item">
+    <div class="gl-mag-grid gl-mag-grid-alt">
+      <% devozione.forEach((img, i) => { %>
+        <figure class="gl-mag-item <%= i === 0 ? 'gl-featured' : '' %>">
           <a href="/images/galleria/<%= img.file %>" target="_blank" rel="noopener">
             <img src="/images/galleria/<%= img.file %>" alt="<%= img.caption %>" loading="lazy">
+            <div class="gl-caption-overlay">
+              <span class="gl-caption-text"><%= img.caption %></span>
+            </div>
           </a>
-          <figcaption><%= img.caption %></figcaption>
         </figure>
       <% }) %>
-    <% } else { %>
-      <div class="gallery-placeholder">
-        <span>🖼️</span>
-        <p>Le foto del campanile e della piazza arriveranno presto.</p>
-        <p class="muted small">Metti i file in <code>public/images/galleria/</code> e aggiorna la lista in <code>server.js</code>.</p>
-      </div>
-    <% } %>
+    </div>
   </div>
-</section>
+</div>
+
+<%# ── 03 LA PIAZZA E IL CAMPANILE ────────────────────────────────── %>
+<div class="gl-section lp-full">
+  <div class="gl-section-inner">
+    <div class="gl-section-head">
+      <span class="gl-section-num">03</span>
+      <div>
+        <h2 class="gl-section-title">La Piazza e il Campanile</h2>
+        <p class="gl-section-desc">I simboli del cuore di Siano: la piazza, il campanile e i fuochi che illuminano la notte.</p>
+      </div>
+    </div>
+
+    <div class="gl-mag-grid gl-mag-grid-trio">
+      <% luoghi.forEach((img, i) => { %>
+        <figure class="gl-mag-item">
+          <a href="/images/galleria/<%= img.file %>" target="_blank" rel="noopener">
+            <img src="/images/galleria/<%= img.file %>" alt="<%= img.caption %>" loading="lazy">
+            <div class="gl-caption-overlay">
+              <span class="gl-caption-text"><%= img.caption %></span>
+            </div>
+          </a>
+        </figure>
+      <% }) %>
+    </div>
+  </div>
+</div>

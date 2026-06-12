@@ -9,9 +9,31 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css?v=12">
 </head>
 <body>
+
+  <%# ── Banner prudenza (mostrato una volta per sessione) ── %>
+  <div class="safety-overlay" id="safetyOverlay" aria-modal="true" role="dialog">
+    <div class="safety-card">
+      <div class="safety-icon">🟠</div>
+      <h2 class="safety-title">Gioca con la testa</h2>
+      <p class="safety-intro">
+        FantaSanRocco è un gioco goliardico per la Festa di San Rocco a Siano.<br>
+        Divertiti, ma ricordati di:
+      </p>
+      <ul class="safety-list">
+        <li>🍺 Bere con moderazione e responsabilità</li>
+        <li>🚗 Non metterti alla guida dopo aver bevuto</li>
+        <li>👥 Rispettare le persone intorno a te</li>
+        <li>🎆 Seguire le norme di sicurezza durante i festeggiamenti</li>
+        <li>🏥 In caso di emergenza chiamare il 118</li>
+      </ul>
+      <button class="btn safety-btn" id="safetyAccept">Ho capito — inizia il gioco →</button>
+      <p class="safety-fine">Partecipando dichiari di comportarti in modo responsabile durante la festa.</p>
+    </div>
+  </div>
+
   <%- include('partials/nav') %>
 
   <main class="container">

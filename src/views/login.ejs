@@ -1,6 +1,7 @@
 <section class="card form-card">
   <h1>Accedi</h1>
   <form action="/login" method="post" autocomplete="off">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <label>Nickname
       <input type="text" name="nickname" required placeholder="il tuo nickname">
     </label>

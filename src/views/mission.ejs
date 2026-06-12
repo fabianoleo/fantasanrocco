@@ -29,6 +29,7 @@
   <section class="card">
     <h2>Invia la tua prova</h2>
     <form action="/missioni/<%= m.id %>/invia" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <% if (m.requires_photo) { %>
         <label>Foto (obbligatoria)
           <input type="file" name="foto" accept="image/*" capture="environment" required>

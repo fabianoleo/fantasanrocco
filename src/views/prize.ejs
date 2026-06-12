@@ -1,88 +1,168 @@
-<section class="hero prize-hero">
-  <h1>🏆 I Premi in Palio</h1>
-  <p class="lead">Scala la classifica di <strong>FantaSanRocco</strong> e vinci uno dei tre premi!<br>
-    <span class="muted">I punti si accumulano durante la festa del 16 agosto. Chi ne fa di più vince.</span>
-  </p>
-</section>
+<%# ── HERO ─────────────────────────────────────────────────────── %>
+<div class="pz-hero lp-full">
+  <div class="pz-hero-inner">
+    <p class="pz-hero-kicker">Festa di San Rocco 2026 &nbsp;·&nbsp; Siano</p>
+    <h1 class="pz-title">I Premi<br>in Palio</h1>
+    <p class="pz-subtitle">Chi sale in cima alla classifica porta a casa un premio.<br>Tre posti. Tre premi. Una sola settimana per conquistarli.</p>
+    <div class="pz-hero-pill">
+      <span>3</span> premi &nbsp;&middot;&nbsp; <span>1</span> classifica &nbsp;&middot;&nbsp; <span>agosto&nbsp;2026</span>
+    </div>
+  </div>
+</div>
 
-<!-- ===== 1° POSTO ===== -->
-<section class="card prize-card prize-gold">
-  <div class="prize-rank">🥇 Primo posto</div>
-  <div class="prize-body">
-    <div class="prize-info">
-      <h2>Weekend in Europa per 2</h2>
-      <p>Una fuga indimenticabile: 2 notti in una città europea a scelta per te e un amico (o il tuo/la tua partner). Volo + hotel inclusi.</p>
-      <ul class="prize-details">
-        <li>✈️ Volo A/R da Napoli</li>
-        <li>🏨 2 notti in hotel</li>
+<%# ── PRIMO POSTO ─────────────────────────────────────────────── %>
+<div class="pz-section pz-gold lp-full">
+  <div class="pz-rank-ghost">I</div>
+  <div class="pz-section-inner">
+    <div class="pz-section-info">
+      <div class="pz-rank-label">
+        <span class="pz-medal">🥇</span>
+        <span>Primo Posto</span>
+      </div>
+      <div class="pz-divider"></div>
+      <h2 class="pz-prize-name">Smartbox<br>3 giorni da sogno</h2>
+      <p class="pz-prize-tagline">In Europa, per 2 persone, quando vuoi tu</p>
+      <p class="pz-prize-desc">Un cofanetto regalo con centinaia di strutture in tutta Europa. Scegli la destinazione, scegli il momento. Tre giorni indimenticabili per due persone.</p>
+      <ul class="pz-details">
+        <li>🎁 Cofanetto Smartbox originale</li>
+        <li>🌍 Valido in tutta Europa</li>
         <li>👫 Per 2 persone</li>
+        <li>🏨 3 giorni / 2 notti</li>
       </ul>
     </div>
-    <figure class="prize-photo">
-      <% if (photoEuropa) { %>
-        <img src="/images/premi/<%= photoEuropa %>" alt="Weekend in Europa">
+    <div class="pz-photos-area">
+      <% if (smartboxCover && smartboxDest) { %>
+        <div class="pz-photos-duo">
+          <div class="pz-photo pz-photo-border-gold">
+            <img src="/images/premi/<%= smartboxCover %>" alt="Smartbox copertina">
+          </div>
+          <div class="pz-photo pz-photo-border-gold">
+            <img src="/images/premi/<%= smartboxDest %>" alt="Destinazioni Europa">
+          </div>
+        </div>
+      <% } else if (smartboxCover) { %>
+        <div class="pz-photo pz-photo-single pz-photo-border-gold">
+          <img src="/images/premi/<%= smartboxCover %>" alt="Smartbox">
+        </div>
       <% } else { %>
-        <div class="prize-photo-placeholder">✈️<br><span>Foto in arrivo</span></div>
+        <div class="pz-photo-placeholder">
+          <span class="pz-ph-icon">🎁</span>
+          <span>Foto in arrivo</span>
+        </div>
       <% } %>
-    </figure>
+    </div>
   </div>
-</section>
+</div>
 
-<!-- ===== 2° POSTO ===== -->
-<section class="card prize-card prize-silver">
-  <div class="prize-rank">🥈 Secondo posto</div>
-  <div class="prize-body">
-    <div class="prize-info">
-      <h2>PlayStation 5</h2>
-      <p>La console di Sony: giochi next-gen, DualSense con feedback aptico e grafica 4K. Un premio da vero campione.</p>
-      <ul class="prize-details">
-        <li>🎮 PS5 Disc Edition</li>
-        <li>📦 Controller DualSense incluso</li>
+<%# ── SECONDO POSTO ───────────────────────────────────────────── %>
+<div class="pz-section pz-silver lp-full">
+  <div class="pz-rank-ghost">II</div>
+  <div class="pz-section-inner">
+    <div class="pz-section-info">
+      <div class="pz-rank-label">
+        <span class="pz-medal">🥈</span>
+        <span>Secondo Posto</span>
+      </div>
+      <div class="pz-divider"></div>
+      <h2 class="pz-prize-name">Nintendo<br>Switch Lite</h2>
+      <p class="pz-prize-tagline">La console portatile, ovunque tu voglia</p>
+      <p class="pz-prize-desc">Leggera, compatta, perfetta per giocare dovunque. Centinaia di titoli disponibili: dal party game all'avventura, la Switch Lite è gaming puro.</p>
+      <ul class="pz-details">
+        <li>🎮 Nintendo Switch Lite</li>
+        <li>📦 Versione portatile e leggera</li>
+        <li>🎯 Centinaia di giochi disponibili</li>
       </ul>
     </div>
-    <figure class="prize-photo">
+    <div class="pz-photos-area">
       <% if (photoPs5) { %>
-        <img src="/images/premi/<%= photoPs5 %>" alt="PlayStation 5">
+        <div class="pz-photo pz-photo-single pz-photo-border-silver">
+          <img src="/images/premi/<%= photoPs5 %>" alt="Nintendo Switch Lite">
+        </div>
       <% } else { %>
-        <div class="prize-photo-placeholder">🎮<br><span>Foto in arrivo</span></div>
+        <div class="pz-photo-placeholder">
+          <span class="pz-ph-icon">🎮</span>
+          <span>Foto in arrivo</span>
+        </div>
       <% } %>
-    </figure>
+    </div>
   </div>
-</section>
+</div>
 
-<!-- ===== 3° POSTO ===== -->
-<section class="card prize-card prize-bronze">
-  <div class="prize-rank">🥉 Terzo posto</div>
-  <div class="prize-body">
-    <div class="prize-info">
-      <h2>Macchinetta del Caffè</h2>
-      <p>Perché dopo tante missioni ci vuole il caffè perfetto. Una macchinetta di qualità per iniziare ogni mattina alla grande.</p>
-      <ul class="prize-details">
+<%# ── TERZO POSTO ─────────────────────────────────────────────── %>
+<div class="pz-section pz-bronze lp-full">
+  <div class="pz-rank-ghost">III</div>
+  <div class="pz-section-inner">
+    <div class="pz-section-info">
+      <div class="pz-rank-label">
+        <span class="pz-medal">🥉</span>
+        <span>Terzo Posto</span>
+      </div>
+      <div class="pz-divider"></div>
+      <h2 class="pz-prize-name">Macchina<br>del Caffè</h2>
+      <p class="pz-prize-tagline">Perché le grandi imprese meritano un gran caffè</p>
+      <p class="pz-prize-desc">Dopo tante missioni completate, il caffè perfetto è il tuo premio. Una macchina di qualità per iniziare ogni mattina alla grande.</p>
+      <ul class="pz-details">
         <li>☕ Macchina espresso automatica</li>
         <li>🫘 Cialde omaggio incluse</li>
+        <li>✨ Design da cucina di qualità</li>
       </ul>
     </div>
-    <figure class="prize-photo">
+    <div class="pz-photos-area">
       <% if (photoCaffe) { %>
-        <img src="/images/premi/<%= photoCaffe %>" alt="Macchinetta del caffè">
+        <div class="pz-photo pz-photo-single pz-photo-border-bronze">
+          <img src="/images/premi/<%= photoCaffe %>" alt="Macchinetta del caffè">
+        </div>
       <% } else { %>
-        <div class="prize-photo-placeholder">☕<br><span>Foto in arrivo</span></div>
+        <div class="pz-photo-placeholder">
+          <span class="pz-ph-icon">☕</span>
+          <span>Foto in arrivo</span>
+        </div>
       <% } %>
-    </figure>
+    </div>
   </div>
-</section>
+</div>
 
-<section class="card">
-  <h2>Come si vince</h2>
-  <ol>
-    <li>Completa più missioni che puoi durante la festa di San Rocco.</li>
-    <li>Ogni prova approvata dallo staff ti dà i punti della missione.</li>
-    <li>Chi è in cima alla <a href="/classifica">classifica generale</a> a fine festa porta a casa il primo premio.</li>
-    <li>Il 2° e il 3° classificato vincono PS5 e macchinetta del caffè.</li>
-  </ol>
-  <% if (!currentUser) { %>
-    <a class="btn" href="/login">Accedi e gioca</a>
-  <% } else { %>
-    <a class="btn" href="/missioni">Alle missioni →</a>
-  <% } %>
-</section>
+<%# ── COME SI VINCE ────────────────────────────────────────────── %>
+<div class="pz-how lp-full">
+  <div class="pz-how-inner">
+    <p class="pz-how-kicker">Regolamento</p>
+    <h2 class="pz-how-title">Come si vince</h2>
+    <div class="pz-steps">
+      <div class="pz-step">
+        <span class="pz-step-num">01</span>
+        <div>
+          <p class="pz-step-title">Completa le missioni</p>
+          <p class="pz-step-desc">Ogni missione vale un numero di punti. Più missioni completi, più punti accumuli nella settimana della festa.</p>
+        </div>
+      </div>
+      <div class="pz-step">
+        <span class="pz-step-num">02</span>
+        <div>
+          <p class="pz-step-title">Invia la prova</p>
+          <p class="pz-step-desc">Fotografia, video o descrizione: carica la tua prova per ogni missione completata. Lo staff la verificherà e ti assegnerà i punti.</p>
+        </div>
+      </div>
+      <div class="pz-step">
+        <span class="pz-step-num">03</span>
+        <div>
+          <p class="pz-step-title">Sali in classifica</p>
+          <p class="pz-step-desc">I punti approvati entrano subito in classifica. Tieni d'occhio il tabellone: la gara è aperta fino alla fine della festa.</p>
+        </div>
+      </div>
+      <div class="pz-step">
+        <span class="pz-step-num">04</span>
+        <div>
+          <p class="pz-step-title">Vinci il premio</p>
+          <p class="pz-step-desc">I primi tre in classifica a fine festa si aggiudicano i premi. Chi ne ha di più, vince.</p>
+        </div>
+      </div>
+    </div>
+    <div class="pz-how-cta">
+      <% if (!currentUser) { %>
+        <a class="btn" href="/login">Accedi e gioca &rarr;</a>
+      <% } else { %>
+        <a class="btn" href="/missioni">Vai alle missioni &rarr;</a>
+      <% } %>
+    </div>
+  </div>
+</div>

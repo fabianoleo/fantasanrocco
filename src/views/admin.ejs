@@ -7,6 +7,7 @@
     Dopo la registrazione si gioca dal normale <strong>/login</strong>.</p>
 
   <form action="/admin/inviti" method="post" class="row" style="align-items:flex-end">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <label style="flex:2">Etichetta (facoltativa, es. nome)
       <input type="text" name="label" placeholder="es. Mario Rossi">
     </label>
@@ -32,6 +33,7 @@
             <button type="button" class="btn-mini copy-btn" data-copy="<%= link %>">Copia</button>
             <form action="/admin/inviti/<%= i.id %>/elimina" method="post" class="inline"
                   onsubmit="return confirm('Eliminare questo invito non ancora usato?');">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <button type="submit" class="link-btn">elimina</button>
             </form>
           </div>
@@ -58,6 +60,7 @@
 <section class="card">
   <h2>➕ Nuova missione</h2>
   <form action="/admin/missioni" method="post" class="mission-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <label>Titolo
       <input type="text" name="title" required placeholder="es. 🥃 Shot con Zio Max">
     </label>
@@ -92,6 +95,7 @@
         <span class="points-badge"><%= m.points %> pt</span>
       </summary>
       <form action="/admin/missioni/<%= m.id %>/modifica" method="post" class="mission-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <label>Titolo<input type="text" name="title" value="<%= m.title %>" required></label>
         <label>Descrizione<textarea name="description" rows="2"><%= m.description %></textarea></label>
         <div class="row">
@@ -110,6 +114,7 @@
       </form>
       <form action="/admin/missioni/<%= m.id %>/elimina" method="post" class="danger-form"
             onsubmit="return confirm('Eliminare definitivamente questa missione e le sue prove?');">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <button class="btn btn-no" type="submit">🗑️ Elimina</button>
       </form>
     </details>
@@ -127,6 +132,7 @@
           <span class="role-badge role-<%= u.role %>"><%= u.role %></span>
         </span>
         <form action="/admin/utenti/<%= u.id %>/ruolo" method="post" class="inline">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <select name="role">
             <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>user</option>
             <option value="moderator" <%= u.role === 'moderator' ? 'selected' : '' %>>moderator</option>
@@ -147,6 +153,7 @@
   </p>
   <form action="/admin/reset-gioco" method="post"
         onsubmit="return confirm('⚠️ RESET DEFINITIVO: vuoi davvero cancellare tutti i dati di gioco? Gli admin rimarranno.');">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <label style="margin-bottom:.5rem">
       Scrivi <strong>RESET</strong> per confermare
       <input type="text" name="conferma" placeholder="RESET" autocomplete="off"
