@@ -216,6 +216,14 @@ const GALLERIA_DEVOZIONE = [
   { file: 'sanrocco-anziane.jpg',       caption: 'Anziane signore devote interloquiscono all\'interno della chiesa' },
   { file: 'sanrocco-oro.jpg',           caption: 'L\'oro consegnato da generazioni di Sianesi in dono al santo patrono' },
   { file: 'sanrocco-fuochi-anziani.jpg',caption: 'Anziani di Siano osservano i fuochi d\'artificio in onore del Santo' },
+  { file: 'sanrocco-maria.jpg',         caption: 'Maria, tra i banchi della chiesa — la devozione che attraversa una vita intera' },
+];
+const GALLERIA_PALIO = [
+  { file: 'palio-fuochi.jpg',       caption: 'I fuochi del Palio esplodono nel cielo di Siano — uno spettacolo rinomato in tutta Italia' },
+  { file: 'fuochisti-preparano.jpg',caption: 'I maestri fuochisti al lavoro: la preparazione delle bombe da tiro è un rito antico' },
+  { file: 'mano-bomba.jpg',         caption: 'La mano di un maestro fuochista posata sulla bomba — precisione, esperienza e rispetto' },
+  { file: 'fuochista-anziano.jpg',  caption: 'Un anziano maestro prepara le bombe: un sapere trasmesso di generazione in generazione' },
+  { file: 'palio-collage.jpg',      caption: 'I fuochisti con la percoca nel vino — tradizione irrinunciabile — e le bombe allineate pronte per il Palio' },
 ];
 const GALLERIA_LUOGHI = [
   { file: 'campanile.webp', caption: 'Il campanile di San Rocco, simbolo di Siano' },
@@ -229,6 +237,7 @@ app.get('/galleria', (req, res) => {
     processione: GALLERIA_PROCESSIONE,
     devozione:   GALLERIA_DEVOZIONE,
     luoghi:      GALLERIA_LUOGHI,
+    palio:       GALLERIA_PALIO,
   });
 });
 

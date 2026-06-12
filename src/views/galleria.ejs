@@ -5,7 +5,7 @@
     <h1 class="gl-title">Galleria</h1>
     <p class="gl-sub">Le immagini della festa. Ogni scatto, una storia.</p>
     <div class="gl-hero-count">
-      <span><%= processione.length + devozione.length + luoghi.length %></span> fotografie
+      <span><%= processione.length + devozione.length + luoghi.length + palio.length %></span> fotografie
     </div>
   </div>
 </div>
@@ -62,11 +62,37 @@
   </div>
 </div>
 
-<%# ── 03 LA PIAZZA E IL CAMPANILE ────────────────────────────────── %>
+<%# ── 03 IL PALIO DEI FUOCHI ─────────────────────────────────────── %>
+<div class="gl-section gl-section-palio lp-full">
+  <div class="gl-section-inner">
+    <div class="gl-section-head">
+      <span class="gl-section-num" style="color:var(--fire);text-shadow:0 0 30px rgba(232,78,27,.4)">03</span>
+      <div>
+        <h2 class="gl-section-title">Il Palio dei Fuochi</h2>
+        <p class="gl-section-desc">I maestri fuochisti, le bombe da tiro, il cielo di Siano illuminato a festa — rinomato in tutta Italia.</p>
+      </div>
+    </div>
+
+    <div class="gl-mag-grid gl-mag-grid-palio">
+      <% palio.forEach((img, i) => { %>
+        <figure class="gl-mag-item <%= i === 0 ? 'gl-featured' : '' %> gl-palio-item">
+          <a href="/images/galleria/<%= img.file %>" target="_blank" rel="noopener">
+            <img src="/images/galleria/<%= img.file %>" alt="<%= img.caption %>" loading="lazy">
+            <div class="gl-caption-overlay">
+              <span class="gl-caption-text"><%= img.caption %></span>
+            </div>
+          </a>
+        </figure>
+      <% }) %>
+    </div>
+  </div>
+</div>
+
+<%# ── 04 LA PIAZZA E IL CAMPANILE ────────────────────────────────── %>
 <div class="gl-section lp-full">
   <div class="gl-section-inner">
     <div class="gl-section-head">
-      <span class="gl-section-num">03</span>
+      <span class="gl-section-num">04</span>
       <div>
         <h2 class="gl-section-title">La Piazza e il Campanile</h2>
         <p class="gl-section-desc">I simboli del cuore di Siano: la piazza, il campanile e i fuochi che illuminano la notte.</p>

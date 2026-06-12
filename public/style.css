@@ -960,7 +960,9 @@ html { overflow-x: hidden; }
   align-items: center; justify-content: center;
   text-align: center;
   padding: 2rem 1.5rem;
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse 110% 70% at 50% 50%, rgba(212,160,26,.07) 0%, transparent 60%),
+    linear-gradient(170deg, #040408 0%, #08081a 55%, #050510 100%);
 }
 
 .manifesto-kicker {
@@ -2770,4 +2772,44 @@ html { overflow-x: hidden; }
 @media (max-width: 520px) {
   .st-title { font-size: clamp(1.7rem, 11vw, 2.5rem); }
   .st-feast-num { font-size: 7rem; }
+}
+
+/* ── Galleria: sezione Palio dei Fuochi ──────────────────────────── */
+.gl-section-palio {
+  background: radial-gradient(ellipse 100% 60% at 50% 0%,
+    rgba(232,78,27,.07) 0%, rgba(232,134,30,.03) 40%, transparent 65%);
+}
+.gl-section-palio .gl-section-head::before {
+  background: linear-gradient(90deg, rgba(232,78,27,.25), transparent);
+}
+.gl-section-palio .gl-section-title { color: var(--fire); }
+.gl-section-palio .gl-section-num { color: var(--fire); }
+
+.gl-mag-grid-palio {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 280px;
+  gap: .9rem;
+}
+.gl-mag-grid-palio .gl-featured {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+.gl-palio-item::after {
+  background: linear-gradient(135deg, rgba(232,78,27,.15) 0%, transparent 60%) !important;
+}
+.gl-palio-item:hover { border-color: rgba(232,78,27,.4) !important; }
+.gl-palio-item.gl-featured {
+  box-shadow: 0 0 0 1px rgba(232,78,27,.2), 0 20px 60px rgba(232,78,27,.12);
+}
+
+@media (max-width: 768px) {
+  .gl-mag-grid-palio {
+    grid-template-columns: 1fr 1fr;
+    grid-auto-rows: 200px;
+  }
+}
+@media (max-width: 480px) {
+  .gl-mag-grid-palio { grid-template-columns: 1fr; grid-auto-rows: 240px; }
+  .gl-mag-grid-palio .gl-featured { grid-column: span 1; grid-row: span 1; }
 }
