@@ -746,6 +746,18 @@ label.check input { width: auto; }
 
 /* ---------- Moderation --------------------------------------------- */
 .mod-list { display: grid; gap: 1rem; }
+.mod-user-header {
+  display: flex; align-items: baseline; gap: .8rem;
+  padding: .5rem 0 .25rem;
+  border-bottom: 1px solid rgba(212,160,26,.2);
+  margin-top: .8rem;
+}
+.mod-user-header:first-child { margin-top: 0; }
+.mod-user-name {
+  font-family: var(--font-heading); font-size: .82rem;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--gold);
+}
+.mod-user-count { font-size: .75rem; color: var(--text-3); }
 .mod-top  { display: flex; justify-content: space-between; gap: .6rem; align-items: baseline; }
 .mod-photo {
   width: 100%; max-height: 400px; object-fit: contain;
@@ -1002,6 +1014,72 @@ html { overflow-x: hidden; }
   margin-top: 2.5rem; line-height: 1.72;
   opacity: 0; transform: translateY(18px);
   transition: opacity .6s .15s var(--ease), transform .6s .15s var(--ease);
+}
+.manifesto-scroll-hint {
+  position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: .6rem;
+  pointer-events: none; white-space: nowrap;
+  opacity: 0; transition: opacity .7s var(--ease);
+}
+.manifesto-scroll-hint.ms-visible { opacity: 1; }
+
+.msh-label {
+  font-family: var(--font-heading);
+  font-size: .62rem; letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(212,160,26,.65);
+  animation: msh-pulse-text 2.4s ease-in-out infinite;
+}
+@keyframes msh-pulse-text {
+  0%, 100% { opacity: .65; }
+  50%       { opacity: 1; }
+}
+
+/* Mouse outline */
+.msh-mouse {
+  width: 24px; height: 38px;
+  border: 2px solid rgba(212,160,26,.45);
+  border-radius: 12px;
+  position: relative;
+  animation: msh-glow 2.4s ease-in-out infinite;
+}
+@keyframes msh-glow {
+  0%, 100% { border-color: rgba(212,160,26,.35); box-shadow: none; }
+  50%       { border-color: rgba(212,160,26,.7);  box-shadow: 0 0 14px 2px rgba(212,160,26,.15); }
+}
+
+/* Scrolling dot inside mouse */
+.msh-dot {
+  position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
+  width: 3px; height: 7px;
+  background: rgba(212,160,26,.9);
+  border-radius: 2px;
+  animation: msh-dot-scroll 1.6s ease-in-out infinite;
+}
+@keyframes msh-dot-scroll {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  60%  { opacity: .3; transform: translateX(-50%) translateY(13px); }
+  61%  { opacity: 0; transform: translateX(-50%) translateY(13px); }
+  62%  { opacity: 0; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Chevron tripli animati */
+.msh-arrows {
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+}
+.msh-arrows span {
+  display: block; width: 12px; height: 12px;
+  border-right: 2px solid rgba(212,160,26,.5);
+  border-bottom: 2px solid rgba(212,160,26,.5);
+  transform: rotate(45deg);
+  animation: msh-chevron 1.6s ease-in-out infinite;
+}
+.msh-arrows span:nth-child(1) { animation-delay: 0s;    opacity: .3; }
+.msh-arrows span:nth-child(2) { animation-delay: .18s;  opacity: .6; }
+.msh-arrows span:nth-child(3) { animation-delay: .36s;  opacity: 1; }
+@keyframes msh-chevron {
+  0%, 100% { opacity: inherit; }
+  50%       { opacity: 1; filter: drop-shadow(0 0 4px rgba(212,160,26,.6)); }
 }
 .manifesto-body.mb-visible { opacity: 1; transform: translateY(0); }
 
@@ -1646,6 +1724,27 @@ html { overflow-x: hidden; }
 }
 .online-pill:hover { border-color: rgba(46,204,113,.4); color: var(--text-2); }
 
+/* Wrapper del contatore — clip il roll verticale */
+.oc-wrap {
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  height: 1.1em;
+}
+.oc-val {
+  display: inline-block;
+  line-height: 1;
+}
+
+/* Flash verde sul pill quando il numero cambia */
+@keyframes oc-pill-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(46,204,113,.55); border-color: rgba(46,204,113,.75); }
+  45%  { box-shadow: 0 0 18px 5px rgba(46,204,113,.2); border-color: rgba(46,204,113,.55); }
+  100% { box-shadow: none; border-color: rgba(46,204,113,.22); }
+}
+.online-pill.oc-flash { animation: oc-pill-flash .75s ease-out forwards; }
+
 .online-dot {
   width: 6px; height: 6px;
   border-radius: 50%;
@@ -1720,16 +1819,38 @@ html { overflow-x: hidden; }
   border-bottom: 1px solid rgba(212,160,26,.1);
   overflow: hidden;
 }
+/* Mosaico fotografico dietro il titolo — desktop: 3 colonne */
+.gl-hero::after {
+  content: '';
+  position: absolute; inset: 0; z-index: 0;
+  background-image:
+    url('/images/galleria/sanrocco-processione.jpg'),
+    url('/images/galleria/palio-fuochi.jpg'),
+    url('/images/galleria/sanrocco-oro.jpg');
+  background-size: 33.34% 100%, 33.33% 100%, 33.33% 100%;
+  background-position: 0% center, 50% center, 100% center;
+  background-repeat: no-repeat;
+  opacity: .11;
+  pointer-events: none;
+}
+/* Mobile: una sola foto centrata */
+@media (max-width: 600px) {
+  .gl-hero::after {
+    background-image: url('/images/galleria/sanrocco-processione.jpg');
+    background-size: cover;
+    background-position: center 30%;
+  }
+}
 .gl-hero::before {
   content: '';
-  position: absolute; inset: 0;
+  position: absolute; inset: 0; z-index: 1;
   background:
     radial-gradient(ellipse 70% 80% at 50% 110%, rgba(212,160,26,.13) 0%, transparent 65%),
     radial-gradient(ellipse 40% 50% at 15% 20%, rgba(232,134,30,.07) 0%, transparent 55%),
     radial-gradient(ellipse 40% 50% at 85% 20%, rgba(192,57,15,.06) 0%, transparent 55%);
   pointer-events: none;
 }
-.gl-hero-inner { position: relative; z-index: 1; }
+.gl-hero-inner { position: relative; z-index: 2; }
 .gl-title {
   font-family: var(--font-display);
   font-size: clamp(3.5rem, 12vw, 8rem);
@@ -2169,14 +2290,14 @@ html { overflow-x: hidden; }
   text-align: center;
   border-bottom: 1px solid rgba(212,160,26,.12);
   overflow: hidden;
-}
-.pg-hero::before {
-  content: '';
-  position: absolute; inset: 0;
   background:
     radial-gradient(ellipse 90% 70% at 50% 120%, rgba(212,160,26,.13) 0%, transparent 65%),
     radial-gradient(ellipse 50% 50% at 20% 30%, rgba(232,134,30,.06) 0%, transparent 60%),
     radial-gradient(ellipse 50% 50% at 80% 30%, rgba(232,78,27,.06) 0%, transparent 60%);
+}
+.pg-hero::before {
+  content: '';
+  position: absolute; inset: 0;
   pointer-events: none;
 }
 .pg-hero-inner { position: relative; z-index: 1; }
@@ -2416,8 +2537,10 @@ html { overflow-x: hidden; }
   text-align: center;
   position: relative;
   overflow: hidden;
-  background: radial-gradient(ellipse 140% 60% at 50% 0%,
-    rgba(212,160,26,.14) 0%, rgba(232,134,30,.04) 45%, transparent 65%);
+  background:
+    radial-gradient(ellipse 140% 60% at 50% 0%, rgba(212,160,26,.14) 0%, rgba(232,134,30,.04) 45%, transparent 65%),
+    linear-gradient(rgba(4,4,8,.82), rgba(4,4,8,.82)),
+    url('/images/premi/smartbox-cover.webp') center / cover no-repeat;
 }
 .pz-hero::after {
   content: '';
@@ -2619,8 +2742,10 @@ html { overflow-x: hidden; }
 .st-hero {
   padding: 7.5rem 0 5.5rem;
   text-align: center; position: relative; overflow: hidden;
-  background: radial-gradient(ellipse 130% 70% at 50% -5%,
-    rgba(212,160,26,.12) 0%, rgba(232,134,30,.04) 42%, transparent 65%);
+  background:
+    radial-gradient(ellipse 130% 70% at 50% -5%, rgba(212,160,26,.12) 0%, rgba(232,134,30,.04) 42%, transparent 65%),
+    linear-gradient(rgba(4,4,8,.8), rgba(4,4,8,.8)),
+    url('/images/galleria/sanrocco-processione.jpg') center 30% / cover no-repeat;
 }
 .st-hero::after {
   content: '';

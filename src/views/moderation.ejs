@@ -6,7 +6,14 @@
   <p class="muted">Nessuna prova in attesa. Tutto sotto controllo! ✅</p>
 <% } else { %>
   <div class="mod-list">
+    <% let modCurrentUser = null; %>
     <% pending.forEach((s) => { %>
+      <% if (s.nickname !== modCurrentUser) { modCurrentUser = s.nickname; %>
+        <div class="mod-user-header">
+          <span class="mod-user-name"><%= s.nickname %></span>
+          <span class="mod-user-count"><%= pending.filter(x => x.nickname === s.nickname).length %> in attesa</span>
+        </div>
+      <% } %>
       <section class="card mod-card">
         <div class="mod-top">
           <div>

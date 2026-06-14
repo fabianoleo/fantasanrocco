@@ -107,33 +107,69 @@ function verifyCsrf(req, res, next) {
 }
 app.use(verifyCsrf);
 
-// --- Utenti online (in-memory, aggiornato ad ogni richiesta) ---------------
-const _online = new Map(); // sessionId -> { userId, lastSeen }
-const ONLINE_TTL = 5 * 60 * 1000; // 5 minuti di inattività = offline
+// --- Utenti online — ping-based (affidabile su mobile + Cloudflare) --------
+// Il client manda GET /api/online/ping?uid=UUID ogni 8s.
+// UUID generato in localStorage: stabile attraverso login/logout/refresh.
+const _lastPing = new Map(); // uid → timestamp
+const _sseClients = new Set();
+const PING_TTL = 18_000; // 3 ping mancati = offline
 
-app.use((req, res, next) => {
-  // Traccia solo richieste di pagine, non asset statici
-  const isPage = req.method === 'GET'
-    && !req.path.startsWith('/images/')
-    && !req.path.endsWith('.js')
-    && !req.path.endsWith('.css')
-    && !req.path.startsWith('/api/');
-  if (isPage && req.session) {
-    // Forza la creazione del cookie anche per non loggati
-    if (!req.session.tracked) req.session.tracked = true;
-    _online.set(req.session.id, { userId: req.session.userId || null, lastSeen: Date.now() });
+function _onlineCount() {
+  const cutoff = Date.now() - PING_TTL;
+  return [..._lastPing.values()].filter(t => t >= cutoff).length;
+}
+
+function _broadcastCount() {
+  const msg = `data: ${JSON.stringify({ count: _onlineCount() })}\n\n`;
+  for (const r of _sseClients) { try { r.write(msg); } catch {} }
+}
+
+// Ping: il client manda il suo UUID stabile (localStorage) ogni 8s
+app.get('/api/online/ping', (req, res) => {
+  const uid = typeof req.query.uid === 'string' ? req.query.uid.slice(0, 64) : null;
+  if (uid) {
+    const prev = _onlineCount();
+    _lastPing.set(uid, Date.now());
+    if (_onlineCount() !== prev) _broadcastCount();
   }
-  next();
+  res.json({ ok: true });
 });
-setInterval(() => {
-  const cutoff = Date.now() - ONLINE_TTL;
-  for (const [id, d] of _online) if (d.lastSeen < cutoff) _online.delete(id);
-}, 60_000);
 
-app.get('/api/online', (req, res) => {
-  const cutoff = Date.now() - ONLINE_TTL;
-  const count = [..._online.values()].filter(d => d.lastSeen >= cutoff).length;
-  res.json({ count });
+// SSE: canale push per ricevere aggiornamenti in tempo reale
+app.get('/api/online/stream', (req, res) => {
+  if (req.socket) req.socket.setNoDelay(true);
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  res.flushHeaders();
+  _sseClients.add(res);
+  try { res.write(`retry: 2000\ndata: ${JSON.stringify({ count: _onlineCount() })}\n\n`); } catch {}
+  const hb = setInterval(() => { try { res.write(': ping\n\n'); } catch {} }, 20_000);
+  req.on('close', () => { _sseClients.delete(res); clearInterval(hb); });
+});
+
+// Pulizia ogni 10s: rimuove chi non pinga più e aggiorna il count
+setInterval(() => {
+  const cutoff = Date.now() - PING_TTL;
+  let changed = false;
+  for (const [id, t] of _lastPing) {
+    if (t < cutoff) { _lastPing.delete(id); changed = true; }
+  }
+  if (changed) _broadcastCount();
+}, 5_000);
+
+app.get('/api/online', (req, res) => { res.json({ count: _onlineCount() }); });
+
+// Debug: mostra le entry attive nel map (solo admin/staff)
+app.get('/api/online/debug', auth.requireStaff, (req, res) => {
+  const now = Date.now();
+  const entries = [..._lastPing.entries()].map(([uid, t]) => ({
+    uid: uid.slice(0, 8) + '…',
+    secondsAgo: Math.round((now - t) / 1000),
+    alive: (now - t) < PING_TTL,
+  }));
+  res.json({ count: _onlineCount(), entries });
 });
 
 // --- Upload foto (multer) ---------------------------------------------------
@@ -523,7 +559,7 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
       hasPending:    statuses.includes('pending'),
       hasApproved:   statuses.includes('approved'),
       canSubmit: m.repeatable
-        ? !statuses.includes('pending')
+        ? true
         : !(statuses.includes('pending') || statuses.includes('approved')),
       completedBy: completedCount[m.id] || 0,
     };
@@ -537,7 +573,7 @@ app.get('/missioni/:id', auth.requireLogin, (req, res) => {
   const statuses = db.prepare('SELECT status FROM submissions WHERE user_id = ? AND mission_id = ?')
     .all(req.currentUser.id, m.id).map((r) => r.status);
   const canSubmit = m.repeatable
-    ? !statuses.includes('pending')
+    ? true
     : !(statuses.includes('pending') || statuses.includes('approved'));
   res.render('mission', {
     title: m.title.replace(/[^\p{L}\p{N} ]/gu, '').trim() || 'Missione',
@@ -569,7 +605,7 @@ app.post('/missioni/:id/invia', auth.requireLogin, (req, res) => {
     const statuses = db.prepare('SELECT status FROM submissions WHERE user_id = ? AND mission_id = ?')
       .all(req.currentUser.id, m.id).map((r) => r.status);
     const blocked = m.repeatable
-      ? statuses.includes('pending')
+      ? false
       : (statuses.includes('pending') || statuses.includes('approved'));
     if (blocked) {
       if (req.file) fs.unlink(path.join(UPLOADS_DIR, req.file.filename), () => {});
@@ -646,7 +682,7 @@ app.get('/moderazione', auth.requireStaff, (req, res) => {
     JOIN users u ON u.id = s.user_id
     JOIN missions m ON m.id = s.mission_id
     WHERE s.status = 'pending'
-    ORDER BY s.created_at ASC
+    ORDER BY u.nickname ASC, s.created_at ASC
   `).all();
   res.render('moderation', { title: 'Moderazione', pending });
 });

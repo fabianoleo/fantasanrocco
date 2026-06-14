@@ -112,25 +112,117 @@ document.addEventListener('click', async (e) => {
       if (progress > 0.62) body.classList.add('mb-visible');
       else body.classList.remove('mb-visible');
     }
+    const hint = document.getElementById('manifestoScrollHint');
+    if (hint) {
+      if (progress > 0.05 && progress < 0.90) hint.classList.add('ms-visible');
+      else hint.classList.remove('ms-visible');
+    }
   }, { passive: true });
 })();
 
-// ── Utenti online (polling ogni 30s) ────────────────────────────────
+// ── Utenti online — ping ogni 15s + SSE per aggiornamenti ───────────
 (function () {
-  const el = document.getElementById('onlineCount');
-  if (!el) return;
+  const pill = document.getElementById('onlinePill');
+  const wrap = pill && pill.querySelector('.oc-wrap');
+  if (!pill || !wrap) return;
 
-  async function refresh() {
-    try {
-      const res = await fetch('/api/online');
-      const { count } = await res.json();
-      el.textContent = count;
-      el.closest('.online-pill').style.color = count > 0 ? '' : '';
-    } catch { /* ignora errori di rete */ }
+  let current = null;
+  let sseWorking = false;
+  let pollTimer = null;
+
+  // UUID stabile per dispositivo — non cambia con login/logout/refresh
+  let _uid = localStorage.getItem('fsr.uid');
+  if (!_uid) {
+    _uid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = crypto.getRandomValues(new Uint8Array(1))[0] & 15;
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
+    localStorage.setItem('fsr.uid', _uid);
   }
 
-  refresh();
-  setInterval(refresh, 30_000);
+  function sendPing() {
+    if (document.visibilityState === 'hidden') return;
+    fetch('/api/online/ping?uid=' + _uid).catch(() => {});
+  }
+  sendPing();
+  setInterval(sendPing, 6_000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') sendPing();
+  });
+
+  function setCount(n) {
+    if (typeof n !== 'number' || isNaN(n)) return;
+    const el = wrap.querySelector('.oc-val');
+    if (!el) return;
+
+    if (current === null) {
+      el.textContent = n;
+      current = n;
+      return;
+    }
+    if (n === current) return;
+
+    const goUp = n > current; // numero sale → vecchio esce in alto, nuovo entra dal basso
+    current = n;
+
+    // Flash verde sul pill
+    pill.classList.remove('oc-flash');
+    void pill.offsetWidth;
+    pill.classList.add('oc-flash');
+
+    // Esce
+    el.animate(
+      [{ transform: 'translateY(0)', opacity: 1 },
+       { transform: `translateY(${goUp ? '-' : ''}110%)`, opacity: 0 }],
+      { duration: 180, easing: 'ease-in', fill: 'forwards' }
+    ).onfinish = () => {
+      el.textContent = n;
+      // Entra dal lato opposto
+      el.animate(
+        [{ transform: `translateY(${goUp ? '' : '-'}110%)`, opacity: 0 },
+         { transform: 'translateY(0)', opacity: 1 }],
+        { duration: 220, easing: 'ease-out', fill: 'forwards' }
+      ).onfinish = () => { el.style.cssText = ''; };
+    };
+  }
+
+  // Fallback: polling ogni 4s se SSE non funziona
+  function startPolling() {
+    if (pollTimer) return;
+    pollTimer = setInterval(async () => {
+      try {
+        const r = await fetch('/api/online');
+        const { count } = await r.json();
+        setCount(count);
+      } catch {}
+    }, 4000);
+    // Prima lettura immediata
+    fetch('/api/online').then(r => r.json()).then(({ count }) => setCount(count)).catch(() => {});
+  }
+
+  // Attendi 8s: se SSE non ha ancora risposto, avvia polling
+  const sseTimeout = setTimeout(() => {
+    if (!sseWorking) startPolling();
+  }, 8000);
+
+  function connect() {
+    const es = new EventSource('/api/online/stream');
+    es.onmessage = (e) => {
+      try {
+        const { count } = JSON.parse(e.data);
+        sseWorking = true;
+        clearTimeout(sseTimeout);
+        if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+        setCount(count);
+      } catch {}
+    };
+    es.onerror = () => {
+      es.close();
+      setTimeout(connect, 5000);
+    };
+  }
+
+  connect();
 })();
 
 // ── Hide scroll hint on first scroll ────────────────────────────────
