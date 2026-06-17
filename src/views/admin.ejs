@@ -1,63 +1,6 @@
 <h1>⚙️ Pannello Admin</h1>
 
 <section class="card">
-  <h2>🎟️ Inviti di registrazione</h2>
-  <p class="muted small">Genera un link <strong>monouso</strong> per ogni persona: vale per
-    una sola registrazione (un dispositivo). Copia il link e invialo (WhatsApp, ecc.).
-    Dopo la registrazione si gioca dal normale <strong>/login</strong>.</p>
-
-  <form action="/admin/inviti" method="post" class="row" style="align-items:flex-end">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <label style="flex:2">Etichetta (facoltativa, es. nome)
-      <input type="text" name="label" placeholder="es. Mario Rossi">
-    </label>
-    <label style="flex:1">Quanti
-      <input type="number" name="count" value="1" min="1" max="100">
-    </label>
-    <button class="btn" type="submit">Genera</button>
-  </form>
-
-  <% const free = invites.filter(i => !i.used); const used = invites.filter(i => i.used); %>
-  <h3 style="margin-top:1rem">Da consegnare (<%= free.length %>)</h3>
-  <% if (free.length === 0) { %>
-    <p class="muted small">Nessun invito disponibile: generane qui sopra.</p>
-  <% } else { %>
-    <ul class="invite-list">
-      <% free.forEach((i) => { const link = baseUrl + '/registrati/' + i.token; %>
-        <li class="invite-row">
-          <div class="invite-info">
-            <% if (i.label) { %><strong><%= i.label %></strong><% } %>
-            <input class="invite-link" type="text" readonly value="<%= link %>" onclick="this.select()">
-          </div>
-          <div class="invite-actions">
-            <button type="button" class="btn-mini copy-btn" data-copy="<%= link %>">Copia</button>
-            <form action="/admin/inviti/<%= i.id %>/elimina" method="post" class="inline"
-                  onsubmit="return confirm('Eliminare questo invito non ancora usato?');">
-              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-              <button type="submit" class="link-btn">elimina</button>
-            </form>
-          </div>
-        </li>
-      <% }) %>
-    </ul>
-  <% } %>
-
-  <% if (used.length > 0) { %>
-    <details style="margin-top:.6rem">
-      <summary class="muted">Già usati (<%= used.length %>)</summary>
-      <ul class="invite-list">
-        <% used.forEach((i) => { %>
-          <li class="invite-row used">
-            <span><%= i.label ? i.label + ' · ' : '' %>usato da <strong><%= i.used_by_nick || '—' %></strong>
-              <span class="muted small"><%= i.used_at %></span></span>
-          </li>
-        <% }) %>
-      </ul>
-    </details>
-  <% } %>
-</section>
-
-<section class="card">
   <h2>➕ Nuova missione</h2>
   <form action="/admin/missioni" method="post" class="mission-form">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -158,6 +101,11 @@
       Scrivi <strong>RESET</strong> per confermare
       <input type="text" name="conferma" placeholder="RESET" autocomplete="off"
              style="max-width:160px; margin-top:.3rem">
+    </label>
+    <label style="margin-bottom:.5rem; margin-top:.5rem">
+      Inserisci la tua <strong>password admin</strong>
+      <input type="password" name="admin_password" placeholder="Password" autocomplete="current-password"
+             style="max-width:220px; margin-top:.3rem">
     </label>
     <div>
       <button class="btn btn-no" type="submit">🧨 Reset Gioco</button>

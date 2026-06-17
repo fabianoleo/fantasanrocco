@@ -16,6 +16,26 @@ const multer = require('multer');
 
 const nodemailer = require('nodemailer');
 
+// Magic bytes check sincrono — no dipendenze esterne, no CVE, no loop infinito
+const ALLOWED_MIME = new Set(['image/jpeg','image/png','image/webp','image/gif','image/avif']);
+const MIME_TO_EXT  = { 'image/jpeg':'.jpg','image/png':'.png','image/webp':'.webp','image/gif':'.gif','image/avif':'.avif' };
+
+function checkImageMagicBytes(filePath) {
+  try {
+    const fd  = fs.openSync(filePath, 'r');
+    const buf = Buffer.alloc(16);
+    fs.readSync(fd, buf, 0, 16, 0);
+    fs.closeSync(fd);
+    if (buf[0]===0xFF && buf[1]===0xD8 && buf[2]===0xFF) return 'image/jpeg';
+    if (buf.slice(0,8).equals(Buffer.from([0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A]))) return 'image/png';
+    if (buf.slice(0,4).toString('ascii')==='RIFF' && buf.slice(8,12).toString('ascii')==='WEBP') return 'image/webp';
+    if (buf.slice(0,6).toString('ascii')==='GIF87a' || buf.slice(0,6).toString('ascii')==='GIF89a') return 'image/gif';
+    // AVIF: ftyp box (offset 4) contiene 'avif' o 'avis'
+    if (buf.slice(4,8).toString('ascii')==='ftyp' && (buf.slice(8,12).toString('ascii').startsWith('avif') || buf.slice(8,12).toString('ascii').startsWith('avis'))) return 'image/avif';
+    return null;
+  } catch { return null; }
+}
+
 const { db, DATA_DIR, UPLOADS_DIR } = require('./db');
 const auth = require('./auth');
 
@@ -57,21 +77,34 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // --- Sessioni (persistite su SQLite, sopravvivono ai riavvii) ---------------
 if (!process.env.SESSION_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: SESSION_SECRET mancante in produzione. Arresto.');
+    process.exit(1);
+  }
   console.warn('⚠️  SESSION_SECRET non impostato: usane uno nel file .env!');
 }
+const APP_URL = (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
 app.use(session({
   store: new SqliteStore({ client: db, expired: { clear: true, intervalMs: 900000 } }),
-  name: 'fsr.sid',
+  name: 'fsr.s2',
   secret: process.env.SESSION_SECRET || 'dev-secret-cambiami',
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    sameSite: SECURE_COOKIES ? 'none' : 'lax',
+    sameSite: 'lax',
     secure: SECURE_COOKIES,
     maxAge: 1000 * 60 * 60 * 24 * 7, // 7 giorni
   },
 }));
+
+// Cancella il vecchio cookie fsr.sid (SameSite=none) se ancora presente nel browser
+app.use((req, res, next) => {
+  if (req.headers.cookie && req.headers.cookie.includes('fsr.sid=')) {
+    res.setHeader('Set-Cookie', 'fsr.sid=; Path=/; Max-Age=0; HttpOnly; SameSite=lax');
+  }
+  next();
+});
 
 // --- Flash messages + utente corrente --------------------------------------
 app.use((req, res, next) => {
@@ -93,8 +126,6 @@ app.use((req, res, next) => {
 
 function verifyCsrf(req, res, next) {
   if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
-  // Multipart form bodies non sono ancora parsate qui: le rotte upload gestiscono
-  // il check manualmente dentro la callback di multer (dopo il parsing).
   if (req.is('multipart/form-data')) return next();
   const token = req.body._csrf || req.headers['x-csrf-token'];
   if (!token || !req.session.csrfToken || token !== req.session.csrfToken) {
@@ -113,6 +144,7 @@ app.use(verifyCsrf);
 const _lastPing = new Map(); // uid → timestamp
 const _sseClients = new Set();
 const PING_TTL = 18_000; // 3 ping mancati = offline
+const MAX_ONLINE_ENTRIES = 5000;
 
 function _onlineCount() {
   const cutoff = Date.now() - PING_TTL;
@@ -128,6 +160,9 @@ function _broadcastCount() {
 app.get('/api/online/ping', (req, res) => {
   const uid = typeof req.query.uid === 'string' ? req.query.uid.slice(0, 64) : null;
   if (uid) {
+    if (!_lastPing.has(uid) && _lastPing.size >= MAX_ONLINE_ENTRIES) {
+      return res.json({ ok: true });
+    }
     const prev = _onlineCount();
     _lastPing.set(uid, Date.now());
     if (_onlineCount() !== prev) _broadcastCount();
@@ -256,6 +291,7 @@ const GALLERIA_DEVOZIONE = [
 ];
 const GALLERIA_PALIO = [
   { file: 'palio-fuochi.jpg',       caption: 'I fuochi del Palio esplodono nel cielo di Siano — uno spettacolo rinomato in tutta Italia' },
+  { file: 'ventagli.webp',          caption: 'I ventagli caricati e pronti al lancio: ogni lamella porta un fuoco, ogni fuoco porta un applauso' },
   { file: 'fuochisti-preparano.jpg',caption: 'I maestri fuochisti al lavoro: la preparazione delle bombe da tiro è un rito antico' },
   { file: 'mano-bomba.jpg',         caption: 'La mano di un maestro fuochista posata sulla bomba — precisione, esperienza e rispetto' },
   { file: 'fuochista-anziano.jpg',  caption: 'Un anziano maestro prepara le bombe: un sapere trasmesso di generazione in generazione' },
@@ -297,38 +333,28 @@ app.get('/classifica', (req, res) => {
 });
 
 // =========================================================================
-//  AUTENTICAZIONE (registrazione leggera: nickname + password, email facoltativa)
+//  AUTENTICAZIONE (registrazione aperta: nickname + email + password)
 // =========================================================================
-const loginLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false });
+const loginLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => (req.body?.nickname || '').toLowerCase().trim() || req.ip,
+});
 const resetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5,  standardHeaders: true, legacyHeaders: false });
+const registerLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
 const globalLimiter = rateLimit({ windowMs: 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false });
 app.use(globalLimiter);
 
-// --- Registrazione SOLO su invito personale --------------------------------
-// Ogni persona riceve un link unico /registrati/<token>. Vale una sola volta:
-// appena viene usato si "brucia" (un altro dispositivo trova "invito già usato").
-// La registrazione aperta è disabilitata.
-
-function getInvite(token) {
-  if (!token) return null;
-  return db.prepare('SELECT * FROM invites WHERE token = ?').get(token);
-}
-
-// Pagina informativa: se arrivi su /registrati senza token
-app.get('/registrati', (req, res) => res.render('register-needed', { title: 'Registrazione su invito' }));
-
-// Form di registrazione legato a un invito
-app.get('/registrati/:token', (req, res) => {
-  const inv = getInvite(req.params.token);
-  if (!inv) return res.status(404).render('error', { title: 'Invito non valido', message: 'Questo link di registrazione non è valido. Chiedi all\'organizzazione un link corretto.' });
-  if (inv.used) return res.status(410).render('error', { title: 'Invito già usato', message: 'Questo link è già stato usato per registrarsi. Ogni invito vale per una sola persona / un solo dispositivo. Se sei già registrato, vai su Accedi.' });
-  res.render('register', { title: 'Registrati', token: inv.token, label: inv.label });
+// --- Registrazione aperta --------------------------------------------------
+app.get('/registrati', (req, res) => {
+  if (req.currentUser) return res.redirect('/missioni');
+  res.render('register', { title: 'Registrati' });
 });
 
-app.post('/registrati/:token', (req, res) => {
-  const inv = getInvite(req.params.token);
-  if (!inv) return res.status(404).render('error', { title: 'Invito non valido', message: 'Questo link di registrazione non è valido.' });
-  if (inv.used) return res.status(410).render('error', { title: 'Invito già usato', message: 'Questo link è già stato usato.' });
+app.post('/registrati', registerLimiter, (req, res) => {
+  if (req.currentUser) return res.redirect('/missioni');
 
   const nickname = (req.body.nickname || '').trim();
   const email    = (req.body.email || '').trim().toLowerCase() || null;
@@ -336,54 +362,46 @@ app.post('/registrati/:token', (req, res) => {
 
   if (nickname.length < 2 || nickname.length > 24) {
     flash(req, 'error', 'Il nickname deve avere tra 2 e 24 caratteri.');
-    return res.redirect('/registrati/' + inv.token);
+    return res.redirect('/registrati');
   }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     flash(req, 'error', 'Inserisci un indirizzo email valido.');
-    return res.redirect('/registrati/' + inv.token);
+    return res.redirect('/registrati');
   }
   if (password.length < 8) {
     flash(req, 'error', 'La password deve avere almeno 8 caratteri.');
-    return res.redirect('/registrati/' + inv.token);
+    return res.redirect('/registrati');
   }
-  const exists = db.prepare('SELECT id FROM users WHERE nickname = ?').get(nickname);
-  if (exists) {
+
+  const existsNick = db.prepare('SELECT id FROM users WHERE nickname = ?').get(nickname);
+  if (existsNick) {
     flash(req, 'error', 'Nickname già in uso, scegline un altro.');
-    return res.redirect('/registrati/' + inv.token);
+    return res.redirect('/registrati');
+  }
+  const existsEmail = db.prepare('SELECT id FROM users WHERE lower(email) = ?').get(email);
+  if (existsEmail) {
+    flash(req, 'error', 'Email già registrata. Vai su Accedi o recupera la password.');
+    return res.redirect('/registrati');
   }
 
-  // Consuma l'invito e crea l'utente in un'unica transazione atomica.
-  // L'UPDATE "... WHERE used=0" garantisce che due dispositivi non possano
-  // usare lo stesso link in parallelo: solo il primo va a buon fine.
-  let newId;
-  try {
-    newId = db.transaction(() => {
-      const consumed = db.prepare("UPDATE invites SET used = 1, used_at = datetime('now') WHERE token = ? AND used = 0").run(inv.token);
-      if (consumed.changes === 0) throw new Error('USED');
-      const info = db.prepare('INSERT INTO users (nickname, email, password_hash) VALUES (?, ?, ?)')
-        .run(nickname, email, auth.hashPassword(password));
-      db.prepare('UPDATE invites SET used_by_user_id = ? WHERE token = ?').run(info.lastInsertRowid, inv.token);
-      return info.lastInsertRowid;
-    })();
-  } catch (e) {
-    if (e.message === 'USED') {
-      return res.status(410).render('error', { title: 'Invito già usato', message: 'Qualcuno ha appena usato questo link da un altro dispositivo.' });
-    }
-    throw e;
-  }
+  db.prepare('INSERT INTO users (nickname, email, password_hash) VALUES (?, ?, ?)')
+    .run(nickname, email, auth.hashPassword(password));
 
-  // Registrazione "a parte": NON facciamo login automatico.
-  // Mostriamo la conferma con il link per giocare (Accedi).
   res.render('register-done', { title: 'Registrazione completata', nickname });
 });
 
 app.get('/login', (req, res) => res.render('login', { title: 'Accedi' }));
 
+// Hash sentinella: usato se il nickname non esiste, per mantenere tempo costante
+const BCRYPT_SENTINEL = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
+
 app.post('/login', loginLimiter, (req, res) => {
   const nickname = (req.body.nickname || '').trim();
   const password = req.body.password || '';
   const user = db.prepare('SELECT * FROM users WHERE nickname = ?').get(nickname);
-  if (!user || !auth.verifyPassword(password, user.password_hash)) {
+  // Esegue sempre bcrypt (tempo costante) — previene timing oracle anche se il nickname non esiste
+  const passwordOk = auth.verifyPassword(password, user?.password_hash || BCRYPT_SENTINEL);
+  if (!user || !passwordOk) {
     flash(req, 'error', 'Nickname o password errati.');
     return res.redirect('/login');
   }
@@ -464,7 +482,9 @@ app.post('/password-dimenticata', resetLimiter, (req, res) => {
   db.prepare('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?')
     .run(token, expires, user.id);
 
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  const baseUrl = process.env.APP_URL && !process.env.APP_URL.includes('localhost')
+    ? process.env.APP_URL.replace(/\/$/, '')
+    : `${req.protocol}://${req.get('host')}`;
   const resetLink = `${baseUrl}/reset-password/${token}`;
 
   const transporter = makeMailTransporter();
@@ -478,12 +498,16 @@ app.post('/password-dimenticata', resetLimiter, (req, res) => {
              <p>Hai richiesto il reset della password.</p>
              <p><a href="${resetLink}">Clicca qui per impostare una nuova password</a> (link valido 1 ora).</p>
              <p class="muted">Se non sei stato tu, ignora questa email.</p>`,
-    }).catch((err) => console.error('Errore invio email reset:', err));
+    }).then((info) => {
+      console.log(`[EMAIL] Reset inviato a ${user.email} — messageId: ${info.messageId}`);
+    }).catch((err) => {
+      console.error(`[EMAIL] ERRORE invio reset a ${user.email}:`, err.message, err.responseCode || '');
+    });
   } else {
     // Modalità sviluppo: link visibile solo in console
-    console.log(`\n🔑 RESET LINK (dev): ${resetLink}\n`);
+    console.log(`[DEV] Reset link generato per user_id=${user.id} (invia email disabilitata — vedi .env)`);
     if (process.env.NODE_ENV !== 'production') {
-      flash(req, 'success', `[DEV] Link reset: ${resetLink}`);
+      flash(req, 'success', `[DEV] Reset link in console (non in UI per sicurezza).`);
     } else {
       flash(req, 'success', genericMsg);
     }
@@ -597,19 +621,23 @@ app.post('/missioni/:id/invia', auth.requireLogin, (req, res) => {
       if (req.file) fs.unlink(path.join(UPLOADS_DIR, req.file.filename), () => {});
       return res.status(403).render('error', { title: 'Errore di sicurezza', message: 'Token non valido. Ricarica la pagina.' });
     }
+    // Verifica magic bytes (sincrona — nessuna dipendenza esterna, nessun CVE)
+    if (req.file) {
+      const mime = checkImageMagicBytes(path.join(UPLOADS_DIR, req.file.filename));
+      if (!mime || !ALLOWED_MIME.has(mime)) {
+        fs.unlink(path.join(UPLOADS_DIR, req.file.filename), () => {});
+        flash(req, 'error', 'Formato file non ammesso. Carica solo immagini (JPEG, PNG, WebP, GIF, AVIF).');
+        return res.redirect(`/missioni/${m.id}`);
+      }
+      // Rinomina il file con l'estensione corretta derivata dal contenuto reale
+      const correctExt = MIME_TO_EXT[mime] || '.jpg';
+      const oldPath = path.join(UPLOADS_DIR, req.file.filename);
+      const safeName = req.file.filename.replace(/\.[^.]+$/, correctExt);
+      const newPath = path.join(UPLOADS_DIR, safeName);
+      try { fs.renameSync(oldPath, newPath); req.file.filename = safeName; } catch {}
+    }
     if (!isMissionActiveNow(m)) {
       flash(req, 'error', 'Questa missione non è attiva in questo momento.');
-      return res.redirect(`/missioni/${m.id}`);
-    }
-    // Regole di ripetibilità
-    const statuses = db.prepare('SELECT status FROM submissions WHERE user_id = ? AND mission_id = ?')
-      .all(req.currentUser.id, m.id).map((r) => r.status);
-    const blocked = m.repeatable
-      ? false
-      : (statuses.includes('pending') || statuses.includes('approved'));
-    if (blocked) {
-      if (req.file) fs.unlink(path.join(UPLOADS_DIR, req.file.filename), () => {});
-      flash(req, 'error', 'Hai già inviato questa missione (in attesa o approvata).');
       return res.redirect(`/missioni/${m.id}`);
     }
     // Foto obbligatoria?
@@ -617,9 +645,29 @@ app.post('/missioni/:id/invia', auth.requireLogin, (req, res) => {
       flash(req, 'error', 'Questa missione richiede una foto come prova.');
       return res.redirect(`/missioni/${m.id}`);
     }
-    db.prepare(`INSERT INTO submissions (user_id, mission_id, photo_path, note)
-                VALUES (?, ?, ?, ?)`)
-      .run(req.currentUser.id, m.id, req.file ? req.file.filename : null, (req.body.note || '').trim());
+    // SELECT + INSERT atomico in transazione: previene doppio invio per race condition
+    let inserted;
+    try {
+      inserted = db.transaction(() => {
+        const statuses = db.prepare('SELECT status FROM submissions WHERE user_id = ? AND mission_id = ?')
+          .all(req.currentUser.id, m.id).map((r) => r.status);
+        const blocked = m.repeatable
+          ? false
+          : (statuses.includes('pending') || statuses.includes('approved'));
+        if (blocked) return false;
+        db.prepare('INSERT INTO submissions (user_id, mission_id, photo_path, note) VALUES (?, ?, ?, ?)')
+          .run(req.currentUser.id, m.id, req.file ? req.file.filename : null, (req.body.note || '').trim());
+        return true;
+      })();
+    } catch (e) {
+      if (req.file) fs.unlink(path.join(UPLOADS_DIR, req.file.filename), () => {});
+      throw e;
+    }
+    if (!inserted) {
+      if (req.file) fs.unlink(path.join(UPLOADS_DIR, req.file.filename), () => {});
+      flash(req, 'error', 'Hai già inviato questa missione (in attesa o approvata).');
+      return res.redirect(`/missioni/${m.id}`);
+    }
     flash(req, 'success', 'Prova inviata! Ora aspetta la validazione dello staff. 📨');
     res.redirect('/missioni');
   });
@@ -712,32 +760,7 @@ app.post('/moderazione/:id/:azione', auth.requireStaff, (req, res) => {
 app.get('/admin', auth.requireAdmin, (req, res) => {
   const missions = db.prepare('SELECT * FROM missions ORDER BY id DESC').all();
   const users = db.prepare('SELECT id, nickname, email, role, created_at FROM users ORDER BY role, nickname').all();
-  const invites = db.prepare(`
-    SELECT i.*, u.nickname AS used_by_nick
-    FROM invites i LEFT JOIN users u ON u.id = i.used_by_user_id
-    ORDER BY i.used ASC, i.id DESC
-  `).all();
-  const baseUrl = `${req.protocol}://${req.get('host')}`;
-  res.render('admin', { title: 'Admin', missions, users, invites, baseUrl });
-});
-
-// Genera N inviti (link di registrazione monouso)
-app.post('/admin/inviti', auth.requireAdmin, (req, res) => {
-  const count = Math.min(Math.max(parseInt(req.body.count, 10) || 1, 1), 100);
-  const label = (req.body.label || '').trim() || null;
-  const stmt = db.prepare('INSERT INTO invites (token, label, created_by) VALUES (?, ?, ?)');
-  db.transaction((n) => {
-    for (let i = 0; i < n; i++) stmt.run(crypto.randomBytes(16).toString('hex'), label, req.currentUser.id);
-  })(count);
-  flash(req, 'success', `Generati ${count} invito/i.`);
-  res.redirect('/admin');
-});
-
-// Elimina un invito NON ancora usato
-app.post('/admin/inviti/:id/elimina', auth.requireAdmin, (req, res) => {
-  const info = db.prepare('DELETE FROM invites WHERE id = ? AND used = 0').run(req.params.id);
-  flash(req, info.changes ? 'success' : 'error', info.changes ? 'Invito eliminato.' : 'Non puoi eliminare un invito già usato.');
-  res.redirect('/admin');
+  res.render('admin', { title: 'Admin', missions, users });
 });
 
 app.post('/admin/missioni', auth.requireAdmin, (req, res) => {
@@ -786,9 +809,13 @@ app.post('/admin/missioni/:id/elimina', auth.requireAdmin, (req, res) => {
 
 // Reset gioco: cancella tutto tranne gli admin
 app.post('/admin/reset-gioco', auth.requireAdmin, (req, res) => {
-  // Doppia conferma via campo testo: l'admin deve scrivere "RESET"
   if ((req.body.conferma || '').trim().toUpperCase() !== 'RESET') {
     flash(req, 'error', 'Conferma non corretta. Scrivi RESET nel campo per procedere.');
+    return res.redirect('/admin');
+  }
+  // Re-autenticazione: verifica la password dell'admin prima di distruggere i dati
+  if (!auth.verifyPassword(req.body.admin_password || '', req.currentUser.password_hash)) {
+    flash(req, 'error', 'Password admin errata. Reset annullato.');
     return res.redirect('/admin');
   }
   db.transaction(() => {

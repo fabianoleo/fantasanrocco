@@ -25,6 +25,7 @@
         <button class="link-btn" type="submit">Esci (<%= currentUser.nickname %>)</button>
       </form>
     <% } else { %>
+      <a href="/registrati" class="<%= path === '/registrati' ? 'active' : '' %>">Registrati</a>
       <a href="/login" class="btn-mini">Accedi</a>
     <% } %>
   </nav>
@@ -79,6 +80,7 @@
           <button class="mm-logout" type="submit">Esci dall'account →</button>
         </form>
       <% } else { %>
+        <a href="/registrati" class="btn" style="width:100%;justify-content:center;margin-bottom:.5rem">Registrati</a>
         <a href="/login" class="btn" style="width:100%;justify-content:center">Accedi e gioca</a>
       <% } %>
     </div>

@@ -1,0 +1,11 @@
+.env
+.env.*
+data/
+.git
+node_modules/
+_originali/
+_da-sistemare/
+.DS_Store
+npm-debug.log*
+/tmp/
+avvia.sh
