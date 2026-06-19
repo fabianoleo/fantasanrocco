@@ -36,7 +36,7 @@ function checkImageMagicBytes(filePath) {
   } catch { return null; }
 }
 
-const { db, DATA_DIR, UPLOADS_DIR } = require('./db');
+const { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR } = require('./db');
 const auth = require('./auth');
 
 const app = express();
@@ -50,8 +50,19 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(expressLayouts);
 app.set('layout', 'layout');
 
+// Helper icone SVG disponibile in tutte le view: <%- icon('flame') %>
+app.locals.icon = require('./icons').icon;
+
+// Helper iniziali: dal nome/nickname ricava 1-2 lettere per l'avatar fallback
+app.locals.initials = (name) => {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return parts[0].slice(0, 2).toUpperCase();
+};
+
 // Dietro Cloudflare Tunnel / ngrok: fidati dell'header del proxy così
-// req.protocol diventa "https" e i link generati (inviti) sono corretti.
+// req.protocol diventa "https" e i link generati (es. reset password) sono corretti.
 app.set('trust proxy', 1);
 
 // --- Sicurezza di base + body parser ---------------------------------------
@@ -217,6 +228,23 @@ const storage = multer.diskStorage({
 });
 const upload = multer({
   storage,
+  limits: { fileSize: MAX_UPLOAD_MB * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (/^image\//.test(file.mimetype)) return cb(null, true);
+    cb(new Error('Sono ammesse solo immagini.'));
+  },
+});
+
+// Upload avatar: stessa validazione, ma salvato nella cartella avatar (pubblica)
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, AVATARS_DIR),
+  filename: (req, file, cb) => {
+    const ext = (path.extname(file.originalname) || '.jpg').toLowerCase().slice(0, 5);
+    cb(null, `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`);
+  },
+});
+const avatarUpload = multer({
+  storage: avatarStorage,
   limits: { fileSize: MAX_UPLOAD_MB * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (/^image\//.test(file.mimetype)) return cb(null, true);
@@ -712,6 +740,60 @@ app.post('/profilo/cambia-password', auth.requireLogin, (req, res) => {
   res.redirect('/profilo');
 });
 
+// Foto profilo (avatar): carica una nuova immagine. Se assente → iniziali.
+app.post('/profilo/avatar', auth.requireLogin, (req, res) => {
+  avatarUpload.single('avatar')(req, res, (err) => {
+    if (err) {
+      flash(req, 'error', err.message || 'Errore nel caricamento della foto.');
+      return res.redirect('/profilo');
+    }
+    // CSRF check per multipart (body disponibile solo dopo multer)
+    const csrfToken = req.body._csrf || '';
+    if (!csrfToken || csrfToken !== req.session.csrfToken) {
+      if (req.file) fs.unlink(path.join(AVATARS_DIR, req.file.filename), () => {});
+      return res.status(403).render('error', { title: 'Errore di sicurezza', message: 'Token non valido. Ricarica la pagina.' });
+    }
+    if (!req.file) {
+      flash(req, 'error', 'Seleziona un\'immagine da caricare.');
+      return res.redirect('/profilo');
+    }
+    // Verifica magic bytes: deve essere davvero un'immagine
+    const mime = checkImageMagicBytes(path.join(AVATARS_DIR, req.file.filename));
+    if (!mime || !ALLOWED_MIME.has(mime)) {
+      fs.unlink(path.join(AVATARS_DIR, req.file.filename), () => {});
+      flash(req, 'error', 'Formato non ammesso. Carica un\'immagine (JPEG, PNG, WebP, GIF, AVIF).');
+      return res.redirect('/profilo');
+    }
+    // Rinomina con l'estensione corretta derivata dal contenuto reale
+    const correctExt = MIME_TO_EXT[mime] || '.jpg';
+    const safeName = req.file.filename.replace(/\.[^.]+$/, correctExt);
+    try { fs.renameSync(path.join(AVATARS_DIR, req.file.filename), path.join(AVATARS_DIR, safeName)); } catch {}
+    // Rimuovi la vecchia foto profilo, se presente
+    const old = req.currentUser.avatar_path;
+    if (old) fs.unlink(path.join(AVATARS_DIR, path.basename(old)), () => {});
+    db.prepare('UPDATE users SET avatar_path = ? WHERE id = ?').run(safeName, req.currentUser.id);
+    flash(req, 'success', 'Foto profilo aggiornata.');
+    res.redirect('/profilo');
+  });
+});
+
+// Rimuovi la foto profilo → si torna alle iniziali
+app.post('/profilo/avatar/rimuovi', auth.requireLogin, verifyCsrf, (req, res) => {
+  const old = req.currentUser.avatar_path;
+  if (old) fs.unlink(path.join(AVATARS_DIR, path.basename(old)), () => {});
+  db.prepare('UPDATE users SET avatar_path = NULL WHERE id = ?').run(req.currentUser.id);
+  flash(req, 'success', 'Foto profilo rimossa. Ora mostri le tue iniziali.');
+  res.redirect('/profilo');
+});
+
+// Avatar serviti pubblicamente (non sono dati sensibili come le foto-prova)
+app.get('/avatar/:file', (req, res) => {
+  const safe = path.basename(req.params.file);
+  const full = path.join(AVATARS_DIR, safe);
+  if (!fs.existsSync(full)) return res.status(404).send('File non trovato');
+  res.sendFile(full);
+});
+
 // Le foto sono PRIVATE: le vede solo lo staff (moderatori/admin)
 app.get('/uploads/:file', auth.requireStaff, (req, res) => {
   const safe = path.basename(req.params.file);
@@ -820,10 +902,9 @@ app.post('/admin/reset-gioco', auth.requireAdmin, (req, res) => {
   }
   db.transaction(() => {
     db.prepare('DELETE FROM submissions').run();
-    db.prepare('DELETE FROM invites').run();
     db.prepare("DELETE FROM users WHERE role != 'admin'").run();
   })();
-  flash(req, 'success', 'Gioco resettato: utenti, prove e inviti eliminati. Gli admin sono rimasti.');
+  flash(req, 'success', 'Gioco resettato: utenti e prove eliminati. Gli admin sono rimasti.');
   res.redirect('/admin');
 });
 

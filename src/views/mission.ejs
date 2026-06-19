@@ -8,9 +8,9 @@
   <p><%= m.description %></p>
 
   <div class="mission-meta">
-    <% if (m.repeatable) { %><span class="tag">🔁 Ripetibile</span><% } else { %><span class="tag">1 sola volta</span><% } %>
-    <% if (m.requires_photo) { %><span class="tag">📷 Foto obbligatoria</span><% } else { %><span class="tag">Senza foto</span><% } %>
-    <% if (activeNow) { %><span class="tag tag-live">🟢 Attiva ora</span><% } else { %><span class="tag tag-off">⏰ Non attiva ora</span><% } %>
+    <% if (m.repeatable) { %><span class="tag"><%- icon('repeat') %> Ripetibile</span><% } else { %><span class="tag">1 sola volta</span><% } %>
+    <% if (m.requires_photo) { %><span class="tag"><%- icon('camera') %> Foto obbligatoria</span><% } else { %><span class="tag">Senza foto</span><% } %>
+    <% if (activeNow) { %><span class="tag tag-live"><%- icon('dot') %> Attiva ora</span><% } else { %><span class="tag tag-off"><%- icon('alarm') %> Non attiva ora</span><% } %>
   </div>
 
   <% if (m.active_from || m.active_to) { %>
@@ -20,9 +20,9 @@
 </section>
 
 <% if (statuses.includes('approved') && !m.repeatable) { %>
-  <div class="card"><p class="tag-ok">✅ Hai già completato questa missione. Bravo/a!</p></div>
+  <div class="card"><p class="tag-ok"><%- icon('check-circle') %> Hai già completato questa missione. Bravo/a!</p></div>
 <% } else if (statuses.includes('pending')) { %>
-  <div class="card"><p class="tag-pending">⏳ Hai una prova in attesa di validazione per questa missione.</p></div>
+  <div class="card"><p class="tag-pending"><%- icon('hourglass') %> Hai una prova in attesa di validazione per questa missione.</p></div>
 <% } %>
 
 <% if (canSubmit && activeNow) { %>

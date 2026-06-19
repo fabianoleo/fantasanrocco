@@ -1,0 +1,21 @@
+<%# Griglia bento per una sottosezione della galleria.
+    Locals: items [{file, caption}], sec (id), label (nome sezione). %>
+<% const SPANS = ['s-feat','s-tall','s-wide','s-std','s-tall','s-wide','s-std','s-std']; %>
+<div class="bento-grid">
+  <% items.forEach((img, i) => { %>
+    <button type="button"
+            class="bento-item <%= SPANS[i % SPANS.length] %>"
+            style="--d:<%= i %>"
+            data-gallery="<%= sec %>"
+            data-index="<%= i %>"
+            data-url="/images/galleria/<%= img.file %>"
+            data-title="<%= img.caption %>"
+            data-desc="<%= label %>"
+            aria-label="Apri: <%= img.caption %>">
+      <img class="bento-img" src="/images/galleria/<%= img.file %>"
+           alt="<%= img.caption %>" loading="lazy" decoding="async">
+      <span class="bento-corner" aria-hidden="true"><%- icon('plus') %></span>
+      <span class="bento-overlay"><span class="bento-cap"><%= img.caption %></span></span>
+    </button>
+  <% }) %>
+</div>

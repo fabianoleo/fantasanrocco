@@ -1,0 +1,461 @@
+/* ===================================================================
+   FantaSanRocco — Cinematic Hero (ricreazione nativa)
+   Porting dell'effetto "cinematic landing hero" in CSS puro, senza
+   React/Tailwind. Tutto è scoped sotto .cine per non toccare il resto.
+   Animazioni guidate da GSAP (cinematic.js). Palette: midnight + oro.
+   =================================================================== */
+
+.cine {
+  --cine-card-1: #122247;   /* blu notte profondo  */
+  --cine-card-2: #070a16;   /* quasi nero          */
+  --cine-gold:   #f3c64b;
+  --cine-gold-2: #d4a01a;
+  position: relative;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);   /* full-bleed: esce dal .container (max 800px) */
+  margin-top: -1.5rem;             /* annulla il padding-top del .container */
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  color: var(--text);
+  perspective: 1500px;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Elementi nascosti finché GSAP non li rivela */
+.cine .gsap-reveal { visibility: hidden; }
+
+/* Helper 3D */
+.cine .transform-style-3d { transform-style: preserve-3d; }
+.cine .will-change-t { will-change: transform; }
+
+/* -------------------------------------------------------------------
+   Overlay ambiente
+------------------------------------------------------------------- */
+.cine .film-grain {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 50; opacity: 0.05; mix-blend-mode: overlay;
+  background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="noiseFilter"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23noiseFilter)"/></svg>');
+}
+
+.cine .bg-grid-theme {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.5;
+  background-size: 60px 60px;
+  background-image:
+    linear-gradient(to right, rgba(237, 232, 213, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(237, 232, 213, 0.05) 1px, transparent 1px);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+          mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+}
+
+/* -------------------------------------------------------------------
+   Tipografia skeuomorfica (profondità 3D)
+------------------------------------------------------------------- */
+.cine .text-3d-matte {
+  color: var(--text);
+  text-shadow:
+    0 0 40px rgba(243, 198, 75, 0.18),
+    0 10px 30px rgba(0, 0, 0, 0.6),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.cine .text-silver-matte {
+  background: linear-gradient(180deg, #fffaf0 0%, rgba(154, 143, 120, 0.55) 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transform: translateZ(0);
+  filter:
+    drop-shadow(0px 10px 24px rgba(0, 0, 0, 0.55))
+    drop-shadow(0px 0px 28px rgba(243, 198, 75, 0.15));
+}
+
+/* Marchio dentro la card: oro lucido su fondo scuro */
+.cine .text-card-gold {
+  background: linear-gradient(180deg, #fff6db 0%, var(--cine-gold) 45%, #b9821a 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transform: translateZ(0);
+  filter:
+    drop-shadow(0px 12px 24px rgba(0, 0, 0, 0.8))
+    drop-shadow(0px 2px 6px rgba(212, 160, 26, 0.35));
+}
+
+/* -------------------------------------------------------------------
+   Card fisica profonda con illuminazione dinamica dal mouse
+------------------------------------------------------------------- */
+.cine .premium-depth-card {
+  background: linear-gradient(145deg, var(--cine-card-1) 0%, var(--cine-card-2) 100%);
+  box-shadow:
+    0 40px 100px -20px rgba(0, 0, 0, 0.9),
+    0 20px 40px -20px rgba(0, 0, 0, 0.8),
+    inset 0 1px 2px rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(243, 198, 75, 0.16),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(243, 198, 75, 0.18);
+  position: relative;
+}
+
+.cine .card-sheen {
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 50;
+  background: radial-gradient(800px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(243, 198, 75, 0.08) 0%, transparent 40%);
+  mix-blend-mode: screen; transition: opacity 0.3s ease;
+}
+
+/* -------------------------------------------------------------------
+   Mockup iPhone realistico
+------------------------------------------------------------------- */
+.cine .iphone-bezel {
+  background-color: #111;
+  box-shadow:
+    inset 0 0 0 2px #52525b,
+    inset 0 0 0 7px #000,
+    0 40px 80px -15px rgba(0, 0, 0, 0.9),
+    0 15px 25px -5px rgba(0, 0, 0, 0.7);
+  transform-style: preserve-3d;
+}
+
+.cine .hardware-btn {
+  position: absolute; z-index: 0;
+  background: linear-gradient(90deg, #404040 0%, #171717 100%);
+  box-shadow:
+    -2px 0 5px rgba(0, 0, 0, 0.8),
+    inset -1px 0 1px rgba(255, 255, 255, 0.15),
+    inset 1px 0 2px rgba(0, 0, 0, 0.8);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cine .screen-glare {
+  position: absolute; inset: 0; z-index: 40; pointer-events: none;
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 45%);
+}
+
+.cine .widget-depth {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+  box-shadow:
+    0 10px 20px rgba(0, 0, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.05),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.cine .floating-ui-badge {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%);
+  -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+  box-shadow:
+    0 0 0 1px rgba(243, 198, 75, 0.14),
+    0 25px 50px -12px rgba(0, 0, 0, 0.8),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.5);
+}
+
+.cine .progress-ring {
+  transform: rotate(-90deg);
+  transform-origin: center;
+  stroke-dasharray: 402;
+  stroke-dashoffset: 402;
+  stroke-linecap: round;
+}
+
+/* -------------------------------------------------------------------
+   Bottoni CTA tattili (oro chiaro / scuro)
+------------------------------------------------------------------- */
+.cine .btn-modern-light, .cine .btn-modern-dark {
+  display: inline-flex; align-items: center; justify-content: center; gap: .9rem;
+  padding: 1rem 1.6rem; border-radius: 1.25rem;
+  font-family: var(--font-body); cursor: pointer; text-decoration: none;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.cine .btn-modern-light {
+  background: linear-gradient(180deg, #fff7e6 0%, #f3e6c4 100%);
+  color: #2a1d05;
+  box-shadow: 0 0 0 1px rgba(120, 90, 20, 0.18), 0 2px 4px rgba(0,0,0,0.1), 0 12px 24px -4px rgba(120, 80, 10, 0.35), inset 0 1px 1px rgba(255,255,255,1), inset 0 -3px 6px rgba(120,90,20,0.12);
+}
+.cine .btn-modern-light:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 1px rgba(120, 90, 20, 0.2), 0 6px 12px -2px rgba(0,0,0,0.15), 0 22px 34px -6px rgba(120, 80, 10, 0.5), inset 0 1px 1px rgba(255,255,255,1), inset 0 -3px 6px rgba(120,90,20,0.12);
+}
+.cine .btn-modern-light:active {
+  transform: translateY(1px);
+  background: linear-gradient(180deg, #f3e6c4 0%, #e7d3a0 100%);
+}
+.cine .btn-modern-dark {
+  background: linear-gradient(180deg, #1b1830 0%, #0c0a16 100%);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(243,198,75,0.22), 0 2px 4px rgba(0,0,0,0.6), 0 12px 24px -4px rgba(0,0,0,0.9), inset 0 1px 1px rgba(255,255,255,0.12), inset 0 -3px 6px rgba(0,0,0,0.8);
+}
+.cine .btn-modern-dark:hover {
+  transform: translateY(-3px);
+  background: linear-gradient(180deg, #272238 0%, #15121f 100%);
+  box-shadow: 0 0 0 1px rgba(243,198,75,0.35), 0 6px 12px -2px rgba(0,0,0,0.7), 0 22px 34px -6px rgba(0,0,0,1), inset 0 1px 1px rgba(255,255,255,0.18), inset 0 -3px 6px rgba(0,0,0,0.8);
+}
+.cine .btn-modern-dark:active { transform: translateY(1px); background: #0c0a16; }
+
+.cine .btn-modern-light .ico, .cine .btn-modern-dark .ico { width: 1.6em; height: 1.6em; }
+.cine .btn-sub  { font-size: .62rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; opacity: .65; line-height: 1; margin-bottom: 3px; }
+.cine .btn-main { font-size: 1.15rem; font-weight: 800; line-height: 1; letter-spacing: -.01em; font-family: var(--font-heading); }
+.cine .btn-stack { text-align: left; }
+
+/* ===================================================================
+   LAYOUT  (sostituisce le utility Tailwind con classi dedicate)
+   =================================================================== */
+
+/* Wrapper testi hero (sfondo) */
+.cine .hero-text-wrapper,
+.cine .cta-wrapper {
+  position: absolute; z-index: 10; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 0 1.5rem; width: 100vw;
+  will-change: transform;
+}
+.cine .hero-text-wrapper { transform-style: preserve-3d; }
+.cine .cta-wrapper { pointer-events: none; }
+.cine .cta-wrapper .cine-cta-actions { pointer-events: auto; }
+
+.cine .hero-line {
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 9vw, 6rem);
+  line-height: 1.02; letter-spacing: -0.02em; font-weight: 800;
+  margin: 0;
+}
+.cine .hero-line-1 { margin-bottom: .3rem; }
+.cine .hero-line-2 { font-weight: 900; letter-spacing: -0.03em; }
+
+.cine .cta-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 7vw, 4.6rem);
+  font-weight: 800; letter-spacing: -0.02em; margin: 0 0 1.4rem;
+}
+.cine .cta-sub {
+  color: var(--text-2);
+  font-size: clamp(1rem, 2.2vw, 1.25rem);
+  font-weight: 300; line-height: 1.6;
+  max-width: 38rem; margin: 0 auto 3rem;
+}
+.cine .cine-cta-actions {
+  display: flex; flex-direction: column; gap: 1.2rem; align-items: center;
+}
+@media (min-width: 640px) { .cine .cine-cta-actions { flex-direction: row; } }
+
+/* Strato card (primo piano) */
+.cine .card-layer {
+  position: absolute; inset: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; perspective: 1500px;
+}
+.cine .main-card {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: auto;
+  width: 92vw; height: 92vh; border-radius: 32px;
+}
+@media (min-width: 768px) {
+  .cine .main-card { width: 85vw; height: 85vh; border-radius: 40px; }
+}
+
+.cine .card-grid {
+  position: relative; width: 100%; height: 100%;
+  max-width: 80rem; margin: 0 auto; padding: 1.5rem 1.5rem; z-index: 10;
+  display: flex; flex-direction: column; justify-content: space-evenly; align-items: center;
+}
+@media (min-width: 1024px) {
+  .cine .card-grid {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem; padding: 0 3rem;
+  }
+}
+
+/* Colonne card */
+.cine .card-right-text { order: 1; display: flex; justify-content: center; width: 100%; min-width: 0; z-index: 20; }
+.cine .card-left-text  { order: 3; display: flex; flex-direction: column; justify-content: center; text-align: center; width: 100%; min-width: 0; z-index: 20; padding: 0 1rem; }
+.cine .mockup-scroll-wrapper {
+  order: 2; position: relative; width: 100%; min-width: 0; height: 380px;
+  display: flex; align-items: center; justify-content: center; z-index: 10; perspective: 1000px;
+}
+@media (min-width: 1024px) {
+  .cine .card-right-text { order: 3; justify-content: flex-end; }
+  .cine .card-left-text  { order: 1; text-align: left; padding: 0; }
+  .cine .mockup-scroll-wrapper { order: 2; height: 600px; }
+}
+
+.cine .brand-word {
+  font-family: var(--font-display);
+  font-size: clamp(3.2rem, 9vw, 6rem);
+  font-weight: 900; text-transform: uppercase; letter-spacing: -0.04em;
+  line-height: .9; margin: 0; text-align: center;
+}
+@media (min-width: 1024px) {
+  .cine .brand-word { text-align: right; font-size: clamp(3rem, 5vw, 5rem); }
+}
+
+.cine .card-heading {
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 4vw, 2.3rem);
+  font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; margin: 0;
+}
+@media (min-width: 1024px) { .cine .card-heading { margin-bottom: 1.2rem; } }
+.cine .card-desc {
+  color: rgba(220, 228, 255, 0.72);
+  font-family: var(--font-serif);
+  font-size: clamp(.98rem, 1.4vw, 1.15rem); font-style: italic;
+  line-height: 1.6; margin: .8rem auto 0; max-width: 24rem;
+}
+@media (max-width: 767px) { .cine .card-desc { display: none; } }
+@media (min-width: 1024px) { .cine .card-desc { margin-left: 0; margin-right: 0; max-width: none; } }
+
+/* Scala del mockup per breakpoint */
+.cine .mockup-scale {
+  position: relative; width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  transform: scale(0.62);
+}
+@media (min-width: 768px)  { .cine .mockup-scale { transform: scale(0.82); } }
+@media (min-width: 1024px) { .cine .mockup-scale { transform: scale(1); } }
+
+/* -------------------------------------------------------------------
+   iPhone + schermata app (mock fedele FantaSanRocco mobile)
+------------------------------------------------------------------- */
+.cine .iphone {
+  position: relative; width: 280px; height: 580px; border-radius: 3rem;
+  display: flex; flex-direction: column; will-change: transform; transform-style: preserve-3d;
+}
+.cine .hw-1 { top: 120px; left: -3px; width: 3px; height: 25px; border-radius: 4px 0 0 4px; }
+.cine .hw-2 { top: 160px; left: -3px; width: 3px; height: 45px; border-radius: 4px 0 0 4px; }
+.cine .hw-3 { top: 220px; left: -3px; width: 3px; height: 45px; border-radius: 4px 0 0 4px; }
+.cine .hw-4 { top: 170px; right: -3px; width: 3px; height: 70px; border-radius: 0 4px 4px 0; transform: scaleX(-1); }
+
+.cine .iphone-screen {
+  position: absolute; inset: 7px; border-radius: 2.5rem; overflow: hidden;
+  background: radial-gradient(120% 90% at 50% -10%, #0c1330 0%, #050914 60%);
+  box-shadow: inset 0 0 15px rgba(0,0,0,1);
+  color: #fff; z-index: 10;
+}
+.cine .island {
+  position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
+  width: 100px; height: 28px; background: #000; border-radius: 100px; z-index: 50;
+  display: flex; align-items: center; justify-content: flex-end; padding-right: 12px;
+  box-shadow: inset 0 -1px 2px rgba(255,255,255,0.1);
+}
+.cine .island-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #2ecc71; box-shadow: 0 0 8px rgba(46,204,113,0.85);
+  animation: cine-pulse 1.8s ease-in-out infinite;
+}
+@keyframes cine-pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+
+.cine .app-ui {
+  position: relative; width: 100%; height: 100%;
+  padding: 48px 20px 28px; display: flex; flex-direction: column;
+}
+
+/* Header app */
+.cine .app-head {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.4rem;
+}
+.cine .app-kicker { font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: var(--cine-gold); font-weight: 700; }
+.cine .app-title  { font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: #fff; letter-spacing: .02em; }
+.cine .app-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-heading); font-weight: 700; font-size: .82rem; color: #fff;
+  background: radial-gradient(circle at 35% 30%, rgba(243,198,75,.35), rgba(212,160,26,.08));
+  border: 1px solid rgba(243,198,75,.3); box-shadow: inset 0 1px 2px rgba(255,255,255,.2);
+  overflow: hidden;
+}
+.cine .app-avatar-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* Anello punti */
+.cine .ring-wrap {
+  position: relative; width: 176px; height: 176px; margin: 0 auto 1.6rem;
+  display: flex; align-items: center; justify-content: center;
+  filter: drop-shadow(0 15px 25px rgba(0,0,0,0.8));
+}
+.cine .ring-wrap svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cine .ring-center { text-align: center; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+.cine .counter-val { font-family: var(--font-heading); font-size: 2.6rem; font-weight: 800; letter-spacing: -.02em; color: #fff; line-height: 1; }
+.cine .ring-label { font-size: 8px; letter-spacing: .14em; text-transform: uppercase; color: rgba(243,198,75,.7); font-weight: 700; margin-top: 4px; }
+
+/* Righe missione */
+.cine .app-rows { display: flex; flex-direction: column; gap: .7rem; }
+.cine .app-row { border-radius: 16px; padding: 12px; display: flex; align-items: center; }
+.cine .row-ico {
+  width: 40px; height: 40px; border-radius: 12px; margin-right: 12px; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.4);
+}
+.cine .row-ico .ico { width: 18px; height: 18px; }
+.cine .row-ico-gold  { background: linear-gradient(160deg, rgba(243,198,75,.22), rgba(212,160,26,.04)); border: 1px solid rgba(243,198,75,.28); color: var(--cine-gold); }
+.cine .row-ico-fire  { background: linear-gradient(160deg, rgba(232,78,27,.22), rgba(232,78,27,.04)); border: 1px solid rgba(232,78,27,.3); color: #f97316; }
+.cine .row-body { flex: 1; min-width: 0; }
+.cine .row-title { font-size: .76rem; font-weight: 700; color: #fff; letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cine .row-meta  { font-size: .62rem; color: rgba(220,228,255,.5); margin-top: 2px; }
+.cine .row-tag {
+  font-size: .56rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  padding: .18rem .5rem; border-radius: 100px; flex: 0 0 auto;
+}
+.cine .row-tag-ok   { color: #43d17a; background: rgba(46,204,113,.1); border: 1px solid rgba(46,204,113,.3); }
+.cine .row-tag-live { color: var(--cine-gold); background: rgba(243,198,75,.1); border: 1px solid rgba(243,198,75,.3); }
+
+.cine .home-bar {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 4px; background: rgba(255,255,255,0.22); border-radius: 100px;
+}
+
+/* Badge fluttuanti in vetro */
+.cine .floating-badge {
+  position: absolute; display: flex; align-items: center; gap: .85rem;
+  border-radius: 16px; padding: .85rem; z-index: 30;
+}
+.cine .fb-1 { top: 24px;    left: -15px; }
+.cine .fb-2 { bottom: 48px; right: -15px; }
+@media (min-width: 1024px) {
+  .cine .fb-1 { top: 48px;    left: -80px; }
+  .cine .fb-2 { bottom: 80px; right: -80px; padding: 1rem; }
+}
+.cine .fb-ico {
+  width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,.4);
+}
+.cine .fb-ico .ico { width: 18px; height: 18px; }
+.cine .fb-ico-fire { background: linear-gradient(180deg, rgba(232,78,27,.22), rgba(232,78,27,.05)); border: 1px solid rgba(232,78,27,.35); color: #f97316; }
+.cine .fb-ico-gold { background: linear-gradient(180deg, rgba(243,198,75,.22), rgba(212,160,26,.05)); border: 1px solid rgba(243,198,75,.35); color: var(--cine-gold); }
+.cine .fb-title { color: #fff; font-size: .8rem; font-weight: 700; letter-spacing: -.01em; }
+.cine .fb-sub   { color: rgba(220,228,255,.55); font-size: .68rem; font-weight: 500; margin-top: 1px; }
+
+/* Indizio di scroll */
+.cine .cine-scroll-hint {
+  position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
+  z-index: 40; display: flex; flex-direction: column; align-items: center; gap: .5rem;
+  color: var(--text-3); pointer-events: none;
+}
+.cine .cine-scroll-hint span { font-size: .62rem; letter-spacing: .25em; text-transform: uppercase; }
+.cine .cine-scroll-hint .ch-mouse {
+  width: 22px; height: 34px; border: 1px solid rgba(243,198,75,.4); border-radius: 12px;
+  display: flex; justify-content: center; padding-top: 5px;
+}
+.cine .cine-scroll-hint .ch-dot {
+  width: 3px; height: 7px; border-radius: 2px; background: var(--cine-gold);
+  animation: cine-wheel 1.6s ease-in-out infinite;
+}
+@keyframes cine-wheel { 0% { opacity:0; transform: translateY(-3px);} 40% { opacity:1;} 100% { opacity:0; transform: translateY(7px);} }
+
+/* -------------------------------------------------------------------
+   FALLBACK: niente JS / motion ridotto → mostra tutto, niente pin
+------------------------------------------------------------------- */
+.cine.cine--static { height: auto; min-height: 100vh; padding: 7rem 0 4rem; }
+.cine.cine--static .gsap-reveal { visibility: visible !important; }
+.cine.cine--static .hero-text-wrapper { position: relative; inset: auto; margin-bottom: 3rem; }
+.cine.cine--static .cta-wrapper { display: none; }
+.cine.cine--static .card-layer { position: relative; inset: auto; }
+.cine.cine--static .main-card { width: 92vw; max-width: 1100px; height: auto; min-height: 80vh; padding: 2rem 0; }
+.cine.cine--static .cine-scroll-hint { display: none; }
+.cine.cine--static .mockup-scroll-wrapper { height: 480px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cine .island-dot, .cine .cine-scroll-hint .ch-dot { animation: none; }
+}

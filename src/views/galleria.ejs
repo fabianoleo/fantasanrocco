@@ -1,9 +1,11 @@
+<link rel="stylesheet" href="/gallery.css?v=1">
+
 <%# ── HERO ────────────────────────────────────────────────────────── %>
 <div class="gl-hero lp-full">
   <div class="gl-hero-inner">
     <p class="lp-kicker" style="margin-bottom:.9rem;letter-spacing:.22em">Siano &nbsp;·&nbsp; Festa di San Rocco</p>
     <h1 class="gl-title">Galleria</h1>
-    <p class="gl-sub">Le immagini della festa. Ogni scatto, una storia.</p>
+    <p class="gl-sub">Le immagini della festa. Tocca una foto per aprirla, poi scorri tra le altre dal dock.</p>
     <div class="gl-hero-count">
       <span><%= processione.length + devozione.length + luoghi.length + palio.length %></span> fotografie
     </div>
@@ -20,19 +22,7 @@
         <p class="gl-section-desc">Il Santo portato a spalla tra le vie di Siano, tra applausi, preghiere e fuochi d'artificio.</p>
       </div>
     </div>
-
-    <div class="gl-mag-grid">
-      <% processione.forEach((img, i) => { %>
-        <figure class="gl-mag-item <%= i === 0 ? 'gl-featured' : '' %>">
-          <a href="/images/galleria/<%= img.file %>" target="_blank" rel="noopener">
-            <img src="/images/galleria/<%= img.file %>" alt="<%= img.caption %>" loading="<%= i === 0 ? 'eager' : 'lazy' %>">
-            <div class="gl-caption-overlay">
-              <span class="gl-caption-text"><%= img.caption %></span>
-            </div>
-          </a>
-        </figure>
-      <% }) %>
-    </div>
+    <%- include('partials/bento-grid', { items: processione, sec: 'processione', label: 'La Processione' }) %>
   </div>
 </div>
 
@@ -46,19 +36,7 @@
         <p class="gl-section-desc">La fede che si tocca con mano: i volti, i gesti, l'oro donato al Santo per generazioni.</p>
       </div>
     </div>
-
-    <div class="gl-mag-grid gl-mag-grid-alt">
-      <% devozione.forEach((img, i) => { %>
-        <figure class="gl-mag-item <%= i === 0 ? 'gl-featured' : '' %>">
-          <a href="/images/galleria/<%= img.file %>" target="_blank" rel="noopener">
-            <img src="/images/galleria/<%= img.file %>" alt="<%= img.caption %>" loading="lazy">
-            <div class="gl-caption-overlay">
-              <span class="gl-caption-text"><%= img.caption %></span>
-            </div>
-          </a>
-        </figure>
-      <% }) %>
-    </div>
+    <%- include('partials/bento-grid', { items: devozione, sec: 'devozione', label: 'Il Popolo e la Devozione' }) %>
   </div>
 </div>
 
@@ -72,19 +50,7 @@
         <p class="gl-section-desc">I maestri fuochisti, le bombe da tiro, il cielo di Siano illuminato a festa — rinomato in tutta Italia.</p>
       </div>
     </div>
-
-    <div class="gl-mag-grid gl-mag-grid-palio">
-      <% palio.forEach((img, i) => { %>
-        <figure class="gl-mag-item <%= i === 0 ? 'gl-featured' : '' %> gl-palio-item">
-          <a href="/images/galleria/<%= img.file %>" target="_blank" rel="noopener">
-            <img src="/images/galleria/<%= img.file %>" alt="<%= img.caption %>" loading="lazy">
-            <div class="gl-caption-overlay">
-              <span class="gl-caption-text"><%= img.caption %></span>
-            </div>
-          </a>
-        </figure>
-      <% }) %>
-    </div>
+    <%- include('partials/bento-grid', { items: palio, sec: 'palio', label: 'Il Palio dei Fuochi' }) %>
   </div>
 </div>
 
@@ -98,18 +64,30 @@
         <p class="gl-section-desc">I simboli del cuore di Siano: la piazza, il campanile e i fuochi che illuminano la notte.</p>
       </div>
     </div>
-
-    <div class="gl-mag-grid gl-mag-grid-trio">
-      <% luoghi.forEach((img, i) => { %>
-        <figure class="gl-mag-item">
-          <a href="/images/galleria/<%= img.file %>" target="_blank" rel="noopener">
-            <img src="/images/galleria/<%= img.file %>" alt="<%= img.caption %>" loading="lazy">
-            <div class="gl-caption-overlay">
-              <span class="gl-caption-text"><%= img.caption %></span>
-            </div>
-          </a>
-        </figure>
-      <% }) %>
-    </div>
+    <%- include('partials/bento-grid', { items: luoghi, sec: 'luoghi', label: 'La Piazza e il Campanile' }) %>
   </div>
 </div>
+
+<%# ── MODALE LIGHTBOX + DOCK (condiviso da tutte le sottosezioni) ─── %>
+<div class="bento-modal" id="bentoModal" role="dialog" aria-modal="true" aria-label="Foto a schermo intero">
+  <div class="bm-backdrop"></div>
+  <div class="bm-stage">
+    <div class="bm-figure">
+      <img class="bm-img" src="" alt="">
+      <div class="bm-caption">
+        <p class="bm-kicker"></p>
+        <p class="bm-title"></p>
+      </div>
+    </div>
+    <button class="bm-nav bm-prev" type="button" aria-label="Foto precedente"><%- icon('chevron-left') %></button>
+    <button class="bm-nav bm-next" type="button" aria-label="Foto successiva"><%- icon('chevron-right') %></button>
+    <button class="bm-close" type="button" aria-label="Chiudi"><%- icon('x') %></button>
+  </div>
+</div>
+<div class="bm-dock" id="bmDock" aria-label="Naviga tra le foto">
+  <div class="bm-dock-inner">
+    <span class="bm-dock-handle" aria-hidden="true"></span>
+  </div>
+</div>
+
+<script src="/gallery.js?v=1" defer></script>

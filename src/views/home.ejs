@@ -1,57 +1,160 @@
-<%# ── HERO: full viewport ─────────────────────────────────────────── %>
-<section class="lp-hero">
-  <div class="lp-hero-inner">
-    <div class="lp-santo" data-reveal="scale-in">
-      <img src="/images/galleria/sanrocco-chiesa.webp" alt="San Rocco"
-           class="hero-santo-img" onerror="this.style.display='none'">
-    </div>
-    <h1 class="lp-title" data-reveal="fade-up" data-delay="1">FantaSanRocco</h1>
-    <p class="lp-sub" data-reveal="fade-up" data-delay="2">
-      Il gioco della Festa di <em>San Rocco</em> · Siano (SA)
-    </p>
-    <div class="lp-cta" data-reveal="fade-up" data-delay="3">
-      <% if (currentUser) { %>
-        <a class="btn" href="/missioni">Vai alle missioni →</a>
-      <% } else { %>
-        <a class="btn" href="/login">Accedi e gioca</a>
-      <% } %>
-      <a class="btn btn-ghost" href="/galleria">Galleria</a>
-    </div>
-    <% if (!currentUser) { %>
-      <p class="lp-note" data-reveal="fade-in" data-delay="4">
-        Serve il <strong>link personale</strong> fornito dall'organizzazione.
-      </p>
-    <% } %>
+<%# ── CINEMATIC HERO (ricreazione nativa) ──────────────────────────── %>
+<link rel="stylesheet" href="/cinematic.css?v=5">
+<%
+  // Conto alla rovescia per la festa (14 agosto 2026) — metrica dell'anello
+  const _festa = new Date('2026-08-14T00:00:00');
+  const _days  = Math.max(0, Math.ceil((_festa - new Date()) / 86400000));
+  const _avatar = currentUser ? initials(currentUser.nickname) : 'FSR';
+%>
+<section class="cine" data-metric="<%= _days %>" aria-label="Presentazione FantaSanRocco">
+  <div class="film-grain" aria-hidden="true"></div>
+  <div class="bg-grid-theme" aria-hidden="true"></div>
+
+  <%# ── Strato sfondo: titoli hero ── %>
+  <div class="hero-text-wrapper">
+    <h1 class="hero-line hero-line-1 text-track gsap-reveal text-3d-matte">Vivi la festa,</h1>
+    <h1 class="hero-line hero-line-2 text-days gsap-reveal text-silver-matte">non solo guardarla.</h1>
   </div>
-  <div class="lp-scroll-hint" id="scrollHint">
+
+  <%# ── Strato sfondo 2: CTA finale ── %>
+  <div class="cta-wrapper gsap-reveal">
+    <h2 class="cta-title text-silver-matte">Entra in gioco.</h2>
+    <p class="cta-sub">
+      Unisciti agli altri giocatori della Festa di San Rocco a Siano e prenditi
+      la tua classifica. Bastano una registrazione e la voglia di vincere.
+    </p>
+    <div class="cine-cta-actions">
+      <a class="btn-modern-light" href="<%= currentUser ? '/missioni' : '/registrati' %>">
+        <%- icon('logo-firework') %>
+        <span class="btn-stack">
+          <span class="btn-sub">Festa di San Rocco</span>
+          <span class="btn-main"><%= currentUser ? 'Le missioni' : 'Registrati e gioca' %></span>
+        </span>
+      </a>
+      <a class="btn-modern-dark" href="/premio">
+        <%- icon('trophy') %>
+        <span class="btn-stack">
+          <span class="btn-sub">In palio</span>
+          <span class="btn-main">I tre premi</span>
+        </span>
+      </a>
+    </div>
+  </div>
+
+  <%# ── Primo piano: la card fisica ── %>
+  <div class="card-layer">
+    <div class="main-card premium-depth-card gsap-reveal">
+      <div class="card-sheen" aria-hidden="true"></div>
+
+      <div class="card-grid">
+
+        <%# DESTRA (desktop) / ALTO (mobile): marchio %>
+        <div class="card-right-text gsap-reveal">
+          <h2 class="brand-word text-card-gold">San Rocco</h2>
+        </div>
+
+        <%# CENTRO: mockup iPhone con la web app mobile %>
+        <div class="mockup-scroll-wrapper">
+          <div class="mockup-scale">
+            <div class="iphone will-change-t transform-style-3d">
+              <span class="hardware-btn hw-1" aria-hidden="true"></span>
+              <span class="hardware-btn hw-2" aria-hidden="true"></span>
+              <span class="hardware-btn hw-3" aria-hidden="true"></span>
+              <span class="hardware-btn hw-4" aria-hidden="true"></span>
+
+              <div class="iphone-screen">
+                <div class="screen-glare" aria-hidden="true"></div>
+                <div class="island">
+                  <span class="island-dot" aria-hidden="true"></span>
+                </div>
+
+                <div class="app-ui">
+                  <%# Header app %>
+                  <div class="phone-widget app-head">
+                    <div>
+                      <div class="app-kicker">FantaSanRocco</div>
+                      <div class="app-title">La tua gara</div>
+                    </div>
+                    <div class="app-avatar">
+                      <% if (currentUser && currentUser.avatar_path) { %>
+                        <img class="app-avatar-img" src="/avatar/<%= currentUser.avatar_path %>" alt="">
+                      <% } else { %><%= _avatar %><% } %>
+                    </div>
+                  </div>
+
+                  <%# Anello: conto alla rovescia per la festa %>
+                  <div class="phone-widget ring-wrap">
+                    <svg viewBox="0 0 176 176" aria-hidden="true">
+                      <circle cx="88" cy="88" r="64" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="12"></circle>
+                      <circle class="progress-ring" cx="88" cy="88" r="64" fill="none" stroke="#f3c64b" stroke-width="12"></circle>
+                    </svg>
+                    <div class="ring-center">
+                      <span class="counter-val">0</span>
+                      <span class="ring-label">Giorni alla festa</span>
+                    </div>
+                  </div>
+
+                  <%# Righe missione %>
+                  <div class="app-rows">
+                    <div class="phone-widget app-row widget-depth">
+                      <span class="row-ico row-ico-gold"><%- icon('check-circle') %></span>
+                      <div class="row-body">
+                        <div class="row-title">Selfie con il Santo</div>
+                        <div class="row-meta">+50 punti</div>
+                      </div>
+                      <span class="row-tag row-tag-ok">Completata</span>
+                    </div>
+                    <div class="phone-widget app-row widget-depth">
+                      <span class="row-ico row-ico-fire"><%- icon('fireworks') %></span>
+                      <div class="row-body">
+                        <div class="row-title">Palio dei Fuochi</div>
+                        <div class="row-meta">Stasera · 23:30</div>
+                      </div>
+                      <span class="row-tag row-tag-live">Attiva</span>
+                    </div>
+                  </div>
+
+                  <div class="home-bar" aria-hidden="true"></div>
+                </div>
+              </div>
+            </div>
+
+            <%# Badge fluttuanti in vetro %>
+            <div class="floating-badge fb-1 floating-ui-badge gsap-reveal">
+              <span class="fb-ico fb-ico-fire"><%- icon('fireworks') %></span>
+              <div>
+                <p class="fb-title">Palio dei Fuochi</p>
+                <p class="fb-sub">Traguardo sbloccato</p>
+              </div>
+            </div>
+            <div class="floating-badge fb-2 floating-ui-badge gsap-reveal">
+              <span class="fb-ico fb-ico-gold"><%- icon('medal') %></span>
+              <div>
+                <p class="fb-title">Sei sul podio!</p>
+                <p class="fb-sub">2º posto in classifica</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <%# SINISTRA (desktop) / BASSO (mobile): testo accountability %>
+        <div class="card-left-text gsap-reveal">
+          <h3 class="card-heading">Missioni, punti, gloria.</h3>
+          <p class="card-desc">
+            FantaSanRocco trasforma la Festa di San Rocco a Siano in una gara:
+            completa le sfide, carica le prove, scala la classifica in tempo reale.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="cine-scroll-hint" id="scrollHint" aria-hidden="true">
     <span>Scorri</span>
-    <div class="lp-scroll-arrow"></div>
+    <div class="ch-mouse"><div class="ch-dot"></div></div>
   </div>
 </section>
-
-<%# ── MANIFESTO PIN ────────────────────────────────────────────────── %>
-<div class="manifesto-wrap lp-full" id="manifestoWrap">
-  <div class="manifesto-pin" id="manifestoPin">
-    <p class="manifesto-kicker">Quest'estate a Siano</p>
-    <div class="manifesto-word-stack">
-      <span class="mw mw-active">Missioni.</span>
-      <span class="mw">Punti.</span>
-      <span class="mw">Vittoria.</span>
-    </div>
-    <p class="manifesto-body" id="manifestoBody">
-      Completa le sfide, carica le prove,<br>scala la classifica in tempo reale.
-    </p>
-    <div class="manifesto-scroll-hint" id="manifestoScrollHint">
-      <span class="msh-label">Scorri per scoprire</span>
-      <div class="msh-mouse">
-        <div class="msh-dot"></div>
-      </div>
-      <div class="msh-arrows">
-        <span></span><span></span><span></span>
-      </div>
-    </div>
-  </div>
-</div>
 
 <%# ── NUMERI ──────────────────────────────────────────────────────── %>
 <section class="lp-numbers lp-full">
@@ -78,17 +181,17 @@
     <h2 class="lp-headline" data-reveal="fade-up">Premi veri.<br>Per chi sa come giocare.</h2>
     <div class="lp-prizes-grid">
       <div class="lp-prize-card lp-prize-gold" data-reveal="slide-up" data-delay="0">
-        <span class="lp-prize-icon">🥇</span>
+        <span class="lp-prize-icon"><%- icon('medal') %></span>
         <h3>Smartbox Europa</h3>
         <p>3 giorni da sogno in Europa per 2 persone. Scegli tu dove andare.</p>
       </div>
       <div class="lp-prize-card lp-prize-silver" data-reveal="slide-up" data-delay="1">
-        <span class="lp-prize-icon">🥈</span>
+        <span class="lp-prize-icon"><%- icon('medal') %></span>
         <h3>Nintendo Switch Lite</h3>
         <p>Console portatile Nintendo per il secondo classificato.</p>
       </div>
       <div class="lp-prize-card lp-prize-bronze" data-reveal="slide-up" data-delay="2">
-        <span class="lp-prize-icon">🥉</span>
+        <span class="lp-prize-icon"><%- icon('medal') %></span>
         <h3>Macchinetta del caffè</h3>
         <p>Perché il caffè campano non si discute.</p>
       </div>
@@ -106,8 +209,8 @@
       <div class="lp-step" data-reveal="slide-right" data-delay="0">
         <span class="lp-step-num">01</span>
         <div class="lp-step-body">
-          <h3>Ricevi il link</h3>
-          <p>L'organizzazione ti manda un link personale. Solo tu puoi usarlo.</p>
+          <h3>Registrati</h3>
+          <p>Crea il tuo account in un minuto: nickname, email e una password. Tutto qui.</p>
         </div>
       </div>
       <div class="lp-step" data-reveal="slide-left" data-delay="1">
@@ -149,7 +252,7 @@
       <ol class="lp-podio-list">
         <% topThree.forEach((u, i) => { %>
           <li class="lp-podio-item" data-reveal="slide-up" data-delay="<%= i %>">
-            <span class="lp-podio-medal"><%= ['🥇','🥈','🥉'][i] %></span>
+            <span class="lp-podio-medal <%= ['is-gold','is-silver','is-bronze'][i] %>"><%- icon('medal') %></span>
             <span class="lp-podio-name"><%= u.nickname %></span>
             <span class="lp-podio-pts"><%= u.points %><small>pt</small></span>
           </li>
@@ -165,12 +268,12 @@
   <div class="lp-section-inner">
     <% if (!currentUser) { %>
       <p class="lp-kicker" data-reveal="fade-in">Sei pronto?</p>
-      <h2 class="lp-final-title" data-reveal="fade-up">Hai il link.<br>Usalo.</h2>
+      <h2 class="lp-final-title" data-reveal="fade-up">Registrati.<br>E gioca.</h2>
       <p class="lp-final-sub" data-reveal="fade-up" data-delay="1">
-        Ogni link è personale e vale una sola registrazione.
+        Un nickname, una password, e sei in gara con tutti gli altri.
       </p>
       <div data-reveal="fade-up" data-delay="2">
-        <a class="btn" href="/login">Accedi e gioca</a>
+        <a class="btn" href="/registrati">Registrati e gioca</a>
       </div>
     <% } else { %>
       <p class="lp-kicker" data-reveal="fade-in">Il gioco ti aspetta</p>
@@ -183,3 +286,8 @@
     <% } %>
   </div>
 </section>
+
+<%# ── Motore cinematic hero (GSAP self-hosted + script nativo) ──────── %>
+<script src="/vendor/gsap.min.js" defer></script>
+<script src="/vendor/ScrollTrigger.min.js" defer></script>
+<script src="/cinematic.js?v=3" defer></script>

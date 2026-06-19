@@ -1,5 +1,5 @@
 <h1>Missioni</h1>
-<p class="muted">Tocca una missione per inviare la tua prova. 🟢 = puoi farla ora.</p>
+<p class="muted">Tocca una missione per inviare la tua prova. <span style="color:var(--green)"><%- icon('dot') %></span> = puoi farla ora.</p>
 
 <div class="mission-grid">
   <% missions.forEach((m) => { %>
@@ -11,20 +11,20 @@
       <p class="mission-desc"><%= m.description %></p>
       <div class="mission-meta">
         <% if (m.hasApproved && !m.repeatable) { %>
-          <span class="tag tag-ok">✅ Completata</span>
+          <span class="tag tag-ok"><%- icon('check-circle') %> Completata</span>
         <% } else if (m.hasPending) { %>
-          <span class="tag tag-pending">⏳ In attesa</span>
+          <span class="tag tag-pending"><%- icon('hourglass') %> In attesa</span>
         <% } %>
-        <% if (m.repeatable) { %><span class="tag">🔁 Ripetibile</span><% } %>
-        <% if (m.requires_photo) { %><span class="tag">📷 Foto</span><% } %>
+        <% if (m.repeatable) { %><span class="tag"><%- icon('repeat') %> Ripetibile</span><% } %>
+        <% if (m.requires_photo) { %><span class="tag"><%- icon('camera') %> Foto</span><% } %>
         <% if (!m.activeNow) { %>
-          <span class="tag tag-off">⏰ Non attiva ora</span>
+          <span class="tag tag-off"><%- icon('alarm') %> Non attiva ora</span>
         <% } else { %>
-          <span class="tag tag-live">🟢 Attiva</span>
+          <span class="tag tag-live"><%- icon('dot') %> Attiva</span>
         <% } %>
       </div>
       <div class="mission-counter">
-        <span class="mc-icon">👥</span>
+        <span class="mc-icon"><%- icon('people') %></span>
         <span class="mc-val"><%= m.completedBy %></span>
         <span class="mc-label"><%= m.completedBy === 1 ? 'persona ha completato' : 'persone hanno completato' %></span>
       </div>

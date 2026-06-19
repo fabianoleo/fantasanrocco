@@ -1,9 +1,9 @@
-<h1>🛡️ Moderazione</h1>
+<h1 class="staff-title"><%- icon('shield') %> Moderazione</h1>
 <p class="muted">Prove in attesa: <strong><%= pending.length %></strong>.
   Se due moderatori aprono la stessa, vince il primo che clicca: l'altro vedrà un avviso.</p>
 
 <% if (pending.length === 0) { %>
-  <p class="muted">Nessuna prova in attesa. Tutto sotto controllo! ✅</p>
+  <p class="muted">Nessuna prova in attesa. Tutto sotto controllo! <span style="color:var(--green)"><%- icon('check') %></span></p>
 <% } else { %>
   <div class="mod-list">
     <% let modCurrentUser = null; %>
@@ -28,7 +28,7 @@
             <img class="mod-photo" src="/uploads/<%= s.photo_path %>" alt="prova" loading="lazy">
           </a>
         <% } else if (s.requires_photo) { %>
-          <p class="tag-off">⚠️ Manca la foto (anomalia)</p>
+          <p class="tag-off"><%- icon('warning') %> Manca la foto (anomalia)</p>
         <% } else { %>
           <p class="muted small">Missione senza foto (auto-dichiarata).</p>
         <% } %>
@@ -38,12 +38,12 @@
         <div class="mod-actions">
           <form action="/moderazione/<%= s.id %>/approva" method="post" class="inline">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button class="btn btn-ok" type="submit">✅ Approva</button>
+            <button class="btn btn-ok" type="submit"><%- icon('check') %> Approva</button>
           </form>
           <form action="/moderazione/<%= s.id %>/rifiuta" method="post" class="inline reject-form">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <input type="text" name="review_note" placeholder="motivo (facoltativo)" maxlength="200">
-            <button class="btn btn-no" type="submit">❌ Rifiuta</button>
+            <button class="btn btn-no" type="submit"><%- icon('x') %> Rifiuta</button>
           </form>
         </div>
       </section>

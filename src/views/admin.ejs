@@ -1,7 +1,7 @@
-<h1>⚙️ Pannello Admin</h1>
+<h1 class="staff-title"><%- icon('gear') %> Pannello Admin</h1>
 
 <section class="card">
-  <h2>➕ Nuova missione</h2>
+  <h2 class="staff-title"><%- icon('plus') %> Nuova missione</h2>
   <form action="/admin/missioni" method="post" class="mission-form">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <label>Titolo
@@ -30,11 +30,11 @@
 </section>
 
 <section class="card">
-  <h2>📋 Missioni esistenti (<%= missions.length %>)</h2>
+  <h2 class="staff-title"><%- icon('list') %> Missioni esistenti (<%= missions.length %>)</h2>
   <% missions.forEach((m) => { %>
     <details class="admin-mission">
       <summary>
-        <span><%= m.archived ? '🗄️ ' : '' %><%= m.title %></span>
+        <span><% if (m.archived) { %><%- icon('archive') %> <% } %><%= m.title %></span>
         <span class="points-badge"><%= m.points %> pt</span>
       </summary>
       <form action="/admin/missioni/<%= m.id %>/modifica" method="post" class="mission-form">
@@ -52,20 +52,20 @@
           <label>Attiva fino a<input type="text" name="active_to" value="<%= m.active_to || '' %>" placeholder="2026-08-17 03:00"></label>
         </div>
         <div class="mod-actions">
-          <button class="btn" type="submit">💾 Salva</button>
+          <button class="btn" type="submit"><%- icon('save') %> Salva</button>
         </div>
       </form>
       <form action="/admin/missioni/<%= m.id %>/elimina" method="post" class="danger-form"
             onsubmit="return confirm('Eliminare definitivamente questa missione e le sue prove?');">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button class="btn btn-no" type="submit">🗑️ Elimina</button>
+        <button class="btn btn-no" type="submit"><%- icon('trash') %> Elimina</button>
       </form>
     </details>
   <% }) %>
 </section>
 
 <section class="card">
-  <h2>👥 Utenti e ruoli (<%= users.length %>)</h2>
+  <h2 class="staff-title"><%- icon('people') %> Utenti e ruoli (<%= users.length %>)</h2>
   <p class="muted small">Promuovi i tuoi collaboratori a <strong>moderatore</strong> (validano le prove)
     o <strong>admin</strong> (gestiscono tutto). Solo gli utenti normali compaiono in classifica.</p>
   <ul class="user-list">
@@ -89,9 +89,9 @@
 </section>
 
 <section class="card reset-card">
-  <h2>🧨 Reset Gioco <span class="tag tag-off">solo test</span></h2>
+  <h2 class="staff-title"><%- icon('bolt') %> Reset Gioco <span class="tag tag-off">solo test</span></h2>
   <p class="muted small">
-    Cancella <strong>tutti gli utenti non-admin</strong>, le loro prove e tutti gli inviti.
+    Cancella <strong>tutti gli utenti non-admin</strong> e le loro prove.
     Gli account admin rimangono intatti. <strong>Azione irreversibile.</strong>
   </p>
   <form action="/admin/reset-gioco" method="post"
@@ -108,7 +108,7 @@
              style="max-width:220px; margin-top:.3rem">
     </label>
     <div>
-      <button class="btn btn-no" type="submit">🧨 Reset Gioco</button>
+      <button class="btn btn-no" type="submit"><%- icon('bolt') %> Reset Gioco</button>
     </div>
   </form>
 </section>

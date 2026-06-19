@@ -1,0 +1,16 @@
+<%# Avatar riusabile: mostra la foto profilo se caricata, altrimenti le iniziali.
+    Locals opzionali: user (default = currentUser), cls (classi extra), online (bool). %>
+<%
+  const u   = (locals.user !== undefined && locals.user) ? locals.user
+            : (typeof currentUser !== 'undefined' ? currentUser : null);
+  const _cls = locals.cls || '';
+  const _ini = initials(u && u.nickname);
+%>
+<span class="avatar <%= _cls %>" title="<%= u ? u.nickname : '' %>">
+  <% if (u && u.avatar_path) { %>
+    <img class="avatar-img" src="/avatar/<%= u.avatar_path %>" alt="Foto di <%= u.nickname %>">
+  <% } else { %>
+    <span class="avatar-fallback"><%= _ini %></span>
+  <% } %>
+  <% if (locals.online) { %><span class="avatar-dot" aria-hidden="true"></span><% } %>
+</span>

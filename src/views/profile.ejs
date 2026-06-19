@@ -1,13 +1,12 @@
 <%
   const approvedCount = subs.filter(s => s.status === 'approved').length;
   const pendingCount  = subs.filter(s => s.status === 'pending').length;
-  const avatar = currentUser.nickname.charAt(0).toUpperCase();
 %>
 
 <%# ── HERO ────────────────────────────────────────────────────────── %>
 <div class="pf-hero lp-full">
   <div class="pf-hero-inner">
-    <div class="pf-avatar"><%= avatar %></div>
+    <%- include('partials/avatar', { user: currentUser, cls: 'avatar-xl pf-avatar', online: true }) %>
     <p class="lp-kicker" style="margin-bottom:.4rem">Il tuo profilo</p>
     <h1 class="pf-name"><%= currentUser.nickname %></h1>
     <div class="pf-score-wrap">
@@ -47,13 +46,13 @@
       <%
         const isApproved = s.status === 'approved';
         const isPending  = s.status === 'pending';
-        const icon     = isApproved ? '✅' : isPending ? '⏳' : '❌';
+        const iconName = isApproved ? 'check-circle' : isPending ? 'hourglass' : 'x';
         const rowCls   = isApproved ? 'is-approved' : isPending ? 'is-pending' : 'is-rejected';
         const badgeCls = isApproved ? 'ok' : isPending ? 'wait' : 'no';
         const badgeTxt = isApproved ? 'Approvata' : isPending ? 'In attesa' : 'Rifiutata';
       %>
       <li class="pf-sub-row <%= rowCls %>">
-        <span class="pf-sub-icon"><%= icon %></span>
+        <span class="pf-sub-icon"><%- icon(iconName) %></span>
         <div class="pf-sub-body">
           <span class="pf-sub-title"><%= s.title %></span>
           <span class="pf-sub-meta"><%= s.points %> pt &nbsp;·&nbsp; <%= s.created_at %></span>
@@ -67,9 +66,34 @@
   </ul>
 <% } %>
 
+<%# ── FOTO PROFILO ─────────────────────────────────────────────────── %>
+<div class="pf-form-card">
+  <p class="pf-form-title"><%- icon('camera') %> Foto profilo</p>
+  <div class="pf-avatar-row">
+    <%- include('partials/avatar', { user: currentUser, cls: 'avatar-lg' }) %>
+    <div class="pf-avatar-actions">
+      <p class="muted small" style="margin-bottom:.7rem">
+        Carica una foto: comparirà al posto delle iniziali <strong><%= initials(currentUser.nickname) %></strong>.
+        JPEG, PNG, WebP o GIF, max <%= 8 %> MB.
+      </p>
+      <form action="/profilo/avatar" method="post" enctype="multipart/form-data" class="pf-avatar-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="file" name="avatar" accept="image/*" required id="avatarInput">
+        <button class="btn" type="submit"><%- icon('camera') %> Carica foto</button>
+      </form>
+      <% if (currentUser.avatar_path) { %>
+        <form action="/profilo/avatar/rimuovi" method="post" style="margin-top:.6rem">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="link-btn" type="submit"><%- icon('trash') %> Rimuovi foto e torna alle iniziali</button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</div>
+
 <%# ── CAMBIA PASSWORD ─────────────────────────────────────────────── %>
 <div class="pf-form-card">
-  <p class="pf-form-title">🔒 Cambia password</p>
+  <p class="pf-form-title"><%- icon('lock') %> Cambia password</p>
   <form action="/profilo/cambia-password" method="post" autocomplete="off" style="max-width:440px">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <label>Password attuale

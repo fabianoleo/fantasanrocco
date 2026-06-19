@@ -11,10 +11,12 @@ const DATA_DIR = process.env.DATA_DIR
   ? path.resolve(process.env.DATA_DIR)
   : path.resolve(__dirname, '..', 'data');
 
-const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
+const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');     // foto-prova (private)
+const AVATARS_DIR = path.join(DATA_DIR, 'avatars');     // foto profilo (pubbliche)
 
 // Assicura che le cartelle esistano
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+fs.mkdirSync(AVATARS_DIR, { recursive: true });
 
 const db = new Database(path.join(DATA_DIR, 'fantasanrocco.db'));
 db.pragma('journal_mode = WAL'); // più robusto con letture/scritture concorrenti
@@ -59,22 +61,11 @@ CREATE TABLE IF NOT EXISTS submissions (
 
 CREATE INDEX IF NOT EXISTS idx_sub_status ON submissions(status);
 CREATE INDEX IF NOT EXISTS idx_sub_user   ON submissions(user_id);
-
--- Inviti di registrazione: ogni token è un link monouso (1 persona / 1 dispositivo).
-CREATE TABLE IF NOT EXISTS invites (
-  id              INTEGER PRIMARY KEY AUTOINCREMENT,
-  token           TEXT NOT NULL UNIQUE,
-  label           TEXT,                          -- nota libera, es. nome della persona
-  used            INTEGER NOT NULL DEFAULT 0,    -- 0/1
-  used_by_user_id INTEGER REFERENCES users(id),
-  used_at         TEXT,
-  created_by      INTEGER REFERENCES users(id),
-  created_at      TEXT NOT NULL DEFAULT (datetime('now'))
-);
 `);
 
 // Migrazioni: aggiunge colonne se non esistono ancora (idempotente)
 try { db.exec('ALTER TABLE users ADD COLUMN reset_token TEXT'); } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN reset_token_expires TEXT'); } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN avatar_path TEXT'); } catch {}
 
-module.exports = { db, DATA_DIR, UPLOADS_DIR };
+module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR };
