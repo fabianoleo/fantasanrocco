@@ -356,8 +356,63 @@ function leaderboardRows() {
   `).all();
 }
 
+// Classifica del mini-gioco: per punteggio record (solo chi ha giocato)
+function gameLeaderboardRows() {
+  return db.prepare(`
+    SELECT id, nickname, game_best AS best
+    FROM users
+    WHERE role = 'user' AND game_best > 0
+    ORDER BY game_best DESC, created_at ASC
+  `).all();
+}
+
+// =========================================================================
+//  MINI-GIOCO  «Corri San Rocco»  — traguardi che danno punti in automatico
+// =========================================================================
+// Ogni traguardo è una "missione" (game_key) sbloccata raggiungendo un
+// punteggio nel gioco. Al raggiungimento il server inserisce una prova già
+// approvata → i punti entrano in classifica come le altre missioni.
+const GAME_ACHIEVEMENTS = [
+  // ── Base (accessibili a tutti) ───────────────────────────────────
+  { key: 'g-run',  threshold: 1,    points: 10,  title: 'Prima corsa',                 desc: 'Completa la tua prima partita a «Corri San Rocco».' },
+  { key: 'g-50',   threshold: 50,   points: 15,  title: 'In cammino',                  desc: 'Raggiungi 50 punti in una partita.' },
+  { key: 'g-120',  threshold: 120,  points: 25,  title: 'Pellegrino instancabile',      desc: 'Raggiungi 120 punti in una partita.' },
+  { key: 'g-250',  threshold: 250,  points: 40,  title: 'Col cane fino ai fuochi',      desc: 'Raggiungi 250 punti in una partita.' },
+  { key: 'g-400',  threshold: 400,  points: 60,  title: 'Leggenda di Siano',            desc: 'Raggiungi 400 punti in una partita.' },
+  // ── Avanzati (per chi va lontano) ───────────────────────────────
+  { key: 'g-600',  threshold: 600,  points: 80,  title: 'Devoto tra i devoti',          desc: 'Raggiungi 600 punti in una partita.' },
+  { key: 'g-850',  threshold: 850,  points: 100, title: 'Cavaliere di San Rocco',       desc: 'Raggiungi 850 punti in una partita.' },
+  { key: 'g-1100', threshold: 1100, points: 130, title: 'Guardiano della processione',  desc: 'Raggiungi 1100 punti in una partita.' },
+  { key: 'g-1500', threshold: 1500, points: 170, title: 'Il Santo corre ancora',        desc: 'Raggiungi 1500 punti in una partita.' },
+  { key: 'g-2000', threshold: 2000, points: 220, title: 'Immortale come San Rocco',     desc: 'Raggiungi 2000 punti in una partita. Sei inarrestabile.' },
+];
+
+// Crea/aggiorna le missioni del gioco allo startup (idempotente).
+function ensureGameMissions() {
+  const get = db.prepare('SELECT id FROM missions WHERE game_key = ?');
+  const ins = db.prepare(`INSERT INTO missions (title, description, points, requires_photo, repeatable, archived, game_key)
+                          VALUES (?, ?, ?, 0, 0, 0, ?)`);
+  const upd = db.prepare('UPDATE missions SET title = ?, description = ?, points = ? WHERE game_key = ?');
+  for (const a of GAME_ACHIEVEMENTS) {
+    if (get.get(a.key)) upd.run(a.title, a.desc, a.points, a.key);
+    else ins.run(a.title, a.desc, a.points, a.key);
+  }
+}
+ensureGameMissions();
+
+// È un traguardo già conquistato dall'utente?
+function gameMissionId(key) {
+  const m = db.prepare('SELECT id FROM missions WHERE game_key = ?').get(key);
+  return m ? m.id : null;
+}
+
 app.get('/classifica', (req, res) => {
-  res.render('leaderboard', { title: 'Classifica', rows: leaderboardRows(), currentUserId: req.currentUser?.id ?? null });
+  res.render('leaderboard', {
+    title: 'Classifica',
+    rows: leaderboardRows(),
+    gameRows: gameLeaderboardRows(),
+    currentUserId: req.currentUser?.id ?? null,
+  });
 });
 
 // =========================================================================
@@ -373,6 +428,7 @@ const loginLimiter = rateLimit({
 const resetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5,  standardHeaders: true, legacyHeaders: false });
 const registerLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
 const globalLimiter = rateLimit({ windowMs: 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false });
+const gameLimiter = rateLimit({ windowMs: 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false });
 app.use(globalLimiter);
 
 // --- Registrazione aperta --------------------------------------------------
@@ -482,6 +538,49 @@ app.get('/storia', (req, res) => {
   res.render('storia', { title: 'La Storia di San Rocco' });
 });
 
+// ── Mini-gioco «Corri San Rocco» ──────────────────────────────────────────
+app.get('/gioco', (req, res) => {
+  const achievements = GAME_ACHIEVEMENTS.map((a) => {
+    let done = false;
+    if (req.currentUser) {
+      const mid = gameMissionId(a.key);
+      done = !!(mid && db.prepare("SELECT 1 FROM submissions WHERE user_id = ? AND mission_id = ? AND status = 'approved'")
+        .get(req.currentUser.id, mid));
+    }
+    return { title: a.title, desc: a.desc, points: a.points, threshold: a.threshold, done };
+  });
+  res.render('gioco', {
+    title: 'Corri San Rocco',
+    achievements,
+    best: req.currentUser ? (req.currentUser.game_best || 0) : 0,
+  });
+});
+
+// Report del punteggio di fine partita: aggiorna il record e assegna i
+// traguardi non ancora conquistati (solo loggati). Idempotente.
+app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, res) => {
+  const score = Math.max(0, Math.min(100000, parseInt(req.body.score, 10) || 0));
+  const awarded = [];
+  db.transaction(() => {
+    if (score > (req.currentUser.game_best || 0)) {
+      db.prepare('UPDATE users SET game_best = ? WHERE id = ?').run(score, req.currentUser.id);
+    }
+    for (const a of GAME_ACHIEVEMENTS) {
+      if (score < a.threshold) continue;
+      const mid = gameMissionId(a.key);
+      if (!mid) continue;
+      const has = db.prepare("SELECT 1 FROM submissions WHERE user_id = ? AND mission_id = ? AND status = 'approved'")
+        .get(req.currentUser.id, mid);
+      if (has) continue;
+      db.prepare(`INSERT INTO submissions (user_id, mission_id, status, note, review_note)
+                  VALUES (?, ?, 'approved', 'mini-gioco', 'auto')`).run(req.currentUser.id, mid);
+      awarded.push({ title: a.title, points: a.points });
+    }
+  })();
+  const best = Math.max(score, req.currentUser.game_best || 0);
+  res.json({ ok: true, best, awarded });
+});
+
 app.get('/password-dimenticata', (req, res) => {
   if (req.currentUser) return res.redirect('/profilo');
   res.render('forgot-password', { title: 'Password dimenticata' });
@@ -588,7 +687,7 @@ app.post('/reset-password/:token', (req, res) => {
 //  MISSIONI + INVIO PROVE (utenti loggati)
 // =========================================================================
 app.get('/missioni', auth.requireLogin, (req, res) => {
-  const missions = db.prepare('SELECT * FROM missions WHERE archived = 0 ORDER BY points DESC, id ASC').all();
+  const missions = db.prepare('SELECT * FROM missions WHERE archived = 0 AND game_key IS NULL ORDER BY points DESC, id ASC').all();
   const mySubs = db.prepare('SELECT mission_id, status FROM submissions WHERE user_id = ?').all(req.currentUser.id);
   const byMission = {};
   for (const s of mySubs) {

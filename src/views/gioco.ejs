@@ -1,0 +1,75 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<link rel="stylesheet" href="/game.css?v=4">
+
+<%# ── HERO ────────────────────────────────────────────────────────── %>
+<section class="gm-hero">
+  <h1 class="gm-title">Corri San Rocco</h1>
+  <p class="gm-sub">
+    Un mini-gioco pixelato: torce e bombe piovono dal cielo di Siano.<br>
+    Muoviti per schivarle, raccogli le <strong>monete d'oro</strong> e prendi l'<strong>aureola</strong> per l'invincibilità.
+  </p>
+</section>
+
+<%# ── GIOCO ───────────────────────────────────────────────────────── %>
+<div class="gm-stage-wrap">
+  <div id="gmRoot" class="gm-stage"
+       data-logged="<%= currentUser ? 1 : 0 %>"
+       data-csrf="<%= csrfToken %>"
+       data-best="<%= best %>">
+    <canvas id="gmCanvas" class="gm-canvas" aria-label="Mini-gioco Corri San Rocco"></canvas>
+    <div class="gm-hud">
+      <span class="gm-score" id="gmScore">0</span>
+      <span class="gm-best" id="gmBest">record <%= best %></span>
+    </div>
+    <div class="gm-overlay" id="gmOverlay">
+      <p class="gm-over-title" id="gmOverTitle">Corri San Rocco</p>
+      <p class="gm-over-score" id="gmOverScore"></p>
+      <p class="gm-hint" id="gmHint"></p>
+      <button class="btn gm-play-btn" id="gmPlayBtn" type="button">Gioca</button>
+    </div>
+    <div class="gm-toast" id="gmToast" aria-live="polite"></div>
+    <div class="gm-arcade-flash" id="gmFlash" aria-hidden="true"></div>
+  </div>
+  <%# Controller mobile: tieni premuto per muovere in orizzontale %>
+  <div class="gm-pad" id="gmPad">
+    <button class="gm-pad-btn" id="gmLeft" type="button" aria-label="Muovi a sinistra"><%- icon('chevron-left') %></button>
+    <button class="gm-pad-btn" id="gmRight" type="button" aria-label="Muovi a destra"><%- icon('chevron-right') %></button>
+  </div>
+
+  <p class="gm-hint" style="text-align:center;margin-top:.9rem">
+    <span class="gm-hint-desk"><kbd>←</kbd> <kbd>→</kbd> (o <kbd>A</kbd>/<kbd>D</kbd>) oppure trascina sullo schermo per muoverti</span>
+    <span class="gm-hint-touch">Tieni premuti i tasti <kbd>◀</kbd> <kbd>▶</kbd> per spostare San Rocco</span>
+  </p>
+</div>
+
+<template id="gmIconTrophy"><%- icon('trophy') %></template>
+<template id="gmIconCheck"><%- icon('check') %></template>
+
+<%# ── TRAGUARDI (punti automatici) ────────────────────────────────── %>
+<section class="gm-ach-section">
+  <div class="gm-ach-head">
+    <p class="gm-ach-kicker">Punti automatici</p>
+    <h2 class="gm-ach-title">Traguardi del gioco</h2>
+    <p class="gm-ach-note">Raggiungi questi punteggi in una partita: i punti entrano subito nella tua classifica, senza validazione.</p>
+  </div>
+  <div class="gm-ach-grid">
+    <% achievements.forEach((a) => { %>
+      <div class="gm-ach <%= a.done ? 'is-done' : '' %>" data-title="<%= a.title %>" data-threshold="<%= a.threshold %>">
+        <span class="gm-ach-badge"><%- a.done ? icon('check') : icon('trophy') %></span>
+        <div class="gm-ach-body">
+          <p class="gm-ach-name"><%= a.title %></p>
+          <p class="gm-ach-desc"><%= a.desc %></p>
+        </div>
+        <span class="gm-ach-pts">+<%= a.points %><small>pt</small></span>
+      </div>
+    <% }) %>
+  </div>
+  <% if (!currentUser) { %>
+    <p class="gm-login-note">
+      Puoi giocare liberamente, ma per <strong>guadagnare punti</strong> con i traguardi devi
+      <a href="/registrati">registrarti</a> o <a href="/login">accedere</a>.
+    </p>
+  <% } %>
+</section>
+
+<script src="/game.js?v=4" defer></script>

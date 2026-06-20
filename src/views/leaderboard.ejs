@@ -2,9 +2,17 @@
 <div class="lb-hero">
   <p class="lp-kicker">Live</p>
   <h1 class="lb-hero-title">Classifica</h1>
-  <p class="lb-hero-sub">Si aggiorna man mano che lo staff valida le prove.</p>
+  <p class="lb-hero-sub">La gara dei premi e i record del mini-gioco, in un colpo d'occhio.</p>
 </div>
 
+<%# ── Tab ───────────────────────────────────────────────────────── %>
+<div class="lb-tabs" role="tablist">
+  <button class="lb-tab active" type="button" role="tab" data-target="lbPanelGeneral"><%- icon('trophy') %> Generale</button>
+  <button class="lb-tab" type="button" role="tab" data-target="lbPanelGame"><%- icon('bolt') %> Gioco</button>
+</div>
+
+<%# ════════════════════ PANNELLO GENERALE ════════════════════════ %>
+<div class="lb-panel lb-panel-active" id="lbPanelGeneral">
 <% if (rows.length === 0) { %>
 
   <div class="lb-empty">
@@ -23,10 +31,7 @@
   <% const rest = rows.slice(3); %>
 
   <div class="lb-podium-wrap">
-    <%# Riordina: 2°, 1°, 3° per l'effetto podio fisico %>
     <% const podiumOrder = [top3[1], top3[0], top3[2]].filter(Boolean); %>
-    <% const podiumPos   = top3[1] ? [1, 0, 2] : [0]; %>
-
     <% podiumOrder.forEach((u, pi) => { %>
       <% const realIdx = top3.indexOf(u); %>
       <% const isMe    = currentUserId && u.id === currentUserId; %>
@@ -60,3 +65,39 @@
   <% } %>
 
 <% } %>
+</div>
+
+<%# ════════════════════ PANNELLO GIOCO ═══════════════════════════ %>
+<div class="lb-panel" id="lbPanelGame">
+<% if (gameRows.length === 0) { %>
+
+  <div class="lb-empty">
+    <span class="lb-empty-icon"><%- icon('bolt') %></span>
+    <p>Nessun punteggio registrato.</p>
+    <p class="muted small">Sii il primo a correre con San Rocco e a entrare nella classifica del gioco.</p>
+    <a href="/gioco" class="btn" style="margin-top:1.5rem"><%- icon('bolt') %> Vai al gioco</a>
+  </div>
+
+<% } else { %>
+
+  <div class="lb-list-wrap card">
+    <h2 class="lb-list-title">I migliori punteggi · «Corri San Rocco»</h2>
+    <ol class="lb-list lb-list-game">
+      <% gameRows.forEach((u, i) => { %>
+        <% const isMe = currentUserId && u.id === currentUserId; %>
+        <li class="lb-list-row <%= isMe ? 'lb-me' : '' %>">
+          <span class="lb-list-rank">
+            <% if (i < 3) { %><span class="lb-medal-inline <%= ['is-gold','is-silver','is-bronze'][i] %>"><%- icon('medal') %></span><% } else { %><%= i + 1 %><% } %>
+          </span>
+          <span class="lb-list-name"><%= u.nickname %><% if (isMe) { %> <span class="lb-you">tu</span><% } %></span>
+          <span class="lb-list-pts"><%= u.best %><small>record</small></span>
+        </li>
+      <% }) %>
+    </ol>
+  </div>
+  <p class="muted small" style="text-align:center;margin-top:1.2rem">
+    Il punteggio record si aggiorna ad ogni partita su <a href="/gioco" style="color:var(--gold)">Corri San Rocco</a>.
+  </p>
+
+<% } %>
+</div>

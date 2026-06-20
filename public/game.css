@@ -1,0 +1,201 @@
+/* ===================================================================
+   FantaSanRocco — Mini-gioco «Corri San Rocco»
+   Endless runner pixelato. Tema oro/notte, scoped sotto .gm-*.
+   =================================================================== */
+
+.gm-hero {
+  text-align: center;
+  padding: 4.5rem 1.5rem 2rem;
+}
+.gm-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 8vw, 5.5rem);
+  font-weight: 900; letter-spacing: .04em; line-height: 1;
+  background: linear-gradient(120deg, #fffaee 0%, var(--gold-2) 30%, var(--gold) 55%, var(--amber) 100%);
+  background-size: 250% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: title-shimmer 9s linear infinite;
+  margin-bottom: .6rem;
+}
+.gm-sub {
+  font-family: var(--font-serif); font-style: italic;
+  color: var(--text-2); font-size: clamp(.95rem, 2.2vw, 1.2rem);
+  line-height: 1.6;
+}
+
+/* ── Cornice del gioco ──────────────────────────────────────────── */
+.gm-stage-wrap {
+  max-width: 760px; margin: 0 auto;
+  padding: 0 1rem;
+}
+.gm-stage {
+  position: relative;
+  border-radius: 18px; overflow: hidden;
+  border: 1px solid var(--border-gold);
+  box-shadow: var(--shadow), 0 0 60px rgba(212,160,26,.12);
+  background: #05060f;
+  aspect-ratio: 3 / 2;
+  max-height: 70vh; margin: 0 auto;
+}
+.gm-canvas {
+  display: block; width: 100%; height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* HUD punteggio/record sopra al canvas */
+.gm-hud {
+  position: absolute; top: 10px; left: 14px; right: 14px;
+  display: flex; justify-content: space-between; align-items: center;
+  pointer-events: none; z-index: 2;
+  font-family: var(--font-heading); letter-spacing: .12em;
+}
+.gm-hud .gm-score { color: #fff; font-size: 1.1rem; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,.8); }
+.gm-hud .gm-best  { color: var(--gold-2); font-size: .78rem; font-weight: 600; text-shadow: 0 2px 8px rgba(0,0,0,.8); }
+
+/* Overlay start / game over */
+.gm-overlay {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: .9rem; text-align: center; padding: 1.5rem;
+  background: radial-gradient(ellipse at center, rgba(4,3,10,.55) 0%, rgba(4,3,10,.85) 100%);
+  -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+  transition: opacity .3s var(--ease);
+}
+.gm-overlay.gm-hidden { opacity: 0; pointer-events: none; }
+.gm-over-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 5vw, 2.6rem); font-weight: 900;
+  color: var(--gold-2); text-shadow: 0 2px 20px rgba(0,0,0,.7);
+}
+.gm-over-score { color: #fff; font-family: var(--font-heading); font-size: 1.05rem; }
+.gm-over-score b { color: var(--gold-2); }
+.gm-hint { color: var(--text-2); font-size: .8rem; font-family: var(--font-body); }
+.gm-hint kbd {
+  font-family: var(--font-heading); font-size: .72rem;
+  background: var(--glass); border: 1px solid var(--border-gold);
+  border-radius: 6px; padding: .1rem .45rem; color: var(--text);
+}
+.gm-play-btn {
+  margin-top: .3rem;
+}
+
+/* toast traguardi conquistati */
+.gm-toast {
+  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%) translateY(20px);
+  z-index: 5; display: flex; flex-direction: column; gap: .4rem; align-items: center;
+  opacity: 0; transition: opacity .35s var(--ease), transform .35s var(--spring);
+  pointer-events: none; width: max-content; max-width: 90%;
+}
+.gm-toast.gm-show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.gm-toast-item {
+  display: flex; align-items: center; gap: .55rem;
+  background: rgba(212,160,26,.16); border: 1px solid var(--border-gold);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-radius: 100px; padding: .4rem .9rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5);
+}
+.gm-toast-item .ico { width: 16px; height: 16px; color: var(--gold-2); }
+.gm-toast-item span { font-size: .82rem; color: #fff; font-weight: 600; }
+.gm-toast-item b { color: var(--gold-2); }
+
+/* ── Pannello traguardi ─────────────────────────────────────────── */
+.gm-ach-section { max-width: 760px; margin: 3.5rem auto 1rem; padding: 0 1.2rem; }
+.gm-ach-head { text-align: center; margin-bottom: 1.8rem; }
+.gm-ach-kicker { font-family: var(--font-heading); font-size: .7rem; letter-spacing: .24em; text-transform: uppercase; color: var(--gold-2); margin-bottom: .5rem; }
+.gm-ach-title { font-family: var(--font-display); font-size: clamp(1.6rem, 5vw, 2.6rem); font-weight: 800; color: var(--text); }
+.gm-ach-note { color: var(--text-2); font-family: var(--font-serif); font-style: italic; margin-top: .5rem; font-size: .95rem; }
+
+.gm-ach-grid { display: grid; gap: .9rem; }
+.gm-ach {
+  display: flex; align-items: center; gap: 1rem;
+  padding: 1rem 1.2rem; border-radius: 16px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  transition: border-color .3s var(--ease), transform .3s var(--ease);
+}
+.gm-ach.is-done { border-color: rgba(46,204,113,.4); background: linear-gradient(120deg, rgba(46,204,113,.06), var(--bg-card)); }
+.gm-ach-badge {
+  flex: 0 0 auto; width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, rgba(243,198,75,.2), rgba(212,160,26,.04));
+  border: 1px solid var(--border-gold); color: var(--gold-2);
+}
+.gm-ach.is-done .gm-ach-badge { background: linear-gradient(160deg, rgba(46,204,113,.22), rgba(46,204,113,.04)); border-color: rgba(46,204,113,.4); color: #43d17a; }
+.gm-ach-badge .ico { width: 22px; height: 22px; }
+.gm-ach-body { flex: 1; min-width: 0; }
+.gm-ach-name { font-family: var(--font-heading); font-weight: 700; color: var(--text); font-size: 1rem; letter-spacing: .01em; }
+.gm-ach-desc { color: var(--text-2); font-size: .82rem; margin-top: .15rem; }
+.gm-ach-pts {
+  flex: 0 0 auto; font-family: var(--font-heading); font-weight: 800;
+  color: var(--gold-2); font-size: 1.05rem; white-space: nowrap;
+}
+.gm-ach.is-done .gm-ach-pts { color: #43d17a; }
+.gm-ach-pts small { font-size: .62rem; opacity: .7; margin-left: 2px; }
+
+.gm-login-note {
+  text-align: center; max-width: 620px; margin: 1.5rem auto 0;
+  padding: 1rem 1.2rem; border-radius: 14px;
+  background: rgba(212,160,26,.08); border: 1px solid var(--border-gold);
+  color: var(--text-2); font-size: .9rem;
+}
+.gm-login-note a { color: var(--gold-2); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gm-title { animation: none; }
+}
+
+
+/* ── Controller mobile (tieni premuto per muoverti) ─────────────── */
+.gm-pad { display: none; gap: 1rem; justify-content: center; margin-top: 1rem; }
+.gm-pad-btn {
+  flex: 1; max-width: 210px; min-height: 66px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 16px; cursor: pointer; color: var(--gold-2);
+  background: linear-gradient(180deg, rgba(243,198,75,.16), rgba(212,160,26,.04));
+  border: 1px solid var(--border-gold);
+  box-shadow: 0 6px 18px rgba(0,0,0,.4), inset 0 1px 1px rgba(255,255,255,.1);
+  -webkit-tap-highlight-color: transparent; touch-action: none; user-select: none;
+  transition: transform .1s var(--ease), background .2s var(--ease);
+}
+.gm-pad-btn .ico { width: 34px; height: 34px; }
+.gm-pad-btn:active {
+  transform: scale(.95);
+  background: linear-gradient(180deg, rgba(243,198,75,.3), rgba(212,160,26,.08));
+}
+
+.gm-hint-touch { display: none; }
+@media (pointer: coarse), (max-width: 760px) {
+  .gm-pad { display: flex; }
+  .gm-hint-desk { display: none; }
+  .gm-hint-touch { display: inline; }
+}
+
+
+/* ── Messaggi stile arcade (VIA! / GAME OVER / BONUS!) ──────────── */
+.gm-arcade-flash {
+  position: absolute; inset: 0; z-index: 6;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; opacity: 0;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(1.1rem, 5.2vw, 2.1rem);
+  letter-spacing: .04em; text-align: center; padding: 0 1rem;
+  color: #f5c842;
+  text-shadow:
+    3px 3px 0 #5a1a00, -1px -1px 0 #000, 1px 1px 0 #000,
+    0 0 16px rgba(243,198,75,.7), 0 0 34px rgba(232,78,27,.5);
+}
+.gm-arcade-flash.show { animation: gm-arcade-pop 1.05s steps(60) forwards; }
+@keyframes gm-arcade-pop {
+  0%   { opacity: 0; transform: scale(.3) rotate(-4deg); }
+  16%  { opacity: 1; transform: scale(1.22) rotate(2deg); }
+  28%  { transform: scale(.96) rotate(0deg); }
+  40%  { transform: scale(1.05); }
+  70%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.18); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gm-arcade-flash.show { animation: gm-arcade-fade 1s linear forwards; }
+  @keyframes gm-arcade-fade { 0%{opacity:0} 12%{opacity:1} 75%{opacity:1} 100%{opacity:0} }
+}

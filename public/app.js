@@ -61,6 +61,21 @@ document.addEventListener('click', async (e) => {
   });
 })();
 
+// ── Classifica: tab Generale / Gioco ────────────────────────────────
+(function () {
+  const tabs = document.querySelectorAll('.lb-tab');
+  if (!tabs.length) return;
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.lb-panel').forEach((p) => {
+        p.classList.toggle('lb-panel-active', p.id === tab.dataset.target);
+      });
+    });
+  });
+})();
+
 // ── Scroll Reveal (IntersectionObserver) ────────────────────────────
 (function () {
   const els = document.querySelectorAll('[data-reveal]');

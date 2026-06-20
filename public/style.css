@@ -2924,3 +2924,37 @@ textarea:focus-visible,
 .pf-avatar-form input[type="file"]::file-selector-button:hover {
   background: var(--glass-hover); border-color: rgba(212,160,26,.5);
 }
+
+
+/* ===================================================================
+   CLASSIFICA — Tab Generale / Gioco
+   =================================================================== */
+.lb-tabs {
+  display: flex; justify-content: center; gap: .6rem;
+  margin: 0 auto 2rem; flex-wrap: wrap;
+}
+.lb-tab {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-family: var(--font-heading); font-weight: 600;
+  font-size: .82rem; letter-spacing: .06em;
+  color: var(--text-2); cursor: pointer;
+  background: var(--glass); border: 1px solid var(--border);
+  border-radius: 100px; padding: .55rem 1.2rem;
+  transition: color .25s var(--ease), border-color .25s var(--ease), background .25s var(--ease);
+}
+.lb-tab .ico { width: 1.05em; height: 1.05em; }
+.lb-tab:hover { color: var(--text); border-color: rgba(212,160,26,.35); }
+.lb-tab.active {
+  color: #1a1206;
+  background: linear-gradient(135deg, var(--gold-2) 0%, var(--gold) 100%);
+  border-color: transparent;
+  box-shadow: 0 6px 22px rgba(212,160,26,.28);
+}
+
+.lb-panel { display: none; }
+.lb-panel.lb-panel-active { display: block; animation: fade-up .4s var(--ease) both; }
+
+/* medaglia inline nel rank della classifica gioco */
+.lb-medal-inline { display: inline-flex; font-size: 1.5rem; line-height: 1; }
+.lb-medal-inline .ico { width: 1em; height: 1em; }
+.lb-list-game .lb-list-pts small { display: block; text-align: right; }
