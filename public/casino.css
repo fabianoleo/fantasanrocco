@@ -1,0 +1,188 @@
+/* ===================================================================
+   FantaSanRocco — Ruota della Fortuna + Slot «Tombola di San Rocco»
+   Tema oro/notte, scoped sotto .cz-*. Stessa estetica del mini-gioco.
+   =================================================================== */
+
+.cz-hero { text-align: center; padding: 4rem 1.5rem 1rem; }
+.cz-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 7vw, 4.6rem);
+  font-weight: 900; letter-spacing: .03em; line-height: 1;
+  background: linear-gradient(120deg, #fffaee 0%, var(--gold-2) 30%, var(--gold) 55%, var(--amber) 100%);
+  background-size: 250% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: title-shimmer 9s linear infinite; margin-bottom: .5rem;
+}
+.cz-sub { font-family: var(--font-serif); font-style: italic; color: var(--text-2); font-size: clamp(.95rem, 2.2vw, 1.15rem); }
+
+/* Saldo punti (condiviso) */
+.cz-balance {
+  display: flex; align-items: center; justify-content: center; gap: .55rem;
+  max-width: 320px; margin: 1.3rem auto 0; padding: .6rem 1.2rem;
+  border-radius: 100px; background: rgba(212,160,26,.1); border: 1px solid var(--border-gold);
+}
+.cz-balance .ico { width: 18px; height: 18px; color: var(--gold-2); }
+.cz-balance b { font-family: var(--font-heading); font-size: 1.3rem; color: var(--gold-2); }
+.cz-balance span { color: var(--text-2); font-size: .82rem; }
+.cz-balance b.bump { animation: cz-bump .5s var(--spring); }
+@keyframes cz-bump { 0% { transform: scale(1); } 40% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+/* ── RUOTA ────────────────────────────────────────────────────────── */
+.cz-wheel-wrap { max-width: 520px; margin: 1.5rem auto 0; padding: 0 1rem; text-align: center; }
+.cz-wheel-stage { position: relative; width: min(86vw, 420px); margin: 0 auto; aspect-ratio: 1; }
+.cz-wheel-svg {
+  width: 100%; height: 100%; display: block;
+  filter: drop-shadow(0 18px 40px rgba(0,0,0,.55));
+  transition: transform 5s cubic-bezier(.16,.84,.3,1);
+}
+.cz-wheel-seg-label {
+  font-family: var(--font-heading); font-weight: 800; fill: #1a1206;
+  font-size: 9px; letter-spacing: .02em;
+}
+.cz-wheel-seg-jack { font-size: 6.6px; fill: #fff; }
+.cz-wheel-hub {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 19%; height: 19%; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff7d0, var(--gold) 55%, var(--amber));
+  border: 3px solid #1a1206; box-shadow: 0 4px 14px rgba(0,0,0,.5), inset 0 1px 2px rgba(255,255,255,.5);
+  display: flex; align-items: center; justify-content: center; z-index: 3;
+}
+.cz-wheel-hub .ico { width: 52%; height: 52%; color: #1a1206; }
+.cz-wheel-pointer {
+  position: absolute; top: -3%; left: 50%; transform: translateX(-50%); z-index: 4;
+  width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent;
+  border-top: 26px solid var(--gold-2); filter: drop-shadow(0 3px 4px rgba(0,0,0,.6));
+}
+.cz-spin-btn { margin-top: 1.6rem; min-width: 220px; }
+.cz-wheel-note { margin-top: 1rem; color: var(--text-2); font-size: .85rem; font-family: var(--font-body); }
+.cz-wheel-note b { color: var(--gold-2); }
+
+/* Esito ruota */
+.cz-wheel-result {
+  margin: 1.4rem auto 0; max-width: 340px; padding: 1rem 1.3rem; border-radius: 16px;
+  background: linear-gradient(160deg, rgba(243,198,75,.14), rgba(212,160,26,.04));
+  border: 1px solid var(--border-gold); opacity: 0; transform: translateY(10px);
+  transition: opacity .4s var(--ease), transform .4s var(--spring);
+}
+.cz-wheel-result.show { opacity: 1; transform: translateY(0); }
+.cz-wheel-result.jackpot { border-color: #ff7a3c; background: linear-gradient(160deg, rgba(255,122,60,.18), rgba(255,90,60,.04)); }
+.cz-wheel-result .amt { font-family: var(--font-display); font-weight: 900; font-size: 2rem; color: var(--gold-2); }
+.cz-wheel-result.jackpot .amt { color: #ff9a4c; }
+.cz-wheel-result .lbl { color: var(--text); font-size: .9rem; }
+
+/* ── SLOT ─────────────────────────────────────────────────────────── */
+.cz-slot-wrap { max-width: 560px; margin: 1.5rem auto 0; padding: 0 1rem; }
+.cz-machine {
+  border-radius: 22px; padding: 1.4rem 1.4rem 1.6rem;
+  background: linear-gradient(180deg, #1a1330 0%, #120d22 100%);
+  border: 1px solid var(--border-gold);
+  box-shadow: var(--shadow), 0 0 60px rgba(212,160,26,.14), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.cz-reels {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: .7rem;
+  padding: .9rem; border-radius: 16px;
+  background: radial-gradient(ellipse at center, #07060f 0%, #05040b 100%);
+  border: 2px solid rgba(212,160,26,.35); box-shadow: inset 0 4px 18px rgba(0,0,0,.7);
+}
+.cz-reel {
+  position: relative; overflow: hidden; border-radius: 10px; height: 96px;
+  background: linear-gradient(180deg, #100b1f, #0a0716);
+  border: 1px solid rgba(243,198,75,.18);
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+}
+.cz-reel-strip { display: flex; flex-direction: column; will-change: transform; }
+.cz-reel-strip.spin { transition: transform var(--dur, 2s) cubic-bezier(.18,.7,.2,1); }
+.cz-tile { height: 96px; flex: 0 0 96px; display: flex; align-items: center; justify-content: center; }
+.cz-tile svg { width: 58px; height: 58px; }
+.cz-reel.win { animation: cz-reel-win .6s var(--ease) 2; }
+@keyframes cz-reel-win {
+  0%,100% { box-shadow: inset 0 4px 18px rgba(0,0,0,.7); border-color: rgba(243,198,75,.18); }
+  50% { box-shadow: inset 0 0 24px rgba(243,198,75,.55); border-color: var(--gold-2); }
+}
+.cz-payline { position: absolute; top: 50%; left: .9rem; right: .9rem; height: 2px; background: linear-gradient(90deg, transparent, rgba(243,198,75,.5), transparent); transform: translateY(-1px); z-index: 5; pointer-events: none; }
+
+/* Comandi slot */
+.cz-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.2rem; }
+.cz-bets { display: flex; gap: .45rem; flex-wrap: wrap; }
+.cz-bet {
+  font-family: var(--font-heading); font-weight: 700; font-size: .9rem;
+  min-width: 48px; padding: .5rem .7rem; border-radius: 10px; cursor: pointer;
+  color: var(--gold-2); background: rgba(243,198,75,.08); border: 1px solid var(--border-gold);
+  transition: transform .12s var(--ease), background .2s var(--ease);
+}
+.cz-bet.sel { color: #1a1206; background: linear-gradient(135deg, var(--gold-2), var(--gold)); border-color: transparent; }
+.cz-bet:active { transform: scale(.94); }
+.cz-bet-lbl { width: 100%; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-2); margin-bottom: .35rem; }
+.cz-spin {
+  flex: 1; min-width: 150px; min-height: 56px; font-family: var(--font-heading); font-weight: 800;
+  font-size: 1rem; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; color: #1a1206;
+  border: none; border-radius: 14px;
+  background: linear-gradient(135deg, var(--gold-2) 0%, var(--gold) 55%, var(--amber) 100%);
+  box-shadow: 0 8px 22px rgba(212,160,26,.4), inset 0 1px 0 rgba(255,255,255,.3);
+  transition: transform .14s var(--ease), box-shadow .2s var(--ease), filter .2s var(--ease);
+}
+.cz-spin:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(212,160,26,.55); }
+.cz-spin:active:not(:disabled) { transform: scale(.97); }
+.cz-spin:disabled { filter: grayscale(.5) brightness(.7); cursor: not-allowed; }
+
+.cz-outcome { text-align: center; margin-top: 1rem; min-height: 1.6rem; font-family: var(--font-heading); font-weight: 700; }
+.cz-outcome .win { color: #43d17a; } .cz-outcome .win b { color: var(--gold-2); }
+.cz-outcome .lose { color: var(--text-2); }
+.cz-outcome.jack { animation: cz-bump .6s var(--spring); }
+
+/* Flash arcade (riuso stile Press Start 2P del mini-gioco) */
+.cz-flash {
+  position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; opacity: 0;
+  font-family: 'Press Start 2P', monospace; font-size: clamp(1.3rem, 6vw, 2.6rem);
+  letter-spacing: .04em; text-align: center; padding: 0 1rem; color: #f5c842;
+  text-shadow: 3px 3px 0 #5a1a00, -1px -1px 0 #000, 1px 1px 0 #000, 0 0 18px rgba(243,198,75,.7), 0 0 38px rgba(232,78,27,.5);
+}
+.cz-flash.show { animation: gm-arcade-pop 1.15s steps(60) forwards; }
+
+/* Paytable */
+.cz-paytable { max-width: 560px; margin: 2.6rem auto 0; padding: 0 1rem; }
+.cz-paytable h2 { font-family: var(--font-display); font-size: clamp(1.4rem, 5vw, 2.2rem); font-weight: 800; text-align: center; color: var(--text); margin-bottom: .4rem; }
+.cz-paytable .cz-pt-note { text-align: center; color: var(--text-2); font-family: var(--font-serif); font-style: italic; font-size: .9rem; margin-bottom: 1.4rem; }
+.cz-pt-grid { display: grid; gap: .6rem; }
+.cz-pt-row {
+  display: flex; align-items: center; gap: .9rem; padding: .7rem .9rem; border-radius: 12px;
+  background: var(--bg-card); border: 1px solid var(--border);
+}
+.cz-pt-syms { display: flex; gap: .2rem; }
+.cz-pt-syms svg { width: 30px; height: 30px; }
+.cz-pt-name { flex: 1; min-width: 0; }
+.cz-pt-name .n { font-family: var(--font-heading); font-weight: 700; color: var(--text); font-size: .92rem; }
+.cz-pt-name .d { color: var(--text-2); font-size: .76rem; }
+.cz-pt-mult { font-family: var(--font-heading); font-weight: 800; color: var(--gold-2); font-size: 1.1rem; white-space: nowrap; }
+.cz-pt-row.top { border-color: var(--border-gold); background: linear-gradient(120deg, rgba(243,198,75,.08), var(--bg-card)); }
+
+.cz-house-note {
+  max-width: 560px; margin: 1.6rem auto 0; padding: .9rem 1.1rem; border-radius: 12px;
+  background: rgba(212,160,26,.06); border: 1px solid var(--border-gold);
+  color: var(--text-2); font-size: .82rem; text-align: center;
+}
+.cz-house-note b { color: var(--gold-2); }
+
+/* Hub modalità di gioco (in /gioco) */
+.cz-modes { max-width: 760px; margin: 2.4rem auto 0; padding: 0 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+.cz-mode {
+  display: flex; flex-direction: column; gap: .5rem; padding: 1.3rem; border-radius: 16px;
+  text-decoration: none; color: inherit; position: relative; overflow: hidden;
+  background: linear-gradient(160deg, rgba(243,198,75,.12), rgba(212,160,26,.03));
+  border: 1px solid var(--border-gold); transition: transform .2s var(--ease), box-shadow .25s var(--ease);
+}
+.cz-mode:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgba(0,0,0,.45), 0 0 0 1px var(--gold-2); }
+.cz-mode-ic { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, var(--gold-2), var(--gold)); color: #1a1206; }
+.cz-mode-ic .ico { width: 22px; height: 22px; }
+.cz-mode h3 { font-family: var(--font-heading); font-weight: 800; color: var(--text); font-size: 1.1rem; }
+.cz-mode p { color: var(--text-2); font-size: .82rem; line-height: 1.4; }
+.cz-mode .cz-mode-tag { align-self: flex-start; font-family: var(--font-heading); font-size: .6rem; letter-spacing: .12em; text-transform: uppercase; color: var(--gold-2); border: 1px solid var(--border-gold); border-radius: 100px; padding: .15rem .5rem; }
+
+@media (max-width: 560px) { .cz-modes { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) {
+  .cz-title { animation: none; }
+  .cz-wheel-svg { transition: transform 2.5s ease-out; }
+}

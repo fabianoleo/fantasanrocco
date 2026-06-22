@@ -1,3 +1,7 @@
+<%# ── PRIMA SCHERMATA: banner + logo 3D + titolo + frase + scroll ───── %>
+<link rel="stylesheet" href="/intro3d.css?v=3">
+<%- include('partials/intro3d') %>
+
 <%# ── CINEMATIC HERO (ricreazione nativa) ──────────────────────────── %>
 <link rel="stylesheet" href="/cinematic.css?v=5">
 <%
@@ -12,16 +16,17 @@
 
   <%# ── Strato sfondo: titoli hero ── %>
   <div class="hero-text-wrapper">
-    <h1 class="hero-line hero-line-1 text-track gsap-reveal text-3d-matte">Vivi la festa,</h1>
-    <h1 class="hero-line hero-line-2 text-days gsap-reveal text-silver-matte">non solo guardarla.</h1>
+    <h1 class="hero-line hero-line-1 text-track gsap-reveal text-3d-matte">La festa è una gara.</h1>
+    <h1 class="hero-line hero-line-2 text-days gsap-reveal text-silver-matte">Scendi in campo.</h1>
   </div>
 
   <%# ── Strato sfondo 2: CTA finale ── %>
   <div class="cta-wrapper gsap-reveal">
     <h2 class="cta-title text-silver-matte">Entra in gioco.</h2>
     <p class="cta-sub">
-      Unisciti agli altri giocatori della Festa di San Rocco a Siano e prenditi
-      la tua classifica. Bastano una registrazione e la voglia di vincere.
+      Completa le missioni, sfida il mini-gioco arcade «Corri San Rocco», gira
+      ogni giorno la Ruota della Fortuna e tenta la Slot: tutto fa punti per
+      la stessa classifica. Basta una registrazione e la voglia di vincere.
     </p>
     <div class="cine-cta-actions">
       <a class="btn-modern-light" href="<%= currentUser ? '/missioni' : '/registrati' %>">
@@ -139,10 +144,11 @@
 
         <%# SINISTRA (desktop) / BASSO (mobile): testo accountability %>
         <div class="card-left-text gsap-reveal">
-          <h3 class="card-heading">Missioni, punti, gloria.</h3>
+          <h3 class="card-heading">Missioni, mini-giochi, gloria.</h3>
           <p class="card-desc">
             FantaSanRocco trasforma la Festa di San Rocco a Siano in una gara:
-            completa le sfide, carica le prove, scala la classifica in tempo reale.
+            completa le sfide, gioca all'arcade, alla ruota e alla slot, carica
+            le prove e scala la classifica in tempo reale.
           </p>
         </div>
 
@@ -238,6 +244,35 @@
   </div>
 </section>
 
+<%# ── I GIOCHI ─────────────────────────────────────────────────────── %>
+<section class="lp-games lp-full">
+  <div class="lp-section-inner">
+    <p class="lp-kicker" data-reveal="fade-in">Non solo missioni</p>
+    <h2 class="lp-headline" data-reveal="fade-up">Gioca, vinci punti,<br>scala la classifica.</h2>
+    <div class="lp-prizes-grid">
+      <a href="/gioco" class="lp-prize-card lp-game-card" data-reveal="slide-up" data-delay="0">
+        <span class="lp-prize-icon lp-game-icon"><%- icon('bolt') %></span>
+        <h3>Corri San Rocco</h3>
+        <p>Il mini-gioco arcade pixelato: schiva torce e bombe, raccogli monete e bonus rari — aureola, reliquia ×2 e i leggendari fuochi. Traguardi fino a 15.000 punti che entrano in classifica.</p>
+        <span class="lp-game-tag">Mini-gioco</span>
+      </a>
+      <a href="/ruota" class="lp-prize-card lp-game-card" data-reveal="slide-up" data-delay="1">
+        <span class="lp-prize-icon lp-game-icon"><%- icon('wheel') %></span>
+        <h3>Ruota della Fortuna</h3>
+        <p>Un giro gratis ogni giorno: vinci punti per la classifica, con la possibilità del jackpot. La trovi anche dall'icona ruota nella barra in alto.</p>
+        <span class="lp-game-tag">Gratis · ogni giorno</span>
+      </a>
+      <a href="/slot" class="lp-prize-card lp-game-card" data-reveal="slide-up" data-delay="2">
+        <span class="lp-prize-icon lp-game-icon"><%- icon('ticket') %></span>
+        <h3>Slot di San Rocco</h3>
+        <p>Punta i tuoi punti sui rulli: ciliegie, percoca, brocca di vino, braciola di capra, fuochi e San Rocco per il jackpot. Funziona con gli stessi punti della gara.</p>
+        <span class="lp-game-tag">Gioca i tuoi punti</span>
+      </a>
+    </div>
+    <a href="/gioco" class="lp-more-link" data-reveal="fade-in">Vai alla sezione gioco →</a>
+  </div>
+</section>
+
 <%# ── PODIO ────────────────────────────────────────────────────────── %>
 <section class="lp-podio lp-full">
   <div class="lp-section-inner">
@@ -286,6 +321,11 @@
     <% } %>
   </div>
 </section>
+
+<%# ── Logo 3D della prima schermata (Three.js self-hosted) ──────────── %>
+<script src="/vendor/three.min.js" defer></script>
+<script src="/vendor/GLTFLoader.js" defer></script>
+<script src="/intro3d.js?v=4" defer></script>
 
 <%# ── Motore cinematic hero (GSAP self-hosted + script nativo) ──────── %>
 <script src="/vendor/gsap.min.js" defer></script>

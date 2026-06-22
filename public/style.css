@@ -208,6 +208,77 @@ img { max-width: 100%; display: block; }
 .nav a.staff { color: var(--amber); }
 .nav a.staff:hover { background: rgba(232, 134, 30, 0.1); }
 
+/* ── Bottone Gioco (accanto al brand, sempre visibile) ────────────── */
+.nav-game-btn {
+  display: inline-flex; align-items: center; gap: .38rem;
+  font-family: var(--font-heading); font-weight: 700;
+  font-size: .78rem; letter-spacing: .08em; text-transform: uppercase;
+  color: #1a1206;
+  background: linear-gradient(135deg, var(--gold-2) 0%, var(--gold) 55%, var(--amber) 100%);
+  background-size: 200% auto;
+  border-radius: 100px;
+  padding: .35rem .85rem .35rem .72rem;
+  box-shadow: 0 2px 12px rgba(212,160,26,.35), inset 0 1px 0 rgba(255,255,255,.25);
+  transition: background-position .4s var(--ease), box-shadow .25s var(--ease), transform .18s var(--ease);
+  white-space: nowrap; flex-shrink: 0;
+  animation: nav-game-pulse 3.5s ease-in-out infinite;
+}
+.nav-game-btn .ico { width: 13px; height: 13px; color: #1a1206; flex-shrink: 0; }
+.nav-game-btn:hover {
+  background-position: right center;
+  box-shadow: 0 4px 22px rgba(212,160,26,.55), inset 0 1px 0 rgba(255,255,255,.3);
+  transform: translateY(-1px);
+}
+.nav-game-btn.is-active {
+  background: linear-gradient(135deg, #fff7d0 0%, var(--gold-2) 40%, var(--gold) 100%);
+  box-shadow: 0 0 0 2px rgba(212,160,26,.4), 0 4px 22px rgba(212,160,26,.4);
+  animation: none;
+}
+@keyframes nav-game-pulse {
+  0%, 100% { box-shadow: 0 2px 12px rgba(212,160,26,.35), inset 0 1px 0 rgba(255,255,255,.25); }
+  50%       { box-shadow: 0 4px 20px rgba(212,160,26,.6), 0 0 0 3px rgba(212,160,26,.18), inset 0 1px 0 rgba(255,255,255,.25); }
+}
+
+/* Icona Ruota della Fortuna — tonda, accanto al bottone Gioco */
+.nav-wheel-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%;
+  color: var(--gold-2);
+  background: radial-gradient(circle at 35% 30%, rgba(243,198,75,.16), rgba(212,160,26,.05));
+  border: 1px solid var(--border-gold);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+  transition: transform .25s var(--ease), box-shadow .25s var(--ease), color .2s var(--ease);
+}
+.nav-wheel-btn .ico { width: 19px; height: 19px; }
+.nav-wheel-btn:hover {
+  color: #fff7d0; transform: rotate(35deg);
+  box-shadow: 0 0 0 2px rgba(212,160,26,.25), 0 4px 16px rgba(212,160,26,.4);
+}
+.nav-wheel-btn.is-active {
+  color: #1a1206;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  border-color: transparent;
+  box-shadow: 0 0 0 2px rgba(212,160,26,.4);
+}
+
+/* Saldo punti dell'utente nella barra in alto */
+.nav-balance {
+  display: inline-flex; align-items: center; gap: .3rem; flex-shrink: 0;
+  padding: .26rem .6rem .26rem .5rem; border-radius: 100px;
+  font-family: var(--font-heading); font-weight: 800; font-size: .82rem;
+  color: var(--gold-2);
+  background: linear-gradient(135deg, rgba(243,198,75,.16), rgba(212,160,26,.06));
+  border: 1px solid var(--border-gold);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+  transition: box-shadow .25s var(--ease), transform .18s var(--ease), color .2s var(--ease);
+  white-space: nowrap;
+}
+.nav-balance .ico { width: 15px; height: 15px; color: var(--gold-2); flex-shrink: 0; }
+.nav-balance:hover { color: #fff7d0; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(212,160,26,.35); }
+.nav-balance-val { line-height: 1; display: inline-block; }
+.nav-balance-val.bump { animation: nav-bal-bump .5s cubic-bezier(.2,1.4,.3,1); }
+@keyframes nav-bal-bump { 0% { transform: scale(1); } 40% { transform: scale(1.35); color: #fff7d0; } 100% { transform: scale(1); } }
+
 .btn-mini {
   background: linear-gradient(135deg, var(--fire-2), var(--fire));
   color: #fff !important;
@@ -1217,6 +1288,40 @@ html { overflow-x: hidden; }
   border-radius: 0 0 2px 2px;
 }
 
+/* Pulsante centrale Gioco: cerchio dorato rialzato sopra la barra */
+.bn-game {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; gap: .2rem;
+  padding: .6rem .4rem .55rem;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.bn-game-circle {
+  width: 52px; height: 52px; margin-top: -24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; color: #1a1206;
+  background: linear-gradient(135deg, var(--gold-2) 0%, var(--gold) 55%, var(--amber) 100%);
+  box-shadow:
+    0 0 0 5px rgba(4,3,10,.94),                 /* stacco dalla barra */
+    0 6px 18px rgba(212,160,26,.5),
+    inset 0 1px 0 rgba(255,255,255,.35);
+  transition: transform .2s var(--spring), box-shadow .25s var(--ease);
+}
+.bn-game-circle .ico { width: 26px; height: 26px; color: #1a1206; }
+.bn-game:active .bn-game-circle { transform: scale(.92); }
+.bn-game-label {
+  font-family: var(--font-heading); font-size: .55rem; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--gold-2);
+}
+.bn-game.bn-active .bn-game-circle {
+  box-shadow:
+    0 0 0 5px rgba(4,3,10,.94),
+    0 0 0 7px rgba(212,160,26,.45),
+    0 6px 22px rgba(212,160,26,.6),
+    inset 0 1px 0 rgba(255,255,255,.35);
+}
+.bn-game.bn-active .bn-game-label { color: var(--gold); }
+
 /* ── Mobile overrides ──────────────────────────────────────────── */
 @media (max-width: 768px) {
   /* Show mobile elements */
@@ -1238,6 +1343,7 @@ html { overflow-x: hidden; }
     max-width: calc(100% - 108px);
     overflow: hidden;
     white-space: nowrap;
+    text-overflow: ellipsis;
   }
   /* Push content above bottom-nav */
   .container { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
@@ -1563,9 +1669,14 @@ html { overflow-x: hidden; }
   .prize-duo-img { width: calc(50% - .25rem); height: 110px; }
 }
 
-/* brand-short non usato — il nome completo è visibile ovunque */
+/* Brand: nome completo di default, sigla "FSR" sui telefoni stretti
+   (lascia spazio a icona ruota + saldo punti + online nella barra) */
 .brand-short { display: none; }
 .brand-full  { display: inline; }
+@media (max-width: 560px) {
+  .brand-full  { display: none; }
+  .brand-short { display: inline; }
+}
 
 
 /* ===================================================================
@@ -1997,7 +2108,9 @@ html { overflow-x: hidden; }
 .safety-list li {
   font-size: .88rem; color: var(--text);
   line-height: 1.45;
+  display: flex; align-items: center; gap: .6rem;
 }
+.safety-emo { font-size: 1.25rem; line-height: 1; flex-shrink: 0; width: 1.5rem; text-align: center; }
 .safety-btn {
   width: 100%; justify-content: center;
   font-size: .92rem; padding: .95rem 1.5rem;
@@ -2728,6 +2841,15 @@ html { overflow-x: hidden; }
 .lp-prize-bronze .lp-prize-icon { color: var(--medal-bronze); }
 .lp-prize-icon .ico {
   filter: drop-shadow(0 4px 14px rgba(0,0,0,.5));
+}
+/* Card-gioco nella home (link) */
+.lp-game-card { display: block; text-decoration: none; color: inherit; border-color: rgba(212,160,26,.18); }
+.lp-game-card:hover { border-color: rgba(212,160,26,.55); box-shadow: var(--shadow), 0 0 60px rgba(212,160,26,.12); }
+.lp-game-icon { color: var(--gold-2); }
+.lp-game-tag {
+  display: inline-block; margin-top: 1rem;
+  font-family: var(--font-heading); font-size: .6rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--gold-2); border: 1px solid var(--border-gold); border-radius: 100px; padding: .22rem .62rem;
 }
 .lp-more-link .ico, .btn .ico { vertical-align: -0.12em; }
 

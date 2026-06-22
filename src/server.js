@@ -126,6 +126,13 @@ app.use((req, res, next) => {
 });
 app.use(auth.loadCurrentUser);
 
+// Saldo punti dell'utente loggato, disponibile in ogni view (barra in alto).
+// userPoints è una function declaration (hoisted) → richiamabile qui a runtime.
+app.use((req, res, next) => {
+  res.locals.userBalance = req.currentUser ? userPoints(req.currentUser.id) : null;
+  next();
+});
+
 // --- CSRF protection (synchronizer-token pattern) --------------------------
 app.use((req, res, next) => {
   if (!req.session.csrfToken) {
@@ -345,7 +352,7 @@ app.get('/galleria', (req, res) => {
 function leaderboardRows() {
   return db.prepare(`
     SELECT u.id, u.nickname,
-           COALESCE(SUM(CASE WHEN s.status='approved' THEN m.points ELSE 0 END), 0) AS points,
+           COALESCE(SUM(CASE WHEN s.status='approved' THEN m.points ELSE 0 END), 0) + u.points_adjust AS points,
            COUNT(CASE WHEN s.status='approved' THEN 1 END) AS done
     FROM users u
     LEFT JOIN submissions s ON s.user_id = u.id
@@ -354,6 +361,18 @@ function leaderboardRows() {
     GROUP BY u.id
     ORDER BY points DESC, u.created_at ASC
   `).all();
+}
+
+// Saldo punti spendibile di un utente = missioni/gioco approvati + saldo ruota/slot.
+// È lo STESSO totale mostrato in classifica: ruota e slot girano su questi punti.
+function userPoints(userId) {
+  const r = db.prepare(`
+    SELECT COALESCE(SUM(CASE WHEN s.status='approved' THEN m.points ELSE 0 END), 0) AS pts
+    FROM submissions s JOIN missions m ON m.id = s.mission_id
+    WHERE s.user_id = ?
+  `).get(userId);
+  const u = db.prepare('SELECT points_adjust FROM users WHERE id = ?').get(userId);
+  return (r ? r.pts : 0) + (u ? u.points_adjust : 0);
 }
 
 // Classifica del mini-gioco: per punteggio record (solo chi ha giocato)
@@ -373,18 +392,33 @@ function gameLeaderboardRows() {
 // punteggio nel gioco. Al raggiungimento il server inserisce una prova già
 // approvata → i punti entrano in classifica come le altre missioni.
 const GAME_ACHIEVEMENTS = [
-  // ── Base (accessibili a tutti) ───────────────────────────────────
-  { key: 'g-run',  threshold: 1,    points: 10,  title: 'Prima corsa',                 desc: 'Completa la tua prima partita a «Corri San Rocco».' },
-  { key: 'g-50',   threshold: 50,   points: 15,  title: 'In cammino',                  desc: 'Raggiungi 50 punti in una partita.' },
-  { key: 'g-120',  threshold: 120,  points: 25,  title: 'Pellegrino instancabile',      desc: 'Raggiungi 120 punti in una partita.' },
-  { key: 'g-250',  threshold: 250,  points: 40,  title: 'Col cane fino ai fuochi',      desc: 'Raggiungi 250 punti in una partita.' },
-  { key: 'g-400',  threshold: 400,  points: 60,  title: 'Leggenda di Siano',            desc: 'Raggiungi 400 punti in una partita.' },
-  // ── Avanzati (per chi va lontano) ───────────────────────────────
-  { key: 'g-600',  threshold: 600,  points: 80,  title: 'Devoto tra i devoti',          desc: 'Raggiungi 600 punti in una partita.' },
-  { key: 'g-850',  threshold: 850,  points: 100, title: 'Cavaliere di San Rocco',       desc: 'Raggiungi 850 punti in una partita.' },
-  { key: 'g-1100', threshold: 1100, points: 130, title: 'Guardiano della processione',  desc: 'Raggiungi 1100 punti in una partita.' },
-  { key: 'g-1500', threshold: 1500, points: 170, title: 'Il Santo corre ancora',        desc: 'Raggiungi 1500 punti in una partita.' },
-  { key: 'g-2000', threshold: 2000, points: 220, title: 'Immortale come San Rocco',     desc: 'Raggiungi 2000 punti in una partita. Sei inarrestabile.' },
+  // ── Punteggio · base (accessibili a tutti) ───────────────────────
+  { key: 'g-run',   metric: 'score', threshold: 1,     points: 10,   title: 'Prima corsa',                 desc: 'Completa la tua prima partita a «Corri San Rocco».' },
+  { key: 'g-50',    metric: 'score', threshold: 50,    points: 15,   title: 'In cammino',                  desc: 'Raggiungi 50 punti in una partita.' },
+  { key: 'g-120',   metric: 'score', threshold: 120,   points: 25,   title: 'Pellegrino instancabile',     desc: 'Raggiungi 120 punti in una partita.' },
+  { key: 'g-250',   metric: 'score', threshold: 250,   points: 40,   title: 'Col cane fino ai fuochi',      desc: 'Raggiungi 250 punti in una partita.' },
+  { key: 'g-400',   metric: 'score', threshold: 400,   points: 60,   title: 'Leggenda di Siano',           desc: 'Raggiungi 400 punti in una partita.' },
+  // ── Punteggio · avanzati (per chi va lontano) ───────────────────
+  { key: 'g-600',   metric: 'score', threshold: 600,   points: 80,   title: 'Devoto tra i devoti',         desc: 'Raggiungi 600 punti in una partita.' },
+  { key: 'g-850',   metric: 'score', threshold: 850,   points: 100,  title: 'Cavaliere di San Rocco',      desc: 'Raggiungi 850 punti in una partita.' },
+  { key: 'g-1100',  metric: 'score', threshold: 1100,  points: 130,  title: 'Guardiano della processione', desc: 'Raggiungi 1100 punti in una partita.' },
+  { key: 'g-1500',  metric: 'score', threshold: 1500,  points: 170,  title: 'Il Santo corre ancora',       desc: 'Raggiungi 1500 punti in una partita.' },
+  { key: 'g-2000',  metric: 'score', threshold: 2000,  points: 220,  title: 'Immortale come San Rocco',    desc: 'Raggiungi 2000 punti in una partita.' },
+  // ── Punteggio · leggendari (fino a 15.000) ──────────────────────
+  { key: 'g-3000',  metric: 'score', threshold: 3000,  points: 290,  title: 'Maratoneta della festa',      desc: 'Raggiungi 3.000 punti in una partita.' },
+  { key: 'g-4500',  metric: 'score', threshold: 4500,  points: 370,  title: 'Veglia infinita',             desc: 'Raggiungi 4.500 punti in una partita.' },
+  { key: 'g-6000',  metric: 'score', threshold: 6000,  points: 470,  title: 'Patrono dei pellegrini',      desc: 'Raggiungi 6.000 punti in una partita.' },
+  { key: 'g-8000',  metric: 'score', threshold: 8000,  points: 590,  title: 'Miracolo di Siano',           desc: 'Raggiungi 8.000 punti in una partita.' },
+  { key: 'g-10000', metric: 'score', threshold: 10000, points: 740,  title: 'Santo tra i santi',           desc: 'Raggiungi 10.000 punti in una partita.' },
+  { key: 'g-12500', metric: 'score', threshold: 12500, points: 920,  title: 'Eterno camminatore',          desc: 'Raggiungi 12.500 punti in una partita.' },
+  { key: 'g-15000', metric: 'score', threshold: 15000, points: 1200, title: 'Mito di San Rocco',           desc: 'Raggiungi 15.000 punti in una partita. Sei inarrestabile.' },
+  // ── Partite giocate (più giochi, più punti) ─────────────────────
+  { key: 'gp-3',    metric: 'plays', threshold: 3,     points: 15,   title: 'Ci ho preso gusto',           desc: 'Gioca 3 partite a «Corri San Rocco».' },
+  { key: 'gp-8',    metric: 'plays', threshold: 8,     points: 25,   title: 'Habitué del cortile',         desc: 'Gioca 8 partite.' },
+  { key: 'gp-20',   metric: 'plays', threshold: 20,    points: 45,   title: 'Cliente fisso',               desc: 'Gioca 20 partite.' },
+  { key: 'gp-40',   metric: 'plays', threshold: 40,    points: 70,   title: 'Veterano del distributore',   desc: 'Gioca 40 partite.' },
+  { key: 'gp-75',   metric: 'plays', threshold: 75,    points: 110,  title: 'Mai una pausa',               desc: 'Gioca 75 partite.' },
+  { key: 'gp-150',  metric: 'plays', threshold: 150,   points: 170,  title: 'Inchiodato allo schermo',     desc: 'Gioca 150 partite. Ma quanto giochi?' },
 ];
 
 // Crea/aggiorna le missioni del gioco allo startup (idempotente).
@@ -429,6 +463,8 @@ const resetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5,  standardHead
 const registerLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
 const globalLimiter = rateLimit({ windowMs: 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false });
 const gameLimiter = rateLimit({ windowMs: 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false });
+const slotLimiter = rateLimit({ windowMs: 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false });
+const wheelLimiter = rateLimit({ windowMs: 60 * 1000, max: 12, standardHeaders: true, legacyHeaders: false });
 app.use(globalLimiter);
 
 // --- Registrazione aperta --------------------------------------------------
@@ -547,12 +583,13 @@ app.get('/gioco', (req, res) => {
       done = !!(mid && db.prepare("SELECT 1 FROM submissions WHERE user_id = ? AND mission_id = ? AND status = 'approved'")
         .get(req.currentUser.id, mid));
     }
-    return { title: a.title, desc: a.desc, points: a.points, threshold: a.threshold, done };
+    return { title: a.title, desc: a.desc, points: a.points, threshold: a.threshold, metric: a.metric, done };
   });
   res.render('gioco', {
     title: 'Corri San Rocco',
     achievements,
     best: req.currentUser ? (req.currentUser.game_best || 0) : 0,
+    plays: req.currentUser ? (req.currentUser.game_plays || 0) : 0,
   });
 });
 
@@ -561,12 +598,16 @@ app.get('/gioco', (req, res) => {
 app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, res) => {
   const score = Math.max(0, Math.min(100000, parseInt(req.body.score, 10) || 0));
   const awarded = [];
+  // Ogni report di fine partita conta come una partita giocata
+  const plays = (req.currentUser.game_plays || 0) + 1;
   db.transaction(() => {
     if (score > (req.currentUser.game_best || 0)) {
       db.prepare('UPDATE users SET game_best = ? WHERE id = ?').run(score, req.currentUser.id);
     }
+    db.prepare('UPDATE users SET game_plays = ? WHERE id = ?').run(plays, req.currentUser.id);
     for (const a of GAME_ACHIEVEMENTS) {
-      if (score < a.threshold) continue;
+      const value = a.metric === 'plays' ? plays : score;
+      if (value < a.threshold) continue;
       const mid = gameMissionId(a.key);
       if (!mid) continue;
       const has = db.prepare("SELECT 1 FROM submissions WHERE user_id = ? AND mission_id = ? AND status = 'approved'")
@@ -578,7 +619,126 @@ app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, r
     }
   })();
   const best = Math.max(score, req.currentUser.game_best || 0);
-  res.json({ ok: true, best, awarded });
+  res.json({ ok: true, best, plays, awarded });
+});
+
+// =========================================================================
+//  RUOTA DELLA FORTUNA  (gratis 1×/giorno) + SLOT «Tombola di San Rocco»
+//  Stessa valuta della classifica: i premi modificano users.points_adjust.
+//  Tutta la casualità è SOLO lato server (mai fidarsi del client).
+// =========================================================================
+function cryptoRandom() {                       // [0,1) da CSPRNG
+  return crypto.randomBytes(4).readUInt32BE(0) / 0x100000000;
+}
+function weightedPick(items) {                  // items: [{ ..., weight }]
+  const tot = items.reduce((a, it) => a + it.weight, 0);
+  let r = cryptoRandom() * tot;
+  for (const it of items) { if ((r -= it.weight) < 0) return it; }
+  return items[items.length - 1];
+}
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+// ── Ruota: spicchi con premi in punti. Più alto il premio, più raro. ──────
+// L'ordine è anche quello visivo degli spicchi (0 in alto, orario).
+const WHEEL_PRIZES = [
+  { points: 10,  weight: 250, label: '10' },
+  { points: 75,  weight: 40,  label: '75' },
+  { points: 25,  weight: 130, label: '25' },
+  { points: 5,   weight: 300, label: '5' },
+  { points: 150, weight: 17,  label: '150' },
+  { points: 15,  weight: 180, label: '15' },
+  { points: 300, weight: 3,   label: 'JACKPOT 300', jackpot: true },
+  { points: 40,  weight: 80,  label: '40' },
+];
+
+app.get('/ruota', auth.requireLogin, (req, res) => {
+  res.render('ruota', {
+    title: 'Ruota della Fortuna',
+    prizes: WHEEL_PRIZES,
+    balance: userPoints(req.currentUser.id),
+    canSpin: req.currentUser.last_wheel_day !== todayStr(),
+  });
+});
+
+app.post('/ruota/gira', auth.requireLogin, wheelLimiter, (req, res) => {
+  const today = todayStr();
+  let result = null;
+  const ok = db.transaction(() => {
+    // Ri-legge l'utente DENTRO la transazione → niente doppio giro per race condition
+    const u = db.prepare('SELECT last_wheel_day FROM users WHERE id = ?').get(req.currentUser.id);
+    if (u && u.last_wheel_day === today) return false;
+    const pick = weightedPick(WHEEL_PRIZES);
+    const idx = WHEEL_PRIZES.indexOf(pick);
+    db.prepare('UPDATE users SET points_adjust = points_adjust + ?, last_wheel_day = ? WHERE id = ?')
+      .run(pick.points, today, req.currentUser.id);
+    result = { index: idx, points: pick.points, jackpot: !!pick.jackpot };
+    return true;
+  })();
+  if (!ok) return res.status(429).json({ ok: false, error: 'already', message: 'Hai già girato oggi. Torna domani!' });
+  res.json({ ok: true, ...result, balance: userPoints(req.currentUser.id) });
+});
+
+// ── Slot: 3 rulli, simboli pesati (San Rocco il più raro/forte). ─────────
+// RTP ≈ 88,6% → vantaggio del banco ~11,4%: a lungo andare il giocatore perde.
+const SLOT_SYMBOLS = [
+  { key: 'ciliegia', weight: 14 },
+  { key: 'percoca',  weight: 10 },
+  { key: 'vino',     weight: 7  },
+  { key: 'braciola', weight: 5  },
+  { key: 'fuoco',    weight: 3  },
+  { key: 'sanrocco', weight: 1  },
+];
+const SLOT_TRIPLE = { ciliegia: 3, percoca: 6, vino: 12, braciola: 25, fuoco: 55, sanrocco: 188 };
+const SLOT_PAIR   = { ciliegia: 0, percoca: 1, vino: 1.5, braciola: 3, fuoco: 8, sanrocco: 12 };
+const SLOT_BETS   = [10, 20, 50, 100];
+
+// Valuta una giocata (3 simboli) → moltiplicatore sulla puntata + descrizione.
+function evalSlot(reels) {
+  const cnt = {};
+  reels.forEach((s) => { cnt[s] = (cnt[s] || 0) + 1; });
+  for (const k in cnt) {
+    if (cnt[k] === 3) {
+      return { mult: SLOT_TRIPLE[k], kind: 'tris', sym: k, jackpot: k === 'sanrocco' };
+    }
+  }
+  let best = 0, bestSym = null;
+  for (const k in cnt) {
+    if (cnt[k] === 2 && (SLOT_PAIR[k] || 0) > best) { best = SLOT_PAIR[k]; bestSym = k; }
+  }
+  if (best > 0) return { mult: best, kind: 'coppia', sym: bestSym, jackpot: false };
+  return { mult: 0, kind: 'niente', sym: null, jackpot: false };
+}
+
+app.get('/slot', auth.requireLogin, (req, res) => {
+  res.render('slot', {
+    title: 'Slot di San Rocco',
+    symbols: SLOT_SYMBOLS.map((s) => s.key),
+    bets: SLOT_BETS,
+    triple: SLOT_TRIPLE,
+    pair: SLOT_PAIR,
+    balance: userPoints(req.currentUser.id),
+  });
+});
+
+app.post('/slot/gira', auth.requireLogin, slotLimiter, (req, res) => {
+  const bet = parseInt(req.body.bet, 10);
+  if (!SLOT_BETS.includes(bet)) {
+    return res.status(400).json({ ok: false, error: 'bet', message: 'Puntata non valida.' });
+  }
+  let out = null;
+  const ok = db.transaction(() => {
+    const balance = userPoints(req.currentUser.id);
+    if (balance < bet) return false;                       // non puoi puntare più di quanto hai
+    const reels = [weightedPick(SLOT_SYMBOLS).key, weightedPick(SLOT_SYMBOLS).key, weightedPick(SLOT_SYMBOLS).key];
+    const r = evalSlot(reels);
+    const payout = Math.floor(r.mult * bet);               // vincita lorda (puntata inclusa)
+    const net = payout - bet;                              // effetto sul saldo
+    db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(net, req.currentUser.id);
+    out = { reels, payout, net, win: payout > 0, kind: r.kind, sym: r.sym, jackpot: r.jackpot };
+    return true;
+  })();
+  if (!ok) return res.status(400).json({ ok: false, error: 'funds', message: 'Punti insufficienti per questa puntata.' });
+  res.json({ ok: true, bet, ...out, balance: userPoints(req.currentUser.id) });
 });
 
 app.get('/password-dimenticata', (req, res) => {
@@ -810,7 +970,7 @@ app.get('/profilo', auth.requireLogin, (req, res) => {
     WHERE s.user_id = ?
     ORDER BY s.created_at DESC
   `).all(req.currentUser.id);
-  const total = subs.filter((s) => s.status === 'approved').reduce((a, s) => a + s.points, 0);
+  const total = userPoints(req.currentUser.id);
   res.render('profile', { title: 'Il mio profilo', subs, total });
 });
 

@@ -1,0 +1,71 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<link rel="stylesheet" href="/casino.css?v=2">
+<%# symSvg(key): SVG pixel-art del simbolo slot (San Rocco il più forte) %>
+<% function symSvg(k) { %><% if (k === 'ciliegia') { %><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 7 C13 12,12 16,11 19" stroke="#3f7a2e" stroke-width="2" fill="none"/><path d="M16 7 C19 11,21 14,22 17" stroke="#3f7a2e" stroke-width="2" fill="none"/><path d="M16 7 q6 -4 9 -1 q-4 3 -9 1 z" fill="#4faa3a"/><circle cx="11" cy="23" r="5.5" fill="#d6303a"/><circle cx="9.3" cy="21.3" r="1.6" fill="#ff8a8a"/><circle cx="22" cy="21" r="5.5" fill="#c01f2a"/><circle cx="20.3" cy="19.3" r="1.5" fill="#ff8a8a"/></svg><% } else if (k === 'percoca') { %><svg viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="17" cy="19" rx="9.5" ry="10" fill="#f3a93a"/><ellipse cx="17" cy="19" rx="9.5" ry="10" fill="none" stroke="#d4801f" stroke-width="1"/><path d="M17 10 q-3 6 0 18" stroke="#d4801f" stroke-width="1.6" fill="none"/><ellipse cx="13" cy="15" rx="3" ry="2" fill="#ffd98c" opacity=".7"/><path d="M16 9 q5 -3 8 0 q-4 3 -8 1 z" fill="#4faa3a"/></svg><% } else if (k === 'vino') { %><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="11" y="7" width="10" height="3" rx="1.2" fill="#caa24a"/><path d="M11 10 h10 l-1.2 4 q4.2 2.2 4.2 8 a8 8 0 0 1 -16 0 q0 -5.8 4.2 -8 z" fill="#b5643c"/><path d="M9.5 19 a7.5 8 0 0 0 15 0 q-1 -3.4 -3.2 -4.4 h-8.6 q-2.2 1 -3.2 4.4 z" fill="#7a1d22"/><path d="M22 13 q4.5 2.5 3.5 7" stroke="#caa24a" stroke-width="2.4" fill="none"/></svg><% } else if (k === 'braciola') { %><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M11 12 q-4 4 -2.5 9 q3 6 11 5 q8 -1 8 -7.5 q0 -6 -7 -8 q-6 -1.5 -10 1.5 z" fill="#9a5236"/><path d="M12.5 14 q-3 3 -1.5 7 q2.5 5 9 4.5 q6 -.5 6 -5.5 q0 -5 -6 -6.5 q-5 -1.2 -7.5 .5 z" fill="#c0734f"/><circle cx="8.5" cy="12" r="3.2" fill="#f0e8d6"/><circle cx="8.5" cy="12" r="1.1" fill="#c9bda3"/></svg><% } else if (k === 'fuoco') { %><svg viewBox="0 0 32 32" aria-hidden="true"><g stroke-width="2.2" stroke-linecap="round"><line x1="16" y1="16" x2="16" y2="4" stroke="#ff5a3c"/><line x1="16" y1="16" x2="25" y2="7" stroke="#f5c842"/><line x1="16" y1="16" x2="28" y2="16" stroke="#5ad1ff"/><line x1="16" y1="16" x2="25" y2="25" stroke="#7bff9a"/><line x1="16" y1="16" x2="16" y2="28" stroke="#ff8ad1"/><line x1="16" y1="16" x2="7" y2="25" stroke="#f5c842"/><line x1="16" y1="16" x2="4" y2="16" stroke="#ff5a3c"/><line x1="16" y1="16" x2="7" y2="7" stroke="#5ad1ff"/></g><circle cx="16" cy="16" r="2.6" fill="#fff7d0"/></svg><% } else if (k === 'sanrocco') { %><svg viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="16" cy="6.5" rx="8" ry="2.6" fill="none" stroke="#f5c842" stroke-width="2"/><path d="M11 21 h10 l1 7 h-12 z" fill="#9a6b3b"/><path d="M9 14 q0 -6 7 -6 q7 0 7 6 q0 2 -1 3 h-12 q-1 -1 -1 -3 z" fill="#6b4f2c"/><rect x="11.5" y="11.5" width="9" height="9.5" rx="3.2" fill="#e8c49a"/><path d="M10.5 13 q5.5 -3.2 11 0 v-1.4 q-5.5 -3.6 -11 0 z" fill="#5a4326"/><rect x="13.3" y="15" width="1.5" height="2.2" rx=".6" fill="#3a2c18"/><rect x="17.2" y="15" width="1.5" height="2.2" rx=".6" fill="#3a2c18"/><path d="M13.5 18.8 q2.5 1.8 5 0" stroke="#b06b4a" stroke-width="1.2" fill="none"/></svg><% } %><% } %>
+<%
+  const SYM_NAME = { sanrocco: 'San Rocco', fuoco: "Fuoco d'artificio", braciola: 'Braciola di capra', vino: 'Brocca di vino', percoca: 'Percoca', ciliegia: 'Ciliegie' };
+  const SYM_DESC = { sanrocco: 'Il simbolo più forte — jackpot!', fuoco: 'Lo spettacolo della festa', braciola: 'Il sapore del Palio', vino: 'La percoca nel vino', percoca: 'Dolce e succosa', ciliegia: 'Il classico delle slot' };
+  const ptOrder = ['sanrocco', 'fuoco', 'braciola', 'vino', 'percoca', 'ciliegia'];
+%>
+
+<section class="cz-hero">
+  <h1 class="cz-title">Slot di San Rocco</h1>
+  <p class="cz-sub">Punta i tuoi punti e fai girare i rulli.<br>San Rocco è il simbolo più forte: tre in fila e fai il jackpot.</p>
+  <div class="cz-balance">
+    <%- icon('trophy') %>
+    <b id="czBalance"><%= balance %></b><span>punti disponibili</span>
+  </div>
+</section>
+
+<div class="cz-slot-wrap">
+  <div id="czSlot" class="cz-machine" data-csrf="<%= csrfToken %>" data-balance="<%= balance %>" data-bet="<%= bets[0] %>">
+    <div class="cz-reels">
+      <div class="cz-reel" id="czReel0"><div class="cz-reel-strip"><div class="cz-tile"><% symSvg('sanrocco') %></div></div></div>
+      <div class="cz-reel" id="czReel1"><div class="cz-reel-strip"><div class="cz-tile"><% symSvg('vino') %></div></div></div>
+      <div class="cz-reel" id="czReel2"><div class="cz-reel-strip"><div class="cz-tile"><% symSvg('ciliegia') %></div></div></div>
+      <div class="cz-payline"></div>
+    </div>
+
+    <div class="cz-controls">
+      <div class="cz-bets">
+        <span class="cz-bet-lbl">Puntata</span>
+        <% bets.forEach((b, i) => { %>
+          <button type="button" class="cz-bet <%= i === 0 ? 'sel' : '' %>" data-bet="<%= b %>"><%= b %></button>
+        <% }) %>
+      </div>
+      <button type="button" class="cz-spin" id="czSpin">Gira</button>
+    </div>
+
+    <p class="cz-outcome" id="czOutcome" aria-live="polite"></p>
+  </div>
+</div>
+
+<p class="cz-house-note">
+  La slot ha un <b>vantaggio del banco</b>: ogni giro è casuale e calcolato sul server.
+  Puoi vincere colpi grossi, ma <b>a lungo andare la slot rende meno di quanto si punta</b>. Gioca per divertimento!
+</p>
+
+<section class="cz-paytable">
+  <h2>Tabella vincite</h2>
+  <p class="cz-pt-note">Moltiplicatori sulla puntata. Tre simboli uguali in fila = vincita piena.</p>
+  <div class="cz-pt-grid">
+    <% ptOrder.forEach((k) => { %>
+      <div class="cz-pt-row <%= k === 'sanrocco' ? 'top' : '' %>">
+        <div class="cz-pt-syms"><% symSvg(k) %><% symSvg(k) %><% symSvg(k) %></div>
+        <div class="cz-pt-name">
+          <p class="n"><%= SYM_NAME[k] %></p>
+          <p class="d"><%= SYM_DESC[k] %><% if (pair[k] > 0) { %> · coppia ×<%= pair[k] %><% } %></p>
+        </div>
+        <span class="cz-pt-mult">×<%= triple[k] %></span>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<%# Template simboli per i rulli (clonati da slot.js) %>
+<% symbols.forEach((k) => { %><template id="sym-<%= k %>"><% symSvg(k) %></template><% }) %>
+<template id="czIconCoin"><%- icon('trophy') %></template>
+
+<div class="cz-flash" id="czFlash" aria-hidden="true"></div>
+
+<script src="/slot.js?v=2" defer></script>

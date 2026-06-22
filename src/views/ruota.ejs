@@ -1,0 +1,49 @@
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
+<link rel="stylesheet" href="/casino.css?v=2">
+<%
+  const cx = 100, cy = 100, r = 96, n = prizes.length, step = 360 / n;
+  function pt(a, rad) { const t = a * Math.PI / 180; return [(cx + rad * Math.sin(t)).toFixed(2), (cy - rad * Math.cos(t)).toFixed(2)]; }
+  const segColors = ['#f3c64b', '#e0a92a'];
+%>
+
+<section class="cz-hero">
+  <h1 class="cz-title">Ruota della Fortuna</h1>
+  <p class="cz-sub">Un giro gratis al giorno: vinci punti per la classifica.<br>Più alto è il premio, più è raro… e c'è anche il jackpot!</p>
+  <div class="cz-balance">
+    <%- icon('trophy') %>
+    <b id="czBalance"><%= balance %></b><span>punti totali</span>
+  </div>
+</section>
+
+<div class="cz-wheel-wrap" id="czWheelRoot" data-csrf="<%= csrfToken %>" data-can="<%= canSpin ? 1 : 0 %>" data-seg="<%= n %>" data-step="<%= step %>">
+  <div class="cz-wheel-stage">
+    <div class="cz-wheel-pointer"></div>
+    <svg class="cz-wheel-svg" id="czWheel" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <% prizes.forEach((p, i) => {
+           const a0 = i * step, a1 = (i + 1) * step, mid = a0 + step / 2;
+           const [x0, y0] = pt(a0, r), [x1, y1] = pt(a1, r);
+           const [lx, ly] = pt(mid, r * 0.62);
+           const fill = p.jackpot ? '#7a1d22' : segColors[i % 2];
+      %>
+        <path d="M<%= cx %> <%= cy %> L<%= x0 %> <%= y0 %> A<%= r %> <%= r %> 0 0 1 <%= x1 %> <%= y1 %> Z" fill="<%= fill %>" stroke="#1a1206" stroke-width="1.2"/>
+        <text class="cz-wheel-seg-label <%= p.jackpot ? 'cz-wheel-seg-jack' : '' %>" x="<%= lx %>" y="<%= ly %>" text-anchor="middle" dominant-baseline="middle" transform="rotate(<%= mid %> <%= lx %> <%= ly %>)"><%= p.jackpot ? 'JACKPOT' : p.label %></text>
+      <% }) %>
+      <circle cx="100" cy="100" r="97" fill="none" stroke="#caa24a" stroke-width="3"/>
+    </svg>
+    <div class="cz-wheel-hub"><%- icon('logo-firework') %></div>
+  </div>
+
+  <button type="button" class="btn cz-spin-btn" id="czSpinWheel" <%= canSpin ? '' : 'disabled' %>>
+    <%= canSpin ? 'Gira la ruota — è gratis!' : 'Già girata oggi — torna domani' %>
+  </button>
+  <p class="cz-wheel-note">La ruota si ricarica <b>ogni giorno</b>. I punti vinti entrano subito nella tua classifica.</p>
+
+  <div class="cz-wheel-result" id="czResult">
+    <div class="amt" id="czResultAmt"></div>
+    <div class="lbl" id="czResultLbl"></div>
+  </div>
+</div>
+
+<div class="cz-flash" id="czFlash" aria-hidden="true"></div>
+
+<script src="/ruota.js?v=2" defer></script>

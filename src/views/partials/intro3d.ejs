@@ -1,0 +1,13 @@
+<%# ── Prima schermata: logo 3D + titolo + frase ────────────────────── %>
+<div class="intro-screen" id="introScreen">
+  <section class="intro3d" aria-label="Benvenuto nel Fanta San Rocco">
+    <div class="intro3d-stage">
+      <canvas id="introCanvas" class="intro3d-canvas" data-model="/models/fanta-san-rocco-logo.glb?v=2" aria-hidden="true"></canvas>
+      <%# Fallback visivo se il 3D non è disponibile %>
+      <div class="intro3d-fallback" aria-hidden="true"><%- icon('logo-firework') %></div>
+    </div>
+
+    <h1 class="intro3d-title">fantasanrocco</h1>
+    <p class="intro3d-phrase">Entra nel Fanta San Rocco e vivi la festa <b>da protagonista</b>.</p>
+  </section>
+</div>

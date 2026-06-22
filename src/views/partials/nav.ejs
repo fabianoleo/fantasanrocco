@@ -4,12 +4,24 @@
     <span class="brand-short"><%- icon('logo-firework', 'brand-mark') %> FSR</span>
   </a>
 
+  <%# Ruota della Fortuna — icona sempre accessibile nella barra %>
+  <a href="/ruota" class="nav-wheel-btn <%= path === '/ruota' ? 'is-active' : '' %>" title="Ruota della Fortuna" aria-label="Ruota della Fortuna">
+    <%- icon('wheel') %>
+  </a>
+
+  <%# Saldo punti dell'utente loggato %>
+  <% if (currentUser) { %>
+    <a href="/profilo" class="nav-balance" title="I tuoi punti">
+      <%- icon('trophy') %><span class="nav-balance-val"><%= userBalance %></span>
+    </a>
+  <% } %>
+
   <%# Desktop nav %>
   <nav class="nav">
+    <a href="/gioco"           class="<%= path === '/gioco'           ? 'active' : '' %>">Gioco</a>
     <a href="/classifica"      class="<%= path === '/classifica'      ? 'active' : '' %>">Classifica</a>
     <a href="/programmazione" class="<%= path === '/programmazione' ? 'active' : '' %>">Programmazione</a>
     <a href="/galleria"        class="<%= path === '/galleria'        ? 'active' : '' %>">Galleria</a>
-    <a href="/gioco"           class="<%= path === '/gioco'           ? 'active' : '' %>">Gioco</a>
     <a href="/storia"          class="<%= path === '/storia'          ? 'active' : '' %>">Storia</a>
     <a href="/premio"          class="<%= path === '/premio'          ? 'active' : '' %>">Premio</a>
     <% if (currentUser) { %>
@@ -62,15 +74,17 @@
       <a href="/programmazione"  class="mm-link" data-delay="3">Programmazione</a>
       <a href="/galleria"        class="mm-link" data-delay="4">Galleria</a>
       <a href="/gioco"           class="mm-link" data-delay="5">Gioco</a>
-      <a href="/storia"          class="mm-link" data-delay="6">Storia</a>
-      <a href="/premio"          class="mm-link" data-delay="7">Premi</a>
+      <a href="/ruota"           class="mm-link" data-delay="6">Ruota della Fortuna</a>
+      <a href="/slot"            class="mm-link" data-delay="7">Slot</a>
+      <a href="/storia"          class="mm-link" data-delay="8">Storia</a>
+      <a href="/premio"          class="mm-link" data-delay="9">Premi</a>
       <% if (currentUser) { %>
-        <a href="/profilo"  class="mm-link" data-delay="8">Profilo</a>
+        <a href="/profilo"  class="mm-link" data-delay="10">Profilo</a>
         <% if (currentUser.role === 'moderator' || currentUser.role === 'admin') { %>
-          <a href="/moderazione" class="mm-link mm-staff" data-delay="9">Moderazione</a>
+          <a href="/moderazione" class="mm-link mm-staff" data-delay="11">Moderazione</a>
         <% } %>
         <% if (currentUser.role === 'admin') { %>
-          <a href="/admin" class="mm-link mm-staff" data-delay="10">Admin</a>
+          <a href="/admin" class="mm-link mm-staff" data-delay="12">Admin</a>
         <% } %>
       <% } %>
     </nav>
@@ -103,6 +117,11 @@
       <path d="M13 10V3L4 14h7v7l9-11h-7z"/>
     </svg>
     <span>Missioni</span>
+  </a>
+  <%# Pulsante centrale rialzato: cerchio dorato → Gioco %>
+  <a href="/gioco" class="bn-game <%= path === '/gioco' ? 'bn-active' : '' %>" aria-label="Gioco">
+    <span class="bn-game-circle"><%- icon('gamepad') %></span>
+    <span class="bn-game-label">Gioco</span>
   </a>
   <a href="/classifica" class="bn-item <%= path === '/classifica' ? 'bn-active' : '' %>">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">

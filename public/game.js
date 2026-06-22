@@ -34,14 +34,15 @@
   const PW = 18;
   // ── Stato ───────────────────────────────────────────────────────
   let state = 'idle';           // idle | run | over
-  let px, target, dist, bonus, score, inv, items, popups, fx, spawnT, coinT, haloT, animT, last, shake, reported;
+  let px, target, dist, bonus, score, inv, mult, items, popups, fx, spawnT, coinT, haloT, relicT, fwT, animT, last, shake, reported;
   let keyL = false, keyR = false, pointerX = null, overTimer = null;
 
   function reset() {
     px = (W - PW) / 2; target = px;
-    dist = 0; bonus = 0; score = 0; inv = 0;
+    dist = 0; bonus = 0; score = 0; inv = 0; mult = 0;
     items = []; popups = []; fx = [];
-    spawnT = 60; coinT = 120; haloT = 1500; animT = 0; shake = 0; reported = false; pointerX = null;
+    spawnT = 60; coinT = 120; haloT = 1500; relicT = 3200; fwT = 6800;
+    animT = 0; shake = 0; reported = false; pointerX = null;
   }
   reset();
 
@@ -89,6 +90,17 @@
   const drop = () => { pointerX = null; };
   canvas.addEventListener('pointerup', drop);
   canvas.addEventListener('pointercancel', drop);
+  // Niente menu nativo / selezione su pressione prolungata o tap ripetuti (mobile)
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+  const stopSelect = (e) => e.preventDefault();
+  canvas.addEventListener('selectstart', stopSelect);
+  const gmRoot = document.getElementById('gmRoot');
+  if (gmRoot) {
+    gmRoot.addEventListener('selectstart', stopSelect);
+    gmRoot.addEventListener('contextmenu', (e) => {
+      if (e.target.closest('.gm-stage, .gm-pad')) e.preventDefault();
+    });
+  }
 
   // Controller mobile: pulsanti ◀ ▶ da tenere premuti
   function holdButton(btn, set) {
@@ -178,6 +190,31 @@
       ctx.restore();
       return;
     }
+    if (o.kind === 'relic') {            // EPICO — gemma viola rotante
+      ctx.save();
+      ctx.shadowColor = 'rgba(190,120,255,.9)'; ctx.shadowBlur = 10;
+      ctx.translate(cx, cy); ctx.rotate(Math.PI / 4 + Math.sin(t / 14) * 0.12);
+      const s = o.w * 0.66;
+      r(-s / 2, -s / 2, s, s, '#b06bff');
+      r(-s / 2, -s / 2, s, s / 3, '#e6caff');
+      ctx.strokeStyle = '#7a2dd6'; ctx.lineWidth = 1.2; ctx.strokeRect(-s / 2, -s / 2, s, s);
+      ctx.restore();
+      return;
+    }
+    if (o.kind === 'fw') {               // LEGGENDARIO — fuoco d'artificio multicolore
+      const cols = ['#ff5a3c', '#f5c842', '#5ad1ff', '#7bff9a', '#ff8ad1'];
+      ctx.save();
+      ctx.shadowColor = 'rgba(255,150,80,.95)'; ctx.shadowBlur = 11;
+      const spin = t / 6, rr = o.w / 2;
+      for (let a = 0; a < 8; a++) {
+        const ang = a / 8 * Math.PI * 2 + spin;
+        r(cx + Math.cos(ang) * rr, cy + Math.sin(ang) * rr, 2, 2, cols[a % cols.length]);
+        r(cx + Math.cos(ang) * rr * 0.55, cy + Math.sin(ang) * rr * 0.55, 1, 1, cols[(a + 2) % cols.length]);
+      }
+      disc(cx, cy, 2.4, '#fff7d0');
+      ctx.restore();
+      return;
+    }
     // ostacoli
     if (o.type === 'torch') {
       r(o.x + o.w / 2 - 1, o.y, 2, o.h, '#6b4a25');
@@ -251,6 +288,14 @@
     const w = 13;
     items.push({ kind: 'halo', x: 8 + Math.random() * (W - w - 16), y: -w - 6, w, h: w, vs: -0.6 });
   }
+  function spawnRelic() {   // EPICO: reliquia d'oro → punteggio ×2 a tempo
+    const w = 13;
+    items.push({ kind: 'relic', x: 10 + Math.random() * (W - w - 20), y: -w - 6, w, h: w + 2, vs: -0.5 });
+  }
+  function spawnFw() {      // LEGGENDARIO: fuochi → spazza gli ostacoli + super bonus
+    const w = 14;
+    items.push({ kind: 'fw', x: 12 + Math.random() * (W - w - 24), y: -w - 6, w, h: w, vs: -0.7 });
+  }
 
   // ── Loop ────────────────────────────────────────────────────────
   function frame(now) {
@@ -267,8 +312,10 @@
 
     if (state === 'run') {
       animT += dt;
-      dist += (1.9 + diff * 1.4) * dt;
+      const x2 = mult > 0 ? 2 : 1;
+      dist += (1.9 + diff * 1.4) * dt * x2;
       if (inv > 0) inv -= dt;
+      if (mult > 0) mult -= dt;
 
       // movimento
       if (pointerX !== null) { target = pointerX - PW / 2; px += (target - px) * Math.min(1, 0.32 * dt); }
@@ -293,6 +340,18 @@
         if (inv <= 0 && !items.some((o) => o.kind === 'halo')) spawnHalo();
         haloT = 1400 + Math.random() * 700;
       }
+      // EPICO — reliquia (×2 punteggio): più rara dell'aureola
+      relicT -= dt;
+      if (relicT <= 0) {
+        if (mult <= 0 && !items.some((o) => o.kind === 'relic')) spawnRelic();
+        relicT = 3000 + Math.random() * 1900;
+      }
+      // LEGGENDARIO — fuochi d'artificio: rarissimi
+      fwT -= dt;
+      if (fwT <= 0) {
+        if (!items.some((o) => o.kind === 'fw')) spawnFw();
+        fwT = 6500 + Math.random() * 3800;
+      }
 
       // caduta + interazioni
       const pbox = { x: px + 3, y: GROUND - 30, w: PW - 6, h: 28 };
@@ -304,10 +363,24 @@
         const cx = o.x + o.w / 2, cy = o.y + o.h / 2;
 
         if (o.kind === 'coin') {
-          if (overlap(grab, o)) { bonus += 15; popup(cx, o.y, '+15', '#f5c842'); burst(cx, cy, '#f5c842'); items.splice(i, 1); continue; }
+          if (overlap(grab, o)) { const g = 15 * x2; bonus += g; popup(cx, o.y, '+' + g, '#f5c842'); burst(cx, cy, '#f5c842'); items.splice(i, 1); continue; }
           if (o.y > GROUND - 2) { items.splice(i, 1); continue; }
         } else if (o.kind === 'halo') {
-          if (overlap(grab, o)) { inv = 260; popup(cx, o.y, 'AUREOLA!', '#fff7d0', 9); arcadeFlash('BONUS!'); burst(cx, cy, '#f5c842'); items.splice(i, 1); continue; }
+          if (overlap(grab, o)) { inv = 260; popup(cx, o.y, 'AUREOLA!', '#fff7d0', 9); arcadeFlash('AUREOLA!'); burst(cx, cy, '#f5c842'); items.splice(i, 1); continue; }
+          if (o.y > GROUND - 2) { items.splice(i, 1); continue; }
+        } else if (o.kind === 'relic') {        // EPICO: punteggio ×2
+          if (overlap(grab, o)) { mult = 380; popup(cx, o.y, 'x2!', '#d8a8ff', 11); arcadeFlash('RELIQUIA x2'); burst(cx, cy, '#c98bff'); items.splice(i, 1); continue; }
+          if (o.y > GROUND - 2) { items.splice(i, 1); continue; }
+        } else if (o.kind === 'fw') {           // LEGGENDARIO: spazza gli ostacoli + super bonus
+          if (overlap(grab, o)) {
+            bonus += 150 * x2; inv = Math.max(inv, 150);
+            popup(cx, o.y, '+' + (150 * x2), '#ff5a3c', 12); arcadeFlash('FUOCHI!');
+            const cols = ['#ff5a3c', '#f5c842', '#5ad1ff', '#7bff9a', '#ff8ad1'];
+            items.forEach((it, k) => { if (it.kind === 'hit') burst(it.x + it.w / 2, it.y + it.h / 2, cols[k % cols.length]); });
+            shake = Math.max(shake, 5);
+            items = items.filter((it) => it.kind !== 'hit' && it !== o);
+            break;
+          }
           if (o.y > GROUND - 2) { items.splice(i, 1); continue; }
         } else { // hit
           if (o.y > GROUND - 2) { burst(cx, GROUND - 4); items.splice(i, 1); continue; }
@@ -335,6 +408,14 @@
     const moving = keyL || keyR || pointerX !== null;
     const fr = Math.floor(animT / 4) % 2;
     const flick = inv > 0 && inv < 70 && (Math.floor(animT / 3) % 2);   // lampeggia a fine invincibilità
+    if (state === 'run' && mult > 0) {                                  // aura viola del ×2 (reliquia)
+      ctx.save();
+      ctx.globalAlpha = 0.55 + 0.3 * Math.sin(animT / 4);
+      ctx.shadowColor = 'rgba(190,120,255,.9)'; ctx.shadowBlur = 9;
+      ctx.beginPath(); ctx.ellipse(px + 9, GROUND - 16, 13, 17, 0, 0, 7);
+      ctx.strokeStyle = '#c98bff'; ctx.lineWidth = 1.4; ctx.stroke();
+      ctx.restore();
+    }
     drawDog(px - 14, GROUND - 10, (state === 'run' && moving) ? fr : 0);
     if (!flick) drawSaint(px, GROUND - 32, (state === 'run' && moving) ? fr : 0, inv > 0, animT);
 
@@ -347,6 +428,13 @@
       const sc = 1 + Math.max(0, (7 - p.t)) * 0.07;
       arcadeText(p.x, p.y, p.text, p.color, p.size * sc, a);
       if (p.t > p.life) popups.splice(i, 1);
+    }
+
+    // indicatore ×2 (reliquia) in alto al centro
+    if (mult > 0) {
+      const fade = mult < 60 ? (Math.floor(animT / 3) % 2 ? 0.35 : 1) : 1;
+      const pulse = 9 + Math.max(0, Math.sin(animT / 5)) * 1.5;
+      arcadeText(W / 2, 13, 'x2', '#d8a8ff', pulse, fade);
     }
 
     elScore.textContent = score;

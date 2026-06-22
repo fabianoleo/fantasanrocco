@@ -157,6 +157,12 @@ const PATHS = {
   party:
     '<path d="M4 20 9 7l8 8z" /><path d="m9 7 8 8" stroke-width="1.1" />' +
     '<path d="M14 4v2M19 6l-1.5 1.5M20 11h-2" /><circle cx="12.5" cy="13" r="0.6" fill="currentColor" stroke="none" /><circle cx="15" cy="16" r="0.6" fill="currentColor" stroke="none" />',
+  // Ruota della fortuna: cerchio con raggi + mozzo + freccia in alto
+  wheel:
+    '<circle cx="12" cy="12.5" r="8" />' +
+    '<path d="M12 4.5v16M4 12.5h16M6.3 6.8l11.4 11.4M17.7 6.8 6.3 18.2" stroke-width="1.2" />' +
+    '<circle cx="12" cy="12.5" r="1.5" fill="currentColor" stroke="none" />' +
+    '<path d="M12 2 10.4 4.8h3.2z" fill="currentColor" stroke="none" />',
 };
 
 function icon(name, extraClass = '') {

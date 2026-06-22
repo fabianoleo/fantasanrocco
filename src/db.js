@@ -68,6 +68,12 @@ try { db.exec('ALTER TABLE users ADD COLUMN reset_token TEXT'); } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN reset_token_expires TEXT'); } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN avatar_path TEXT'); } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN game_best INTEGER NOT NULL DEFAULT 0'); } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN game_plays INTEGER NOT NULL DEFAULT 0'); } catch {}
+// Saldo netto da ruota + slot (può essere negativo per le perdite alla slot):
+// entra nel totale punti della classifica → ruota e slot girano sugli stessi punti.
+try { db.exec('ALTER TABLE users ADD COLUMN points_adjust INTEGER NOT NULL DEFAULT 0'); } catch {}
+// Ultimo giorno (YYYY-MM-DD) in cui l'utente ha girato la ruota gratuita
+try { db.exec('ALTER TABLE users ADD COLUMN last_wheel_day TEXT'); } catch {}
 // game_key: marca una "missione" come traguardo del mini-gioco (esclusa dalle missioni-foto)
 try { db.exec('ALTER TABLE missions ADD COLUMN game_key TEXT'); } catch {}
 

@@ -1,12 +1,13 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
-<link rel="stylesheet" href="/game.css?v=4">
+<link rel="stylesheet" href="/game.css?v=6">
+<link rel="stylesheet" href="/casino.css?v=2">
 
 <%# ── HERO ────────────────────────────────────────────────────────── %>
 <section class="gm-hero">
   <h1 class="gm-title">Corri San Rocco</h1>
   <p class="gm-sub">
     Un mini-gioco pixelato: torce e bombe piovono dal cielo di Siano.<br>
-    Muoviti per schivarle, raccogli le <strong>monete d'oro</strong> e prendi l'<strong>aureola</strong> per l'invincibilità.
+    Muoviti per schivarle, raccogli le <strong>monete d'oro</strong> e i <strong>bonus rari</strong>: aureola, reliquia e i leggendari fuochi d'artificio.
   </p>
 </section>
 
@@ -42,6 +43,40 @@
   </p>
 </div>
 
+<%# ── ALTRA MODALITÀ: Slot ─────────────────────────────────────────── %>
+<section class="cz-modes">
+  <a href="/slot" class="cz-mode">
+    <span class="cz-mode-ic"><%- icon('ticket') %></span>
+    <h3>Slot di San Rocco</h3>
+    <p>Punta i tuoi punti e fai girare i rulli: ciliegie, percoche, braciola, vino, fuochi e San Rocco per il jackpot.</p>
+    <span class="cz-mode-tag">Gioca i tuoi punti</span>
+  </a>
+</section>
+
+<%# ── LEGENDA BONUS (rarità) ───────────────────────────────────────── %>
+<section class="gm-bonus-legend" aria-label="Bonus del gioco">
+  <div class="gm-bonus r-comune">
+    <div class="gm-bonus-top"><span class="gm-bonus-ic b-coin"></span><span class="gm-bonus-name">Moneta d'oro</span></div>
+    <p class="gm-bonus-eff">+15 punti al volo (×2 con la reliquia attiva).</p>
+    <span class="gm-rarity">Comune</span>
+  </div>
+  <div class="gm-bonus r-media">
+    <div class="gm-bonus-top"><span class="gm-bonus-ic b-halo"></span><span class="gm-bonus-name">Aureola</span></div>
+    <p class="gm-bonus-eff">Invincibilità a tempo: attraversi gli ostacoli.</p>
+    <span class="gm-rarity">Rarità media</span>
+  </div>
+  <div class="gm-bonus r-epica">
+    <div class="gm-bonus-top"><span class="gm-bonus-ic b-relic"></span><span class="gm-bonus-name">Reliquia d'oro</span></div>
+    <p class="gm-bonus-eff">Punteggio <strong>×2</strong> per alcuni secondi.</p>
+    <span class="gm-rarity">Epica</span>
+  </div>
+  <div class="gm-bonus r-leggendaria">
+    <div class="gm-bonus-top"><span class="gm-bonus-ic b-fw"></span><span class="gm-bonus-name">Fuochi d'artificio</span></div>
+    <p class="gm-bonus-eff">Spazza via <strong>tutti</strong> gli ostacoli + super bonus.</p>
+    <span class="gm-rarity">Leggendaria</span>
+  </div>
+</section>
+
 <template id="gmIconTrophy"><%- icon('trophy') %></template>
 <template id="gmIconCheck"><%- icon('check') %></template>
 
@@ -50,10 +85,13 @@
   <div class="gm-ach-head">
     <p class="gm-ach-kicker">Punti automatici</p>
     <h2 class="gm-ach-title">Traguardi del gioco</h2>
-    <p class="gm-ach-note">Raggiungi questi punteggi in una partita: i punti entrano subito nella tua classifica, senza validazione.</p>
+    <p class="gm-ach-note">I punti entrano subito nella tua classifica, senza validazione.</p>
   </div>
-  <div class="gm-ach-grid">
-    <% achievements.forEach((a) => { %>
+
+  <%
+    const scoreAch = achievements.filter((a) => a.metric === 'score');
+    const playsAch = achievements.filter((a) => a.metric === 'plays');
+    function achCard(a) { %>
       <div class="gm-ach <%= a.done ? 'is-done' : '' %>" data-title="<%= a.title %>" data-threshold="<%= a.threshold %>">
         <span class="gm-ach-badge"><%- a.done ? icon('check') : icon('trophy') %></span>
         <div class="gm-ach-body">
@@ -62,7 +100,16 @@
         </div>
         <span class="gm-ach-pts">+<%= a.points %><small>pt</small></span>
       </div>
-    <% }) %>
+  <% } %>
+
+  <h3 class="gm-ach-subhead">A punteggio · fino a 15.000</h3>
+  <div class="gm-ach-grid">
+    <% scoreAch.forEach((a) => { achCard(a); }) %>
+  </div>
+
+  <h3 class="gm-ach-subhead">A partite giocate</h3>
+  <div class="gm-ach-grid">
+    <% playsAch.forEach((a) => { achCard(a); }) %>
   </div>
   <% if (!currentUser) { %>
     <p class="gm-login-note">
@@ -72,4 +119,4 @@
   <% } %>
 </section>
 
-<script src="/game.js?v=4" defer></script>
+<script src="/game.js?v=6" defer></script>
