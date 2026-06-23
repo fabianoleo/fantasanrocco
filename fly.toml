@@ -8,6 +8,9 @@ primary_region = "mad"
   SECURE_COOKIES = "true"
   DATA_DIR     = "/data"
   PORT         = "3000"
+  # URL pubblico fidato: i link di reset password si costruiscono SOLO da qui,
+  # mai dall'header Host (anti host-header poisoning). Aggiorna col tuo dominio.
+  APP_URL      = "https://fantasanrocco.fly.dev"
 
 [[mounts]]
   source      = "fantasanrocco_data"

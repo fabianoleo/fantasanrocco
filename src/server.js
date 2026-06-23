@@ -313,6 +313,12 @@ const avatarUpload = multer({
 // Helper: scrive un flash e prosegue
 function flash(req, type, msg) { req.session.flash = { type, msg }; }
 
+// Helper: escape HTML per interpolazioni in contesti HTML (es. corpo email).
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 // Helper: una missione è attiva adesso?
 function isMissionActiveNow(m) {
   const now = new Date();
@@ -647,7 +653,15 @@ app.get('/gioco', (req, res) => {
 // Report del punteggio di fine partita: aggiorna il record e assegna i
 // traguardi non ancora conquistati (solo loggati). Idempotente.
 app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, res) => {
-  const score = Math.max(0, Math.min(100000, parseInt(req.body.score, 10) || 0));
+  // Il punteggio arriva dal client: lo trattiamo come NON fidato.
+  // - cap realistico (il traguardo più alto è 15.000);
+  // - delta massimo per singola partita: evita salti irrealistici (es. 0→15.000
+  //   in un solo report) che sbloccherebbero tutti i traguardi in un colpo.
+  const MAX_PLAUSIBLE_SCORE = 16000;
+  const MAX_DELTA_PER_GAME  = 3000;
+  const rawScore = Math.max(0, Math.min(MAX_PLAUSIBLE_SCORE, parseInt(req.body.score, 10) || 0));
+  const prevBest = req.currentUser.game_best || 0;
+  const score = Math.min(rawScore, prevBest + MAX_DELTA_PER_GAME);
   const awarded = [];
   // Ogni report di fine partita conta come una partita giocata
   const plays = (req.currentUser.game_plays || 0) + 1;
@@ -825,9 +839,17 @@ app.post('/password-dimenticata', resetLimiter, (req, res) => {
   db.prepare('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?')
     .run(token, expires, user.id);
 
-  const baseUrl = process.env.APP_URL && !process.env.APP_URL.includes('localhost')
-    ? process.env.APP_URL.replace(/\/$/, '')
-    : `${req.protocol}://${req.get('host')}`;
+  // APP_URL è già normalizzato in alto. In produzione DEVE essere configurato e
+  // diverso da localhost: il link di reset NON si costruisce mai dall'header Host
+  // (host header poisoning → furto del token di reset). In locale usa il default.
+  const isProd = process.env.NODE_ENV === 'production';
+  const appUrlConfigured = process.env.APP_URL && !process.env.APP_URL.includes('localhost');
+  if (isProd && !appUrlConfigured) {
+    console.error('[RESET] APP_URL non configurato in produzione: invio reset annullato (anti host-poisoning).');
+    flash(req, 'success', genericMsg); // risposta generica: non rivela nulla
+    return res.redirect('/login');
+  }
+  const baseUrl = APP_URL; // valore fidato dalla config, mai da req.get('host')
   const resetLink = `${baseUrl}/reset-password/${token}`;
 
   const transporter = makeMailTransporter();
@@ -837,7 +859,7 @@ app.post('/password-dimenticata', resetLimiter, (req, res) => {
       to: user.email,
       subject: 'FantaSanRocco – Reset password',
       text: `Ciao ${user.nickname},\n\nHai richiesto il reset della password.\nClicca qui (scade tra 1 ora):\n${resetLink}\n\nSe non sei stato tu, ignora questa email.`,
-      html: `<p>Ciao <strong>${user.nickname}</strong>,</p>
+      html: `<p>Ciao <strong>${escapeHtml(user.nickname)}</strong>,</p>
              <p>Hai richiesto il reset della password.</p>
              <p><a href="${resetLink}">Clicca qui per impostare una nuova password</a> (link valido 1 ora).</p>
              <p class="muted">Se non sei stato tu, ignora questa email.</p>`,
