@@ -12,3 +12,5 @@ _da-sistemare/
 /tmp/
 # Modello 3D sorgente non ottimizzato (24MB): l'app usa public/models/fanta-san-rocco-logo.glb
 /Meshy_AI_Fanta_San_Rocco_*.glb
+# Sorgenti audio (i file serviti sono in public/radio/)
+/canzoni/

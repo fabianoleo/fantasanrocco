@@ -225,6 +225,57 @@ app.get('/api/online/debug', auth.requireStaff, (req, res) => {
   res.json({ count: _onlineCount(), entries });
 });
 
+// =========================================================================
+//  RADIO «Onde di San Rocco» — stazione condivisa
+//  Tutti ascoltano la STESSA canzone alla STESSA posizione: una timeline
+//  server-authoritative che cicla la playlist all'infinito. Niente skip:
+//  solo "sintonizzati / stop" lato client.
+// =========================================================================
+// ► COME AGGIUNGERE LE CANZONI: metti i file audio in public/radio/ e aggiungi
+//   una voce qui sotto con src, title, (cover opzionale) e duration in secondi.
+//   La durata si può leggere con:  afinfo public/radio/tuofile.mp3
+const RADIO_PLAYLIST = [
+  { src: "/radio/lda-aka-7even-andamento-lento-visual-video-ft-tullio-de-pisc.mp3", title: "LDA, Aka 7even — Andamento Lento ft. Tullio De Piscopo", cover: "/images/artisti/lda-aka7even.jpg", duration: 212 },
+  { src: "/radio/lda-aka-7even-poesie-clandestine-official-video-sanremo-2026.mp3", title: "LDA, Aka 7even — Poesie Clandestine", cover: "/images/artisti/lda-aka7even.jpg", duration: 209 },
+  { src: "/radio/mazzariello-amarsi-per-lavoro-sanremo-giovani-2025.mp3", title: "Mazzariello — Amarsi Per Lavoro", cover: "/images/artisti/mazzariello.jpg", duration: 185 },
+  { src: "/radio/mazzariello-atti-estremi-in-luogo-pubblico-official-video-1.mp3", title: "Mazzariello — Atti Estremi In Luogo Pubblico", cover: "/images/artisti/mazzariello.jpg", duration: 171 },
+  { src: "/radio/mazzariello-blindati-visual-video.mp3", title: "Mazzariello — Blindati", cover: "/images/artisti/mazzariello.jpg", duration: 122 },
+  { src: "/radio/mazzariello-bombe-carta-visual-video.mp3", title: "Mazzariello — Bombe Carta", cover: "/images/artisti/mazzariello.jpg", duration: 184 },
+  { src: "/radio/mazzariello-finestre-verdi-visual-video.mp3", title: "Mazzariello — Finestre Verdi", cover: "/images/artisti/mazzariello.jpg", duration: 205 },
+  { src: "/radio/mazzariello-manifestazione-d-amore-official-video-sanremo-20.mp3", title: "Mazzariello — Manifestazione D'amore", cover: "/images/artisti/mazzariello.jpg", duration: 191 },
+  { src: "/radio/mazzariello-millisecondi-visual-video.mp3", title: "Mazzariello — Millisecondi", cover: "/images/artisti/mazzariello.jpg", duration: 185 },
+  { src: "/radio/mazzariello-nostalgia-karaoke-lyric-video.mp3", title: "Mazzariello — Nostalgia & Karaoke", cover: "/images/artisti/mazzariello.jpg", duration: 217 },
+  { src: "/radio/mazzariello-orchidee-visual-video.mp3", title: "Mazzariello — Orchidee", cover: "/images/artisti/mazzariello.jpg", duration: 183 },
+  { src: "/radio/mazzariello-per-un-milione-di-euro-official-video.mp3", title: "Mazzariello — Per Un Milione Di Euro", cover: "/images/artisti/mazzariello.jpg", duration: 180 },
+  { src: "/radio/serena-brancale-levante-delia-al-mio-paese-testolyrics.mp3", title: "Serena Brancale, Levante, DELIA — Al Mio Paese", cover: "/images/galleria/palio-fuochi.jpg", duration: 198 },
+];
+// Riferimento fisso della timeline: la posizione "in onda" si calcola da qui.
+const RADIO_EPOCH = Date.UTC(2026, 0, 1, 0, 0, 0);
+
+// Cosa è "in onda" adesso (indice canzone + offset in secondi), uguale per tutti.
+app.get('/api/radio/now', (req, res) => {
+  if (!RADIO_PLAYLIST.length) return res.json({ ok: true, playing: false });
+  const total = RADIO_PLAYLIST.reduce((a, t) => a + (t.duration || 0), 0);
+  if (total <= 0) return res.json({ ok: true, playing: false });
+  let elapsed = (((Date.now() - RADIO_EPOCH) / 1000) % total + total) % total;
+  let idx = 0;
+  for (let i = 0; i < RADIO_PLAYLIST.length; i++) {
+    if (elapsed < RADIO_PLAYLIST[i].duration) { idx = i; break; }
+    elapsed -= RADIO_PLAYLIST[i].duration;
+  }
+  const t = RADIO_PLAYLIST[idx];
+  res.json({
+    ok: true, playing: true,
+    index: idx, count: RADIO_PLAYLIST.length,
+    src: t.src, title: t.title, cover: t.cover || null,
+    offset: elapsed, duration: t.duration,
+    serverTime: Date.now(),
+  });
+});
+
+// Reso disponibile alle view per mostrare/nascondere il player.
+app.locals.radioOn = RADIO_PLAYLIST.length > 0;
+
 // --- Upload foto (multer) ---------------------------------------------------
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOADS_DIR),
@@ -636,7 +687,12 @@ function weightedPick(items) {                  // items: [{ ..., weight }]
   for (const it of items) { if ((r -= it.weight) < 0) return it; }
   return items[items.length - 1];
 }
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+// Data odierna nel fuso orario ITALIANO (Europe/Rome) → il limite della ruota
+// si resetta a mezzanotte italiana (gestisce anche l'ora legale). Es: giro le
+// 23:59 e posso rigirare 2 minuti dopo, perché è un nuovo giorno.
+function todayStr() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+}
 
 // ── Ruota: spicchi con premi in punti. Più alto il premio, più raro. ──────
 // L'ordine è anche quello visivo degli spicchi (0 in alto, orario).

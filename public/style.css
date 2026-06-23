@@ -2366,6 +2366,40 @@ html { overflow-x: hidden; }
 }
 
 /* ── Badges ───────────────────────────────────────────────────── */
+/* Pulsanti Instagram artisti (Programmazione) */
+.pg-ig-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+.pg-ig {
+  display: inline-flex; align-items: center; gap: .42rem;
+  padding: .42rem .8rem; border-radius: 100px;
+  font-family: var(--font-heading); font-size: .76rem; font-weight: 700;
+  color: #fff; text-decoration: none; white-space: nowrap;
+  background: linear-gradient(75deg, #fa7e1e 0%, #d62976 48%, #962fbf 80%, #4f5bd5 100%);
+  box-shadow: 0 4px 14px rgba(214,41,118,.32);
+  transition: transform .2s var(--ease), box-shadow .25s var(--ease), filter .2s var(--ease);
+}
+.pg-ig:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(214,41,118,.5); filter: brightness(1.06); }
+.pg-ig:active { transform: scale(.96); }
+.pg-ig .ico { width: 16px; height: 16px; flex-shrink: 0; color: #fff; }
+
+/* Colonna foto artista (destra su desktop, sotto il testo su mobile) */
+.pg-artist {
+  flex-shrink: 0; width: 200px;
+  display: flex; flex-direction: column; gap: .7rem; align-items: stretch;
+}
+.pg-artist-photo {
+  width: 100%; height: auto; display: block; border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 6px 18px rgba(0,0,0,.45);
+}
+.pg-artist .pg-ig-row { margin-top: 0; justify-content: center; gap: .4rem; }
+.pg-artist .pg-ig { font-size: .68rem; padding: .38rem .72rem; }
+/* Schede con due artisti: foto affiancate nello spazio di un solo box */
+.pg-artist-photos { display: flex; gap: .5rem; }
+.pg-artist-photos .pg-artist-photo {
+  width: 50%; aspect-ratio: 1 / 1; object-fit: cover;
+}
+.pg-artist-multi .pg-ig-row { flex-wrap: wrap; }
+
 .pg-badges { display: flex; flex-wrap: wrap; gap: .4rem; }
 .pg-badge {
   font-size: .68rem; font-weight: 700;
@@ -2391,6 +2425,11 @@ html { overflow-x: hidden; }
   .pg-time-icon { font-size: 1.1rem; }
   .pg-time-label { display: none; }
   .pg-time-val { font-size: 1.1rem; }
+  /* Foto artista: sotto il testo, centrata */
+  .pg-artist { width: 100%; align-items: center; }
+  .pg-artist-photo { max-width: 300px; }
+  .pg-artist-multi .pg-artist-photos { max-width: 300px; width: 100%; }
+  .pg-artist-multi .pg-artist-photos .pg-artist-photo { max-width: none; }
 }
 @media (max-width: 480px) {
   .pg-title { letter-spacing: .02em; }

@@ -9,6 +9,22 @@
     <%- icon('wheel') %>
   </a>
 
+  <%# Radio «Onde di San Rocco» — mini player (espandibile) %>
+  <% if (radioOn) { %>
+  <div class="radio-mini" id="radioMini" data-state="paused">
+    <button class="radio-mini-open" id="radioOpen" type="button" aria-label="Apri la radio" aria-haspopup="dialog">
+      <span class="radio-mini-cover" id="radioMiniCover"></span>
+      <span class="radio-mini-meta">
+        <span class="radio-mini-kicker"><span class="radio-dot"></span>Radio</span>
+        <span class="radio-mini-title" id="radioMiniTitle">Onde di San Rocco</span>
+      </span>
+    </button>
+    <button class="radio-mini-toggle" id="radioToggleMini" type="button" aria-label="Ascolta / Stop">
+      <%- icon('play', 'ic-play') %><%- icon('pause', 'ic-pause') %>
+    </button>
+  </div>
+  <% } %>
+
   <%# Saldo punti dell'utente loggato %>
   <% if (currentUser) { %>
     <a href="/profilo" class="nav-balance" title="I tuoi punti">
@@ -54,6 +70,31 @@
     <span></span><span></span><span></span>
   </button>
 </header>
+
+<%# ── Radio «Onde di San Rocco» — popup espanso + audio condiviso ───── %>
+<% if (radioOn) { %>
+<div class="radio-modal" id="radioModal" hidden>
+  <div class="radio-backdrop" id="radioBackdrop"></div>
+  <div class="radio-card" id="radioCard" data-state="paused" role="dialog" aria-modal="true" aria-label="Radio Onde di San Rocco">
+    <button class="radio-close" id="radioClose" type="button" aria-label="Chiudi">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="radio-cover" id="radioCover"></div>
+    <div class="radio-live"><span class="radio-dot"></span> In onda · per tutti</div>
+    <h3 class="radio-title" id="radioTitle">Onde di San Rocco</h3>
+    <div class="radio-bar" id="radioBar"><div class="radio-bar-fill" id="radioBarFill"></div></div>
+    <div class="radio-times"><span id="radioCur">0:00</span><span id="radioDur">0:00</span></div>
+    <div class="radio-controls">
+      <button class="radio-toggle" id="radioToggle" type="button" aria-label="Ascolta / Stop">
+        <%- icon('play', 'ic-play') %><%- icon('pause', 'ic-pause') %>
+        <span class="radio-toggle-label">Ascolta</span>
+      </button>
+    </div>
+    <p class="radio-note">È una radio: stessa canzone per tutti, in diretta.</p>
+  </div>
+</div>
+<audio id="radioAudio" preload="none"></audio>
+<% } %>
 
 <%# ── Mobile overlay menu ─────────────────────────────────────────── %>
 <div class="mobile-menu" id="mobileMenu" aria-hidden="true">

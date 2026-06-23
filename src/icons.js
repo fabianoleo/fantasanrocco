@@ -163,6 +163,22 @@ const PATHS = {
     '<path d="M12 4.5v16M4 12.5h16M6.3 6.8l11.4 11.4M17.7 6.8 6.3 18.2" stroke-width="1.2" />' +
     '<circle cx="12" cy="12.5" r="1.5" fill="currentColor" stroke="none" />' +
     '<path d="M12 2 10.4 4.8h3.2z" fill="currentColor" stroke="none" />',
+  // Instagram: corpo fotocamera + obiettivo + flash
+  instagram:
+    '<rect x="3" y="3" width="18" height="18" rx="5" />' +
+    '<circle cx="12" cy="12" r="4" />' +
+    '<circle cx="17" cy="7" r="1.1" fill="currentColor" stroke="none" />',
+  // Controlli player
+  play:
+    '<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" />',
+  pause:
+    '<rect x="7" y="5" width="3.3" height="14" rx="1" fill="currentColor" stroke="none" />' +
+    '<rect x="13.7" y="5" width="3.3" height="14" rx="1" fill="currentColor" stroke="none" />',
+  // Radio / onde in diretta
+  radio:
+    '<circle cx="12" cy="13" r="2.1" />' +
+    '<path d="M8.6 9.6a5 5 0 0 0 0 6.8M15.4 9.6a5 5 0 0 1 0 6.8" />' +
+    '<path d="M6.2 7.2a8.2 8.2 0 0 0 0 11.6M17.8 7.2a8.2 8.2 0 0 1 0 11.6" />',
 };
 
 function icon(name, extraClass = '') {
