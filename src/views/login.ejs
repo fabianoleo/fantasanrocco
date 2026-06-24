@@ -1,17 +1,54 @@
-<section class="card form-card">
-  <h1>Accedi</h1>
-  <form action="/login" method="post" autocomplete="off">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <label>Nickname
-      <input type="text" name="nickname" required placeholder="il tuo nickname">
-    </label>
-    <label>Password
-      <input type="password" name="password" required placeholder="la tua password">
-    </label>
-    <button class="btn" type="submit">Entra</button>
-  </form>
-  <p class="muted" style="margin-top:.6rem">
-    <a href="/password-dimenticata">Password dimenticata?</a>
-  </p>
-  <p class="muted">Non hai un account? <a href="/registrati">Registrati</a>.</p>
+<link rel="stylesheet" href="/login.css?v=1">
+
+<section class="login-stage lp-full">
+  <canvas class="login-particles" id="loginParticles" aria-hidden="true"></canvas>
+
+  <div class="login-card">
+    <div class="login-card-inner">
+      <header class="login-head">
+        <div class="login-mark"><%- icon('logo-firework') %></div>
+        <h1>Bentornato</h1>
+        <p>Accedi per continuare la festa</p>
+      </header>
+
+      <form class="login-form" action="/login" method="post">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="lf-field">
+          <input type="text" id="nickname" name="nickname" placeholder=" " required
+                 autocomplete="username" autocapitalize="none" spellcheck="false">
+          <label for="nickname">Nickname</label>
+        </div>
+
+        <div class="lf-field">
+          <input type="password" id="password" name="password" placeholder=" " required
+                 autocomplete="current-password">
+          <label for="password">Password</label>
+          <button type="button" class="lf-eye" id="lfEye" aria-pressed="false" aria-label="Mostra password">
+            <svg class="eye-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            <svg class="eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="lf-options">
+          <label class="lf-remember">
+            <input type="checkbox" name="remember" value="1">
+            <span class="lf-check"></span>
+            Ricordami
+          </label>
+          <a href="/password-dimenticata" class="lf-forgot">Password dimenticata?</a>
+        </div>
+
+        <button type="submit" class="lf-submit">Entra</button>
+      </form>
+
+      <p class="lf-signup">Non hai un account? <a href="/registrati">Registrati</a></p>
+    </div>
+  </div>
 </section>
+
+<script src="/login.js?v=1" defer></script>

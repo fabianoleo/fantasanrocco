@@ -1,0 +1,287 @@
+/* =====================================================================
+   LOGIN — schermata animata «Bentornato»
+   Adattamento del componente animato in stack EJS + CSS, tema festa
+   (oro su fondo notturno). Particelle = braci/scintille della festa.
+   ===================================================================== */
+
+.login-stage {
+  position: relative;
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.25rem;
+  overflow: hidden;
+}
+
+/* Bagliore radiale dorato dietro la card */
+.login-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 55% at 50% 38%, rgba(245, 200, 66, 0.10), transparent 70%),
+    radial-gradient(80% 80% at 50% 120%, rgba(212, 160, 26, 0.08), transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Canvas particelle */
+.login-particles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ---------- Card ---------------------------------------------------- */
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 410px;
+}
+
+.login-card-inner {
+  position: relative;
+  background: linear-gradient(180deg, rgba(18, 15, 32, 0.92), rgba(9, 8, 18, 0.94));
+  border: 1px solid rgba(212, 160, 26, 0.22);
+  border-radius: 22px;
+  padding: 2.1rem 1.9rem 1.8rem;
+  box-shadow:
+    0 30px 80px -30px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  animation: lf-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Filo di luce dorato sul bordo superiore */
+.login-card-inner::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 12%; right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 200, 66, 0.7), transparent);
+}
+
+@keyframes lf-rise {
+  from { opacity: 0; transform: translateY(22px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------- Intestazione ------------------------------------------- */
+.login-head { text-align: center; margin-bottom: 1.6rem; }
+
+.login-mark {
+  width: 54px; height: 54px;
+  margin: 0 auto 0.9rem;
+  display: grid; place-items: center;
+}
+.login-mark svg { width: 100%; height: 100%; }
+
+.login-head h1 {
+  font-family: 'Cinzel', serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #fff;
+  margin: 0;
+}
+.login-head p {
+  margin: 0.35rem 0 0;
+  color: var(--muted, #9a93a8);
+  font-size: 0.92rem;
+}
+
+/* ---------- Campi con etichetta flottante --------------------------- */
+.login-form { display: flex; flex-direction: column; gap: 1.05rem; }
+
+.lf-field { position: relative; }
+
+.lf-field input {
+  width: 100%;
+  height: 54px;
+  padding: 1.15rem 0.95rem 0.35rem;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(212, 160, 26, 0.18);
+  border-radius: 13px;
+  color: #fff;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+  outline: none;
+}
+.lf-field input:hover { border-color: rgba(212, 160, 26, 0.32); }
+.lf-field input:focus {
+  border-color: var(--gold-2, #f5c842);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 3px rgba(245, 200, 66, 0.12);
+}
+.lf-field input:-webkit-autofill,
+.lf-field input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  -webkit-box-shadow: 0 0 0 60px #14111f inset;
+  caret-color: #fff;
+}
+
+.lf-field label {
+  position: absolute;
+  left: 0.95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  margin: 0;
+  color: var(--muted, #948da3);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  pointer-events: none;
+  transition: top 0.18s ease, font-size 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+/* Etichetta sale quando il campo è in focus o compilato */
+.lf-field input:focus + label,
+.lf-field input:not(:placeholder-shown) + label {
+  top: 0.5rem;
+  transform: translateY(0);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold-2, #f5c842);
+}
+
+/* Toggle mostra/nascondi password */
+.lf-field .lf-eye {
+  position: absolute;
+  right: 0.55rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px; height: 38px;
+  display: grid; place-items: center;
+  background: none;
+  border: none;
+  color: var(--muted, #9a93a8);
+  cursor: pointer;
+  border-radius: 9px;
+  transition: color 0.18s ease, background 0.18s ease;
+}
+.lf-field .lf-eye:hover { color: var(--gold-2, #f5c842); background: rgba(245, 200, 66, 0.08); }
+.lf-field .lf-eye svg { width: 19px; height: 19px; }
+.lf-field input[type="password"] { padding-right: 3rem; }
+.lf-field input[type="text"]#password { padding-right: 3rem; }
+.lf-eye .eye-off { display: none; }
+.lf-eye.is-on .eye-on { display: none; }
+.lf-eye.is-on .eye-off { display: block; }
+
+/* ---------- Opzioni: ricordami + password dimenticata -------------- */
+.lf-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.86rem;
+  margin-top: -0.15rem;
+}
+
+.lf-remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  color: var(--muted, #b3acbf);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
+  user-select: none;
+}
+.lf-remember input {
+  position: absolute;
+  opacity: 0;
+  width: 0; height: 0;
+}
+.lf-check {
+  width: 18px; height: 18px;
+  border-radius: 5px;
+  border: 1px solid rgba(212, 160, 26, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  display: inline-block;
+  position: relative;
+  transition: background 0.18s ease, border-color 0.18s ease;
+  flex-shrink: 0;
+}
+.lf-check::after {
+  content: "";
+  position: absolute;
+  left: 5px; top: 1.5px;
+  width: 5px; height: 9px;
+  border: solid #1a1408;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lf-remember input:checked + .lf-check {
+  background: linear-gradient(135deg, var(--gold-2, #f5c842), var(--gold, #d4a01a));
+  border-color: var(--gold-2, #f5c842);
+}
+.lf-remember input:checked + .lf-check::after { transform: rotate(45deg) scale(1); }
+.lf-remember input:focus-visible + .lf-check { box-shadow: 0 0 0 3px rgba(245, 200, 66, 0.25); }
+
+.lf-forgot { color: var(--gold, #d4a01a); white-space: nowrap; }
+.lf-forgot:hover { color: var(--gold-2, #f5c842); }
+
+/* ---------- Pulsante Entra ------------------------------------------ */
+.lf-submit {
+  margin-top: 0.45rem;
+  height: 52px;
+  border: none;
+  border-radius: 13px;
+  background: linear-gradient(135deg, var(--gold-2, #f5c842) 0%, var(--gold, #d4a01a) 55%, var(--amber, #b8841a) 100%);
+  color: #1a1408;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  font-size: 1.02rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.16s ease, box-shadow 0.22s ease, filter 0.22s ease;
+  box-shadow: 0 12px 28px -10px rgba(212, 160, 26, 0.55);
+}
+.lf-submit:hover { transform: translateY(-1px); filter: brightness(1.05); box-shadow: 0 16px 34px -10px rgba(212, 160, 26, 0.7); }
+.lf-submit:active { transform: translateY(0); }
+.lf-submit::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -120%;
+  width: 60%; height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: skewX(-18deg);
+  transition: left 0.6s ease;
+}
+.lf-submit:hover::after { left: 130%; }
+
+/* ---------- Registrati ---------------------------------------------- */
+.lf-signup {
+  text-align: center;
+  margin: 1.4rem 0 0;
+  font-size: 0.9rem;
+  color: var(--muted, #948da3);
+}
+.lf-signup a { color: var(--gold-2, #f5c842); font-weight: 600; }
+
+/* ---------- Mobile -------------------------------------------------- */
+@media (max-width: 560px) {
+  .login-stage { min-height: calc(100vh - 150px); padding: 1.5rem 1rem; }
+  .login-card-inner { padding: 1.8rem 1.4rem 1.5rem; border-radius: 20px; }
+  .login-head h1 { font-size: 1.4rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-card-inner { animation: none; }
+  .lf-submit::after { display: none; }
+}

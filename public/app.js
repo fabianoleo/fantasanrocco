@@ -288,3 +288,23 @@ document.addEventListener('click', async (e) => {
     setTimeout(() => overlay.remove(), 480);
   });
 })();
+
+// ── Footer: comparsa in blur quando entra in viewport ────────────────
+(function () {
+  const footer = document.querySelector('.site-footer');
+  if (!footer) return;
+
+  const reveal = () => footer.classList.add('foot-reveal');
+
+  if (!('IntersectionObserver' in window)) { reveal(); return; }
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting) { reveal(); io.disconnect(); }
+    });
+  }, { threshold: 0.12 });
+  io.observe(footer);
+
+  // Rete di sicurezza: non lasciare mai le colonne invisibili
+  setTimeout(reveal, 1600);
+})();

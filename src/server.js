@@ -226,7 +226,7 @@ app.get('/api/online/debug', auth.requireStaff, (req, res) => {
 });
 
 // =========================================================================
-//  RADIO «Onde di San Rocco» — stazione condivisa
+//  RADIO «Radio San Rocco» — stazione condivisa
 //  Tutti ascoltano la STESSA canzone alla STESSA posizione: una timeline
 //  server-authoritative che cicla la playlist all'infinito. Niente skip:
 //  solo "sintonizzati / stop" lato client.
@@ -247,6 +247,7 @@ const RADIO_PLAYLIST = [
   { src: "/radio/mazzariello-nostalgia-karaoke-lyric-video.mp3", title: "Mazzariello — Nostalgia & Karaoke", cover: "/images/artisti/mazzariello.jpg", duration: 217 },
   { src: "/radio/mazzariello-orchidee-visual-video.mp3", title: "Mazzariello — Orchidee", cover: "/images/artisti/mazzariello.jpg", duration: 183 },
   { src: "/radio/mazzariello-per-un-milione-di-euro-official-video.mp3", title: "Mazzariello — Per Un Milione Di Euro", cover: "/images/artisti/mazzariello.jpg", duration: 180 },
+  { src: "/radio/samurai-jay-ossessione.mp3", title: "Samurai Jay — Ossessione", duration: 188 },
   { src: "/radio/serena-brancale-levante-delia-al-mio-paese-testolyrics.mp3", title: "Serena Brancale, Levante, DELIA — Al Mio Paese", cover: "/images/galleria/palio-fuochi.jpg", duration: 198 },
 ];
 // Riferimento fisso della timeline: la posizione "in onda" si calcola da qui.
@@ -575,6 +576,7 @@ const BCRYPT_SENTINEL = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL1
 app.post('/login', loginLimiter, (req, res) => {
   const nickname = (req.body.nickname || '').trim();
   const password = req.body.password || '';
+  const remember = req.body.remember === '1' || req.body.remember === 'on';
   const user = db.prepare('SELECT * FROM users WHERE nickname = ?').get(nickname);
   // Esegue sempre bcrypt (tempo costante) — previene timing oracle anche se il nickname non esiste
   const passwordOk = auth.verifyPassword(password, user?.password_hash || BCRYPT_SENTINEL);
@@ -586,6 +588,14 @@ app.post('/login', loginLimiter, (req, res) => {
   req.session.regenerate((err) => {
     if (err) { flash(req, 'error', 'Errore interno. Riprova.'); return res.redirect('/login'); }
     req.session.userId = user.id;
+    // «Ricordami»: sessione persistente 30 giorni; altrimenti cookie di sessione
+    // (scade alla chiusura del browser). L'ID sessione resta lato server (SQLite),
+    // httpOnly + secure + sameSite=lax → nessun token persistente esposto al client.
+    if (remember) {
+      req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30;
+    } else {
+      req.session.cookie.expires = false;
+    }
     req.session.flash = { type: 'success', msg: `Bentornato/a ${user.nickname}!` };
     res.redirect('/missioni');
   });
