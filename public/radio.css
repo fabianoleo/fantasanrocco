@@ -90,6 +90,13 @@
 }
 .radio-close:hover { background: rgba(255,255,255,.22); }
 .radio-close svg { width: 16px; height: 16px; }
+.radio-logo {
+  display: block;
+  width: auto; height: 96px;
+  margin: 0 auto .15rem;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,.55));
+}
 .radio-cover {
   width: 100%; aspect-ratio: 16 / 10; border-radius: 16px;
   background: linear-gradient(135deg, var(--gold-2), var(--amber));

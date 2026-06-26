@@ -36,7 +36,7 @@ function checkImageMagicBytes(filePath) {
   } catch { return null; }
 }
 
-const { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR } = require('./db');
+const { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR } = require('./db');
 const auth = require('./auth');
 
 const app = express();
@@ -130,6 +130,15 @@ app.use(auth.loadCurrentUser);
 // userPoints è una function declaration (hoisted) → richiamabile qui a runtime.
 app.use((req, res, next) => {
   res.locals.userBalance = req.currentUser ? userPoints(req.currentUser.id) : null;
+  next();
+});
+
+// Barra storie (solo pagine HTML per i loggati): calcola le storie attive raggruppate.
+// activeStoriesGrouped è una function declaration (hoisted), definita più sotto.
+app.use((req, res, next) => {
+  res.locals.storiesData = (req.currentUser && req.method === 'GET')
+    ? activeStoriesGrouped(req.currentUser)
+    : null;
   next();
 });
 
@@ -304,6 +313,23 @@ const avatarStorage = multer.diskStorage({
 });
 const avatarUpload = multer({
   storage: avatarStorage,
+  limits: { fileSize: MAX_UPLOAD_MB * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (/^image\//.test(file.mimetype)) return cb(null, true);
+    cb(new Error('Sono ammesse solo immagini.'));
+  },
+});
+
+// Upload storie: salvate nella cartella stories (servite ai soli loggati)
+const storyStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, STORIES_DIR),
+  filename: (req, file, cb) => {
+    const ext = (path.extname(file.originalname) || '.jpg').toLowerCase().slice(0, 5);
+    cb(null, `${Date.now()}-${crypto.randomBytes(6).toString('hex')}${ext}`);
+  },
+});
+const storyUpload = multer({
+  storage: storyStorage,
   limits: { fileSize: MAX_UPLOAD_MB * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (/^image\//.test(file.mimetype)) return cb(null, true);
@@ -1148,6 +1174,157 @@ app.get('/uploads/:file', auth.requireStaff, (req, res) => {
   if (!fs.existsSync(full)) return res.status(404).send('File non trovato');
   res.sendFile(full);
 });
+
+// =========================================================================
+//  STORIE (foto effimere 24h) — aperte a tutti, pubblicazione immediata
+// =========================================================================
+
+// Redirect "indietro" sicuro (stesso host), fallback in home.
+function safeBack(req) {
+  const ref = req.get('Referer') || '';
+  try {
+    const u = new URL(ref);
+    if (u.host === req.get('host')) return u.pathname + u.search;
+  } catch {}
+  return '/';
+}
+
+// Archi SVG dell'anello segmentato (stesso disegno del componente originale).
+function ringSegments(n, viewedFlags) {
+  const gap = n > 1 ? 12 : 0;
+  const seg = (360 - gap * n) / n;
+  const R = 46, C = 50;
+  const allViewed = viewedFlags.every(Boolean);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const start = -90 + i * (seg + gap);
+    const end = start + seg;
+    const sr = start * Math.PI / 180, er = end * Math.PI / 180;
+    const x1 = (C + R * Math.cos(sr)).toFixed(2), y1 = (C + R * Math.sin(sr)).toFixed(2);
+    const x2 = (C + R * Math.cos(er)).toFixed(2), y2 = (C + R * Math.sin(er)).toFixed(2);
+    const large = seg > 180 ? 1 : 0;
+    out.push({ d: `M ${x1} ${y1} A ${R} ${R} 0 ${large} 1 ${x2} ${y2}`, viewed: viewedFlags[i] || allViewed });
+  }
+  return out;
+}
+
+// Raggruppa le storie attive per utente, con flag "viste" per l'utente corrente.
+function activeStoriesGrouped(currentUser) {
+  const rows = db.prepare(`
+    SELECT s.id, s.user_id, s.media_path, s.created_at, u.nickname, u.avatar_path,
+           (SELECT 1 FROM story_views v WHERE v.story_id = s.id AND v.user_id = ?) AS viewed
+    FROM stories s JOIN users u ON u.id = s.user_id
+    WHERE s.expires_at > datetime('now')
+    ORDER BY s.created_at ASC
+  `).all(currentUser.id);
+
+  const byUser = new Map();
+  for (const r of rows) {
+    if (!byUser.has(r.user_id)) {
+      byUser.set(r.user_id, {
+        id: r.user_id,
+        name: r.user_id === currentUser.id ? 'Tu' : r.nickname,
+        avatar: r.avatar_path ? '/avatar/' + path.basename(r.avatar_path) : null,
+        initials: app.locals.initials(r.nickname),
+        stories: [],
+      });
+    }
+    const ts = Date.parse((r.created_at || '').replace(' ', 'T') + 'Z') || Date.now();
+    byUser.get(r.user_id).stories.push({
+      id: r.id,
+      src: '/storie/media/' + path.basename(r.media_path),
+      ts,
+      viewed: !!r.viewed,
+    });
+  }
+
+  const users = [...byUser.values()].map((u) => {
+    const viewedFlags = u.stories.map((s) => s.viewed);
+    u.segments = ringSegments(u.stories.length, viewedFlags);
+    u.allViewed = viewedFlags.every(Boolean);
+    u.thumb = u.stories[u.stories.length - 1].src; // ultima foto = copertina del cerchio
+    u.lastTs = u.stories[u.stories.length - 1].ts;
+    return u;
+  });
+
+  // Ordine: "Tu" in testa, poi chi ha storie non viste, poi più recenti.
+  users.sort((a, b) => {
+    if (a.id === currentUser.id) return -1;
+    if (b.id === currentUser.id) return 1;
+    if (a.allViewed !== b.allViewed) return a.allViewed ? 1 : -1;
+    return b.lastTs - a.lastTs;
+  });
+
+  const staff = ['moderator', 'admin'].includes(currentUser.role);
+  return { me: { id: currentUser.id, staff }, users };
+}
+
+// Pubblica una storia (foto). Multipart → CSRF verificato a mano (come l'avatar).
+app.post('/storie', auth.requireLogin, (req, res) => {
+  storyUpload.single('foto')(req, res, (err) => {
+    const back = safeBack(req);
+    if (err) { flash(req, 'error', err.message || 'Errore nel caricamento.'); return res.redirect(back); }
+    const csrfToken = req.body._csrf || '';
+    if (!csrfToken || csrfToken !== req.session.csrfToken) {
+      if (req.file) fs.unlink(path.join(STORIES_DIR, req.file.filename), () => {});
+      return res.status(403).render('error', { title: 'Errore di sicurezza', message: 'Token non valido. Ricarica la pagina.' });
+    }
+    if (!req.file) { flash(req, 'error', 'Seleziona una foto da pubblicare.'); return res.redirect(back); }
+    const mime = checkImageMagicBytes(path.join(STORIES_DIR, req.file.filename));
+    if (!mime || !ALLOWED_MIME.has(mime)) {
+      fs.unlink(path.join(STORIES_DIR, req.file.filename), () => {});
+      flash(req, 'error', 'Formato non ammesso. Carica un\'immagine (JPEG, PNG, WebP, GIF, AVIF).');
+      return res.redirect(back);
+    }
+    const correctExt = MIME_TO_EXT[mime] || '.jpg';
+    const safeName = req.file.filename.replace(/\.[^.]+$/, correctExt);
+    try { fs.renameSync(path.join(STORIES_DIR, req.file.filename), path.join(STORIES_DIR, safeName)); } catch {}
+    db.prepare("INSERT INTO stories (user_id, media_path, expires_at) VALUES (?, ?, datetime('now','+1 day'))")
+      .run(req.currentUser.id, safeName);
+    flash(req, 'success', 'Storia pubblicata! Resta visibile 24 ore.');
+    res.redirect(back);
+  });
+});
+
+// Media delle storie: solo per utenti loggati.
+app.get('/storie/media/:file', auth.requireLogin, (req, res) => {
+  const safe = path.basename(req.params.file);
+  const full = path.join(STORIES_DIR, safe);
+  if (!fs.existsSync(full)) return res.status(404).send('File non trovato');
+  res.sendFile(full);
+});
+
+// Segna una storia come vista (CSRF via header globale verifyCsrf).
+app.post('/api/storie/:id/visto', auth.requireLogin, (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ ok: false });
+  db.prepare('INSERT OR IGNORE INTO story_views (story_id, user_id) VALUES (?, ?)').run(id, req.currentUser.id);
+  res.json({ ok: true });
+});
+
+// Elimina una storia: autore o staff.
+app.post('/storie/:id/elimina', auth.requireLogin, (req, res) => {
+  const id = Number(req.params.id);
+  const st = db.prepare('SELECT * FROM stories WHERE id = ?').get(id);
+  const staff = ['moderator', 'admin'].includes(req.currentUser.role);
+  if (st && (st.user_id === req.currentUser.id || staff)) {
+    fs.unlink(path.join(STORIES_DIR, path.basename(st.media_path)), () => {});
+    db.prepare('DELETE FROM stories WHERE id = ?').run(id); // story_views via ON DELETE CASCADE
+  }
+  if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true });
+  res.redirect(safeBack(req));
+});
+
+// Pulizia periodica delle storie scadute (file + righe).
+function purgeExpiredStories() {
+  try {
+    const expired = db.prepare("SELECT media_path FROM stories WHERE expires_at <= datetime('now')").all();
+    for (const s of expired) fs.unlink(path.join(STORIES_DIR, path.basename(s.media_path)), () => {});
+    if (expired.length) db.prepare("DELETE FROM stories WHERE expires_at <= datetime('now')").run();
+  } catch { /* la pulizia non deve mai bloccare l'app */ }
+}
+purgeExpiredStories();
+setInterval(purgeExpiredStories, 30 * 60 * 1000).unref?.();
 
 // =========================================================================
 //  MODERAZIONE (moderatori + admin)

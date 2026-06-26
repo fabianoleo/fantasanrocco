@@ -32,38 +32,75 @@
     </a>
   <% } %>
 
-  <%# Desktop nav %>
-  <nav class="nav">
-    <a href="/gioco"           class="<%= path === '/gioco'           ? 'active' : '' %>">Gioco</a>
-    <a href="/classifica"      class="<%= path === '/classifica'      ? 'active' : '' %>">Classifica</a>
-    <a href="/programmazione" class="<%= path === '/programmazione' ? 'active' : '' %>">Programmazione</a>
-    <a href="/galleria"        class="<%= path === '/galleria'        ? 'active' : '' %>">Galleria</a>
-    <a href="/storia"          class="<%= path === '/storia'          ? 'active' : '' %>">Storia</a>
-    <a href="/premio"          class="<%= path === '/premio'          ? 'active' : '' %>">Premio</a>
-    <% if (currentUser) { %>
-      <a href="/missioni" class="<%= path.startsWith('/missioni') ? 'active' : '' %>">Missioni</a>
-      <a href="/profilo"  class="<%= path === '/profilo'    ? 'active' : '' %>">Profilo</a>
-      <% if (currentUser.role === 'moderator' || currentUser.role === 'admin') { %>
-        <a href="/moderazione" class="staff <%= path === '/moderazione' ? 'active' : '' %>">Modera</a>
-      <% } %>
-      <% if (currentUser.role === 'admin') { %>
-        <a href="/admin" class="staff <%= path === '/admin' ? 'active' : '' %>">Admin</a>
-      <% } %>
-      <form action="/logout" method="post" class="inline">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button class="link-btn" type="submit">Esci (<%= currentUser.nickname %>)</button>
-      </form>
-    <% } else { %>
-      <a href="/registrati" class="<%= path === '/registrati' ? 'active' : '' %>">Registrati</a>
-      <a href="/login" class="btn-mini">Accedi</a>
-    <% } %>
-  </nav>
-
-  <%# Online pill %>
+  <%# Online ora — subito a sinistra del pulsante menu %>
   <div class="online-pill" id="onlinePill" title="Online ora">
     <span class="online-dot"></span>
     <div class="oc-wrap"><span class="oc-val" id="onlineCount">—</span></div>
   </div>
+
+  <%# Desktop nav → Mega-menu a tendina con anteprima immagini (hover) %>
+  <%
+    const mmItems = [
+      { href: '/gioco',          label: 'Gioco',          img: '/images/galleria/palio-fuochi.jpg' },
+      { href: '/classifica',     label: 'Classifica',     img: '/images/premi/ps5.webp' },
+      { href: '/programmazione', label: 'Programmazione', img: '/images/menu/programmazione.png' },
+      { href: '/galleria',       label: 'Galleria',       img: '/images/galleria/fuochi.webp' },
+      { href: '/storia',         label: 'Storia',         img: '/images/galleria/processione-storica.jpg' },
+      { href: '/premio',         label: 'Premio',         img: '/images/premi/smartbox-cover.webp' },
+    ];
+    if (currentUser) {
+      mmItems.push({ href: '/missioni', label: 'Missioni', img: '/images/galleria/fuochisti-preparano.jpg', active: path.startsWith('/missioni') });
+      mmItems.push({ href: '/profilo',  label: 'Profilo',  avatar: true });
+      if (currentUser.role === 'moderator' || currentUser.role === 'admin')
+        mmItems.push({ href: '/moderazione', label: 'Modera', img: '/images/galleria/sanrocco-oro.jpg', staff: true });
+      if (currentUser.role === 'admin')
+        mmItems.push({ href: '/admin', label: 'Admin', img: '/images/galleria/sanrocco-oro.jpg', staff: true });
+      mmItems.push({ logout: true, label: 'Esci', img: '/images/galleria/sanrocco-rientro-fuochi.jpg' });
+    } else {
+      mmItems.push({ href: '/registrati', label: 'Registrati', img: '/images/galleria/sanrocco-applausi.jpg' });
+      mmItems.push({ href: '/login',      label: 'Accedi',     img: '/images/galleria/piazza.webp' });
+    }
+    mmItems.forEach((it) => { if (it.active === undefined) it.active = (path === it.href); });
+  %>
+  <nav class="nav megamenu" id="megamenu">
+    <button class="mm-trigger" id="mmTrigger" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="mmPanel" aria-label="Apri il menu">
+      <span class="mm-bars" aria-hidden="true"><span></span><span></span><span></span></span>
+    </button>
+
+    <div class="mm-panel" id="mmPanel" role="menu" aria-label="Navigazione">
+      <ul class="mm-list">
+        <% mmItems.forEach((it, i) => { %>
+          <li>
+            <% if (it.logout) { %>
+              <form action="/logout" method="post" class="mm-logout-form">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button type="submit" role="menuitem" class="mega-link is-staff" data-mm="<%= i %>"><span class="mega-link-text"><%= it.label %></span></button>
+              </form>
+            <% } else { %>
+              <a role="menuitem" class="mega-link <%= it.active ? 'is-current' : '' %> <%= it.staff ? 'is-staff' : '' %>" href="<%= it.href %>" data-mm="<%= i %>">
+                <span class="mega-link-text"><%= it.label %></span>
+              </a>
+            <% } %>
+          </li>
+        <% }) %>
+      </ul>
+      <div class="mm-stage" id="mmStage" aria-hidden="true">
+        <% mmItems.forEach((it, i) => { %>
+          <div class="mm-shot <%= i === 0 ? 'is-active' : '' %>" data-mm="<%= i %>">
+            <% if (it.avatar) { %>
+              <% if (currentUser && currentUser.avatar_path) { %>
+                <img src="/avatar/<%= currentUser.avatar_path %>" alt="" loading="lazy">
+              <% } else { %>
+                <span class="mm-initials"><%= initials(currentUser ? currentUser.nickname : '') %></span>
+              <% } %>
+            <% } else { %>
+              <img src="<%= it.img %>" alt="" loading="lazy">
+            <% } %>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </nav>
 
   <%# Hamburger (mobile only) %>
   <button class="hamburger" id="hamburger" aria-label="Apri menu" aria-expanded="false">
@@ -79,6 +116,7 @@
     <button class="radio-close" id="radioClose" type="button" aria-label="Chiudi">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
+    <img class="radio-logo" src="/images/logoradio.png?v=1" alt="Radio San Rocco" width="100" height="100">
     <div class="radio-cover" id="radioCover"></div>
     <div class="radio-live"><span class="radio-dot"></span> In onda · per tutti</div>
     <h3 class="radio-title" id="radioTitle">Radio San Rocco</h3>

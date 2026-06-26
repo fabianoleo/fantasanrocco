@@ -1,0 +1,47 @@
+<%# ── Barra Storie (subito sotto la topbar) — solo per utenti loggati ── %>
+<% if (currentUser && storiesData) { %>
+<section class="stories-bar" aria-label="Storie">
+  <%# Gradiente condiviso per gli anelli (a tema festa: oro → ambra → fuoco) %>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="fsrStoryGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#f5c842"/>
+        <stop offset="55%" stop-color="#e8861e"/>
+        <stop offset="100%" stop-color="#e84e1b"/>
+      </linearGradient>
+    </defs>
+  </svg>
+  <div class="stories-scroll">
+
+    <%# Aggiungi la tua storia (foto) %>
+    <form class="story-add" action="/storie" method="post" enctype="multipart/form-data" id="storyAddForm">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="story-circle story-add-btn" id="storyAddBtn">
+        <input type="file" name="foto" accept="image/*" id="storyFile" hidden>
+        <span class="story-ring story-add-ring">
+          <span class="story-thumb story-add-thumb"><%- icon('camera') %></span>
+          <span class="story-add-plus" aria-hidden="true"><%- icon('plus') %></span>
+        </span>
+        <span class="story-label">La tua storia</span>
+      </label>
+    </form>
+
+    <%# Cerchi degli utenti con storie attive %>
+    <% storiesData.users.forEach((u, i) => { %>
+      <button type="button" class="story-circle <%= u.allViewed ? 'is-viewed' : '' %>" data-user-index="<%= i %>" aria-label="Storie di <%= u.name %>">
+        <span class="story-ring">
+          <svg viewBox="0 0 100 100" aria-hidden="true">
+            <% u.segments.forEach((seg) => { %><path d="<%= seg.d %>" class="sc-seg <%= seg.viewed ? 'is-viewed' : '' %>" /><% }) %>
+          </svg>
+          <span class="story-thumb"><img src="<%= u.thumb %>" alt="" loading="lazy"></span>
+        </span>
+        <span class="story-label"><%= u.name %></span>
+      </button>
+    <% }) %>
+
+  </div>
+
+  <script type="application/json" id="fsrStories"><%- JSON.stringify({ me: storiesData.me, csrf: csrfToken, users: storiesData.users.map(function(u){ return { id: u.id, name: u.name, avatar: u.avatar, initials: u.initials, stories: u.stories }; }) }).replace(/</g, '\\u003c') %></script>
+</section>
+<script src="/stories.js?v=2" defer></script>
+<% } %>

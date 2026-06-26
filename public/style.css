@@ -908,7 +908,11 @@ label.check input { width: auto; }
    LANDING PAGE — Scroll Experience
    =================================================================== */
 
-html { overflow-x: hidden; }
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;   /* iOS: niente auto-ingrandimento dei font */
+  text-size-adjust: 100%;
+}
 
 /* Full-bleed breakout from .container */
 .lp-full {
@@ -3124,6 +3128,433 @@ textarea:focus-visible,
 .lb-medal-inline { display: inline-flex; font-size: 1.5rem; line-height: 1; }
 .lb-medal-inline .ico { width: 1em; height: 1em; }
 .lb-list-game .lb-list-pts small { display: block; text-align: right; }
+
+/* ===================================================================
+   MEGA-MENU desktop — tendina con anteprima immagini (hover slideshow)
+   =================================================================== */
+/* Posizione: il menu è l'ultimo a destra, l'online-pill subito a sinistra */
+.megamenu { margin-left: 0; }
+.topbar .online-pill { margin-left: auto; }
+
+/* Pulsante menu — icona hamburger curata */
+.mm-trigger {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 38px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid var(--border-gold);
+  color: var(--text);
+  border-radius: 12px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.24s var(--ease), color 0.24s var(--ease), border-color 0.24s var(--ease), box-shadow 0.24s var(--ease), transform 0.12s var(--ease);
+}
+.mm-trigger:hover,
+.megamenu.is-open .mm-trigger {
+  background: linear-gradient(180deg, rgba(245,200,66,0.18), rgba(212,160,26,0.08));
+  color: var(--gold-2);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245, 200, 66, 0.12), 0 6px 18px -8px rgba(212, 160, 26, 0.6);
+}
+.mm-trigger:active { transform: translateY(1px); }
+
+.mm-bars {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 20px; height: 14px; gap: 4px;
+}
+.mm-bars span {
+  display: block; height: 2px; width: 100%;
+  border-radius: 2px;
+  background: currentColor;
+  transition: width 0.28s var(--ease), transform 0.28s var(--ease);
+}
+.mm-bars span:nth-child(2) { width: 62%; }     /* riga centrale più corta — tocco "designer" */
+.mm-trigger:hover .mm-bars span:nth-child(2),
+.megamenu.is-open .mm-bars span:nth-child(2) { width: 100%; }
+.megamenu.is-open .mm-bars span:nth-child(1) { transform: translateY(1px); }
+.megamenu.is-open .mm-bars span:nth-child(3) { transform: translateY(-1px); }
+
+.mm-panel {
+  position: absolute;
+  top: 100%; right: 1.5rem;
+  margin-top: 8px;
+  width: min(640px, calc(100vw - 2rem));
+  display: flex;
+  gap: 1.6rem;
+  padding: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: blur(22px) saturate(180%);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: opacity 0.24s var(--ease), transform 0.24s var(--ease), visibility 0.24s var(--ease);
+  z-index: 90;
+}
+.megamenu:hover .mm-panel,
+.megamenu:focus-within .mm-panel,
+.megamenu.is-open .mm-panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Lista link */
+.mm-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column;
+  flex: 1; min-width: 0;
+}
+.mm-list li { margin: 0; }
+.mm-logout-form { margin: 0; }
+.megamenu .mega-link {
+  display: block; width: 100%;
+  text-align: left;
+  background: none; border: none;
+  cursor: pointer;
+  font-family: var(--font-heading, inherit);
+  font-size: 1.5rem; font-weight: 800; line-height: 1.12;
+  letter-spacing: -0.01em; text-transform: uppercase;
+  color: var(--text-2, #9a8f78);
+  padding: 0.22rem 0;
+  transition: color 0.2s var(--ease);
+}
+.megamenu .mega-link:hover,
+.megamenu .mega-link.is-active,
+.megamenu .mega-link:focus-visible { color: var(--gold-2, #f5c842); background: none; outline: none; }
+.megamenu .mega-link.is-current { color: var(--gold, #d4a01a); }
+.megamenu .mega-link.is-staff { color: var(--amber, #e8861e); }
+.megamenu .mega-link.is-staff:hover, .megamenu .mega-link.is-staff.is-active { color: var(--fire, #e84e1b); }
+
+/* Stagger lettere */
+.mega-link-text { display: inline-block; }
+.mega-link-text span {
+  display: inline-block;
+  transition: transform 0.3s var(--ease);
+  transition-delay: calc(var(--i, 0) * 16ms);
+  will-change: transform;
+}
+.megamenu .mega-link:hover .mega-link-text span,
+.megamenu .mega-link.is-active .mega-link-text span { transform: translateY(-4px); }
+
+/* Stage immagini */
+.mm-stage {
+  position: relative;
+  width: 270px; height: 320px;
+  flex-shrink: 0;
+  border-radius: var(--r);
+  overflow: hidden;
+  background: var(--bg-2, #0f0d1e);
+  border: 1px solid var(--border);
+}
+.mm-shot {
+  position: absolute; inset: 0;
+  opacity: 0;
+  clip-path: inset(0 0 0 100%);
+  transition: clip-path 0.5s var(--ease), opacity 0.35s var(--ease);
+}
+.mm-shot.is-active { opacity: 1; clip-path: inset(0 0 0 0); }
+.mm-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mm-initials {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-heading); font-weight: 800; font-size: 5rem;
+  color: #1a1408;
+  background: linear-gradient(135deg, var(--gold-2, #f5c842), var(--gold, #d4a01a) 55%, var(--amber, #e8861e));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mm-shot { transition: opacity 0.2s; clip-path: none !important; }
+  .mm-link-text span { transition: none; }
+  .mm-panel { transition: opacity 0.15s; }
+}
+
+/* ===================================================================
+   STORIE — barra in alto (sotto la topbar) + visualizzatore a schermo intero
+   =================================================================== */
+.stories-bar {
+  border-bottom: 1px solid rgba(212, 160, 26, 0.12);
+  background: linear-gradient(180deg, rgba(15, 13, 30, 0.6), rgba(9, 8, 18, 0.3));
+}
+.stories-scroll {
+  display: flex;
+  gap: 1rem;
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.stories-scroll::-webkit-scrollbar { display: none; }
+
+/* Cerchio singolo */
+.story-circle {
+  flex: 0 0 auto;
+  width: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.story-ring {
+  position: relative;
+  width: 66px;
+  height: 66px;
+}
+.story-ring > svg {            /* solo l'anello segmentato (figlio diretto), non le icone annidate */
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.sc-seg {
+  fill: none;
+  stroke: url(#fsrStoryGrad);
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke 0.3s ease;
+}
+.sc-seg.is-viewed,
+.story-circle.is-viewed .sc-seg { stroke: rgba(255, 255, 255, 0.2); }
+
+.story-thumb {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--bg, #040408);
+  border: 2px solid var(--bg, #040408);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.story-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;          /* niente menu "Salva immagine" al tap lungo (iOS) */
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+.story-circle:active .story-thumb img { transform: scale(1.05); transition: transform 0.2s; }
+
+.story-label {
+  font-size: 0.72rem;
+  color: var(--text, #ede8d5);
+  max-width: 72px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.story-circle.is-viewed .story-label { color: var(--text-2, #9a8f78); }
+
+/* Bottone "aggiungi storia" */
+.story-add { margin: 0; flex: 0 0 auto; }
+.story-add-btn { cursor: pointer; }
+.story-add-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(212, 160, 26, 0.5);
+  border-radius: 50%;
+  background: rgba(245, 200, 66, 0.05);
+}
+.story-add-thumb {
+  position: static;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+}
+.story-add-thumb .ico { width: 26px; height: 26px; color: var(--gold-2, #f5c842); }
+.story-add-plus {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold-2, #f5c842), var(--gold, #d4a01a));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg, #040408);
+  box-sizing: border-box;
+}
+.story-add-plus .ico { width: 12px; height: 12px; color: #1a1408; display: block; }
+.story-add.is-loading .story-add-ring { opacity: 0.5; animation: story-pulse 0.9s ease-in-out infinite; }
+@keyframes story-pulse { 50% { opacity: 0.85; } }
+
+/* ---- Visualizzatore a schermo intero ---- */
+.sv-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.sv-overlay.is-open { opacity: 1; }
+/* [hidden] deve sempre vincere sui display: grid/inline-flex dei controlli */
+.sv-overlay [hidden] { display: none !important; }
+.sv-stage {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  height: 100%;
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #0a0a0f;
+}
+
+/* Top: barre + intestazione */
+.sv-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 3;
+  padding: 0.6rem 0.5rem 1.4rem;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent);
+  pointer-events: none;
+}
+.sv-top button { pointer-events: auto; }
+.sv-bars { display: flex; gap: 4px; padding: 0 0.4rem; }
+.sv-bar {
+  flex: 1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.sv-bar-fill {
+  height: 100%;
+  width: 0;
+  background: #fff;
+  border-radius: 2px;
+}
+.sv-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.6rem 0;
+}
+.sv-user { display: flex; align-items: center; gap: 0.6rem; }
+.sv-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--gold-2, #f5c842), var(--gold, #d4a01a));
+  color: #1a1408;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+.sv-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.sv-meta { display: flex; flex-direction: column; line-height: 1.2; }
+.sv-meta b { color: #fff; font-size: 0.88rem; }
+.sv-meta small { color: rgba(255, 255, 255, 0.6); font-size: 0.72rem; }
+.sv-actions { display: flex; align-items: center; gap: 0.3rem; }
+.sv-paused {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-right: 0.2rem;
+}
+.sv-paused .ico { width: 14px; height: 14px; }
+.sv-icon-btn {
+  width: 34px; height: 34px;
+  display: grid;
+  place-items: center;
+  background: none;
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+.sv-icon-btn:hover { background: rgba(255, 255, 255, 0.18); }
+.sv-icon-btn .ico { width: 20px; height: 20px; }
+
+/* Media */
+.sv-media {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;       /* niente menu contestuale iOS al tap lungo */
+  touch-action: none;                /* il gesto (pausa/swipe) è tutto nostro */
+}
+.sv-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  pointer-events: none;              /* il tocco arriva al contenitore, non all'immagine */
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.sv-spinner {
+  position: absolute;
+  width: 38px; height: 38px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: sv-spin 0.8s linear infinite;
+}
+@keyframes sv-spin { to { transform: rotate(360deg); } }
+
+/* Chevron (solo desktop) */
+.sv-chevron {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: none;
+  display: none;
+  place-items: center;
+  cursor: pointer;
+}
+.sv-chevron:hover { background: rgba(255, 255, 255, 0.22); }
+.sv-chevron .ico { width: 24px; height: 24px; }
+.sv-prev { left: 0.5rem; }
+.sv-next { right: 0.5rem; }
+@media (min-width: 769px) {
+  .sv-chevron { display: grid; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sv-overlay { transition: none; }
+  .sv-spinner, .story-add.is-loading .story-add-ring { animation: none; }
+}
 
 /* ===================================================================
    STICKY FOOTER — footer rivelato dallo scroll (effetto "tendina")

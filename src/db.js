@@ -13,10 +13,12 @@ const DATA_DIR = process.env.DATA_DIR
 
 const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');     // foto-prova (private)
 const AVATARS_DIR = path.join(DATA_DIR, 'avatars');     // foto profilo (pubbliche)
+const STORIES_DIR = path.join(DATA_DIR, 'stories');     // foto delle storie (24h)
 
 // Assicura che le cartelle esistano
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 fs.mkdirSync(AVATARS_DIR, { recursive: true });
+fs.mkdirSync(STORIES_DIR, { recursive: true });
 
 const db = new Database(path.join(DATA_DIR, 'fantasanrocco.db'));
 db.pragma('journal_mode = WAL'); // più robusto con letture/scritture concorrenti
@@ -61,6 +63,25 @@ CREATE TABLE IF NOT EXISTS submissions (
 
 CREATE INDEX IF NOT EXISTS idx_sub_status ON submissions(status);
 CREATE INDEX IF NOT EXISTS idx_sub_user   ON submissions(user_id);
+
+-- Storie effimere (foto): visibili 24h, poi cancellate (riga + file)
+CREATE TABLE IF NOT EXISTS stories (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  media_path    TEXT NOT NULL,                  -- nome file in data/stories
+  created_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  expires_at    TEXT NOT NULL                   -- datetime('now','+1 day')
+);
+CREATE INDEX IF NOT EXISTS idx_stories_exp  ON stories(expires_at);
+CREATE INDEX IF NOT EXISTS idx_stories_user ON stories(user_id);
+
+-- Chi ha visto quale storia (per l'anello "non viste")
+CREATE TABLE IF NOT EXISTS story_views (
+  story_id      INTEGER NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
+  user_id       INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  seen_at       TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (story_id, user_id)
+);
 `);
 
 // Migrazioni: aggiunge colonne se non esistono ancora (idempotente)
@@ -77,4 +98,4 @@ try { db.exec('ALTER TABLE users ADD COLUMN last_wheel_day TEXT'); } catch {}
 // game_key: marca una "missione" come traguardo del mini-gioco (esclusa dalle missioni-foto)
 try { db.exec('ALTER TABLE missions ADD COLUMN game_key TEXT'); } catch {}
 
-module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR };
+module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR };
