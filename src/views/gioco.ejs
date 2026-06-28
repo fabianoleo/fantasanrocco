@@ -1,5 +1,5 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
-<link rel="stylesheet" href="/game.css?v=6">
+<link rel="stylesheet" href="/game.css?v=7">
 <link rel="stylesheet" href="/casino.css?v=2">
 
 <%# ── HERO ────────────────────────────────────────────────────────── %>
@@ -22,12 +22,51 @@
       <span class="gm-score" id="gmScore">0</span>
       <span class="gm-best" id="gmBest">record <%= best %></span>
     </div>
+
+    <%# Bottone pausa (visibile solo in gioco) %>
+    <button class="gm-pause-toggle" id="gmPauseBtn" type="button" aria-label="Pausa" title="Pausa">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="0.5"/><rect x="14" y="5" width="4" height="14" rx="0.5"/></svg>
+    </button>
+
+    <%# ── MAIN MENU 8-bit (schermata iniziale / game over) ──────────── %>
     <div class="gm-overlay" id="gmOverlay">
-      <p class="gm-over-title" id="gmOverTitle">Corri San Rocco</p>
-      <p class="gm-over-score" id="gmOverScore"></p>
-      <p class="gm-hint" id="gmHint"></p>
-      <button class="btn gm-play-btn" id="gmPlayBtn" type="button">Gioca</button>
+      <div class="gm-8card">
+        <p class="gm-8kicker" id="gmKicker">Insert coin</p>
+        <p class="gm-over-title" id="gmOverTitle">Corri San Rocco</p>
+        <p class="gm-over-score" id="gmOverScore"></p>
+        <div class="gm-8btns">
+          <button class="gm-8btn gm-8btn-primary" id="gmPlayBtn" type="button">Gioca</button>
+          <a class="gm-8btn" href="/classifica">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            <span>Classifica</span>
+          </a>
+        </div>
+        <p class="gm-hint" id="gmHint"></p>
+      </div>
     </div>
+
+    <%# ── PAUSE MENU 8-bit ──────────────────────────────────────────── %>
+    <div class="gm-overlay gm-pause gm-hidden" id="gmPause" aria-hidden="true">
+      <div class="gm-8card">
+        <p class="gm-8kicker">II</p>
+        <p class="gm-over-title">Pausa</p>
+        <div class="gm-8btns">
+          <button class="gm-8btn gm-8btn-primary" id="gmResume" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>
+            <span>Riprendi</span>
+          </button>
+          <button class="gm-8btn" id="gmRestart" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <span>Ricomincia</span>
+          </button>
+          <button class="gm-8btn" id="gmQuit" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/></svg>
+            <span>Esci</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="gm-toast" id="gmToast" aria-live="polite"></div>
     <div class="gm-arcade-flash" id="gmFlash" aria-hidden="true"></div>
   </div>
@@ -119,4 +158,4 @@
   <% } %>
 </section>
 
-<script src="/game.js?v=6" defer></script>
+<script src="/game.js?v=9" defer></script>

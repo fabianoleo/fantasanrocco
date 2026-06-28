@@ -686,26 +686,72 @@ app.get('/gioco', (req, res) => {
   });
 });
 
+// ── Anti-cheat: sessioni di gioco lato server ───────────────────────────
+// Il client NON è fidato. All'inizio della partita il server rilascia un
+// "ticket" monouso con il PROPRIO timestamp; alla fine il punteggio viene
+// validato rispetto al tempo realmente trascorso (orologio del server).
+// Così non si può: gonfiare il punteggio, né accumulare "partite" spammando.
+const gameSessions = new Map();   // token -> { userId, startMs }
+function newGameSession(userId) {
+  if (gameSessions.size > 8000) { // guardia memoria: elimina i 2000 più vecchi
+    const old = [...gameSessions.entries()].sort((a, b) => a[1].startMs - b[1].startMs).slice(0, 2000);
+    for (const [t] of old) gameSessions.delete(t);
+  }
+  const token = crypto.randomBytes(16).toString('hex');
+  gameSessions.set(token, { userId, startMs: Date.now() });
+  return token;
+}
+setInterval(() => {                // pulizia ticket scaduti (>1h)
+  const cutoff = Date.now() - 3600 * 1000;
+  for (const [t, s] of gameSessions) if (s.startMs < cutoff) gameSessions.delete(t);
+}, 15 * 60 * 1000).unref?.();
+
+// Inizio partita → rilascia un ticket col timestamp del server.
+app.post('/gioco/inizio', auth.requireLogin, gameLimiter, verifyCsrf, (req, res) => {
+  res.json({ ok: true, token: newGameSession(req.currentUser.id) });
+});
+
 // Report del punteggio di fine partita: aggiorna il record e assegna i
 // traguardi non ancora conquistati (solo loggati). Idempotente.
 app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, res) => {
-  // Il punteggio arriva dal client: lo trattiamo come NON fidato.
-  // - cap realistico (il traguardo più alto è 15.000);
-  // - delta massimo per singola partita: evita salti irrealistici (es. 0→15.000
-  //   in un solo report) che sbloccherebbero tutti i traguardi in un colpo.
-  const MAX_PLAUSIBLE_SCORE = 16000;
-  const MAX_DELTA_PER_GAME  = 3000;
+  const MAX_PLAUSIBLE_SCORE = 16000;  // cap assoluto (traguardo massimo 15.000)
+  const MAX_DELTA_PER_GAME  = 3000;   // fallback senza ticket valido
+  const MIN_GAME_SEC        = 3;      // durata minima perché la partita "conti"
+  const BASE_ALLOWANCE      = 400;    // margine iniziale (bonus presi subito)
+  const MAX_SCORE_PER_SEC   = 120;    // ritmo massimo plausibile di punteggio
+
   const rawScore = Math.max(0, Math.min(MAX_PLAUSIBLE_SCORE, parseInt(req.body.score, 10) || 0));
   const prevBest = req.currentUser.game_best || 0;
-  const score = Math.min(rawScore, prevBest + MAX_DELTA_PER_GAME);
+
+  // Ticket monouso: lega il punteggio al tempo reale trascorso.
+  const token = req.body.token;
+  const sess = token ? gameSessions.get(token) : null;
+  const validSession = !!(sess && sess.userId === req.currentUser.id);
+  let elapsedSec = 0;
+  if (validSession) { elapsedSec = (Date.now() - sess.startMs) / 1000; gameSessions.delete(token); }
+
+  let score, countsAsPlay;
+  if (validSession) {
+    const timeCap = BASE_ALLOWANCE + elapsedSec * MAX_SCORE_PER_SEC;
+    score = Math.min(rawScore, timeCap);          // impossibile superare il ritmo umano
+    countsAsPlay = elapsedSec >= MIN_GAME_SEC;     // niente "partite" lampo
+  } else {
+    // Nessun ticket valido (cache vecchia o manomissione): crescita prudente,
+    // e non conta come partita giocata (niente farming dei traguardi a partite).
+    score = Math.min(rawScore, prevBest + MAX_DELTA_PER_GAME);
+    countsAsPlay = false;
+  }
+  score = Math.max(0, Math.min(MAX_PLAUSIBLE_SCORE, Math.floor(score)));
+
+  const plays = (req.currentUser.game_plays || 0) + (countsAsPlay ? 1 : 0);
   const awarded = [];
-  // Ogni report di fine partita conta come una partita giocata
-  const plays = (req.currentUser.game_plays || 0) + 1;
   db.transaction(() => {
-    if (score > (req.currentUser.game_best || 0)) {
+    if (score > prevBest) {
       db.prepare('UPDATE users SET game_best = ? WHERE id = ?').run(score, req.currentUser.id);
     }
-    db.prepare('UPDATE users SET game_plays = ? WHERE id = ?').run(plays, req.currentUser.id);
+    if (countsAsPlay) {
+      db.prepare('UPDATE users SET game_plays = ? WHERE id = ?').run(plays, req.currentUser.id);
+    }
     for (const a of GAME_ACHIEVEMENTS) {
       const value = a.metric === 'plays' ? plays : score;
       if (value < a.threshold) continue;
@@ -719,7 +765,7 @@ app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, r
       awarded.push({ title: a.title, points: a.points });
     }
   })();
-  const best = Math.max(score, req.currentUser.game_best || 0);
+  const best = Math.max(score, prevBest);
   res.json({ ok: true, best, plays, awarded });
 });
 

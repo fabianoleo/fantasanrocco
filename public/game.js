@@ -35,7 +35,7 @@
   // ── Stato ───────────────────────────────────────────────────────
   let state = 'idle';           // idle | run | over
   let px, target, dist, bonus, score, inv, mult, items, popups, fx, spawnT, coinT, haloT, relicT, fwT, animT, last, shake, reported;
-  let keyL = false, keyR = false, pointerX = null, overTimer = null;
+  let keyL = false, keyR = false, pointerX = null, overTimer = null, gameToken = null;
 
   function reset() {
     px = (W - PW) / 2; target = px;
@@ -62,14 +62,20 @@
   function start() {
     if (state === 'run') return;
     if (overTimer) { clearTimeout(overTimer); overTimer = null; }
-    reset(); state = 'run'; hideOverlay(); arcadeFlash('VIA!');
+    reset(); requestGameTicket(); state = 'run'; hideOverlay(); arcadeFlash('VIA!'); setPauseBtn();
   }
+  function tryStart() { if (state === 'idle' || state === 'over') start(); }
   document.addEventListener('keydown', (e) => {
     const tag = document.activeElement && document.activeElement.tagName;
     if (/input|textarea/i.test(tag || '')) return;
-    if (e.code === 'ArrowLeft' || e.code === 'KeyA') { keyL = true; if (state !== 'run') start(); e.preventDefault(); }
-    else if (e.code === 'ArrowRight' || e.code === 'KeyD') { keyR = true; if (state !== 'run') start(); e.preventDefault(); }
-    else if (e.code === 'Space' || e.code === 'Enter') { if (state !== 'run') start(); e.preventDefault(); }
+    if (e.code === 'Escape' || e.code === 'KeyP') {        // pausa / riprendi
+      if (state === 'run') pause(); else if (state === 'paused') resume();
+      e.preventDefault(); return;
+    }
+    if (state === 'paused') return;                        // in pausa gli altri tasti non fanno nulla
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') { keyL = true; tryStart(); e.preventDefault(); }
+    else if (e.code === 'ArrowRight' || e.code === 'KeyD') { keyR = true; tryStart(); e.preventDefault(); }
+    else if (e.code === 'Space' || e.code === 'Enter') { tryStart(); e.preventDefault(); }
   });
   document.addEventListener('keyup', (e) => {
     if (e.code === 'ArrowLeft' || e.code === 'KeyA') keyL = false;
@@ -82,6 +88,7 @@
   }
   canvas.addEventListener('pointerdown', (e) => {
     e.preventDefault();
+    if (state === 'paused') return;
     if (state !== 'run') { start(); return; }
     pointerX = canvasX(e.clientX);
     canvas.setPointerCapture(e.pointerId);
@@ -105,7 +112,7 @@
   // Controller mobile: pulsanti ◀ ▶ da tenere premuti
   function holdButton(btn, set) {
     if (!btn) return;
-    const press = (e) => { e.preventDefault(); if (state !== 'run') start(); set(true); try { btn.setPointerCapture(e.pointerId); } catch (_) {} };
+    const press = (e) => { e.preventDefault(); tryStart(); set(true); try { btn.setPointerCapture(e.pointerId); } catch (_) {} };
     const release = (e) => { if (e && e.preventDefault) e.preventDefault(); set(false); };
     btn.addEventListener('pointerdown', press);
     btn.addEventListener('pointerup', release);
@@ -119,15 +126,51 @@
   const playBtn = document.getElementById('gmPlayBtn');
   if (playBtn) playBtn.addEventListener('click', (e) => { e.preventDefault(); start(); });
 
+  // ── Pausa (menu 8-bit) ──────────────────────────────────────────
+  const pauseBtn = document.getElementById('gmPauseBtn');
+  const pauseOverlay = document.getElementById('gmPause');
+  const kicker = document.getElementById('gmKicker');
+  function setPauseBtn() { if (pauseBtn) pauseBtn.classList.toggle('is-on', state === 'run'); }
+  function pause() {
+    if (state !== 'run') return;
+    state = 'paused'; keyL = keyR = false; pointerX = null;
+    if (pauseOverlay) pauseOverlay.classList.remove('gm-hidden');
+    setPauseBtn();
+  }
+  function resume() {
+    if (state !== 'paused') return;
+    state = 'run'; last = 0;                              // niente salto di dt alla ripresa
+    if (pauseOverlay) pauseOverlay.classList.add('gm-hidden');
+    setPauseBtn();
+  }
+  function restart() {
+    if (pauseOverlay) pauseOverlay.classList.add('gm-hidden');
+    reset(); requestGameTicket(); state = 'run'; last = 0; hideOverlay(); setPauseBtn(); arcadeFlash('VIA!');
+  }
+  function quitToMenu() {
+    if (pauseOverlay) pauseOverlay.classList.add('gm-hidden');
+    if (overTimer) { clearTimeout(overTimer); overTimer = null; }
+    reset(); state = 'idle'; setPauseBtn(); showOverlay('idle');
+  }
+  if (pauseBtn) pauseBtn.addEventListener('click', (e) => { e.preventDefault(); pause(); });
+  if (pauseOverlay) {
+    const rb = document.getElementById('gmResume'), sb = document.getElementById('gmRestart'), qb = document.getElementById('gmQuit');
+    if (rb) rb.addEventListener('click', (e) => { e.preventDefault(); resume(); });
+    if (sb) sb.addEventListener('click', (e) => { e.preventDefault(); restart(); });
+    if (qb) qb.addEventListener('click', (e) => { e.preventDefault(); quitToMenu(); });
+  }
+
   function hideOverlay() { overlay.classList.add('gm-hidden'); }
   function showOverlay(mode, sc) {
     overlay.classList.remove('gm-hidden');
     if (mode === 'idle') {
+      if (kicker) kicker.textContent = 'Insert coin';
       ovTitle.textContent = 'Corri San Rocco';
       ovScore.innerHTML = 'Schiva torce e bombe, raccogli le monete d\'oro';
       ovHint.innerHTML = 'Usa <kbd>←</kbd> <kbd>→</kbd> o trascina per spostarti';
       if (playBtn) playBtn.textContent = 'Gioca';
     } else {
+      if (kicker) kicker.textContent = 'Game over';
       ovTitle.textContent = 'Riprova?';
       ovScore.innerHTML = 'Punteggio: <b>' + sc + '</b>' + (sc >= best ? ' · nuovo record!' : '');
       ovHint.innerHTML = 'Premi <kbd>←</kbd>/<kbd>→</kbd> o tocca per ripartire';
@@ -272,6 +315,64 @@
     }
   }
 
+  // ── Fuochi d'artificio di sfondo (sempre attivi: razzo che sale + esplosione) ──
+  const FW_COLORS = ['#f5c842', '#ff5a3c', '#5ad1ff', '#7bff9a', '#ff8ad1', '#c98bff', '#fff7d0'];
+  let bgFw = [];
+  let bgFwT = 10;
+  function spawnBgFw() {
+    bgFw.push({
+      rise: true,
+      x: 24 + Math.random() * (W - 48),
+      y: GROUND - 4,
+      vy: -(1.5 + Math.random() * 1.1),
+      ty: 16 + Math.random() * 78,           // quota dell'esplosione (cielo)
+      color: FW_COLORS[Math.random() * FW_COLORS.length | 0],
+    });
+  }
+  function bgFwExplode(s) {
+    const n = 18 + (Math.random() * 12 | 0);
+    const spd = 0.8 + Math.random() * 0.9;
+    const parts = [];
+    for (let a = 0; a < n; a++) {
+      const ang = (a / n) * Math.PI * 2;
+      const v = spd * (0.55 + Math.random() * 0.6);
+      parts.push({ x: s.x, y: s.y, vx: Math.cos(ang) * v, vy: Math.sin(ang) * v, t: 0, max: 30 + Math.random() * 20 });
+    }
+    bgFw.push({ rise: false, color: s.color, cx: s.x, cy: s.y, parts, flash: 0 });
+  }
+  function drawBgFw(dt) {
+    bgFwT -= dt;
+    if (bgFwT <= 0) { spawnBgFw(); bgFwT = 16 + Math.random() * 40; }   // cadenza continua
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';                          // bagliore additivo
+    for (let i = bgFw.length - 1; i >= 0; i--) {
+      const s = bgFw[i];
+      if (s.rise) {
+        s.y += s.vy * dt;
+        ctx.globalAlpha = 0.95; r(s.x, s.y, 1, 2, s.color);
+        ctx.globalAlpha = 0.4;  r(s.x, s.y + 2, 1, 2, s.color);
+        if (s.y <= s.ty) { bgFwExplode(s); bgFw.splice(i, 1); }
+      } else {
+        s.flash += dt;
+        if (s.flash < 5) { ctx.globalAlpha = (1 - s.flash / 5) * 0.85; disc(s.cx, s.cy, 3, '#fff7d0'); }
+        let alive = false;
+        for (const p of s.parts) {
+          p.t += dt;
+          if (p.t >= p.max) continue;
+          alive = true;
+          p.x += p.vx * dt; p.y += p.vy * dt;
+          p.vy += 0.045 * dt;                 // gravità
+          p.vx *= 0.985; p.vy *= 0.985;
+          ctx.globalAlpha = Math.max(0, 1 - p.t / p.max);
+          r(p.x, p.y, 2, 2, s.color);
+        }
+        if (!alive) bgFw.splice(i, 1);
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
   // ── Spawn ───────────────────────────────────────────────────────
   function spawnObstacle() {
     const types = ['bomb', 'torch', 'crate'];
@@ -394,6 +495,7 @@
     }
 
     drawBg(animT);
+    drawBgFw(dt);
     drawFx();
     if (shake > 0) { ctx.save(); ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake); shake -= dt * 0.6; }
 
@@ -443,7 +545,7 @@
   function overlap(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
 
   function gameOver() {
-    state = 'over'; shake = 7; inv = 0;
+    state = 'over'; shake = 7; inv = 0; setPauseBtn();
     burst(px + PW / 2, GROUND - 14, '#e84e1b');
     if (score > best) best = score;
     elBest.textContent = 'record ' + best;
@@ -452,12 +554,24 @@
     overTimer = setTimeout(() => showOverlay('over', score), 700);
   }
 
-  // ── Invio punteggio + traguardi (invariato) ─────────────────────
+  // ── Anti-cheat: chiede al server un ticket all'inizio di ogni partita ──
+  // Il punteggio finale verrà validato rispetto al tempo reale del server.
+  function requestGameTicket() {
+    if (!logged) return;
+    gameToken = null;
+    fetch('/gioco/inizio', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ _csrf: csrf }),
+    }).then((rs) => rs.ok ? rs.json() : null).then((d) => { if (d && d.token) gameToken = d.token; }).catch(() => {});
+  }
+
+  // ── Invio punteggio + traguardi ─────────────────────────────────
   function report(sc) {
     fetch('/gioco/punteggio', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ score: String(sc), _csrf: csrf }),
+      body: new URLSearchParams({ score: String(sc), token: gameToken || '', _csrf: csrf }),
     }).then((rs) => rs.ok ? rs.json() : null).then((data) => {
       if (!data) return;
       if (typeof data.best === 'number') { best = Math.max(best, data.best); elBest.textContent = 'record ' + best; }
