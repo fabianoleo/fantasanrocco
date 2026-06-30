@@ -29,6 +29,45 @@
   let now = null;          // ultimo /api/radio/now
   let loadedSrc = null;    // src attualmente caricato nell'audio
 
+  // ── "Chi ascolta ora": uid stabile + ping mentre si ascolta ──────
+  const listenersEl = document.getElementById('radioListeners');
+  const listenersN  = document.getElementById('radioListenersN');
+  let uid = null;
+  try {
+    uid = localStorage.getItem('fsr.uid');
+    if (!uid) {
+      uid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+      localStorage.setItem('fsr.uid', uid);
+    }
+  } catch (e) {}
+  let pingTimer = null, pollTimer = null;
+  function updateListeners(n) {
+    if (!listenersEl || typeof n !== 'number') return;
+    if (n > 0) { if (listenersN) listenersN.textContent = n; listenersEl.hidden = false; }
+    else listenersEl.hidden = true;
+  }
+  function radioPing() {
+    if (!uid) return;
+    fetch('/api/radio/ping?uid=' + encodeURIComponent(uid), { cache: 'no-store' })
+      .then(function (r) { return r.json(); }).then(function (d) { if (d) updateListeners(d.listeners); }).catch(function () {});
+  }
+  // Smette subito di "ascoltare": rimuove l'ascoltatore lato server.
+  function radioLeave() {
+    if (!uid) return;
+    fetch('/api/radio/ping?uid=' + encodeURIComponent(uid) + '&leave=1', { cache: 'no-store', keepalive: true })
+      .then(function (r) { return r.json(); }).then(function (d) { if (d) updateListeners(d.listeners); }).catch(function () {});
+  }
+  function startPinging() { if (pingTimer) return; radioPing(); pingTimer = setInterval(radioPing, 10000); }
+  function stopPinging() {
+    var wasPinging = !!pingTimer;
+    if (pingTimer) { clearInterval(pingTimer); pingTimer = null; }
+    if (wasPinging) radioLeave();          // alla pausa esci subito dal conteggio
+  }
+  // Chiusura/uscita pagina mentre si ascolta → esci dal conteggio
+  window.addEventListener('pagehide', function () { if (pingTimer) radioLeave(); });
+
   function fmt(s) { s = Math.max(0, Math.floor(s || 0)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 
   function setState(s) {
@@ -45,6 +84,7 @@
     if (miniCover) miniCover.style.backgroundImage = cov;
     if (cover) cover.style.backgroundImage = cov;
     if (durEl) durEl.textContent = fmt(d.duration);
+    if (typeof d.listeners === 'number') updateListeners(d.listeners);
   }
 
   async function fetchNow() {
@@ -87,8 +127,8 @@
   function toggle() { if (audio.paused) tuneIn(); else tuneOut(); }
 
   // Lo stato UI segue lo stato reale dell'audio
-  audio.addEventListener('play', () => setState('playing'));
-  audio.addEventListener('pause', () => setState('paused'));
+  audio.addEventListener('play', () => { setState('playing'); startPinging(); });
+  audio.addEventListener('pause', () => { setState('paused'); stopPinging(); });
 
   // Avanzamento barra + tempi
   audio.addEventListener('timeupdate', () => {
@@ -126,11 +166,15 @@
     document.body.style.overflow = 'hidden';
     const d = await fetchNow();
     if (d) setMeta(d);
+    // aggiorna il contatore ascoltatori dal vivo mentre il modal è aperto
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(async () => { const dd = await fetchNow(); if (dd) updateListeners(dd.listeners); }, 10000);
   }
   function closeModal() {
     if (!modal) return;
     modal.hidden = true;
     document.body.style.overflow = '';
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
   }
   if (openBtn) openBtn.addEventListener('click', openModal);
   if (closeBtn) closeBtn.addEventListener('click', closeModal);

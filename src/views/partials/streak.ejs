@@ -1,0 +1,19 @@
+<%# ── Popup premio giornaliero (streak) — solo se rivendicabile oggi ──── %>
+<% if (currentUser && streak && streak.claimable) { %>
+<div class="streak-pop" id="streakPop" data-csrf="<%= csrfToken %>">
+  <div class="streak-pop-card" role="dialog" aria-modal="true" aria-label="Premio giornaliero">
+    <div class="streak-pop-ic"><%- icon('flame') %></div>
+    <h3 class="streak-pop-title">Premio del giorno</h3>
+    <p class="streak-pop-sub">Giorno <b><%= streak.day %></b> della tua striscia · torna ogni giorno!</p>
+    <div class="streak-pop-days">
+      <% streak.bonuses.forEach((b, i) => { const d = i + 1; %>
+        <div class="streak-pop-day <%= d < streak.day ? 'is-on' : '' %> <%= d === streak.day ? 'is-today' : '' %>">
+          <span class="d">G<%= d %></span><span class="b">+<%= b %></span>
+        </div>
+      <% }) %>
+    </div>
+    <button class="btn streak-pop-btn" id="streakClaim" type="button">Ritira +<%= streak.bonus %> punti</button>
+  </div>
+</div>
+<script src="/streak.js?v=1" defer></script>
+<% } %>

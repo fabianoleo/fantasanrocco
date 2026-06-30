@@ -32,6 +32,50 @@
   </div>
 </div>
 
+<%# ── LIVELLO ─────────────────────────────────────────────────────── %>
+<div class="pf-level">
+  <span class="pf-level-badge">Lv <b><%= level.level %></b></span>
+  <div class="pf-level-info">
+    <div class="pf-level-row">
+      <span class="pf-level-title"><%= level.title %></span>
+      <span class="pf-level-next"><%= level.max ? 'Livello massimo' : (level.toNext + ' pt al Lv ' + (level.level + 1)) %></span>
+    </div>
+    <div class="pf-level-bar"><span style="width:<%= level.progress %>%"></span></div>
+    <% if (!level.max) { %><span class="pf-level-nexttitle">Prossimo: <%= level.nextTitle %></span><% } %>
+  </div>
+</div>
+
+<%# ── STREAK GIORNALIERA ──────────────────────────────────────────── %>
+<div class="pf-streak">
+  <div class="pf-streak-head">
+    <span class="pf-streak-title"><%- icon('flame') %> Striscia giornaliera</span>
+    <span class="pf-streak-sub"><%= streak.currentDay > 0 ? ('Giorno ' + streak.currentDay + ' / 7') : 'Non ancora iniziata' %></span>
+  </div>
+  <div class="pf-streak-days">
+    <% streak.bonuses.forEach((b, i) => { const d = i + 1; %>
+      <div class="pf-streak-day <%= d <= streak.currentDay ? 'is-on' : '' %> <%= d === streak.currentDay ? 'is-current' : '' %>">
+        <span class="pf-streak-d">G<%= d %></span>
+        <span class="pf-streak-b">+<%= b %></span>
+      </div>
+    <% }) %>
+  </div>
+  <% if (streak.claimable) { %>
+    <p class="pf-streak-cta">Premio di oggi pronto: <b>Giorno <%= streak.day %> · +<%= streak.bonus %> punti</b></p>
+  <% } %>
+</div>
+
+<%# ── VETRINA TRAGUARDI / BADGE ───────────────────────────────────── %>
+<h2 class="pf-section-title">Traguardi <span class="pf-badge-count"><%= badges.filter((b) => b.done).length %>/<%= badges.length %></span></h2>
+<div class="pf-badges">
+  <% badges.forEach((b) => { %>
+    <div class="pf-badge <%= b.done ? 'is-done' : 'is-locked' %>" title="<%= b.desc %>">
+      <span class="pf-badge-ic"><%- b.done ? icon('medal') : icon('lock') %></span>
+      <span class="pf-badge-name"><%= b.title %></span>
+      <span class="pf-badge-pts">+<%= b.points %></span>
+    </div>
+  <% }) %>
+</div>
+
 <%# ── PROVE ──────────────────────────────────────────────────────── %>
 <h2 class="pf-section-title">Le mie prove</h2>
 

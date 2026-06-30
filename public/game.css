@@ -351,3 +351,20 @@
 @media (prefers-reduced-motion: reduce) {
   .gm-8kicker { animation: none; }
 }
+
+/* ── Menu 8-bit compatto su mobile (l'area di gioco è bassa: ~3/2) ── */
+@media (max-width: 560px) {
+  .gm-overlay { padding: .6rem; gap: .4rem; }
+  .gm-8card {
+    padding: .8rem .95rem; gap: .5rem; border-width: 4px;
+    width: min(300px, 96%); max-height: 100%; overflow-y: auto;
+  }
+  .gm-8card::after { background-size: 100% 3px; }
+  .gm-8kicker { font-size: .42rem; }
+  .gm-8card .gm-over-title { font-size: .68rem; line-height: 1.4; text-shadow: 2px 2px 0 rgba(0,0,0,.85); }
+  .gm-8card .gm-over-score { font-size: .42rem; line-height: 1.5; }
+  .gm-8card .gm-hint { display: none; }            /* il comando è già scritto sotto al gioco */
+  .gm-8btns { gap: .45rem; margin-top: .1rem; }
+  .gm-8btn { font-size: .5rem; padding: .55rem .5rem; border-width: 4px; gap: .4rem; }
+  .gm-8btn svg { width: 12px; height: 12px; }
+}

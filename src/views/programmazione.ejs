@@ -1,3 +1,6 @@
+<link rel="stylesheet" href="/vendor/leaflet.css">
+<link rel="stylesheet" href="/map.css?v=6">
+
 <%# ── HERO ────────────────────────────────────────────────────────── %>
 <div class="pg-hero lp-full">
   <div class="pg-hero-inner">
@@ -10,6 +13,9 @@
       <span class="pg-badge pg-badge-big"><%- icon('flame') %> Grande Evento</span>
       <span class="pg-badge pg-badge-fam"><%- icon('people') %> Famiglie</span>
     </div>
+    <% if (typeof places !== 'undefined' && places && places.length) { %>
+      <a href="#mappa" class="btn" style="margin-top:1.2rem"><%- icon('pin') %> I luoghi sulla mappa</a>
+    <% } %>
   </div>
 </div>
 
@@ -38,7 +44,7 @@
         <div class="pg-card-meta">
           <span class="pg-location"><%- icon('pin') %>Mazzariello</span>
         </div>
-        <h2 class="pg-card-title">Mazzariello</h2>
+        <h2 data-map-place="siano-centro" class="pg-card-title">Mazzariello</h2>
         <p class="pg-card-desc">Il divertimento continua!</p>
         <div class="pg-badges">
           <span class="pg-badge pg-badge-dj"><%- icon('headphones') %> DJ Set</span>
@@ -64,7 +70,7 @@
         <div class="pg-card-meta">
           <span class="pg-location"><%- icon('pin') %>Siano</span>
         </div>
-        <h2 class="pg-card-title">Groove Motion Live Band</h2>
+        <h2 data-map-place="siano-centro" class="pg-card-title">Groove Motion Live Band</h2>
         <p class="pg-card-desc">Una serata dal groove unico. Non mancare!</p>
         <div class="pg-badges">
           <span class="pg-badge pg-badge-live"><%- icon('guitar') %> Live Band</span>
@@ -106,7 +112,7 @@
         <div class="pg-card-meta">
           <span class="pg-location"><%- icon('pin') %>Piazza San Rocco, Siano</span>
         </div>
-        <h2 class="pg-card-title">Napoliitudine<br><span class="pg-card-subtitle">con Sal Esposito – «Ce sta je sempe Tour»</span></h2>
+        <h2 data-map-place="piazza-san-rocco" class="pg-card-title">Napoliitudine<br><span class="pg-card-subtitle">con Sal Esposito – «Ce sta je sempe Tour»</span></h2>
         <p class="pg-card-desc">Spettacolo e divertimento assicurato. Non mancare!</p>
         <div class="pg-badges">
           <span class="pg-badge pg-badge-live"><%- icon('guitar') %> Live Band</span>
@@ -148,7 +154,7 @@
         <div class="pg-card-meta">
           <span class="pg-location"><%- icon('pin') %>Siano</span>
         </div>
-        <h2 class="pg-card-title">Alfo V. &amp; Mike Carotenuto DJ</h2>
+        <h2 data-map-place="siano-centro" class="pg-card-title">Alfo V. &amp; Mike Carotenuto DJ</h2>
         <p class="pg-card-desc">Siete pronti a ballare? Vi aspettiamo in tanti!</p>
         <div class="pg-badges">
           <span class="pg-badge pg-badge-dj"><%- icon('headphones') %> DJ Set</span>
@@ -178,7 +184,7 @@
         <div class="pg-card-meta">
           <span class="pg-location"><%- icon('pin') %>Vie di Siano</span>
         </div>
-        <h2 class="pg-card-title">La Processione di San Rocco</h2>
+        <h2 data-map-place="siano-centro" class="pg-card-title">La Processione di San Rocco</h2>
         <p class="pg-card-desc">Il momento più atteso della festa: la statua del Santo portata a spalla per le vie di Siano, tra applausi, preghiere e fuochi d'artificio. Il cuore pulsante della devozione sianese.</p>
         <div class="pg-badges">
           <span class="pg-badge pg-badge-big"><%- icon('candle') %> Tradizione</span>
@@ -214,7 +220,7 @@
         <div class="pg-card-meta">
           <span class="pg-location"><%- icon('pin') %>Siano</span>
         </div>
-        <h2 class="pg-card-title">Disco Inferno</h2>
+        <h2 data-map-place="siano-centro" class="pg-card-title">Disco Inferno</h2>
         <p class="pg-card-desc">Una serata dove il ritmo ti travolgerà!</p>
         <div class="pg-badges">
           <span class="pg-badge pg-badge-dj"><%- icon('headphones') %> DJ Set</span>
@@ -238,7 +244,7 @@
         <div class="pg-card-meta">
           <span class="pg-location"><%- icon('pin') %>Siano</span>
         </div>
-        <h2 class="pg-card-title pg-title-grande" style="-webkit-text-fill-color: var(--fire) !important; color: var(--fire) !important; text-shadow: 0 0 28px rgba(232,78,27,.5);">Palio dei Fuochi</h2>
+        <h2 data-map-place="siano-centro" class="pg-card-title pg-title-grande" style="-webkit-text-fill-color: var(--fire) !important; color: var(--fire) !important; text-shadow: 0 0 28px rgba(232,78,27,.5);">Palio dei Fuochi</h2>
         <p class="pg-card-subtitle-tour">Rinomato in tutta Italia</p>
         <p class="pg-card-desc">Lo spettacolo pirotecnico più atteso dell'anno: squadre di artificieri si sfidano nel cielo di Siano in una gara di luci, colori e botti che ha reso la festa famosa in tutta Italia.</p>
         <div class="pg-badges">
@@ -260,7 +266,7 @@
         <div class="pg-card-meta">
           <span class="pg-location"><%- icon('pin') %>Piazza Borsellino, Siano</span>
         </div>
-        <h2 class="pg-card-title pg-title-grande">LDA &amp; Aka 7even</h2>
+        <h2 data-map-place="piazza-borsellino" class="pg-card-title pg-title-grande">LDA &amp; Aka 7even</h2>
         <p class="pg-card-subtitle-tour">«Primo e Ultimo Ballo Summer Tour»</p>
         <p class="pg-card-desc">Mega evento della Festa di San Rocco 2026.</p>
         <div class="pg-badges">
@@ -306,7 +312,7 @@
           <span class="pg-location"><%- icon('pin') %>Siano</span>
           <span class="pg-free-badge"><%- icon('ticket') %> Ingresso gratuito</span>
         </div>
-        <h2 class="pg-card-title">Luna Park</h2>
+        <h2 data-map-place="siano-centro" class="pg-card-title">Luna Park</h2>
         <p class="pg-card-desc">Giostre e intrattenimento per bambini.</p>
         <div class="pg-badges">
           <span class="pg-badge pg-badge-fam"><%- icon('people') %> Famiglie</span>
@@ -325,7 +331,7 @@
         <div class="pg-card-meta">
           <span class="pg-location"><%- icon('pin') %>Strade di Siano</span>
         </div>
-        <h2 class="pg-card-title">Vagaband</h2>
+        <h2 data-map-place="siano-centro" class="pg-card-title">Vagaband</h2>
         <p class="pg-card-desc">Musica, canti e balli per le strade di Siano!</p>
         <div class="pg-badges">
           <span class="pg-badge pg-badge-live"><%- icon('guitar') %> Live Band</span>
@@ -338,3 +344,66 @@
     </article>
   </div>
 </div>
+
+<%# ── MAPPA DEI LUOGHI (Leaflet + OpenStreetMap) ──────────────────── %>
+<% if (typeof places !== 'undefined' && places && places.length) { %>
+<section class="sia-wrap lp-full" id="mappa">
+  <div class="sia-hero-inner" style="text-align:center;margin-bottom:1.2rem">
+    <p class="lp-kicker">Siano (SA)</p>
+    <h2 class="sia-title" style="font-size:clamp(1.6rem,5vw,2.4rem)">I luoghi della festa</h2>
+    <p class="sia-sub">Tocca un punto sulla mappa o nella lista per vedere gli eventi collegati.</p>
+  </div>
+  <div class="sia-grid">
+    <div class="sia-map-col">
+      <div id="siaMap" class="sia-map" aria-label="Mappa di Siano"></div>
+      <button class="sia-reset" id="siaReset" type="button" hidden>
+        <%- icon('repeat') %> Torna alla vista generale
+      </button>
+    </div>
+    <aside class="sia-side">
+      <div class="sia-card" id="siaCard" hidden>
+        <span class="sia-card-handle" aria-hidden="true"></span>
+        <button class="sia-card-close" id="siaCardClose" type="button" aria-label="Chiudi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+        <div class="sia-card-media" id="siaCardMedia" hidden><span class="sia-card-media-grad"></span></div>
+        <div class="sia-card-content">
+          <div class="sia-card-head">
+            <span class="sia-card-num" id="siaCardNum"></span>
+            <div>
+              <span class="sia-card-kicker"><%- icon('pin') %><span id="siaCardAddr"></span></span>
+              <h3 class="sia-card-name" id="siaCardName"></h3>
+            </div>
+          </div>
+          <p class="sia-card-desc" id="siaCardDesc" hidden></p>
+          <div class="sia-card-events" id="siaCardEvents"></div>
+        </div>
+      </div>
+      <div class="sia-list" id="siaList">
+        <h2 class="sia-list-title">Esplora i luoghi</h2>
+        <ul class="sia-list-items">
+          <% places.forEach((p, i) => { %>
+            <li>
+              <button class="sia-li" data-place="<%= p.id %>" data-num="<%= i + 1 %>" <%= p.coordinates ? '' : 'data-nocoord="1"' %>>
+                <span class="sia-li-num"><%= i + 1 %></span>
+                <span class="sia-li-body">
+                  <span class="sia-li-name"><%= p.name %></span>
+                  <span class="sia-li-meta">
+                    <%= p.events.length %> <%= p.events.length === 1 ? 'evento' : 'eventi' %><% if (!p.coordinates) { %> · <em>da posizionare</em><% } %>
+                  </span>
+                </span>
+                <span class="sia-li-arrow"><%- icon('chevron-right') %></span>
+              </button>
+            </li>
+          <% }) %>
+        </ul>
+        <p class="sia-list-note">Mappa © OpenStreetMap contributors · © CARTO</p>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<script type="application/json" id="siaPlaces"><%- JSON.stringify(places).replace(/</g, '\\u003c') %></script>
+<script src="/vendor/leaflet.js" defer></script>
+<script src="/map.js?v=5" defer></script>
+<% } %>

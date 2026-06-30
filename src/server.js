@@ -37,6 +37,7 @@ function checkImageMagicBytes(filePath) {
 }
 
 const { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR } = require('./db');
+const { placesWithEvents } = require('./data/mapPlaces');
 const auth = require('./auth');
 
 const app = express();
@@ -73,7 +74,7 @@ app.use(helmet({
       scriptSrc:      ["'self'"],
       styleSrc:       ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc:        ["'self'", 'https://fonts.gstatic.com'],
-      imgSrc:         ["'self'", 'data:', 'blob:'],
+      imgSrc:         ["'self'", 'data:', 'blob:', 'https://*.basemaps.cartocdn.com'],
       connectSrc:     ["'self'"],
       frameAncestors: ["'none'"],
       objectSrc:      ["'none'"],
@@ -138,6 +139,10 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   res.locals.storiesData = (req.currentUser && req.method === 'GET')
     ? activeStoriesGrouped(req.currentUser)
+    : null;
+  // Streak giornaliero (popup premio del giorno) — streakStatus è hoisted.
+  res.locals.streak = (req.currentUser && req.method === 'GET')
+    ? streakStatus(req.currentUser)
     : null;
   next();
 });
@@ -251,7 +256,7 @@ const RADIO_PLAYLIST = [
   { src: "/radio/mazzariello-blindati-visual-video.mp3", title: "Mazzariello — Blindati", cover: "/images/artisti/mazzariello.jpg", duration: 122 },
   { src: "/radio/mazzariello-bombe-carta-visual-video.mp3", title: "Mazzariello — Bombe Carta", cover: "/images/artisti/mazzariello.jpg", duration: 184 },
   { src: "/radio/mazzariello-finestre-verdi-visual-video.mp3", title: "Mazzariello — Finestre Verdi", cover: "/images/artisti/mazzariello.jpg", duration: 205 },
-  { src: "/radio/mazzariello-manifestazione-d-amore-official-video-sanremo-20.mp3", title: "Mazzariello — Manifestazione D'amore", cover: "/images/artisti/mazzariello.jpg", duration: 191 },
+  { src: "/radio/mazzariello-manifestazione-d-amore-official-video-sanremo-20.mp3", title: "Mazzariello — Manifestazione D'amore", cover: "/images/artisti/mazzariello-manifestazione.jpg", duration: 191 },
   { src: "/radio/mazzariello-millisecondi-visual-video.mp3", title: "Mazzariello — Millisecondi", cover: "/images/artisti/mazzariello.jpg", duration: 185 },
   { src: "/radio/mazzariello-nostalgia-karaoke-lyric-video.mp3", title: "Mazzariello — Nostalgia & Karaoke", cover: "/images/artisti/mazzariello.jpg", duration: 217 },
   { src: "/radio/mazzariello-orchidee-visual-video.mp3", title: "Mazzariello — Orchidee", cover: "/images/artisti/mazzariello.jpg", duration: 183 },
@@ -261,6 +266,34 @@ const RADIO_PLAYLIST = [
 ];
 // Riferimento fisso della timeline: la posizione "in onda" si calcola da qui.
 const RADIO_EPOCH = Date.UTC(2026, 0, 1, 0, 0, 0);
+
+// ── "Chi ascolta ora": contatore live degli ascoltatori della radio ──────
+// Il client manda /api/radio/ping?uid=UUID ogni ~10s MENTRE sta ascoltando.
+const _radioListeners = new Map();   // uid → timestamp
+const RADIO_LISTEN_TTL = 25_000;     // ~2 ping mancati = non ascolta più
+function radioCount() {
+  const cutoff = Date.now() - RADIO_LISTEN_TTL;
+  return [..._radioListeners.values()].filter((t) => t >= cutoff).length;
+}
+app.get('/api/radio/ping', (req, res) => {
+  // Chiave per UTENTE se loggato (così lo stesso account su più dispositivi
+  // conta UNA sola volta); altrimenti per dispositivo (uid anonimo).
+  const key = req.currentUser
+    ? 'u:' + req.currentUser.id
+    : (typeof req.query.uid === 'string' ? 'a:' + req.query.uid.slice(0, 64) : null);
+  if (key) {
+    if (req.query.leave === '1') {
+      _radioListeners.delete(key);            // pausa / chiusura → smette subito di contare
+    } else if (_radioListeners.has(key) || _radioListeners.size < 5000) {
+      _radioListeners.set(key, Date.now());
+    }
+  }
+  res.json({ ok: true, listeners: radioCount() });
+});
+setInterval(() => {
+  const cutoff = Date.now() - RADIO_LISTEN_TTL;
+  for (const [id, t] of _radioListeners) if (t < cutoff) _radioListeners.delete(id);
+}, 10_000).unref?.();
 
 // Cosa è "in onda" adesso (indice canzone + offset in secondi), uguale per tutti.
 app.get('/api/radio/now', (req, res) => {
@@ -279,6 +312,7 @@ app.get('/api/radio/now', (req, res) => {
     index: idx, count: RADIO_PLAYLIST.length,
     src: t.src, title: t.title, cover: t.cover || null,
     offset: elapsed, duration: t.duration,
+    listeners: radioCount(),
     serverTime: Date.now(),
   });
 });
@@ -459,6 +493,35 @@ function userPoints(userId) {
   return (r ? r.pts : 0) + (u ? u.points_adjust : 0);
 }
 
+// ── Livelli utente (in base ai punti totali) ────────────────────────────
+const LEVELS = [
+  { lv: 1,  title: 'Pellegrino',             at: 0 },
+  { lv: 2,  title: 'Devoto',                 at: 60 },
+  { lv: 3,  title: 'Fedele',                 at: 180 },
+  { lv: 4,  title: 'Portatore di cero',      at: 400 },
+  { lv: 5,  title: 'Cavaliere di San Rocco', at: 750 },
+  { lv: 6,  title: 'Guardiano della festa',  at: 1300 },
+  { lv: 7,  title: 'Veterano del Palio',     at: 2200 },
+  { lv: 8,  title: 'Maestro dei fuochi',     at: 3600 },
+  { lv: 9,  title: 'Leggenda di Siano',      at: 5500 },
+  { lv: 10, title: 'Santo tra i santi',      at: 8500 },
+];
+function userLevel(points) {
+  points = Math.max(0, points || 0);
+  let cur = LEVELS[0];
+  for (const l of LEVELS) { if (points >= l.at) cur = l; else break; }
+  const next = LEVELS.find((l) => l.at > points) || null;
+  const span = next ? (next.at - cur.at) : 1;
+  const into = Math.max(0, points - cur.at);
+  return {
+    level: cur.lv, title: cur.title, points,
+    nextAt: next ? next.at : null, nextTitle: next ? next.title : null,
+    toNext: next ? (next.at - points) : 0,
+    progress: next ? Math.min(100, Math.round(into / span * 100)) : 100,
+    max: !next,
+  };
+}
+
 // Classifica del mini-gioco: per punteggio record (solo chi ha giocato)
 function gameLeaderboardRows() {
   return db.prepare(`
@@ -522,6 +585,16 @@ ensureGameMissions();
 function gameMissionId(key) {
   const m = db.prepare('SELECT id FROM missions WHERE game_key = ?').get(key);
   return m ? m.id : null;
+}
+
+// Traguardi del gioco con stato done/locked per un utente (per gioco + profilo).
+function userGameAchievements(userId) {
+  return GAME_ACHIEVEMENTS.map((a) => {
+    const mid = userId ? gameMissionId(a.key) : null;
+    const done = !!(mid && db.prepare("SELECT 1 FROM submissions WHERE user_id = ? AND mission_id = ? AND status = 'approved'")
+      .get(userId, mid));
+    return { key: a.key, title: a.title, desc: a.desc, points: a.points, threshold: a.threshold, metric: a.metric, done };
+  });
 }
 
 app.get('/classifica', (req, res) => {
@@ -660,7 +733,7 @@ function makeMailTransporter() {
 }
 
 app.get('/programmazione', (req, res) => {
-  res.render('programmazione', { title: 'Programmazione' });
+  res.render('programmazione', { title: 'Programmazione', places: placesWithEvents() });
 });
 
 app.get('/storia', (req, res) => {
@@ -669,15 +742,7 @@ app.get('/storia', (req, res) => {
 
 // ── Mini-gioco «Corri San Rocco» ──────────────────────────────────────────
 app.get('/gioco', (req, res) => {
-  const achievements = GAME_ACHIEVEMENTS.map((a) => {
-    let done = false;
-    if (req.currentUser) {
-      const mid = gameMissionId(a.key);
-      done = !!(mid && db.prepare("SELECT 1 FROM submissions WHERE user_id = ? AND mission_id = ? AND status = 'approved'")
-        .get(req.currentUser.id, mid));
-    }
-    return { title: a.title, desc: a.desc, points: a.points, threshold: a.threshold, metric: a.metric, done };
-  });
+  const achievements = userGameAchievements(req.currentUser ? req.currentUser.id : null);
   res.render('gioco', {
     title: 'Corri San Rocco',
     achievements,
@@ -789,6 +854,46 @@ function weightedPick(items) {                  // items: [{ ..., weight }]
 function todayStr() {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
 }
+// Data (YYYY-MM-DD) italiana di "daysAgo" giorni fa.
+function romeDate(daysAgo) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' })
+    .format(new Date(Date.now() - (daysAgo || 0) * 86400000));
+}
+
+// ── Streak giornaliero (7 giorni, bonus crescente, poi riparte) ─────────
+const STREAK_BONUS = [5, 10, 15, 25, 40, 60, 100];   // giorno 1..7
+function streakStatus(user) {
+  const today = todayStr();
+  const claimedToday = user.streak_last_day === today;
+  let day;
+  if (claimedToday) {
+    day = user.streak_day || 1;                 // già rivendicato oggi
+  } else if (user.streak_last_day === romeDate(1)) {
+    day = (user.streak_day >= 7) ? 1 : (user.streak_day + 1);  // ieri → continua (dopo il 7 riparte)
+  } else {
+    day = 1;                                    // saltato un giorno o prima volta
+  }
+  return {
+    claimable: !claimedToday,
+    currentDay: user.streak_day || 0,
+    day,
+    bonus: STREAK_BONUS[day - 1] || 0,
+    bonuses: STREAK_BONUS,
+  };
+}
+// Rivendica il premio del giorno (idempotente: una sola volta al giorno).
+app.post('/api/streak/claim', auth.requireLogin, verifyCsrf, (req, res) => {
+  const today = todayStr();
+  if (req.currentUser.streak_last_day === today) {
+    return res.json({ ok: true, claimed: false, alreadyToday: true, ...streakStatus(req.currentUser) });
+  }
+  const st = streakStatus(req.currentUser);
+  const day = st.day;
+  const bonus = STREAK_BONUS[day - 1] || 0;
+  db.prepare('UPDATE users SET streak_day = ?, streak_last_day = ?, points_adjust = points_adjust + ? WHERE id = ?')
+    .run(day, today, bonus, req.currentUser.id);
+  res.json({ ok: true, claimed: true, day, bonus, currentDay: day, bonuses: STREAK_BONUS, balance: userPoints(req.currentUser.id) });
+});
 
 // ── Ruota: spicchi con premi in punti. Più alto il premio, più raro. ──────
 // L'ordine è anche quello visivo degli spicchi (0 in alto, orario).
@@ -1131,7 +1236,13 @@ app.get('/profilo', auth.requireLogin, (req, res) => {
     ORDER BY s.created_at DESC
   `).all(req.currentUser.id);
   const total = userPoints(req.currentUser.id);
-  res.render('profile', { title: 'Il mio profilo', subs, total });
+  res.render('profile', {
+    title: 'Il mio profilo',
+    subs, total,
+    level: userLevel(total),
+    badges: userGameAchievements(req.currentUser.id),
+    streak: streakStatus(req.currentUser),
+  });
 });
 
 // Cambio password (utente loggato)

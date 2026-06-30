@@ -95,6 +95,9 @@ try { db.exec('ALTER TABLE users ADD COLUMN game_plays INTEGER NOT NULL DEFAULT 
 try { db.exec('ALTER TABLE users ADD COLUMN points_adjust INTEGER NOT NULL DEFAULT 0'); } catch {}
 // Ultimo giorno (YYYY-MM-DD) in cui l'utente ha girato la ruota gratuita
 try { db.exec('ALTER TABLE users ADD COLUMN last_wheel_day TEXT'); } catch {}
+// Streak giornaliero: giorno corrente del ciclo (1-7) e ultimo giorno rivendicato (YYYY-MM-DD)
+try { db.exec('ALTER TABLE users ADD COLUMN streak_day INTEGER NOT NULL DEFAULT 0'); } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN streak_last_day TEXT'); } catch {}
 // game_key: marca una "missione" come traguardo del mini-gioco (esclusa dalle missioni-foto)
 try { db.exec('ALTER TABLE missions ADD COLUMN game_key TEXT'); } catch {}
 

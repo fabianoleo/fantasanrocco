@@ -1,0 +1,292 @@
+/* ===================================================================
+   MAPPA INTERATTIVA — Siano (Leaflet + tile scure OSM/CARTO)
+   Tema festa: oro su fondo notturno. Numerazione coordinata
+   marker ⇄ lista ⇄ card per un chiaro legame visivo.
+   =================================================================== */
+.sia-hero { text-align: center; padding: 2.6rem 1.25rem 1.4rem; }
+.sia-hero-inner { max-width: 720px; margin: 0 auto; }
+.sia-title {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.05;
+  color: var(--gold-2); margin: .4rem 0 .6rem;
+}
+.sia-sub { color: var(--text-2); font-size: 1rem; line-height: 1.6; max-width: 600px; margin: 0 auto; }
+
+.sia-wrap { padding: 0 1.25rem 2.5rem; }
+.sia-grid { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 1.1rem; }
+@media (min-width: 900px) { .sia-grid { grid-template-columns: minmax(0, 1fr) 372px; align-items: start; } }
+
+/* ── Colonna mappa ── */
+.sia-map-col { position: relative; }
+.sia-map {
+  height: 58vh; min-height: 340px; max-height: 600px;
+  border-radius: var(--r-lg); overflow: hidden;
+  border: 1px solid var(--border-gold);
+  box-shadow: var(--shadow), 0 0 50px rgba(212,160,26,.1);
+  background: #0a0a14;
+}
+@media (min-width: 900px) { .sia-map { height: 580px; max-height: none; } }
+
+.sia-reset {
+  position: absolute; top: 12px; right: 12px; z-index: 600;
+  display: inline-flex; align-items: center; gap: .4rem;
+  background: rgba(11,9,22,.92); color: var(--gold-2);
+  border: 1px solid var(--border-gold); border-radius: 999px;
+  padding: .5rem .9rem; font-size: .8rem; font-weight: 600; cursor: pointer;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px -10px rgba(0,0,0,.8);
+  transition: background .2s var(--ease), transform .12s var(--ease), opacity .25s var(--ease);
+  animation: sia-fade .3s var(--ease) both;
+}
+.sia-reset:hover { background: rgba(212,160,26,.2); transform: translateY(-1px); }
+.sia-reset .ico { width: 15px; height: 15px; }
+@keyframes sia-fade { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* ── Marker personalizzati (numerati) ── */
+.sia-marker { background: none; border: none; }
+.sia-marker-inner {
+  position: relative; display: block; width: 34px; height: 42px;
+  transform-origin: 50% 100%;
+  transition: transform .28s cubic-bezier(.34,1.56,.64,1), filter .25s var(--ease), opacity .25s var(--ease);
+  filter: drop-shadow(0 6px 8px rgba(0,0,0,.6));
+  cursor: pointer;
+  animation: sia-drop .5s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes sia-drop { 0% { opacity: 0; transform: translateY(-16px) scale(.4); } 100% { opacity: 1; transform: none; } }
+.sia-marker-inner svg { width: 100%; height: 100%; display: block; }
+.sia-marker-num {
+  position: absolute; top: 6px; left: 0; width: 34px; text-align: center;
+  font-family: var(--font-heading); font-weight: 800; font-size: 12px; line-height: 1;
+  color: var(--gold-2); pointer-events: none;
+}
+.sia-marker-inner:hover, .sia-marker.is-hover .sia-marker-inner { transform: scale(1.14) translateY(-3px); }
+.sia-marker.is-active .sia-marker-inner { transform: scale(1.32) translateY(-3px); filter: drop-shadow(0 0 14px rgba(245,200,66,.9)); }
+/* gli altri marker si attenuano quando uno è attivo */
+.sia-map.has-active .sia-marker:not(.is-active) .sia-marker-inner { opacity: .42; filter: grayscale(.4) drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+
+.sia-pulse {
+  display: none; position: absolute; left: 50%; top: 14px;
+  width: 34px; height: 34px; margin-left: -17px; border-radius: 50%;
+  background: rgba(245,200,66,.35); transform: translateY(-50%);
+  animation: sia-pulse 1.6s ease-out infinite; pointer-events: none;
+}
+.sia-marker.is-active .sia-pulse { display: block; }
+@keyframes sia-pulse { 0% { transform: translateY(-50%) scale(.5); opacity: .8; } 100% { transform: translateY(-50%) scale(2.5); opacity: 0; } }
+
+/* Tooltip nome luogo (hover) */
+.leaflet-tooltip.sia-tip {
+  background: rgba(11,9,22,.95); color: var(--gold-2); border: 1px solid var(--border-gold);
+  border-radius: 8px; font-family: var(--font-heading); font-size: .72rem; font-weight: 600;
+  padding: 3px 8px; box-shadow: 0 6px 18px -8px rgba(0,0,0,.8);
+}
+.leaflet-tooltip.sia-tip::before { display: none; }
+
+/* ── Pannello laterale ── */
+.sia-side { display: flex; flex-direction: column; gap: 1rem; }
+
+/* Card del luogo */
+.sia-card {
+  position: relative;
+  background: var(--bg-card); border: 1px solid var(--border-gold);
+  border-radius: var(--r-lg); overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  animation: sia-card-in .34s var(--ease) both;
+}
+@keyframes sia-card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.sia-card-handle { display: none; }
+.sia-card-close {
+  position: absolute; top: 8px; right: 8px; z-index: 3;
+  width: 30px; height: 30px; display: grid; place-items: center;
+  background: rgba(0,0,0,.5); color: #fff; border: none; border-radius: 8px; cursor: pointer;
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+}
+.sia-card-close svg { width: 17px; height: 17px; }
+.sia-card-close:hover { background: rgba(0,0,0,.75); }
+.sia-card-media { position: relative; height: 156px; background: #14111f center/cover no-repeat; }
+.sia-card-media-grad { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 35%, rgba(11,9,22,.85) 100%); }
+/* contenuto con cross-fade quando si cambia luogo */
+.sia-card-content { padding: 1rem 1.1rem 1.1rem; transition: opacity .18s var(--ease); }
+.sia-card.is-swap .sia-card-content { opacity: 0; }
+.sia-card-head { display: flex; align-items: flex-start; gap: .7rem; }
+.sia-card-num {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 9px; margin-top: 2px;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold)); color: #1a1206;
+  font-family: var(--font-heading); font-weight: 800; font-size: .9rem;
+}
+.sia-card-kicker { display: inline-flex; align-items: center; gap: .35rem; font-size: .72rem; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; }
+.sia-card-kicker .ico { width: 13px; height: 13px; }
+.sia-card-name { font-family: var(--font-heading); font-weight: 700; color: #fff; font-size: 1.2rem; margin: .2rem 0 0; }
+.sia-card-desc { color: var(--text-2); font-size: .88rem; line-height: 1.55; margin: .7rem 0 0; }
+.sia-card-events { display: flex; flex-direction: column; gap: .45rem; margin-top: .85rem; }
+.sia-ev {
+  display: flex; align-items: center; gap: .6rem;
+  background: rgba(255,255,255,.03); border: 1px solid var(--border);
+  border-radius: 10px; padding: .5rem .6rem;
+  transition: border-color .2s var(--ease), background .2s var(--ease);
+  animation: sia-ev-in .3s var(--ease) both;
+}
+.sia-ev:hover { border-color: var(--border-gold); background: rgba(212,160,26,.06); }
+@keyframes sia-ev-in { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: none; } }
+.sia-ev-when { flex-shrink: 0; text-align: center; min-width: 52px; font-family: var(--font-heading); line-height: 1.1; }
+.sia-ev-day { display: block; font-size: .58rem; letter-spacing: .06em; color: var(--gold-2); text-transform: uppercase; }
+.sia-ev-time { display: block; font-size: .82rem; font-weight: 700; color: #fff; }
+.sia-ev-title { font-size: .84rem; color: var(--text); }
+.sia-card-empty { color: var(--text-3); font-size: .82rem; font-style: italic; margin: .8rem 0 0; }
+.sia-card-link {
+  display: inline-flex; align-items: center; gap: .4rem; margin-top: 1rem;
+  font-size: .8rem; font-weight: 600; color: var(--gold-2); text-decoration: none;
+}
+.sia-card-link .ico { width: 15px; height: 15px; transition: transform .2s var(--ease); }
+.sia-card-link:hover { color: var(--gold); }
+.sia-card-link:hover .ico { transform: translateX(3px); }
+
+/* Lista luoghi */
+.sia-list-title { font-family: var(--font-heading); font-size: .95rem; color: var(--gold-2); margin: .2rem 0 .7rem; letter-spacing: .04em; }
+.sia-list-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
+.sia-li {
+  position: relative; width: 100%; display: flex; align-items: center; gap: .7rem; text-align: left;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: .6rem .7rem; cursor: pointer; overflow: hidden;
+  transition: border-color .2s var(--ease), background .2s var(--ease), transform .14s var(--ease);
+}
+.sia-li::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--gold); transform: scaleY(0); transform-origin: 50% 50%; transition: transform .2s var(--ease); }
+.sia-li:hover { border-color: var(--border-gold); background: rgba(212,160,26,.06); transform: translateX(3px); }
+.sia-li:hover::before, .sia-li.is-active::before { transform: scaleY(1); }
+.sia-li.is-active { border-color: var(--gold); background: rgba(212,160,26,.12); }
+.sia-li-num {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold)); color: #1a1206;
+  font-family: var(--font-heading); font-weight: 800; font-size: .9rem;
+}
+.sia-li[data-nocoord] .sia-li-num { background: rgba(255,255,255,.07); color: var(--text-3); }
+.sia-li-body { min-width: 0; flex: 1; }
+.sia-li-name { display: block; font-weight: 600; color: var(--text); font-size: .92rem; }
+.sia-li-meta { display: block; font-size: .74rem; color: var(--text-3); }
+.sia-li-meta em { color: var(--amber); font-style: normal; }
+.sia-li-arrow { flex-shrink: 0; color: var(--text-3); display: grid; place-items: center; transition: transform .2s var(--ease), color .2s var(--ease); }
+.sia-li-arrow .ico { width: 18px; height: 18px; }
+.sia-li:hover .sia-li-arrow, .sia-li.is-active .sia-li-arrow { color: var(--gold-2); transform: translateX(2px); }
+.sia-list-note { margin: .9rem 0 0; font-size: .68rem; color: var(--text-3); text-align: center; }
+
+/* ── Bottom-sheet su mobile ── */
+@media (max-width: 899px) {
+  .sia-card {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1500;
+    border-radius: 22px 22px 0 0; max-height: 80vh; overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: 0 -22px 60px -10px rgba(0,0,0,.75);
+    animation: sia-sheet-in .34s cubic-bezier(.16,1,.3,1) both;
+  }
+  @keyframes sia-sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+  .sia-card-handle { display: block; width: 40px; height: 4px; border-radius: 3px; background: rgba(255,255,255,.25); margin: .55rem auto .2rem; }
+}
+
+/* ── Leaflet: ritocchi tema scuro ── */
+.leaflet-container { background: #0a0a14; font: inherit; }
+.leaflet-control-zoom a {
+  background: rgba(11,9,22,.92) !important; color: var(--gold-2) !important;
+  border-color: rgba(212,160,26,.25) !important;
+}
+.leaflet-control-zoom a:hover { background: rgba(212,160,26,.22) !important; }
+.leaflet-bar { border: 1px solid rgba(212,160,26,.25) !important; box-shadow: 0 6px 20px -8px rgba(0,0,0,.8) !important; }
+.leaflet-control-attribution {
+  background: rgba(8,7,14,.8) !important; color: var(--text-3) !important;
+  font-size: 10px !important; padding: 2px 6px !important;
+}
+.leaflet-control-attribution a { color: var(--gold) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sia-pulse { animation: none; display: none !important; }
+  .sia-card, .sia-marker-inner, .sia-ev, .sia-reset { animation: none !important; }
+}
+
+/* ===================================================================
+   VISTA 3D (MapLibre + OpenFreeMap) — edifici reali estrusi
+   =================================================================== */
+.sia-3d-btn {
+  position: absolute; left: 12px; bottom: 12px; z-index: 600;
+  display: inline-flex; align-items: center; gap: .45rem;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold)); color: #1a1206;
+  border: none; border-radius: 999px; padding: .55rem 1rem;
+  font-family: var(--font-heading); font-weight: 700; font-size: .82rem; letter-spacing: .02em;
+  cursor: pointer; box-shadow: 0 10px 28px -10px rgba(212,160,26,.7);
+  transition: transform .12s var(--ease), filter .2s var(--ease);
+}
+.sia-3d-btn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.sia-3d-btn .ico { width: 16px; height: 16px; }
+
+.sia3d { position: fixed; inset: 0; z-index: 4000; background: #07060d; }
+.sia3d-map { position: absolute; inset: 0; }
+/* tono notturno coerente col sito (lo stile base è chiaro) */
+.sia3d-map .maplibregl-canvas { filter: brightness(.62) contrast(1.05) saturate(.9); }
+.sia3d-topbar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 3;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: .8rem 1rem; background: linear-gradient(180deg, rgba(7,6,13,.92), transparent);
+  pointer-events: none;
+}
+.sia3d-title { display: inline-flex; align-items: center; gap: .5rem; font-family: var(--font-heading); font-weight: 700; color: var(--gold-2); }
+.sia3d-title .ico { width: 18px; height: 18px; }
+.sia3d-close {
+  pointer-events: auto; display: inline-flex; align-items: center; gap: .4rem;
+  background: rgba(11,9,22,.92); color: var(--gold-2); border: 1px solid var(--border-gold);
+  border-radius: 999px; padding: .55rem .95rem; font-weight: 600; font-size: .82rem; cursor: pointer;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.sia3d-close:hover { background: rgba(212,160,26,.2); }
+.sia3d-close .ico { width: 15px; height: 15px; }
+.sia3d-hint {
+  position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); z-index: 3;
+  background: rgba(7,6,13,.8); color: var(--text-2); border: 1px solid var(--border);
+  border-radius: 999px; padding: .4rem .9rem; font-size: .72rem; white-space: nowrap;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); pointer-events: none;
+}
+.sia3d-loading {
+  position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; gap: .6rem;
+  color: var(--gold-2); font-family: var(--font-heading); font-size: .9rem; background: #07060d;
+}
+.sia3d-spin { width: 22px; height: 22px; border: 3px solid rgba(245,200,66,.25); border-top-color: var(--gold-2); border-radius: 50%; animation: sia-spin .8s linear infinite; }
+@keyframes sia-spin { to { transform: rotate(360deg); } }
+
+/* Marker 3D numerati */
+.sia3d-pin {
+  width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  border: 2px solid #1a1206; box-shadow: 0 6px 12px rgba(0,0,0,.6); cursor: pointer;
+  display: grid; place-items: center;
+}
+.sia3d-pin span { transform: rotate(45deg); font-family: var(--font-heading); font-weight: 800; font-size: .82rem; color: #1a1206; }
+.sia3d-pin:hover { filter: brightness(1.08); }
+
+/* Popup MapLibre — tema scuro */
+.maplibregl-popup.sia3d-popup .maplibregl-popup-content,
+.sia3d-pop { font: inherit; }
+.maplibregl-popup-content {
+  background: var(--bg-card) !important; color: var(--text) !important;
+  border: 1px solid var(--border-gold); border-radius: 12px; padding: .7rem .8rem !important;
+  box-shadow: 0 16px 40px -12px rgba(0,0,0,.8) !important;
+}
+.maplibregl-popup-tip { display: none !important; }
+.sia3d-pop b { display: block; font-family: var(--font-heading); color: var(--gold-2); margin-bottom: .3rem; }
+.sia3d-pop span { display: block; font-size: .78rem; color: var(--text-2); }
+.sia3d .maplibregl-ctrl-attrib { background: rgba(7,6,13,.85) !important; }
+.sia3d .maplibregl-ctrl-attrib a { color: var(--gold) !important; }
+
+@media (max-width: 560px) { .sia3d-hint { display: none; } }
+@media (prefers-reduced-motion: reduce) { .sia3d-spin { animation: none; } }
+
+/* [hidden] deve vincere sui display:flex dei pannelli 3D */
+.sia3d [hidden] { display: none !important; }
+
+/* ── Programmazione: evento cliccabile → mappa col luogo ── */
+.pg-clickable { cursor: pointer; }
+.pg-map-hint {
+  display: inline-flex; align-items: center; gap: .38rem; margin-top: .8rem;
+  background: rgba(212,160,26,.1); color: var(--gold-2);
+  border: 1px solid var(--border-gold); border-radius: 999px;
+  padding: .38rem .8rem; font-family: inherit; font-size: .76rem; font-weight: 600;
+  cursor: pointer; transition: background .2s var(--ease), transform .12s var(--ease);
+}
+.pg-map-hint:hover { background: rgba(212,160,26,.22); transform: translateY(-1px); }
+.pg-map-hint svg { width: 14px; height: 14px; }

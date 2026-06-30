@@ -3760,3 +3760,95 @@ textarea:focus-visible,
 @media (prefers-reduced-motion: reduce) {
   .foot-col { opacity: 1; filter: none; transform: none; }
 }
+
+/* ===================================================================
+   PROFILO — Livello, Streak giornaliera, Vetrina traguardi
+   =================================================================== */
+.pf-level {
+  display: flex; align-items: center; gap: 1rem;
+  background: var(--bg-card); border: 1px solid var(--border-gold);
+  border-radius: var(--r); padding: 1rem 1.1rem; margin: 1.3rem 0;
+}
+.pf-level-badge {
+  flex-shrink: 0; width: 62px; height: 62px; border-radius: 14px;
+  display: grid; place-items: center; text-align: center;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  color: #1a1206; font-family: var(--font-heading); font-weight: 700;
+  font-size: .58rem; letter-spacing: .06em; line-height: 1;
+}
+.pf-level-badge b { display: block; font-size: 1.55rem; margin-top: 2px; }
+.pf-level-info { flex: 1; min-width: 0; }
+.pf-level-row { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; margin-bottom: .45rem; }
+.pf-level-title { font-family: var(--font-heading); font-weight: 700; color: var(--gold-2); font-size: 1rem; }
+.pf-level-next { font-size: .72rem; color: var(--text-3); white-space: nowrap; flex-shrink: 0; }
+.pf-level-bar { height: 9px; border-radius: 6px; background: rgba(255,255,255,.07); overflow: hidden; }
+.pf-level-bar span { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--gold), var(--gold-2)); transition: width .6s var(--ease); }
+.pf-level-nexttitle { display: block; margin-top: .4rem; font-size: .72rem; color: var(--text-3); }
+
+.pf-streak {
+  background: var(--bg-card); border: 1px solid var(--border-gold);
+  border-radius: var(--r); padding: 1rem 1.1rem; margin: 1.3rem 0;
+}
+.pf-streak-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .8rem; flex-wrap: wrap; }
+.pf-streak-title { display: inline-flex; align-items: center; gap: .4rem; font-family: var(--font-heading); font-weight: 700; color: var(--gold-2); }
+.pf-streak-title .ico { width: 18px; height: 18px; color: var(--fire); }
+.pf-streak-sub { font-size: .75rem; color: var(--text-3); }
+.pf-streak-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: .4rem; }
+.pf-streak-day {
+  display: flex; flex-direction: column; align-items: center; gap: .2rem;
+  padding: .5rem .2rem; border-radius: 10px;
+  background: rgba(255,255,255,.04); border: 1px solid var(--border); color: var(--text-3);
+}
+.pf-streak-day.is-on { background: rgba(212,160,26,.14); border-color: var(--border-gold); color: var(--gold-2); }
+.pf-streak-day.is-current { background: linear-gradient(135deg, var(--gold-2), var(--gold)); border-color: var(--gold-2); color: #1a1206; box-shadow: 0 0 0 3px rgba(245,200,66,.18); }
+.pf-streak-d { font-size: .58rem; font-family: var(--font-heading); letter-spacing: .04em; }
+.pf-streak-b { font-size: .75rem; font-weight: 700; }
+.pf-streak-cta { margin: .85rem 0 0; font-size: .82rem; color: var(--gold-2); text-align: center; }
+
+.pf-badge-count { font-size: .68rem; color: var(--gold); background: rgba(212,160,26,.1); border: 1px solid var(--border-gold); padding: .12rem .5rem; border-radius: 999px; vertical-align: middle; margin-left: .45rem; font-family: var(--font-heading); }
+.pf-badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .6rem; margin: .5rem 0 1.4rem; }
+.pf-badge { display: flex; align-items: center; gap: .6rem; padding: .65rem .7rem; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border); }
+.pf-badge.is-done { border-color: var(--border-gold); background: rgba(212,160,26,.06); }
+.pf-badge.is-locked { opacity: .55; }
+.pf-badge-ic { flex-shrink: 0; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; }
+.pf-badge.is-done .pf-badge-ic { background: linear-gradient(135deg, var(--gold-2), var(--gold)); }
+.pf-badge.is-done .pf-badge-ic .ico { color: #1a1206; }
+.pf-badge.is-locked .pf-badge-ic { background: rgba(255,255,255,.05); }
+.pf-badge.is-locked .pf-badge-ic .ico { color: var(--text-3); }
+.pf-badge-ic .ico { width: 17px; height: 17px; }
+.pf-badge-name { flex: 1; min-width: 0; font-size: .8rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-badge-pts { font-size: .72rem; font-weight: 700; color: var(--gold-2); }
+.pf-badge.is-locked .pf-badge-pts { color: var(--text-3); }
+
+/* ── Popup premio giornaliero (streak) ── */
+.streak-pop {
+  position: fixed; inset: 0; z-index: 2600;
+  display: flex; align-items: center; justify-content: center; padding: 1.2rem;
+  background: rgba(4,3,10,.72); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  opacity: 0; visibility: hidden; transition: opacity .25s var(--ease), visibility .25s var(--ease);
+}
+.streak-pop.is-open { opacity: 1; visibility: visible; }
+.streak-pop-card {
+  width: min(420px, 100%); text-align: center;
+  background: linear-gradient(180deg, var(--bg-1), var(--bg-2));
+  border: 1px solid var(--border-gold); border-radius: var(--r-lg); padding: 1.6rem 1.4rem;
+  box-shadow: var(--shadow), 0 0 60px rgba(212,160,26,.2);
+  transform: translateY(14px) scale(.96); transition: transform .3s var(--ease);
+}
+.streak-pop.is-open .streak-pop-card { transform: none; }
+.streak-pop-ic { width: 56px; height: 56px; margin: 0 auto .7rem; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(135deg, var(--fire), var(--gold)); box-shadow: 0 0 30px rgba(232,78,27,.4); }
+.streak-pop-ic .ico { width: 28px; height: 28px; color: #fff; }
+.streak-pop-title { font-family: var(--font-display); font-size: 1.4rem; color: var(--gold-2); margin: 0 0 .2rem; }
+.streak-pop-sub { color: var(--text-2); font-size: .86rem; margin: 0 0 1.1rem; }
+.streak-pop-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: .35rem; margin-bottom: 1.2rem; }
+.streak-pop-day { display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .45rem .1rem; border-radius: 9px; background: rgba(255,255,255,.04); border: 1px solid var(--border); color: var(--text-3); }
+.streak-pop-day.is-on { background: rgba(212,160,26,.14); border-color: var(--border-gold); color: var(--gold-2); }
+.streak-pop-day.is-today { background: linear-gradient(135deg, var(--gold-2), var(--gold)); border-color: var(--gold-2); color: #1a1206; box-shadow: 0 0 0 3px rgba(245,200,66,.2); transform: scale(1.07); }
+.streak-pop-day .d { font-size: .54rem; font-family: var(--font-heading); letter-spacing: .03em; }
+.streak-pop-day .b { font-size: .72rem; font-weight: 700; }
+.streak-pop-btn { width: 100%; justify-content: center; }
+
+/* ── Radio: contatore "chi ascolta ora" ── */
+.radio-listeners { display: inline-flex; align-items: center; gap: .4rem; font-size: .74rem; color: var(--text-2); margin: -.2rem 0 .2rem; }
+.radio-listeners .rl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 7px var(--green); flex-shrink: 0; }
+.radio-listeners b { color: var(--gold-2); }
