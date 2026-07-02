@@ -3,7 +3,7 @@
 <%- include('partials/intro3d') %>
 
 <%# ── CINEMATIC HERO (ricreazione nativa) ──────────────────────────── %>
-<link rel="stylesheet" href="/cinematic.css?v=5">
+<link rel="stylesheet" href="/cinematic.css?v=7">
 <%
   // Conto alla rovescia per la festa (14 agosto 2026) — metrica dell'anello
   const _festa = new Date('2026-08-14T00:00:00');
@@ -18,6 +18,18 @@
   <div class="hero-text-wrapper">
     <h1 class="hero-line hero-line-1 text-track gsap-reveal text-3d-matte">La festa è una gara.</h1>
     <h1 class="hero-line hero-line-2 text-days gsap-reveal text-silver-matte">Scendi in campo.</h1>
+
+    <%# Indicazione animata "continua a scorrere", sotto il titolo %>
+    <div class="cine-scroll-hint" id="scrollHint" aria-hidden="true">
+      <span>Continua a scorrere</span>
+      <%# PC: rotellina del mouse %>
+      <div class="ch-mouse"><div class="ch-dot"></div></div>
+      <%# Mobile: gesto di swipe verso l'alto %>
+      <div class="ch-touch">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg>
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 15 12 9 18 15"/></svg>
+      </div>
+    </div>
   </div>
 
   <%# ── Strato sfondo 2: CTA finale ── %>
@@ -40,7 +52,7 @@
         <%- icon('trophy') %>
         <span class="btn-stack">
           <span class="btn-sub">In palio</span>
-          <span class="btn-main">I tre premi</span>
+          <span class="btn-main">Premi misteriosi</span>
         </span>
       </a>
     </div>
@@ -156,10 +168,6 @@
     </div>
   </div>
 
-  <div class="cine-scroll-hint" id="scrollHint" aria-hidden="true">
-    <span>Scorri</span>
-    <div class="ch-mouse"><div class="ch-dot"></div></div>
-  </div>
 </section>
 
 <%# ── NUMERI ──────────────────────────────────────────────────────── %>
@@ -184,7 +192,9 @@
 <section class="lp-prizes lp-full">
   <div class="lp-section-inner">
     <p class="lp-kicker" data-reveal="fade-in">In palio</p>
-    <h2 class="lp-headline" data-reveal="fade-up">Premi veri.<br>Per chi sa come giocare.</h2>
+    <h2 class="lp-headline" data-reveal="fade-up">I premi? Un mistero.<br>Ancora per poco.</h2>
+    <% /* ── PREMI UFFICIALI — nascosti per ora, salvati per riattivarli dopo (if false) ── */ %>
+    <% if (false) { %>
     <div class="lp-prizes-grid">
       <div class="lp-prize-card lp-prize-gold" data-reveal="slide-up" data-delay="0">
         <span class="lp-prize-icon"><%- icon('medal') %></span>
@@ -202,7 +212,25 @@
         <p>Perché il caffè campano non si discute.</p>
       </div>
     </div>
-    <a href="/premio" class="lp-more-link" data-reveal="fade-in">Scopri tutti i dettagli →</a>
+    <% } %>
+    <div class="lp-prizes-grid">
+      <div class="lp-prize-card lp-prize-gold mm-mystery" data-reveal="slide-up" data-delay="0">
+        <span class="lp-prize-icon"><%- icon('lock') %></span>
+        <h3>Primo premio</h3>
+        <p>Ancora segreto. Sarà svelato prima della festa.</p>
+      </div>
+      <div class="lp-prize-card lp-prize-silver mm-mystery" data-reveal="slide-up" data-delay="1">
+        <span class="lp-prize-icon"><%- icon('lock') %></span>
+        <h3>Secondo premio</h3>
+        <p>Top secret. Continua a giocare per scoprirlo.</p>
+      </div>
+      <div class="lp-prize-card lp-prize-bronze mm-mystery" data-reveal="slide-up" data-delay="2">
+        <span class="lp-prize-icon"><%- icon('lock') %></span>
+        <h3>Terzo premio</h3>
+        <p>Un mistero… per ora.</p>
+      </div>
+    </div>
+    <a href="/premio" class="lp-more-link" data-reveal="fade-in">Come si vince →</a>
   </div>
 </section>
 
@@ -330,4 +358,4 @@
 <%# ── Motore cinematic hero (GSAP self-hosted + script nativo) ──────── %>
 <script src="/vendor/gsap.min.js" defer></script>
 <script src="/vendor/ScrollTrigger.min.js" defer></script>
-<script src="/cinematic.js?v=3" defer></script>
+<script src="/cinematic.js?v=4" defer></script>

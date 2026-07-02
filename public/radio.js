@@ -126,6 +126,13 @@
   }
   function toggle() { if (audio.paused) tuneIn(); else tuneOut(); }
 
+  // API minima per altri moduli (es. il gioco che interrompe la radio e poi la riprende)
+  window.FSRRadio = {
+    isPlaying: function () { return !audio.paused; },
+    pause: function () { if (!audio.paused) tuneOut(); },
+    resume: function () { tuneIn(); },
+  };
+
   // Lo stato UI segue lo stato reale dell'audio
   audio.addEventListener('play', () => { setState('playing'); startPinging(); });
   audio.addEventListener('pause', () => { setState('paused'); stopPinging(); });

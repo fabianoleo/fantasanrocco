@@ -1,0 +1,51 @@
+<section class="card center claim-card">
+<% if (outcome === 'won') { %>
+  <div class="claim-emoji">🎉</div>
+  <h1>Premio riscattato!</h1>
+  <p class="claim-lead">Hai guadagnato</p>
+  <p class="claim-points">+<%= rc.points %><small>punti</small></p>
+  <% if (rc.label) { %><p class="muted"><%= rc.label %></p><% } %>
+  <p class="claim-balance">Nuovo totale: <strong><%= balance %></strong> punti</p>
+  <div class="claim-actions">
+    <a class="btn" href="/classifica">Vai alla classifica</a>
+    <a class="btn btn-ghost" href="/profilo">Il mio profilo</a>
+  </div>
+  <p class="muted claim-note">Questo link era <strong>monouso</strong>: ora è stato usato e non darà altri punti.</p>
+
+<% } else if (outcome === 'mine') { %>
+  <div class="claim-emoji">✅</div>
+  <h1>Hai già riscattato questo premio</h1>
+  <p class="claim-lead">I <strong><%= rc.points %> punti</strong> sono già stati aggiunti al tuo totale in precedenza.</p>
+  <div class="claim-actions">
+    <a class="btn" href="/classifica">Classifica</a>
+    <a class="btn btn-ghost" href="/profilo">Profilo</a>
+  </div>
+
+<% } else if (outcome === 'used') { %>
+  <div class="claim-emoji">⏳</div>
+  <h1>Premio già preso</h1>
+  <p class="claim-lead">Qualcun altro ha aperto questo link prima di te: era <strong>monouso</strong> e i punti sono già stati assegnati.</p>
+  <div class="claim-actions">
+    <a class="btn" href="/missioni">Torna alle missioni</a>
+  </div>
+
+<% } else { %>
+  <div class="claim-emoji">❔</div>
+  <h1>Codice non valido</h1>
+  <p class="claim-lead">Questo link premio non esiste o è stato rimosso.</p>
+  <div class="claim-actions">
+    <a class="btn" href="/">Torna alla home</a>
+  </div>
+<% } %>
+</section>
+
+<style>
+  .claim-card { max-width: 460px; margin: 2.5rem auto; }
+  .claim-emoji { font-size: 3.4rem; line-height: 1; margin-bottom: .3rem; }
+  .claim-lead { font-size: 1.05rem; margin: .4rem 0; }
+  .claim-points { font-size: 3rem; font-weight: 800; color: var(--gold, #f5c842); margin: .2rem 0; line-height: 1; }
+  .claim-points small { font-size: 1rem; font-weight: 600; margin-left: .35rem; opacity: .8; }
+  .claim-balance { margin-top: .6rem; }
+  .claim-actions { display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; margin-top: 1.2rem; }
+  .claim-note { margin-top: 1rem; font-size: .82rem; }
+</style>

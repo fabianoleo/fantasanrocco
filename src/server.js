@@ -96,6 +96,25 @@ if (!process.env.SESSION_SECRET) {
   console.warn('⚠️  SESSION_SECRET non impostato: usane uno nel file .env!');
 }
 const APP_URL = (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+
+// URL pubblico per costruire i link nelle email (es. reset password).
+//  1) Se APP_URL è configurato e non-localhost → usa quello (produzione, dominio fisso).
+//  2) Altrimenti, se la richiesta arriva da un tunnel Cloudflare "usa e getta"
+//     (*.trycloudflare.com / *.cfargotunnel.com), usa quell'host: cambia ad ogni
+//     avvio del tunnel ma non serve toccare .env. È sicuro perché quell'header
+//     lo imposta Cloudflare all'edge (il client non può falsificarlo se il server
+//     è raggiungibile solo tramite il tunnel), e accettiamo SOLO domini di tunnel.
+//  3) Ripiego: APP_URL (localhost) → i link funzionano solo in locale.
+function publicBaseUrl(req) {
+  if (process.env.APP_URL && !process.env.APP_URL.includes('localhost')) return APP_URL;
+  const xfHost = String(req.headers['x-forwarded-host'] || '').split(',')[0].trim();
+  const host = xfHost || String(req.headers.host || '').trim();
+  if (/\.(trycloudflare\.com|cfargotunnel\.com)$/i.test(host)) {
+    const proto = String(req.headers['x-forwarded-proto'] || 'https').split(',')[0].trim();
+    return proto + '://' + host;
+  }
+  return APP_URL;
+}
 app.use(session({
   store: new SqliteStore({ client: db, expired: { clear: true, intervalMs: 900000 } }),
   name: 'fsr.s2',
@@ -683,6 +702,9 @@ app.post('/login', loginLimiter, (req, res) => {
     flash(req, 'error', 'Nickname o password errati.');
     return res.redirect('/login');
   }
+  // Destinazione post-login: solo percorsi interni (no host esterni → niente open-redirect)
+  const rt = req.session.returnTo;
+  const dest = (typeof rt === 'string' && /^\/[A-Za-z0-9]/.test(rt)) ? rt : '/missioni';
   // Rigenera la sessione per prevenire session-fixation attacks
   req.session.regenerate((err) => {
     if (err) { flash(req, 'error', 'Errore interno. Riprova.'); return res.redirect('/login'); }
@@ -696,7 +718,7 @@ app.post('/login', loginLimiter, (req, res) => {
       req.session.cookie.expires = false;
     }
     req.session.flash = { type: 'success', msg: `Bentornato/a ${user.nickname}!` };
-    res.redirect('/missioni');
+    res.redirect(dest);
   });
 });
 
@@ -1026,17 +1048,17 @@ app.post('/password-dimenticata', resetLimiter, (req, res) => {
   db.prepare('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?')
     .run(token, expires, user.id);
 
-  // APP_URL è già normalizzato in alto. In produzione DEVE essere configurato e
-  // diverso da localhost: il link di reset NON si costruisce mai dall'header Host
-  // (host header poisoning → furto del token di reset). In locale usa il default.
+  // Base URL fidata: APP_URL (dominio fisso) oppure l'host del tunnel Cloudflare.
+  // Non usiamo MAI un host arbitrario da req.get('host') (host header poisoning →
+  // furto del token): publicBaseUrl accetta solo APP_URL o domini *.trycloudflare.com.
   const isProd = process.env.NODE_ENV === 'production';
-  const appUrlConfigured = process.env.APP_URL && !process.env.APP_URL.includes('localhost');
-  if (isProd && !appUrlConfigured) {
-    console.error('[RESET] APP_URL non configurato in produzione: invio reset annullato (anti host-poisoning).');
+  const baseUrl = publicBaseUrl(req);
+  const baseIsLocal = baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1');
+  if (isProd && baseIsLocal) {
+    console.error('[RESET] Nessun URL pubblico (APP_URL o tunnel): invio reset annullato (anti host-poisoning).');
     flash(req, 'success', genericMsg); // risposta generica: non rivela nulla
     return res.redirect('/login');
   }
-  const baseUrl = APP_URL; // valore fidato dalla config, mai da req.get('host')
   const resetLink = `${baseUrl}/reset-password/${token}`;
 
   const transporter = makeMailTransporter();
@@ -1520,10 +1542,58 @@ app.post('/moderazione/:id/:azione', auth.requireStaff, (req, res) => {
 // =========================================================================
 //  ADMIN (gestione missioni + ruoli)
 // =========================================================================
+// ── Codici premio monouso (link/QR) ─────────────────────────────────────
+// Il PRIMO utente loggato che apre /r/<code> riscatta i punti; i successivi no.
+app.get('/r/:code', (req, res) => {
+  const code = String(req.params.code || '').trim().slice(0, 64);
+  const rc = db.prepare('SELECT * FROM reward_codes WHERE code = ?').get(code);
+  if (!rc) return res.status(404).render('claim', { title: 'Codice premio', outcome: 'invalid', rc: null });
+
+  if (!req.currentUser) {
+    req.session.returnTo = '/r/' + encodeURIComponent(code);   // torna qui dopo il login
+    flash(req, 'error', 'Accedi (o registrati) per riscattare il premio.');
+    return res.redirect('/login');
+  }
+  // Già riscattato da me in precedenza
+  if (rc.claimed_by === req.currentUser.id) {
+    return res.render('claim', { title: 'Premio', outcome: 'mine', rc });
+  }
+  // Riscatto atomico: va a buon fine solo se nessuno l'ha ancora preso
+  const upd = db.prepare("UPDATE reward_codes SET claimed_by = ?, claimed_at = datetime('now') WHERE code = ? AND claimed_by IS NULL")
+    .run(req.currentUser.id, code);
+  if (upd.changes === 1) {
+    db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(rc.points, req.currentUser.id);
+    return res.render('claim', { title: 'Premio riscattato!', outcome: 'won', rc, balance: userPoints(req.currentUser.id) });
+  }
+  // Qualcun altro è arrivato prima
+  return res.render('claim', { title: 'Premio', outcome: 'used', rc });
+});
+
 app.get('/admin', auth.requireAdmin, (req, res) => {
   const missions = db.prepare('SELECT * FROM missions ORDER BY id DESC').all();
   const users = db.prepare('SELECT id, nickname, email, role, created_at FROM users ORDER BY role, nickname').all();
-  res.render('admin', { title: 'Admin', missions, users });
+  const codes = db.prepare(`SELECT c.*, u.nickname AS claimer
+    FROM reward_codes c LEFT JOIN users u ON u.id = c.claimed_by
+    ORDER BY c.created_at DESC`).all();
+  const host = req.get('host') || '';
+  const baseUrl = (host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https') + '://' + host;
+  res.render('admin', { title: 'Admin', missions, users, codes, baseUrl });
+});
+
+app.post('/admin/codici', auth.requireAdmin, (req, res) => {
+  const points = parseInt(req.body.points, 10);
+  if (!Number.isFinite(points) || points <= 0) { flash(req, 'error', 'Inserisci un numero di punti valido.'); return res.redirect('/admin'); }
+  const label = (req.body.label || '').trim().slice(0, 120) || null;
+  const code = crypto.randomBytes(5).toString('hex');   // 10 caratteri, non indovinabile
+  db.prepare('INSERT INTO reward_codes (code, points, label) VALUES (?, ?, ?)').run(code, points, label);
+  flash(req, 'success', `Codice premio creato: /r/${code}`);
+  res.redirect('/admin');
+});
+
+app.post('/admin/codici/:code/elimina', auth.requireAdmin, (req, res) => {
+  db.prepare('DELETE FROM reward_codes WHERE code = ?').run(req.params.code);
+  flash(req, 'success', 'Codice premio eliminato.');
+  res.redirect('/admin');
 });
 
 app.post('/admin/missioni', auth.requireAdmin, (req, res) => {

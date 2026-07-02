@@ -101,4 +101,17 @@ try { db.exec('ALTER TABLE users ADD COLUMN streak_last_day TEXT'); } catch {}
 // game_key: marca una "missione" come traguardo del mini-gioco (esclusa dalle missioni-foto)
 try { db.exec('ALTER TABLE missions ADD COLUMN game_key TEXT'); } catch {}
 
+// Codici premio monouso (link/QR): il PRIMO utente loggato che apre il link
+// riscatta i punti; chi arriva dopo non guadagna nulla.
+db.exec(`
+CREATE TABLE IF NOT EXISTS reward_codes (
+  code        TEXT PRIMARY KEY,
+  points      INTEGER NOT NULL,
+  label       TEXT,
+  claimed_by  INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  claimed_at  TEXT,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`);
+
 module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR };

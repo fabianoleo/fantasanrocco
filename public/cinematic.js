@@ -77,11 +77,14 @@
       .to(".text-track", { duration: 1.8, y: 0, scale: 1, filter: "blur(0px)", rotationX: 0, ease: "expo.out" })
       .to(".text-days", { duration: 1.4, clipPath: "inset(0 0% 0 0)", ease: "power4.inOut" }, "-=1.0");
 
+    // Su mobile accorciamo la corsa dello scroll: l'animazione avanza più in
+    // fretta e si arriva prima al contenuto (meno "scroll a vuoto").
+    const scrollEnd = isMobile ? 3200 : 7000;
     const scrollTl = gsap.timeline({
       scrollTrigger: {
         trigger: root,
         start: "top top",
-        end: "+=7000",
+        end: "+=" + scrollEnd,
         pin: true,
         scrub: 1,
         anticipatePin: 1,

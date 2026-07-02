@@ -2457,8 +2457,7 @@ html {
   overflow: hidden;
   background:
     radial-gradient(ellipse 140% 60% at 50% 0%, rgba(212,160,26,.14) 0%, rgba(232,134,30,.04) 45%, transparent 65%),
-    linear-gradient(rgba(4,4,8,.82), rgba(4,4,8,.82)),
-    url('/images/premi/smartbox-cover.webp') center / cover no-repeat;
+    #040408;
 }
 .pz-hero::after {
   content: '';
@@ -3852,3 +3851,19 @@ textarea:focus-visible,
 .radio-listeners { display: inline-flex; align-items: center; gap: .4rem; font-size: .74rem; color: var(--text-2); margin: -.2rem 0 .2rem; }
 .radio-listeners .rl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 7px var(--green); flex-shrink: 0; }
 .radio-listeners b { color: var(--gold-2); }
+
+/* ── Admin: codici premio (link/QR monouso) ─────────────────────── */
+.reward-list { list-style: none; margin: 1rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .7rem; }
+.reward-row { border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 12px; padding: .7rem .8rem; background: rgba(255,255,255,.02); }
+.reward-head { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; margin-bottom: .5rem; }
+.reward-label { font-weight: 600; }
+.reward-link { width: 100%; font-family: ui-monospace, Menlo, monospace; font-size: .8rem; padding: .45rem .55rem; border-radius: 8px; border: 1px solid var(--line, rgba(255,255,255,.14)); background: rgba(0,0,0,.25); color: var(--text-1, #eee); margin-bottom: .5rem; }
+.tag.tag-on { background: rgba(60,190,110,.16); color: var(--green, #4ecb71); border: 1px solid rgba(60,190,110,.4); }
+
+/* ── Premi misteriosi (identità premi nascosta) ─────────────────── */
+.pz-photo-mystery { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .2rem; }
+.pz-photo-mystery > span:nth-child(2) { font-size: 3.2rem; font-weight: 800; line-height: 1; color: var(--gold, #f5c842); }
+.pz-photo-mystery .pz-ph-note { font-size: .82rem; opacity: .8; letter-spacing: .03em; }
+.mm-mystery h3 { letter-spacing: .02em; }
+
+/* (Hint "continua a scorrere": stile spostato in cinematic.css, scoped .cine) */

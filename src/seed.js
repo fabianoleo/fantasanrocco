@@ -11,34 +11,65 @@ require('dotenv').config();
 const { db } = require('./db');
 const { hashPassword } = require('./auth');
 
+// ── MISSIONI DEMO (attive) ──────────────────────────────────────────────
+// Ogni missione richiede una foto-prova. Solo «Amore e Luci» è ripetibile.
 const SAMPLE_MISSIONS = [
   {
-    title: '🥃 Shot con Zio Max',
-    description: 'Bevi uno shot insieme a Zio Max in persona. Foto come prova!',
-    points: 100, requires_photo: 1, repeatable: 1, active_from: null, active_to: null,
-  },
-  {
-    title: '🩳 Pantaloncini arancioni',
-    description: 'Fatti vedere con i pantaloncini arancioni la sera del 16 agosto.',
-    points: 80, requires_photo: 1, repeatable: 0,
-    active_from: '2026-08-16 18:00', active_to: '2026-08-17 03:00',
-  },
-  {
-    title: '📸 Selfie con un Rocco',
-    description: 'Trova qualcuno che si chiama Rocco e fatti un selfie insieme.',
-    points: 60, requires_photo: 1, repeatable: 0, active_from: null, active_to: null,
-  },
-  {
-    title: '🎆 Foto sotto i fuochi',
-    description: 'Scatta una foto durante lo spettacolo dei fuochi d\'artificio.',
+    title: '⭐ Bonus "Super Peppe"',
+    description: 'Scatta un selfie con Peppe Tap Tap.',
     points: 50, requires_photo: 1, repeatable: 0, active_from: null, active_to: null,
   },
   {
-    title: '🍝 Piatto tipico sianese',
-    description: 'Mangia un piatto tipico alla festa e dichiaralo (niente foto richiesta).',
-    points: 30, requires_photo: 0, repeatable: 0, active_from: null, active_to: null,
+    title: '💋 Bonus "Amore e Luci"',
+    description: 'Foto mentre baci una persona alla festa. (Ripetibile)',
+    points: 30, requires_photo: 1, repeatable: 1, active_from: null, active_to: null,
+  },
+  {
+    title: '🃏 Bonus "Asso di Mazze"',
+    description: 'Foto di una partita a carte davanti alla Chiesa.',
+    points: 40, requires_photo: 1, repeatable: 0, active_from: null, active_to: null,
+  },
+  {
+    title: '🌙 Bonus "Fuori Orario"',
+    description: 'Foto davanti a un bar dopo che ha già chiuso.',
+    points: 60, requires_photo: 1, repeatable: 0, active_from: null, active_to: null,
+  },
+  {
+    title: '🔔 Bonus "Campanile"',
+    description: 'Foto di gruppo seduti davanti al campanile.',
+    points: 50, requires_photo: 1, repeatable: 0, active_from: null, active_to: null,
   },
 ];
+
+// ── MISSIONI STORICHE (conservate, non più caricate) ────────────────────
+// const SAMPLE_MISSIONS = [
+//   {
+//     title: '🥃 Shot con Zio Max',
+//     description: 'Bevi uno shot insieme a Zio Max in persona. Foto come prova!',
+//     points: 100, requires_photo: 1, repeatable: 1, active_from: null, active_to: null,
+//   },
+//   {
+//     title: '🩳 Pantaloncini arancioni',
+//     description: 'Fatti vedere con i pantaloncini arancioni la sera del 16 agosto.',
+//     points: 80, requires_photo: 1, repeatable: 0,
+//     active_from: '2026-08-16 18:00', active_to: '2026-08-17 03:00',
+//   },
+//   {
+//     title: '📸 Selfie con un Rocco',
+//     description: 'Trova qualcuno che si chiama Rocco e fatti un selfie insieme.',
+//     points: 60, requires_photo: 1, repeatable: 0, active_from: null, active_to: null,
+//   },
+//   {
+//     title: '🎆 Foto sotto i fuochi',
+//     description: 'Scatta una foto durante lo spettacolo dei fuochi d\'artificio.',
+//     points: 50, requires_photo: 1, repeatable: 0, active_from: null, active_to: null,
+//   },
+//   {
+//     title: '🍝 Piatto tipico sianese',
+//     description: 'Mangia un piatto tipico alla festa e dichiaralo (niente foto richiesta).',
+//     points: 30, requires_photo: 0, repeatable: 0, active_from: null, active_to: null,
+//   },
+// ];
 
 function seedMissions() {
   const count = db.prepare('SELECT COUNT(*) AS n FROM missions').get().n;
@@ -52,6 +83,22 @@ function seedMissions() {
   const tx = db.transaction((rows) => rows.forEach((r) => stmt.run(r)));
   tx(SAMPLE_MISSIONS);
   console.log(`Caricate ${SAMPLE_MISSIONS.length} missioni di esempio.`);
+}
+
+// Sostituisce le missioni utente attive con quelle in SAMPLE_MISSIONS:
+// archivia (non cancella → mantiene lo storico invii) tutte le missioni
+// non-gioco e ricarica solo quelle demo. Idempotente.
+function resetMissions() {
+  const stmt = db.prepare(`INSERT INTO missions
+    (title, description, points, requires_photo, repeatable, active_from, active_to)
+    VALUES (@title, @description, @points, @requires_photo, @repeatable, @active_from, @active_to)`);
+  const tx = db.transaction(() => {
+    const arch = db.prepare('UPDATE missions SET archived = 1 WHERE game_key IS NULL AND archived = 0').run();
+    SAMPLE_MISSIONS.forEach((r) => stmt.run(r));
+    return arch.changes;
+  });
+  const archived = tx();
+  console.log(`Archiviate ${archived} missioni precedenti; caricate ${SAMPLE_MISSIONS.length} missioni demo.`);
 }
 
 function createAdmin(nickname, password) {
@@ -78,6 +125,8 @@ function createAdmin(nickname, password) {
 const [, , cmd, ...rest] = process.argv;
 if (cmd === 'admin') {
   createAdmin(rest[0], rest[1]);
+} else if (cmd === 'missioni-reset') {
+  resetMissions();
 } else {
   seedMissions();
 }

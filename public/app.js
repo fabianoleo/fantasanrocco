@@ -240,15 +240,11 @@ document.addEventListener('click', async (e) => {
   connect();
 })();
 
-// ── Hide scroll hint on first scroll ────────────────────────────────
-(function () {
-  const hint = document.getElementById('scrollHint');
-  if (!hint) return;
-  window.addEventListener('scroll', () => {
-    hint.style.transition = 'opacity .5s';
-    hint.style.opacity = '0';
-  }, { once: true, passive: true });
-})();
+// ── Indizio di scroll ────────────────────────────────────────────────
+// NON lo nascondiamo via JS: sta dentro .hero-text-wrapper, che GSAP sfuma
+// e fa sparire man mano che scorri. Nasconderlo "al primo scroll" era
+// fragile — lo scroll "fantasma" che ScrollTrigger genera all'init lo
+// faceva sparire subito. Ora resta visibile a riposo e svanisce scrollando.
 
 // ── Bottom nav: hide on scroll down, show on scroll up ──────────────
 (function () {

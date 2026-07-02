@@ -3,13 +3,20 @@
   <div class="pz-hero-inner">
     <p class="pz-hero-kicker">Festa di San Rocco 2026 &nbsp;·&nbsp; Siano</p>
     <h1 class="pz-title">I Premi<br>in Palio</h1>
-    <p class="pz-subtitle">Chi sale in cima alla classifica porta a casa un premio.<br>Tre posti. Tre premi. Una sola settimana per conquistarli.</p>
+    <p class="pz-subtitle">Chi sale in cima alla classifica porta a casa un premio.<br>Quest'anno però i premi sono <strong>ancora un mistero</strong>: verranno svelati presto.</p>
     <div class="pz-hero-pill">
-      <span>3</span> premi &nbsp;&middot;&nbsp; <span>1</span> classifica &nbsp;&middot;&nbsp; <span>agosto&nbsp;2026</span>
+      <span>3</span> premi &nbsp;&middot;&nbsp; <span>?</span> ancora segreti &nbsp;&middot;&nbsp; <span>agosto&nbsp;2026</span>
     </div>
   </div>
 </div>
 
+<% /* ═══════════════════════════════════════════════════════════════════
+   PREMI UFFICIALI — NASCOSTI PER ORA (restano segreti fino allo svelamento).
+   Il blocco qui sotto è disattivato con `if (false)`: NON viene mostrato,
+   ma è conservato integralmente. Per rivelare di nuovo i premi basta
+   cambiare `if (false)` in `if (true)` (e rimuovere le sezioni "mistero").
+   ═══════════════════════════════════════════════════════════════════ */ %>
+<% if (false) { %>
 <%# ── PRIMO POSTO ─────────────────────────────────────────────── %>
 <div class="pz-section pz-gold lp-full">
   <div class="pz-rank-ghost">I</div>
@@ -121,6 +128,45 @@
     </div>
   </div>
 </div>
+
+<% } /* fine premi ufficiali nascosti */ %>
+
+<%# ══ PREMI MISTERIOSI (mostrati al posto di quelli ufficiali) ══════════ %>
+<%
+  const mysteryRanks = [
+    { cls: 'pz-gold',   ghost: 'I',   label: 'Primo Posto' },
+    { cls: 'pz-silver', ghost: 'II',  label: 'Secondo Posto' },
+    { cls: 'pz-bronze', ghost: 'III', label: 'Terzo Posto' },
+  ];
+  mysteryRanks.forEach((rk) => { %>
+  <div class="pz-section <%= rk.cls %> lp-full">
+    <div class="pz-rank-ghost">?</div>
+    <div class="pz-section-inner">
+      <div class="pz-section-info">
+        <div class="pz-rank-label">
+          <span class="pz-medal"><%- icon('medal') %></span>
+          <span><%= rk.label %></span>
+        </div>
+        <div class="pz-divider"></div>
+        <h2 class="pz-prize-name">Premio<br>Misterioso</h2>
+        <p class="pz-prize-tagline">Ancora top secret &nbsp;·&nbsp; svelato presto</p>
+        <p class="pz-prize-desc">Il premio per il <%= rk.label.toLowerCase() %> è ancora un segreto. Sarà rivelato prima della festa: continua a giocare e scala la classifica, chi arriva in cima non resterà deluso.</p>
+        <ul class="pz-details">
+          <li><%- icon('lock') %> Premio ancora segreto</li>
+          <li><%- icon('sparkle') %> Verrà svelato a breve</li>
+          <li><%- icon('trophy') %> Riservato ai primi in classifica</li>
+        </ul>
+      </div>
+      <div class="pz-photos-area">
+        <div class="pz-photo-placeholder pz-photo-mystery">
+          <span class="pz-ph-icon"><%- icon('gift') %></span>
+          <span>?</span>
+          <span class="pz-ph-note">Sarà svelato presto</span>
+        </div>
+      </div>
+    </div>
+  </div>
+<% }) %>
 
 <%# ── COME SI VINCE ────────────────────────────────────────────── %>
 <div class="pz-how lp-full">

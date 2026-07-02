@@ -37,6 +37,30 @@
   let px, target, dist, bonus, score, inv, mult, items, popups, fx, spawnT, coinT, haloT, relicT, fwT, animT, last, shake, reported;
   let keyL = false, keyR = false, pointerX = null, overTimer = null, gameToken = null;
 
+  // ── Colonna sonora: mentre giochi interrompe la radio e suona «Corri San Rocco» ──
+  let gameSong = null, radioWasOn = false;
+  const ensureSong = () => {
+    if (gameSong) return gameSong;
+    try {
+      gameSong = new Audio('/audio/corri-san-rocco.mp3');
+      gameSong.loop = true; gameSong.preload = 'auto'; gameSong.volume = 0.65;
+    } catch (e) { gameSong = null; }
+    return gameSong;
+  };
+  const songPlay = () => {
+    const R = window.FSRRadio;                               // metti in pausa la radio globale
+    if (R && R.isPlaying && R.isPlaying()) { radioWasOn = true; R.pause(); }
+    const s = ensureSong();
+    if (s) { try { s.currentTime = 0; } catch (e) {} s.play().catch(() => {}); }
+  };
+  const songResume = () => { const s = ensureSong(); if (s) s.play().catch(() => {}); };
+  const songPause = () => { if (gameSong) gameSong.pause(); };
+  const songStop = () => {
+    if (gameSong) { gameSong.pause(); try { gameSong.currentTime = 0; } catch (e) {} }
+    if (radioWasOn && window.FSRRadio && window.FSRRadio.resume) window.FSRRadio.resume();
+    radioWasOn = false;                                      // riprendi la radio se era accesa
+  };
+
   function reset() {
     px = (W - PW) / 2; target = px;
     dist = 0; bonus = 0; score = 0; inv = 0; mult = 0;
@@ -62,7 +86,7 @@
   function start() {
     if (state === 'run') return;
     if (overTimer) { clearTimeout(overTimer); overTimer = null; }
-    reset(); requestGameTicket(); state = 'run'; hideOverlay(); arcadeFlash('VIA!'); setPauseBtn();
+    reset(); requestGameTicket(); state = 'run'; hideOverlay(); arcadeFlash('VIA!'); setPauseBtn(); songPlay();
   }
   function tryStart() { if (state === 'idle' || state === 'over') start(); }
   document.addEventListener('keydown', (e) => {
@@ -135,22 +159,22 @@
     if (state !== 'run') return;
     state = 'paused'; keyL = keyR = false; pointerX = null;
     if (pauseOverlay) pauseOverlay.classList.remove('gm-hidden');
-    setPauseBtn();
+    setPauseBtn(); songPause();
   }
   function resume() {
     if (state !== 'paused') return;
     state = 'run'; last = 0;                              // niente salto di dt alla ripresa
     if (pauseOverlay) pauseOverlay.classList.add('gm-hidden');
-    setPauseBtn();
+    setPauseBtn(); songResume();
   }
   function restart() {
     if (pauseOverlay) pauseOverlay.classList.add('gm-hidden');
-    reset(); requestGameTicket(); state = 'run'; last = 0; hideOverlay(); setPauseBtn(); arcadeFlash('VIA!');
+    reset(); requestGameTicket(); state = 'run'; last = 0; hideOverlay(); setPauseBtn(); arcadeFlash('VIA!'); songPlay();
   }
   function quitToMenu() {
     if (pauseOverlay) pauseOverlay.classList.add('gm-hidden');
     if (overTimer) { clearTimeout(overTimer); overTimer = null; }
-    reset(); state = 'idle'; setPauseBtn(); showOverlay('idle');
+    reset(); state = 'idle'; setPauseBtn(); showOverlay('idle'); songStop();
   }
   if (pauseBtn) pauseBtn.addEventListener('click', (e) => { e.preventDefault(); pause(); });
   if (pauseOverlay) {
@@ -295,7 +319,6 @@
     const g = ctx.createLinearGradient(0, 0, 0, GROUND);
     g.addColorStop(0, '#0a0a1e'); g.addColorStop(0.6, '#10101f'); g.addColorStop(1, '#181226');
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, GROUND);
-    r(250, 16, 12, 12, '#f3ecd0'); r(248, 18, 12, 8, '#0a0a1e');
     stars.forEach((s) => { if ((Math.sin(t / 30 + s.x) + 1) / 2 > 0.35 - s.s * 0.2) r(s.x, s.y, 1, 1, 'rgba(255,250,220,.8)'); });
     const bx = 24;
     r(bx, GROUND - 50, 12, 50, '#0d0b1a'); r(bx + 2, GROUND - 58, 8, 10, '#0d0b1a'); r(bx + 4, GROUND - 64, 4, 8, '#0d0b1a');
@@ -545,7 +568,7 @@
   function overlap(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
 
   function gameOver() {
-    state = 'over'; shake = 7; inv = 0; setPauseBtn();
+    state = 'over'; shake = 7; inv = 0; setPauseBtn(); songStop();
     burst(px + PW / 2, GROUND - 14, '#e84e1b');
     if (score > best) best = score;
     elBest.textContent = 'record ' + best;

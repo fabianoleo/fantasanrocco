@@ -65,6 +65,55 @@
 </section>
 
 <section class="card">
+  <h2 class="staff-title"><%- icon('gift') %> Codici premio (link / QR)</h2>
+  <p class="muted small">
+    Genera un link premio: il <strong>primo utente loggato</strong> che lo apre riceve i punti,
+    chi arriva dopo non guadagna nulla. Perfetto da stampare come QR ai vari punti della festa.
+  </p>
+  <form action="/admin/codici" method="post" class="mission-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="row">
+      <label>Punti in palio
+        <input type="number" name="points" value="50" min="1" required>
+      </label>
+      <label style="flex:1 1 220px">Etichetta (facoltativa, solo per te)
+        <input type="text" name="label" placeholder="es. QR stand gadget">
+      </label>
+    </div>
+    <button class="btn" type="submit"><%- icon('plus') %> Genera codice premio</button>
+  </form>
+
+  <% const codeList = (typeof codes !== 'undefined' && codes) ? codes : []; %>
+  <% const base = (typeof baseUrl !== 'undefined' && baseUrl) ? baseUrl : ''; %>
+  <% if (codeList.length) { %>
+    <ul class="reward-list">
+      <% codeList.forEach((c) => { %>
+        <li class="reward-row">
+          <div class="reward-head">
+            <span class="reward-label"><%= c.label || 'Codice premio' %></span>
+            <span class="points-badge"><%= c.points %> pt</span>
+            <% if (c.claimed_by) { %>
+              <span class="tag tag-off">usato da <%= c.claimer || '—' %></span>
+            <% } else { %>
+              <span class="tag tag-on">libero</span>
+            <% } %>
+          </div>
+          <input class="reward-link" type="text" readonly onclick="this.select()"
+                 value="<%= base %>/r/<%= c.code %>">
+          <form action="/admin/codici/<%= c.code %>/elimina" method="post" class="inline"
+                onsubmit="return confirm('Eliminare questo codice premio?');">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn-mini" type="submit"><%- icon('trash') %> Elimina</button>
+          </form>
+        </li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <p class="muted small">Nessun codice premio ancora. Creane uno qui sopra.</p>
+  <% } %>
+</section>
+
+<section class="card">
   <h2 class="staff-title"><%- icon('people') %> Utenti e ruoli (<%= users.length %>)</h2>
   <p class="muted small">Promuovi i tuoi collaboratori a <strong>moderatore</strong> (validano le prove)
     o <strong>admin</strong> (gestiscono tutto). Solo gli utenti normali compaiono in classifica.</p>

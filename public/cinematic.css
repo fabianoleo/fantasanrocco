@@ -427,22 +427,35 @@
 .cine .fb-title { color: #fff; font-size: .8rem; font-weight: 700; letter-spacing: -.01em; }
 .cine .fb-sub   { color: rgba(220,228,255,.55); font-size: .68rem; font-weight: 500; margin-top: 1px; }
 
-/* Indizio di scroll */
+/* Indizio di scroll — subito SOTTO il titolo hero (dentro .hero-text-wrapper) */
 .cine .cine-scroll-hint {
-  position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
-  z-index: 40; display: flex; flex-direction: column; align-items: center; gap: .5rem;
-  color: var(--text-3); pointer-events: none;
+  margin: 2.4rem auto 0; position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: .55rem;
+  color: rgba(255,255,255,.9); pointer-events: none;
+  text-shadow: 0 1px 10px rgba(0,0,0,.55);
+  animation: cine-hint-float 2s ease-in-out infinite;
 }
-.cine .cine-scroll-hint span { font-size: .62rem; letter-spacing: .25em; text-transform: uppercase; }
+.cine .cine-scroll-hint span { font-size: .64rem; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; }
+/* PC: rotellina del mouse col puntino che scende */
 .cine .cine-scroll-hint .ch-mouse {
-  width: 22px; height: 34px; border: 1px solid rgba(243,198,75,.4); border-radius: 12px;
-  display: flex; justify-content: center; padding-top: 5px;
+  width: 24px; height: 38px; border: 2px solid rgba(243,198,75,.55); border-radius: 13px;
+  display: flex; justify-content: center; padding-top: 6px;
 }
 .cine .cine-scroll-hint .ch-dot {
-  width: 3px; height: 7px; border-radius: 2px; background: var(--cine-gold);
+  width: 3px; height: 8px; border-radius: 2px; background: var(--cine-gold);
   animation: cine-wheel 1.6s ease-in-out infinite;
 }
+/* Mobile: doppio chevron dorato che pulsa verso l'alto (swipe) */
+.cine .cine-scroll-hint .ch-touch { display: none; flex-direction: column; align-items: center; color: var(--cine-gold); }
+.cine .cine-scroll-hint .ch-touch svg { display: block; margin-top: -12px; animation: cine-chevron 1.5s ease-in-out infinite; }
+.cine .cine-scroll-hint .ch-touch svg:nth-child(2) { animation-delay: .2s; }
 @keyframes cine-wheel { 0% { opacity:0; transform: translateY(-3px);} 40% { opacity:1;} 100% { opacity:0; transform: translateY(7px);} }
+@keyframes cine-hint-float { 0%,100% { transform: translateY(0);} 50% { transform: translateY(6px);} }
+@keyframes cine-chevron { 0%,100% { opacity:.3;} 50% { opacity:1;} }
+@media (max-width: 767px) {
+  .cine .cine-scroll-hint .ch-mouse { display: none; }
+  .cine .cine-scroll-hint .ch-touch { display: flex; }
+}
 
 /* -------------------------------------------------------------------
    FALLBACK: niente JS / motion ridotto → mostra tutto, niente pin
@@ -453,9 +466,10 @@
 .cine.cine--static .cta-wrapper { display: none; }
 .cine.cine--static .card-layer { position: relative; inset: auto; }
 .cine.cine--static .main-card { width: 92vw; max-width: 1100px; height: auto; min-height: 80vh; padding: 2rem 0; }
-.cine.cine--static .cine-scroll-hint { display: none; }
+.cine.cine--static .cine-scroll-hint { position: relative; bottom: auto; margin: 1.5rem auto 0; }
 .cine.cine--static .mockup-scroll-wrapper { height: 480px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .cine .island-dot, .cine .cine-scroll-hint .ch-dot { animation: none; }
+  .cine .island-dot, .cine .cine-scroll-hint,
+  .cine .cine-scroll-hint .ch-dot, .cine .cine-scroll-hint .ch-touch svg { animation: none; }
 }
