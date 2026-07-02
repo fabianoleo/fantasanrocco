@@ -38,12 +38,13 @@
   let keyL = false, keyR = false, pointerX = null, overTimer = null, gameToken = null;
 
   // ── Colonna sonora: mentre giochi interrompe la radio e suona «Corri San Rocco» ──
-  let gameSong = null, radioWasOn = false;
+  let gameSong = null, radioWasOn = false, songMuted = false;
   const ensureSong = () => {
     if (gameSong) return gameSong;
     try {
       gameSong = new Audio('/audio/corri-san-rocco.mp3');
       gameSong.loop = true; gameSong.preload = 'auto'; gameSong.volume = 0.65;
+      gameSong.muted = songMuted;
     } catch (e) { gameSong = null; }
     return gameSong;
   };
@@ -155,6 +156,20 @@
   const pauseOverlay = document.getElementById('gmPause');
   const kicker = document.getElementById('gmKicker');
   function setPauseBtn() { if (pauseBtn) pauseBtn.classList.toggle('is-on', state === 'run'); }
+
+  // ── Mute della canzone del gioco (solo la traccia del gioco, non la radio) ──
+  const muteBtn = document.getElementById('gmMuteBtn');
+  function applyMute() {
+    if (gameSong) gameSong.muted = songMuted;
+    if (muteBtn) {
+      muteBtn.classList.toggle('is-muted', songMuted);
+      muteBtn.setAttribute('aria-pressed', songMuted ? 'true' : 'false');
+      muteBtn.title = songMuted ? 'Riattiva audio' : 'Muta la canzone';
+    }
+  }
+  function toggleMute() { songMuted = !songMuted; applyMute(); }
+  if (muteBtn) muteBtn.addEventListener('click', (e) => { e.preventDefault(); toggleMute(); });
+  applyMute();
   function pause() {
     if (state !== 'run') return;
     state = 'paused'; keyL = keyR = false; pointerX = null;

@@ -140,8 +140,11 @@
 <section class="card reset-card">
   <h2 class="staff-title"><%- icon('bolt') %> Reset Gioco <span class="tag tag-off">solo test</span></h2>
   <p class="muted small">
-    Cancella <strong>tutti gli utenti non-admin</strong> e le loro prove.
-    Gli account admin rimangono intatti. <strong>Azione irreversibile.</strong>
+    Cancella <strong>tutti gli utenti non-admin</strong> (con email liberate: si potrà
+    ri-registrare la stessa mail), le loro <strong>prove e foto</strong>, le <strong>storie</strong>
+    e azzera la <strong>classifica</strong>. Restano <strong>missioni</strong> e <strong>codici premio</strong>
+    (i link/QR tornano riscattabili). Gli account admin restano, ma con statistiche di gioco azzerate.
+    <strong>Azione irreversibile.</strong>
   </p>
   <form action="/admin/reset-gioco" method="post"
         onsubmit="return confirm('⚠️ RESET DEFINITIVO: vuoi davvero cancellare tutti i dati di gioco? Gli admin rimarranno.');">

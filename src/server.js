@@ -1651,11 +1651,33 @@ app.post('/admin/reset-gioco', auth.requireAdmin, (req, res) => {
     flash(req, 'error', 'Password admin errata. Reset annullato.');
     return res.redirect('/admin');
   }
+  // Raccoglie i file su disco PRIMA di cancellare le righe (per rimuoverli dopo)
+  const photoFiles  = db.prepare('SELECT photo_path FROM submissions WHERE photo_path IS NOT NULL').all().map((r) => r.photo_path);
+  const storyFiles  = db.prepare('SELECT media_path FROM stories').all().map((r) => r.media_path);
+  const avatarFiles = db.prepare("SELECT avatar_path FROM users WHERE role != 'admin' AND avatar_path IS NOT NULL").all().map((r) => r.avatar_path);
+
   db.transaction(() => {
-    db.prepare('DELETE FROM submissions').run();
-    db.prepare("DELETE FROM users WHERE role != 'admin'").run();
+    db.prepare('DELETE FROM submissions').run();                   // tutte le prove
+    db.prepare('DELETE FROM stories').run();                       // tutte le storie (story_views a cascata)
+    // Sgancia gli inviti dagli utenti (il vincolo è NO ACTION → altrimenti il DELETE
+    // fallirebbe) e li rende di nuovo utilizzabili per la nuova registrazione.
+    db.prepare('UPDATE invites SET used = 0, used_by_user_id = NULL, used_at = NULL').run();
+    db.prepare("UPDATE invites SET created_by = NULL WHERE created_by IN (SELECT id FROM users WHERE role != 'admin')").run();
+    db.prepare("DELETE FROM users WHERE role != 'admin'").run();   // tutti gli utenti tranne gli admin
+    // I codici premio (link/QR) restano, ma tornano TUTTI riscattabili
+    db.prepare('UPDATE reward_codes SET claimed_by = NULL, claimed_at = NULL').run();
+    // Classifica pulita: azzera anche le statistiche di gioco degli admin rimasti
+    db.prepare(`UPDATE users SET points_adjust = 0, game_best = 0, game_plays = 0,
+                streak_day = 0, streak_last_day = NULL, last_wheel_day = NULL`).run();
   })();
-  flash(req, 'success', 'Gioco resettato: utenti e prove eliminati. Gli admin sono rimasti.');
+
+  // Rimuove i file orfani dal disco (best-effort, non blocca la risposta)
+  const rmFiles = (dir, names) => names.forEach((n) => { if (n) fs.unlink(path.join(dir, path.basename(n)), () => {}); });
+  rmFiles(UPLOADS_DIR, photoFiles);
+  rmFiles(STORIES_DIR, storyFiles);
+  rmFiles(AVATARS_DIR, avatarFiles);
+
+  flash(req, 'success', 'Reset completato: utenti, prove, storie e classifica azzerati. Missioni e codici premio mantenuti.');
   res.redirect('/admin');
 });
 

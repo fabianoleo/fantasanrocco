@@ -332,10 +332,10 @@
 .gm-8btn-primary { background: linear-gradient(180deg, #fff2b0 0%, var(--gold-2) 45%, var(--gold) 100%); }
 .gm-8btn-primary:hover { filter: drop-shadow(3px 3px 0 rgba(0,0,0,.55)) brightness(1.05); }
 
-/* Bottone pausa (in alto a destra, solo durante il gioco) */
-.gm-hud { right: 50px; }
+/* Pulsanti in alto a destra (mute + pausa): lascia spazio al "record" della HUD */
+.gm-hud { right: 88px; }
 .gm-pause-toggle {
-  position: absolute; top: 9px; right: 12px; z-index: 4;
+  position: absolute; top: 9px; right: 50px; z-index: 4;
   width: 30px; height: 30px; padding: 0;
   display: none; align-items: center; justify-content: center;
   background: rgba(11,10,22,.9); color: var(--gold-2);
@@ -347,6 +347,24 @@
 .gm-pause-toggle.is-on { display: inline-flex; }
 .gm-pause-toggle:hover { background: rgba(212,160,26,.28); }
 .gm-pause-toggle svg { width: 14px; height: 14px; }
+
+/* Bottone mute della canzone del gioco — accanto alla pausa, sempre visibile */
+.gm-mute-toggle {
+  position: absolute; top: 9px; right: 12px; z-index: 4;
+  width: 30px; height: 30px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(11,10,22,.9); color: var(--gold-2);
+  border-style: solid; border-width: 4px;
+  border-image-source: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='5' height='5'%3E%3Cpath d='M2 1h1v1H2z M1 2h1v1H1z M3 2h1v1H3z M2 3h1v1H2z' fill='%23f5c842'/%3E%3C/svg%3E");
+  border-image-slice: 2; border-image-repeat: stretch;
+  image-rendering: pixelated; cursor: pointer;
+}
+.gm-mute-toggle:hover { background: rgba(212,160,26,.28); }
+.gm-mute-toggle svg { width: 15px; height: 15px; }
+.gm-mute-toggle .gm-ic-off { display: none; }
+.gm-mute-toggle.is-muted { color: #c0554a; }
+.gm-mute-toggle.is-muted .gm-ic-on { display: none; }
+.gm-mute-toggle.is-muted .gm-ic-off { display: inline; }
 
 @media (prefers-reduced-motion: reduce) {
   .gm-8kicker { animation: none; }

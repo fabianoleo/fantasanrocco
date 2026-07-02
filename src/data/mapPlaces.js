@@ -43,16 +43,16 @@ const PLACES = [
 // Eventi: rispecchiano la pagina /programmazione (stessi titoli, orari, luogo).
 // "location" = testo del luogo mostrato sul sito; serve a collegare l'evento al luogo.
 const EVENTS = [
-  { title: 'Mazzariello — DJ Set',                 day: 'Ven 14', time: '00:00', location: 'Siano' },
+  { title: 'Mazzariello — DJ Set',                 day: 'Ven 14', time: '00:00', location: 'Piazza San Rocco, Siano' },
   { title: 'Groove Motion Live Band',              day: 'Ven 14', time: '21:30', location: 'Siano' },
   { title: 'Napoliitudine con Sal Esposito',       day: 'Sab 15', time: '21:30', location: 'Piazza San Rocco, Siano', image: '/images/artisti/napoliitudine.jpg' },
   { title: 'Alfo V. & Mike Carotenuto DJ',         day: 'Dom 16', time: '00:00', location: 'Siano' },
   { title: 'La Processione di San Rocco',          day: 'Dom 16', time: '17:00', location: 'Vie di Siano' },
   { title: 'Disco Inferno',                        day: 'Lun 17', time: '00:00', location: 'Siano' },
   { title: 'LDA & Aka 7even',                      day: 'Lun 17', time: '21:30', location: 'Piazza Borsellino, Siano', image: '/images/artisti/lda-aka7even.jpg' },
-  { title: 'Palio dei Fuochi',                     day: 'Lun 17', time: '23:30', location: 'Siano' },
   { title: 'Luna Park',                            day: 'Mar 18', time: '10:30', location: 'Siano' },
   { title: 'Vagaband',                             day: 'Mar 18', time: '18:30', location: 'Strade di Siano' },
+  { title: 'Palio dei Fuochi',                     day: 'Mar 18', time: '23:30', location: 'Siano' },
 ];
 
 // Normalizza il testo "location" di un evento → id del luogo sulla mappa.
