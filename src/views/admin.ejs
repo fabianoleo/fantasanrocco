@@ -56,7 +56,7 @@
         </div>
       </form>
       <form action="/admin/missioni/<%= m.id %>/elimina" method="post" class="danger-form"
-            onsubmit="return confirm('Eliminare definitivamente questa missione e le sue prove?');">
+            data-confirm="Eliminare definitivamente questa missione e le sue prove?">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <button class="btn btn-no" type="submit"><%- icon('trash') %> Elimina</button>
       </form>
@@ -67,8 +67,9 @@
 <section class="card">
   <h2 class="staff-title"><%- icon('gift') %> Codici premio (link / QR)</h2>
   <p class="muted small">
-    Genera un link premio: il <strong>primo utente loggato</strong> che lo apre riceve i punti,
-    chi arriva dopo non guadagna nulla. Perfetto da stampare come QR ai vari punti della festa.
+    Genera uno o più QR premio: il <strong>primo utente loggato</strong> che scansiona un QR riceve i punti,
+    chi arriva dopo non guadagna nulla. Ogni QR è <strong>monouso</strong> — creane quanti te ne servono, tutti
+    dello stesso valore, e stampali ai vari punti della festa.
   </p>
   <form action="/admin/codici" method="post" class="mission-form">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -76,40 +77,46 @@
       <label>Punti in palio
         <input type="number" name="points" value="50" min="1" required>
       </label>
-      <label style="flex:1 1 220px">Etichetta (facoltativa, solo per te)
+      <label style="width:130px">Quanti QR
+        <input type="number" name="quantity" value="1" min="1" max="100" title="Da 1 a 100 QR in un colpo">
+      </label>
+      <label style="flex:1 1 200px">Etichetta (facoltativa, solo per te)
         <input type="text" name="label" placeholder="es. QR stand gadget">
       </label>
     </div>
-    <button class="btn" type="submit"><%- icon('plus') %> Genera codice premio</button>
+    <button class="btn" type="submit"><%- icon('plus') %> Genera QR premio</button>
   </form>
 
   <% const codeList = (typeof codes !== 'undefined' && codes) ? codes : []; %>
-  <% const base = (typeof baseUrl !== 'undefined' && baseUrl) ? baseUrl : ''; %>
   <% if (codeList.length) { %>
-    <ul class="reward-list">
+    <p class="muted small" style="margin-top:.4rem"><%= codeList.length %> QR totali · usa <kbd>Ctrl/Cmd + P</kbd> per stamparli.</p>
+    <div class="reward-grid">
       <% codeList.forEach((c) => { %>
-        <li class="reward-row">
-          <div class="reward-head">
-            <span class="reward-label"><%= c.label || 'Codice premio' %></span>
+        <div class="reward-qr <%= c.claimed_by ? 'is-used' : '' %>" data-code="<%= c.code %>">
+          <div class="reward-qr-img"><%- c.qrSvg %></div>
+          <div class="reward-qr-meta">
             <span class="points-badge"><%= c.points %> pt</span>
             <% if (c.claimed_by) { %>
-              <span class="tag tag-off">usato da <%= c.claimer || '—' %></span>
+              <span class="tag tag-off">usato<% if (c.claimer) { %> · <%= c.claimer %><% } %></span>
             <% } else { %>
               <span class="tag tag-on">libero</span>
             <% } %>
           </div>
-          <input class="reward-link" type="text" readonly onclick="this.select()"
-                 value="<%= base %>/r/<%= c.code %>">
-          <form action="/admin/codici/<%= c.code %>/elimina" method="post" class="inline"
-                onsubmit="return confirm('Eliminare questo codice premio?');">
+          <div class="reward-qr-code"><% if (c.label) { %><strong><%= c.label %></strong> · <% } %>/r/<%= c.code %></div>
+          <div class="reward-qr-actions">
+            <button type="button" class="btn-mini qr-dl"><%- icon('save') %> Scarica</button>
+            <button type="button" class="btn-mini qr-copy"><%- icon('camera') %> Copia</button>
+          </div>
+          <form action="/admin/codici/<%= c.code %>/elimina" method="post" class="reward-qr-del"
+                data-confirm="Eliminare questo QR premio?">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button class="btn-mini" type="submit"><%- icon('trash') %> Elimina</button>
+            <button class="btn-mini" type="submit" aria-label="Elimina QR"><%- icon('trash') %></button>
           </form>
-        </li>
+        </div>
       <% }) %>
-    </ul>
+    </div>
   <% } else { %>
-    <p class="muted small">Nessun codice premio ancora. Creane uno qui sopra.</p>
+    <p class="muted small">Nessun QR premio ancora. Creane qui sopra.</p>
   <% } %>
 </section>
 
@@ -122,6 +129,7 @@
       <li class="user-row">
         <span class="user-name"><%= u.nickname %>
           <span class="role-badge role-<%= u.role %>"><%= u.role %></span>
+          <span class="user-pts"><%= u.points %> pt</span>
         </span>
         <form action="/admin/utenti/<%= u.id %>/ruolo" method="post" class="inline">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -131,6 +139,13 @@
             <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>admin</option>
           </select>
           <button class="btn-mini" type="submit">Aggiorna</button>
+        </form>
+        <form action="/admin/utenti/<%= u.id %>/bonus" method="post" class="inline user-bonus"
+              data-confirm="Assegnare i punti bonus a questo utente?">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="number" name="points" value="500" step="1" aria-label="Punti bonus" title="Punti bonus (negativi per correggere)">
+          <input type="text" name="reason" placeholder="Motivo (es. Contest Instagram)" aria-label="Motivo" maxlength="120">
+          <button class="btn-mini" type="submit">+ Bonus</button>
         </form>
       </li>
     <% }) %>
@@ -147,7 +162,7 @@
     <strong>Azione irreversibile.</strong>
   </p>
   <form action="/admin/reset-gioco" method="post"
-        onsubmit="return confirm('⚠️ RESET DEFINITIVO: vuoi davvero cancellare tutti i dati di gioco? Gli admin rimarranno.');">
+        data-confirm="⚠️ RESET DEFINITIVO: vuoi davvero cancellare tutti i dati di gioco? Gli admin rimarranno.">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <label style="margin-bottom:.5rem">
       Scrivi <strong>RESET</strong> per confermare
@@ -164,3 +179,5 @@
     </div>
   </form>
 </section>
+
+<script src="/admin.js?v=2" defer></script>

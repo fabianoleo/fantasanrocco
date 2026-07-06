@@ -6,6 +6,7 @@ require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
+const QRCode = require('qrcode');
 const express = require('express');
 const session = require('express-session');
 const SqliteStore = require('better-sqlite3-session-store')(session);
@@ -1569,24 +1570,37 @@ app.get('/r/:code', (req, res) => {
   return res.render('claim', { title: 'Premio', outcome: 'used', rc });
 });
 
-app.get('/admin', auth.requireAdmin, (req, res) => {
+app.get('/admin', auth.requireAdmin, async (req, res) => {
   const missions = db.prepare('SELECT * FROM missions ORDER BY id DESC').all();
-  const users = db.prepare('SELECT id, nickname, email, role, created_at FROM users ORDER BY role, nickname').all();
-  const codes = db.prepare(`SELECT c.*, u.nickname AS claimer
+  const users = db.prepare('SELECT id, nickname, email, role, created_at FROM users ORDER BY role, nickname').all()
+    .map((u) => ({ ...u, points: userPoints(u.id) }));
+  const codesRaw = db.prepare(`SELECT c.*, u.nickname AS claimer
     FROM reward_codes c LEFT JOIN users u ON u.id = c.claimed_by
     ORDER BY c.created_at DESC`).all();
   const host = req.get('host') || '';
   const baseUrl = (host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https') + '://' + host;
+  // Genera il QR (SVG) di ogni codice lato server: pronto da stampare, niente link da copiare
+  const codes = await Promise.all(codesRaw.map(async (c) => {
+    const url = baseUrl + '/r/' + c.code;
+    let qrSvg = '';
+    try { qrSvg = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' }); } catch (e) {}
+    return { ...c, url, qrSvg };
+  }));
   res.render('admin', { title: 'Admin', missions, users, codes, baseUrl });
 });
 
 app.post('/admin/codici', auth.requireAdmin, (req, res) => {
   const points = parseInt(req.body.points, 10);
   if (!Number.isFinite(points) || points <= 0) { flash(req, 'error', 'Inserisci un numero di punti valido.'); return res.redirect('/admin'); }
+  let qty = parseInt(req.body.quantity, 10);
+  if (!Number.isFinite(qty) || qty < 1) qty = 1;
+  qty = Math.min(qty, 100);                              // limite di sicurezza
   const label = (req.body.label || '').trim().slice(0, 120) || null;
-  const code = crypto.randomBytes(5).toString('hex');   // 10 caratteri, non indovinabile
-  db.prepare('INSERT INTO reward_codes (code, points, label) VALUES (?, ?, ?)').run(code, points, label);
-  flash(req, 'success', `Codice premio creato: /r/${code}`);
+  const ins = db.prepare('INSERT INTO reward_codes (code, points, label) VALUES (?, ?, ?)');
+  db.transaction(() => {
+    for (let i = 0; i < qty; i++) ins.run(crypto.randomBytes(5).toString('hex'), points, label);
+  })();
+  flash(req, 'success', `Creat${qty === 1 ? 'o' : 'i'} ${qty} codic${qty === 1 ? 'e' : 'i'} premio da ${points} punti. Ogni QR vale una sola persona.`);
   res.redirect('/admin');
 });
 
@@ -1692,6 +1706,20 @@ app.post('/admin/utenti/:id/ruolo', auth.requireAdmin, (req, res) => {
   }
   db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, target.id);
   flash(req, 'success', `Ruolo di ${target.nickname} aggiornato a ${role}.`);
+  res.redirect('/admin');
+});
+
+// Assegna (o corregge) punti bonus a un utente — es. vincitore del contest Instagram.
+// I punti entrano in points_adjust: stessa valuta di classifica, gioco, ruota e slot.
+app.post('/admin/utenti/:id/bonus', auth.requireAdmin, (req, res) => {
+  const target = auth.getUserById(req.params.id);
+  if (!target) { flash(req, 'error', 'Utente inesistente.'); return res.redirect('/admin'); }
+  const pts = parseInt(req.body.points, 10);
+  if (!Number.isFinite(pts) || pts === 0) { flash(req, 'error', 'Inserisci un numero di punti valido (diverso da 0).'); return res.redirect('/admin'); }
+  const reason = (req.body.reason || '').trim().slice(0, 120);
+  db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(pts, target.id);
+  const segno = pts > 0 ? '+' : '';
+  flash(req, 'success', `${segno}${pts} punti a ${target.nickname}${reason ? ' (' + reason + ')' : ''}. Totale ora: ${userPoints(target.id)}.`);
   res.redirect('/admin');
 });
 

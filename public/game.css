@@ -348,9 +348,11 @@
 .gm-pause-toggle:hover { background: rgba(212,160,26,.28); }
 .gm-pause-toggle svg { width: 14px; height: 14px; }
 
-/* Bottone mute della canzone del gioco — accanto alla pausa, sempre visibile */
+/* Bottone mute della canzone del gioco — accanto alla pausa.
+   z-index 2 (sotto l'overlay z-index 3): visibile solo durante il gioco,
+   nascosto dietro al menu iniziale / game over / pausa. */
 .gm-mute-toggle {
-  position: absolute; top: 9px; right: 12px; z-index: 4;
+  position: absolute; top: 9px; right: 12px; z-index: 2;
   width: 30px; height: 30px; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
   background: rgba(11,10,22,.9); color: var(--gold-2);

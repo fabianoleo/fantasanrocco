@@ -913,6 +913,9 @@ html {
   -webkit-text-size-adjust: 100%;   /* iOS: niente auto-ingrandimento dei font */
   text-size-adjust: 100%;
 }
+/* Rinforzo anti scroll orizzontale: `clip` non crea un contenitore di scroll
+   (quindi non rompe la sticky del footer) come farebbe `hidden`. */
+body { overflow-x: clip; }
 
 /* Full-bleed breakout from .container */
 .lp-full {
@@ -3867,3 +3870,35 @@ textarea:focus-visible,
 .mm-mystery h3 { letter-spacing: .02em; }
 
 /* (Hint "continua a scorrere": stile spostato in cinematic.css, scoped .cine) */
+
+/* ── Admin: punti utente + form bonus punti ─────────────────────── */
+.user-pts { font-size: .72rem; color: var(--gold-2); margin-left: .45rem; font-weight: 600; }
+.user-bonus { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; }
+.user-bonus input[name="points"] { width: 76px; }
+.user-bonus input[name="reason"] { min-width: 150px; flex: 1 1 160px; }
+
+/* ── Admin: griglia QR premio (stampabile) ──────────────────────── */
+.reward-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: .8rem; margin-top: .7rem; }
+.reward-qr { position: relative; border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 12px; padding: .6rem; text-align: center; background: rgba(255,255,255,.02); }
+.reward-qr.is-used { opacity: .5; }
+.reward-qr-img { background: #fff; border-radius: 8px; padding: 6px; line-height: 0; }
+.reward-qr-img svg { width: 100%; height: auto; display: block; }
+.reward-qr-meta { display: flex; gap: .35rem; justify-content: center; align-items: center; margin: .5rem 0 .3rem; flex-wrap: wrap; }
+.reward-qr-code { font-family: ui-monospace, Menlo, monospace; font-size: .64rem; color: var(--text-2); word-break: break-all; }
+.reward-qr-code strong { color: var(--gold-2); }
+.reward-qr-del { position: absolute; top: 4px; right: 4px; }
+.reward-qr-del .btn-mini { padding: .18rem .34rem; }
+@media print {
+  body * { visibility: hidden; }
+  .reward-grid, .reward-grid * { visibility: visible; }
+  .reward-grid { position: absolute; inset: 0 auto auto 0; width: 100%; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .reward-qr { border-color: #ccc; }
+  .reward-qr-del { display: none !important; }
+  .reward-qr.is-used { display: none; }         /* stampa solo i QR ancora liberi */
+}
+
+/* Azioni QR (scarica / copia) */
+.reward-qr-actions { display: flex; gap: .35rem; justify-content: center; margin-top: .5rem; }
+.reward-qr-actions .btn-mini { display: inline-flex; align-items: center; gap: .25rem; font-size: .68rem; padding: .28rem .5rem; }
+.reward-qr-actions .btn-mini svg { width: 13px; height: 13px; }
+@media print { .reward-qr-actions { display: none !important; } }
