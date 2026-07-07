@@ -5,7 +5,7 @@
   </a>
 
   <%# Ruota della Fortuna — icona sempre accessibile nella barra %>
-  <a href="/ruota" class="nav-wheel-btn <%= path === '/ruota' ? 'is-active' : '' %>" title="Ruota della Fortuna" aria-label="Ruota della Fortuna">
+  <a href="/ruota" class="nav-wheel-btn <%= path === '/ruota' ? 'is-active' : '' %> <%= (typeof wheelReady !== 'undefined' && wheelReady) ? 'is-ready' : '' %>" title="<%= (typeof wheelReady !== 'undefined' && wheelReady) ? 'Giro gratis disponibile!' : 'Ruota della Fortuna' %>" aria-label="Ruota della Fortuna">
     <%- icon('wheel') %>
   </a>
 
@@ -27,7 +27,7 @@
 
   <%# Saldo punti dell'utente loggato %>
   <% if (currentUser) { %>
-    <a href="/profilo" class="nav-balance" title="I tuoi punti">
+    <a href="/classifica" class="nav-balance" title="I tuoi punti · vai alla classifica">
       <%- icon('trophy') %><span class="nav-balance-val"><%= userBalance %></span>
     </a>
   <% } %>

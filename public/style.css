@@ -3902,3 +3902,53 @@ textarea:focus-visible,
 .reward-qr-actions .btn-mini { display: inline-flex; align-items: center; gap: .25rem; font-size: .68rem; padding: .28rem .5rem; }
 .reward-qr-actions .btn-mini svg { width: 13px; height: 13px; }
 @media print { .reward-qr-actions { display: none !important; } }
+
+/* ── PWA: banner "Aggiungi a Home" (iOS) + pulsante notifiche ────── */
+.pwa-hint {
+  position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 200;
+  display: flex; align-items: center; gap: .6rem; padding: .7rem .9rem;
+  background: rgba(11,10,22,.97); border: 1px solid rgba(245,200,66,.35);
+  border-radius: 14px; color: #f3ecd0; font-size: .82rem; line-height: 1.35;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.pwa-hint b { color: #f5c842; }
+.pwa-hint-x { margin-left: auto; background: none; border: 0; color: #f3ecd0; font-size: 1.5rem; line-height: 1; cursor: pointer; padding: 0 .2rem; flex-shrink: 0; }
+@media (min-width: 640px) { .pwa-hint { left: auto; max-width: 400px; } }
+#pushBtn[disabled] { opacity: .6; cursor: default; }
+.push-box { margin-top: 1rem; }
+
+/* ── 2FA ─────────────────────────────────────────────────────────── */
+.twofa-qr { background:#fff; padding:10px; border-radius:12px; width:220px; max-width:70%; margin:.9rem 0; }
+.twofa-qr svg { width:100%; height:auto; display:block; }
+.twofa-steps { padding-left:1.1rem; margin:.6rem 0; }
+.twofa-codes { list-style:none; padding:0; display:grid; grid-template-columns:repeat(2,1fr); gap:.45rem; margin:1rem 0; }
+.twofa-codes code { font-size:1rem; letter-spacing:.12em; background:rgba(255,255,255,.05); padding:.35rem .5rem; border-radius:8px; display:block; text-align:center; }
+
+/* ── Ruota: aura animata sull'icona in barra quando c'è il giro gratis ── */
+.nav-wheel-btn.is-ready { position: relative; box-shadow: 0 0 10px rgba(245,200,66,.5), inset 0 1px 0 rgba(255,255,255,.12); }
+.nav-wheel-btn.is-ready::before,
+.nav-wheel-btn.is-ready::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  border: 2px solid var(--gold-2, #f5c842); pointer-events: none;
+  animation: navWheelAura 1.8s ease-out infinite;
+}
+.nav-wheel-btn.is-ready::after { animation-delay: .9s; }
+@keyframes navWheelAura { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.7); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .nav-wheel-btn.is-ready::before, .nav-wheel-btn.is-ready::after { animation: none; opacity: 0; }
+}
+
+/* ── Classifica: foto profilo/iniziali nel podio (prime 3) ───────── */
+.lb-podium-avatar-wrap { position: relative; display: inline-flex; margin-bottom: .55rem; }
+.avatar.lb-podium-avatar { width: 60px; height: 60px; font-size: 1.4rem; border-width: 2px; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+.lb-podium-first .lb-podium-avatar { width: 78px; height: 78px; font-size: 1.9rem; }
+.lb-podium-avatar-wrap .lb-podium-medal {
+  position: absolute; right: -6px; bottom: -6px; margin: 0;
+  font-size: 1.25rem; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,.65));
+}
+.lb-podium-first .lb-podium-avatar-wrap .lb-podium-medal { font-size: 1.5rem; }
+@media (max-width: 560px) {
+  .avatar.lb-podium-avatar { width: 46px; height: 46px; font-size: 1.05rem; }
+  .lb-podium-first .lb-podium-avatar { width: 58px; height: 58px; font-size: 1.35rem; }
+  .lb-podium-avatar-wrap .lb-podium-medal { font-size: 1rem; right: -4px; bottom: -4px; }
+}

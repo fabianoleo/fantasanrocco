@@ -36,7 +36,10 @@
       <% const realIdx = top3.indexOf(u); %>
       <% const isMe    = currentUserId && u.id === currentUserId; %>
       <div class="lb-podium-card lb-podium-<%= ['gold','silver','bronze'][realIdx] %> <%= realIdx === 0 ? 'lb-podium-first' : '' %> <%= isMe ? 'lb-me' : '' %>">
-        <span class="lb-podium-medal"><%- icon('medal') %></span>
+        <span class="lb-podium-avatar-wrap">
+          <%- include('partials/avatar', { user: u, cls: 'lb-podium-avatar' }) %>
+          <span class="lb-podium-medal"><%- icon('medal') %></span>
+        </span>
         <span class="lb-podium-name"><%= u.nickname %><% if (isMe) { %> <span class="lb-you">tu</span><% } %></span>
         <span class="lb-podium-pts"><%= u.points %></span>
         <span class="lb-podium-pts-label">punti</span>

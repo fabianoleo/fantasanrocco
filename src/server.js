@@ -7,6 +7,8 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const QRCode = require('qrcode');
+const webpush = require('web-push');
+const { authenticator } = require('otplib');
 const express = require('express');
 const session = require('express-session');
 const SqliteStore = require('better-sqlite3-session-store')(session);
@@ -86,6 +88,7 @@ app.use(helmet({
   hsts: { maxAge: 63072000, includeSubDomains: true, preload: true },
 }));
 app.use(express.urlencoded({ extended: false, limit: '16kb' }));
+app.use(express.json({ limit: '16kb' }));   // API JSON (es. iscrizione notifiche push)
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // --- Sessioni (persistite su SQLite, sopravvivono ai riavvii) ---------------
@@ -116,6 +119,40 @@ function publicBaseUrl(req) {
   }
   return APP_URL;
 }
+
+// ── Web Push (VAPID) ────────────────────────────────────────────────
+const PUSH_ENABLED = !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
+if (PUSH_ENABLED) {
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT || 'mailto:admin@fantasanrocco.it',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY,
+  );
+} else {
+  console.warn('[PUSH] VAPID non configurate (.env) → notifiche disattivate.');
+}
+function _subObj(row) { return { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } }; }
+function _pushSend(sub, payload) {
+  return webpush.sendNotification(sub, JSON.stringify(payload)).catch((err) => {
+    // 404/410 = iscrizione scaduta/revocata → rimuovila
+    if (err && (err.statusCode === 404 || err.statusCode === 410)) {
+      db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').run(sub.endpoint);
+    }
+  });
+}
+async function pushBroadcast(payload) {
+  if (!PUSH_ENABLED) return 0;
+  const rows = db.prepare('SELECT endpoint, p256dh, auth FROM push_subscriptions').all();
+  await Promise.all(rows.map((r) => _pushSend(_subObj(r), payload)));
+  return rows.length;
+}
+async function pushToUser(userId, payload) {
+  if (!PUSH_ENABLED || !userId) return 0;
+  const rows = db.prepare('SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ?').all(userId);
+  await Promise.all(rows.map((r) => _pushSend(_subObj(r), payload)));
+  return rows.length;
+}
+
 app.use(session({
   store: new SqliteStore({ client: db, expired: { clear: true, intervalMs: 900000 } }),
   name: 'fsr.s2',
@@ -151,6 +188,8 @@ app.use(auth.loadCurrentUser);
 // userPoints è una function declaration (hoisted) → richiamabile qui a runtime.
 app.use((req, res, next) => {
   res.locals.userBalance = req.currentUser ? userPoints(req.currentUser.id) : null;
+  // Giro gratis della Ruota disponibile oggi? → aura animata sull'icona in barra.
+  res.locals.wheelReady = req.currentUser ? (req.currentUser.last_wheel_day !== todayStr()) : false;
   next();
 });
 
@@ -173,6 +212,7 @@ app.use((req, res, next) => {
     req.session.csrfToken = crypto.randomBytes(32).toString('hex');
   }
   res.locals.csrfToken = req.session.csrfToken;
+  res.locals.vapidPublicKey = process.env.VAPID_PUBLIC_KEY || '';
   next();
 });
 
@@ -489,7 +529,7 @@ app.get('/galleria', (req, res) => {
 // Classifica generale (solo giocatori, esclude staff)
 function leaderboardRows() {
   return db.prepare(`
-    SELECT u.id, u.nickname,
+    SELECT u.id, u.nickname, u.avatar_path,
            COALESCE(SUM(CASE WHEN s.status='approved' THEN m.points ELSE 0 END), 0) + u.points_adjust AS points,
            COUNT(CASE WHEN s.status='approved' THEN 1 END) AS done
     FROM users u
@@ -706,6 +746,16 @@ app.post('/login', loginLimiter, (req, res) => {
   // Destinazione post-login: solo percorsi interni (no host esterni → niente open-redirect)
   const rt = req.session.returnTo;
   const dest = (typeof rt === 'string' && /^\/[A-Za-z0-9]/.test(rt)) ? rt : '/missioni';
+
+  // 2FA attiva → non completare il login: chiedi il codice al passaggio successivo
+  if (user.totp_enabled) {
+    return req.session.regenerate((err) => {
+      if (err) { flash(req, 'error', 'Errore interno. Riprova.'); return res.redirect('/login'); }
+      req.session.pending2fa = { userId: user.id, remember, dest, ts: Date.now() };
+      res.redirect('/login/2fa');
+    });
+  }
+
   // Rigenera la sessione per prevenire session-fixation attacks
   req.session.regenerate((err) => {
     if (err) { flash(req, 'error', 'Errore interno. Riprova.'); return res.redirect('/login'); }
@@ -725,6 +775,93 @@ app.post('/login', loginLimiter, (req, res) => {
 
 app.post('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/'));
+});
+
+// ── 2FA (TOTP): verifica al login ─────────────────────────────────────────
+app.get('/login/2fa', (req, res) => {
+  if (!req.session.pending2fa) return res.redirect('/login');
+  res.render('login-2fa', { title: 'Verifica in due passaggi' });
+});
+
+app.post('/login/2fa', loginLimiter, (req, res) => {
+  const p = req.session.pending2fa;
+  if (!p) return res.redirect('/login');
+  if (Date.now() - (p.ts || 0) > 5 * 60 * 1000) {
+    delete req.session.pending2fa;
+    flash(req, 'error', 'Sessione scaduta, riaccedi.');
+    return res.redirect('/login');
+  }
+  const user = auth.getUserById(p.userId);
+  if (!user || !user.totp_enabled) { delete req.session.pending2fa; return res.redirect('/login'); }
+
+  const code = (req.body.code || '').replace(/\s+/g, '');
+  let ok = false;
+  if (/^\d{6}$/.test(code)) {
+    try { ok = authenticator.verify({ token: code, secret: user.totp_secret }); } catch (e) {}
+  }
+  // Codice di recupero monouso
+  if (!ok && code) {
+    let codes = [];
+    try { codes = JSON.parse(user.totp_backup_codes || '[]'); } catch (e) { codes = []; }
+    const idx = codes.findIndex((h) => auth.verifyPassword(code, h));
+    if (idx >= 0) {
+      ok = true;
+      codes.splice(idx, 1);
+      db.prepare('UPDATE users SET totp_backup_codes = ? WHERE id = ?').run(JSON.stringify(codes), user.id);
+    }
+  }
+  if (!ok) { flash(req, 'error', 'Codice non valido.'); return res.redirect('/login/2fa'); }
+
+  const remember = p.remember, dest = p.dest;
+  req.session.regenerate((err) => {
+    if (err) { flash(req, 'error', 'Errore interno. Riprova.'); return res.redirect('/login'); }
+    req.session.userId = user.id;
+    if (remember) req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30;
+    else req.session.cookie.expires = false;
+    req.session.flash = { type: 'success', msg: `Bentornato/a ${user.nickname}!` };
+    res.redirect((typeof dest === 'string' && /^\/[A-Za-z0-9]/.test(dest)) ? dest : '/missioni');
+  });
+});
+
+// ── 2FA: gestione (attiva/disattiva) per l'utente loggato ─────────────────
+app.get('/2fa', auth.requireLogin, async (req, res) => {
+  const u = req.currentUser;
+  if (u.totp_enabled) {
+    return res.render('twofa', { title: 'Sicurezza · 2FA', enabled: true, qrSvg: null, secret: null, backupCodes: null });
+  }
+  const secret = authenticator.generateSecret();
+  req.session.totpSetup = secret;
+  const otpauth = authenticator.keyuri(u.nickname, 'FantaSanRocco', secret);
+  let qrSvg = '';
+  try { qrSvg = await QRCode.toString(otpauth, { type: 'svg', margin: 1 }); } catch (e) {}
+  res.render('twofa', { title: 'Sicurezza · 2FA', enabled: false, qrSvg, secret, backupCodes: null });
+});
+
+app.post('/2fa/attiva', auth.requireLogin, (req, res) => {
+  const u = req.currentUser;
+  if (u.totp_enabled) return res.redirect('/2fa');
+  const secret = req.session.totpSetup;
+  const code = (req.body.code || '').replace(/\s+/g, '');
+  let ok = false;
+  try { ok = !!secret && /^\d{6}$/.test(code) && authenticator.verify({ token: code, secret }); } catch (e) {}
+  if (!ok) { flash(req, 'error', 'Codice non valido: riprova con quello attuale dell\'app.'); return res.redirect('/2fa'); }
+  const plain = Array.from({ length: 8 }, () => crypto.randomBytes(4).toString('hex'));
+  const hashes = plain.map((c) => auth.hashPassword(c));
+  db.prepare('UPDATE users SET totp_secret = ?, totp_enabled = 1, totp_backup_codes = ? WHERE id = ?')
+    .run(secret, JSON.stringify(hashes), u.id);
+  delete req.session.totpSetup;
+  res.render('twofa', { title: 'Sicurezza · 2FA', enabled: true, qrSvg: null, secret: null, backupCodes: plain });
+});
+
+app.post('/2fa/disattiva', auth.requireLogin, (req, res) => {
+  const u = req.currentUser;
+  if (!auth.verifyPassword(req.body.password || '', u.password_hash)) {
+    flash(req, 'error', 'Password errata: 2FA non disattivata.');
+    return res.redirect('/2fa');
+  }
+  db.prepare('UPDATE users SET totp_enabled = 0, totp_secret = NULL, totp_backup_codes = NULL WHERE id = ?').run(u.id);
+  flash(req, 'success', 'Verifica in due passaggi disattivata.');
+  res.redirect('/2fa');
 });
 
 // =========================================================================
@@ -916,6 +1053,26 @@ app.post('/api/streak/claim', auth.requireLogin, verifyCsrf, (req, res) => {
   db.prepare('UPDATE users SET streak_day = ?, streak_last_day = ?, points_adjust = points_adjust + ? WHERE id = ?')
     .run(day, today, bonus, req.currentUser.id);
   res.json({ ok: true, claimed: true, day, bonus, currentDay: day, bonuses: STREAK_BONUS, balance: userPoints(req.currentUser.id) });
+});
+
+// ── Notifiche push: iscrizione / cancellazione (CSRF via header globale) ──
+app.post('/api/push/subscribe', (req, res) => {
+  const sub = req.body || {};
+  if (!sub.endpoint || !sub.keys || !sub.keys.p256dh || !sub.keys.auth) {
+    return res.status(400).json({ ok: false });
+  }
+  const userId = req.currentUser ? req.currentUser.id : null;
+  db.prepare(`INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)
+    VALUES (?, ?, ?, ?)
+    ON CONFLICT(endpoint) DO UPDATE SET user_id = excluded.user_id, p256dh = excluded.p256dh, auth = excluded.auth`)
+    .run(userId, String(sub.endpoint), String(sub.keys.p256dh), String(sub.keys.auth));
+  res.json({ ok: true });
+});
+
+app.post('/api/push/unsubscribe', (req, res) => {
+  const endpoint = (req.body && req.body.endpoint) || '';
+  if (endpoint) db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').run(String(endpoint));
+  res.json({ ok: true });
 });
 
 // ── Ruota: spicchi con premi in punti. Più alto il premio, più raro. ──────
@@ -1610,6 +1767,19 @@ app.post('/admin/codici/:code/elimina', auth.requireAdmin, (req, res) => {
   res.redirect('/admin');
 });
 
+// Invia una notifica push a tutti gli iscritti (es. "Palio dei Fuochi tra 30 min").
+app.post('/admin/push', auth.requireAdmin, async (req, res) => {
+  const title = (req.body.title || '').trim().slice(0, 80) || 'FantaSanRocco';
+  const body = (req.body.body || '').trim().slice(0, 180);
+  let url = (req.body.url || '/').trim().slice(0, 200) || '/';
+  if (!/^\/[A-Za-z0-9/_-]*$/.test(url)) url = '/';   // solo percorsi interni
+  if (!body) { flash(req, 'error', 'Scrivi il testo della notifica.'); return res.redirect('/admin'); }
+  let n = 0;
+  try { n = await pushBroadcast({ title, body, url }); } catch (e) { console.error('[PUSH] broadcast', e.message); }
+  flash(req, 'success', `Notifica inviata a ${n} dispositiv${n === 1 ? 'o' : 'i'}.`);
+  res.redirect('/admin');
+});
+
 app.post('/admin/missioni', auth.requireAdmin, (req, res) => {
   const b = req.body;
   const title = (b.title || '').trim();
@@ -1625,6 +1795,10 @@ app.post('/admin/missioni', auth.requireAdmin, (req, res) => {
     (b.active_from || '').trim() || null,
     (b.active_to || '').trim() || null,
   );
+  if (b.notify) {
+    pushBroadcast({ title: 'Nuova missione!', body: title, url: '/missioni' })
+      .catch((e) => console.error('[PUSH] nuova missione', e.message));
+  }
   flash(req, 'success', 'Missione creata.');
   res.redirect('/admin');
 });

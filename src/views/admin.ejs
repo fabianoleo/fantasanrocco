@@ -1,4 +1,5 @@
 <h1 class="staff-title"><%- icon('gear') %> Pannello Admin</h1>
+<p class="muted small" style="margin-top:-.4rem"><a href="/2fa"><%- icon('lock') %> Sicurezza account · attiva la verifica in due passaggi (2FA)</a></p>
 
 <section class="card">
   <h2 class="staff-title"><%- icon('plus') %> Nuova missione</h2>
@@ -16,6 +17,7 @@
       </label>
       <label class="check"><input type="checkbox" name="requires_photo" checked> Richiede foto</label>
       <label class="check"><input type="checkbox" name="repeatable"> Ripetibile</label>
+      <label class="check"><input type="checkbox" name="notify"> 🔔 Avvisa tutti</label>
     </div>
     <div class="row">
       <label>Attiva da (facoltativo)
@@ -118,6 +120,24 @@
   <% } else { %>
     <p class="muted small">Nessun QR premio ancora. Creane qui sopra.</p>
   <% } %>
+</section>
+
+<section class="card">
+  <h2 class="staff-title">🔔 Invia una notifica</h2>
+  <p class="muted small">Arriva a tutti quelli che hanno attivato gli avvisi (app installata). Es. «Il Palio dei Fuochi inizia tra 30 minuti!».</p>
+  <form action="/admin/push" method="post" class="mission-form">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label>Titolo
+      <input type="text" name="title" maxlength="80" placeholder="FantaSanRocco" value="FantaSanRocco">
+    </label>
+    <label>Messaggio
+      <input type="text" name="body" maxlength="180" required placeholder="Il Palio dei Fuochi inizia tra 30 minuti!">
+    </label>
+    <label>Apri alla pagina (facoltativo)
+      <input type="text" name="url" placeholder="/programmazione" value="/">
+    </label>
+    <button class="btn" type="submit">Invia notifica</button>
+  </form>
 </section>
 
 <section class="card">

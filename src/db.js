@@ -114,4 +114,21 @@ CREATE TABLE IF NOT EXISTS reward_codes (
 );
 `);
 
+// Iscrizioni alle notifiche push (Web Push). user_id NULL = utente non loggato.
+db.exec(`
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id     INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  endpoint    TEXT NOT NULL UNIQUE,
+  p256dh      TEXT NOT NULL,
+  auth        TEXT NOT NULL,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`);
+
+// 2FA (TOTP) per gli admin/staff
+try { db.exec('ALTER TABLE users ADD COLUMN totp_secret TEXT'); } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN totp_enabled INTEGER NOT NULL DEFAULT 0'); } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN totp_backup_codes TEXT'); } catch {}  // JSON di hash
+
 module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR };

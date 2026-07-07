@@ -1,0 +1,36 @@
+<section class="card" style="max-width:540px;margin:2rem auto">
+  <h1 class="staff-title"><%- icon('lock') %> Verifica in due passaggi (2FA)</h1>
+
+  <% if (enabled && backupCodes) { %>
+    <p class="flash flash-success" style="display:block">2FA attivata! Salva questi <strong>codici di recupero</strong> in un posto sicuro: ti servono se perdi il telefono. Ogni codice si usa una sola volta.</p>
+    <ul class="twofa-codes">
+      <% backupCodes.forEach((c) => { %><li><code><%= c %></code></li><% }) %>
+    </ul>
+    <a class="btn" href="/2fa">Ho salvato i codici</a>
+
+  <% } else if (enabled) { %>
+    <p>La verifica in due passaggi è <strong>attiva</strong> su questo account. Al prossimo accesso ti verrà chiesto un codice.</p>
+    <form action="/2fa/disattiva" method="post" class="mission-form" style="margin-top:1rem">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>Per disattivarla, conferma la tua password
+        <input type="password" name="password" required autocomplete="current-password">
+      </label>
+      <button class="btn btn-no" type="submit">Disattiva 2FA</button>
+    </form>
+
+  <% } else { %>
+    <p class="muted">Proteggi l'account con un codice a 6 cifre. Ti serve un'app come <strong>Google Authenticator</strong> o <strong>Authy</strong>.</p>
+    <ol class="twofa-steps">
+      <li>Apri l'app di autenticazione e <strong>scansiona questo QR</strong>:</li>
+    </ol>
+    <div class="twofa-qr"><%- qrSvg %></div>
+    <p class="muted small">Non riesci a scansionare? Inserisci a mano il codice: <code><%= secret %></code></p>
+    <form action="/2fa/attiva" method="post" class="mission-form" style="margin-top:1rem">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>Codice a 6 cifre generato dall'app
+        <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" required placeholder="123456" style="letter-spacing:.2em">
+      </label>
+      <button class="btn" type="submit">Attiva 2FA</button>
+    </form>
+  <% } %>
+</section>

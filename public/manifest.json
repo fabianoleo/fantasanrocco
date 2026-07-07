@@ -1,0 +1,25 @@
+{
+  "name": "FantaSanRocco",
+  "short_name": "FantaSanRocco",
+  "description": "Il gioco della Festa di San Rocco a Siano: missioni, classifica, mini-giochi, radio e programma.",
+  "lang": "it",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#04040a",
+  "theme_color": "#04040a",
+  "categories": ["entertainment", "events", "games"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Missioni", "url": "/missioni" },
+    { "name": "Classifica", "url": "/classifica" },
+    { "name": "Programma", "url": "/programmazione" }
+  ]
+}

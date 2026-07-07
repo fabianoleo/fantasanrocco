@@ -42,6 +42,8 @@
         spinning = false;
         return;
       }
+      // Giro consumato: spegni l'aura sull'icona ruota in barra
+      var wb = document.querySelector('.nav-wheel-btn'); if (wb) wb.classList.remove('is-ready');
       // Porta il centro dello spicchio vincente sotto la freccia (in alto)
       const mid = data.index * step + step / 2;
       const jitter = (Math.random() * (step * 0.5)) - (step * 0.25);
