@@ -36,11 +36,12 @@
     left: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>',
     right: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>',
     pause: '<svg class="ico" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>',
-    trash: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
+    trash: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+    flag: '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="3"/></svg>'
   };
 
   // ── Stato ───────────────────────────────────────────────────────────
-  var overlay = null, stage, barsEl, avatarEl, nameEl, timeEl, pausedEl, delBtn, mediaEl, imgEl;
+  var overlay = null, stage, barsEl, avatarEl, nameEl, timeEl, pausedEl, delBtn, reportBtn, mediaEl, imgEl;
   var uIndex = 0, sIndex = 0, paused = false, raf = null, startT = 0, elapsed = 0, imgReady = false;
   var holdTimer = null, held = false, downX = 0, downY = 0, moved = false;
 
@@ -65,6 +66,7 @@
             '<div class="sv-user"><span class="sv-avatar"></span><span class="sv-meta"><b></b><small></small></span></div>' +
             '<div class="sv-actions">' +
               '<span class="sv-paused" hidden>' + SVG.pause + 'In pausa</span>' +
+              '<button class="sv-icon-btn sv-report" hidden aria-label="Segnala storia" title="Segnala">' + SVG.flag + '</button>' +
               '<button class="sv-icon-btn sv-del" hidden aria-label="Elimina storia">' + SVG.trash + '</button>' +
               '<button class="sv-icon-btn sv-close" aria-label="Chiudi">' + SVG.close + '</button>' +
             '</div>' +
@@ -83,6 +85,7 @@
     timeEl = overlay.querySelector('.sv-meta small');
     pausedEl = overlay.querySelector('.sv-paused');
     delBtn = overlay.querySelector('.sv-del');
+    reportBtn = overlay.querySelector('.sv-report');
     mediaEl = overlay.querySelector('.sv-media');
     imgEl = overlay.querySelector('.sv-img');
     imgEl.style.transition = 'opacity .2s ease';
@@ -91,6 +94,7 @@
     overlay.querySelector('.sv-prev').addEventListener('click', function (e) { e.stopPropagation(); prevStory(); });
     overlay.querySelector('.sv-next').addEventListener('click', function (e) { e.stopPropagation(); nextStory(); });
     delBtn.addEventListener('click', onDelete);
+    reportBtn.addEventListener('click', onReport);
     imgEl.addEventListener('load', onImgLoad);
     imgEl.addEventListener('error', hideSpinner);
 
@@ -144,6 +148,7 @@
     var u = users[uIndex], st = u.stories[i];
     timeEl.textContent = fmtTime(st.ts);
     delBtn.hidden = !(u.id === ME.id || ME.staff);
+    reportBtn.hidden = (u.id === ME.id);   // non puoi segnalare la tua storia
 
     var fills = barsEl.querySelectorAll('.sv-bar-fill');
     for (var k = 0; k < fills.length; k++) {
@@ -205,6 +210,19 @@
     fetch('/storie/' + st.id + '/elimina', {
       method: 'POST', headers: { 'X-CSRF-Token': CSRF, 'Accept': 'application/json' }, credentials: 'same-origin'
     }).then(function () { location.reload(); }, function () { location.reload(); });
+  }
+
+  function onReport(e) {
+    e.stopPropagation();
+    var st = users[uIndex].stories[sIndex];
+    if (!window.confirm('Segnalare questa storia allo staff come contenuto inappropriato?')) return;
+    fetch('/storie/' + st.id + '/segnala', {
+      method: 'POST', headers: { 'X-CSRF-Token': CSRF, 'Accept': 'application/json' }, credentials: 'same-origin'
+    }).then(function () {
+      reportBtn.disabled = true;
+      if (window.__fsrToast) window.__fsrToast('Segnalazione inviata, grazie.');
+      else alert('Segnalazione inviata, grazie.');
+    }).catch(function () {});
   }
 
   function close() {

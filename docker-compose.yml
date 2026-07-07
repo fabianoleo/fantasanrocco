@@ -7,9 +7,23 @@ services:
     environment:
       # Dentro al container i dati stanno in /app/data (vedi volume sotto)
       DATA_DIR: /app/data
+    labels:
+      - "autoheal=true"   # il servizio "autoheal" qui sotto lo riavvia se risulta "unhealthy"
     ports:
       - "3000:3000"
     volumes:
       # I dati (database + foto) vivono sul tuo computer, NON dentro il container:
       # così sopravvivono a riavvii e aggiornamenti. Backup = copia la cartella ./data
       - ./data:/app/data
+
+  # Riavvia automaticamente "app" se l'HEALTHCHECK del Dockerfile lo segna
+  # "unhealthy" (processo bloccato ma non crashato: `restart: unless-stopped`
+  # da solo non basterebbe, perché quello scatta solo se il processo termina).
+  autoheal:
+    image: willfarrell/autoheal
+    container_name: fantasanrocco-autoheal
+    restart: unless-stopped
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: autoheal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

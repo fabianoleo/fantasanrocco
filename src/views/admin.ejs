@@ -200,4 +200,80 @@
   </form>
 </section>
 
+<%# ── STORIE SEGNALATE ─────────────────────────────────────────────── %>
+<% const reports = (typeof reportedStories !== 'undefined' && reportedStories) ? reportedStories : []; %>
+<section class="card">
+  <h2 class="staff-title"><%- icon('warning') %> Storie segnalate <span class="tag <%= reports.length ? 'tag-off' : 'tag-on' %>"><%= reports.length %></span></h2>
+  <% if (reports.length) { %>
+    <ul class="user-list">
+      <% reports.forEach((r) => { %>
+        <li class="user-row">
+          <span class="user-name">Storia #<%= r.id %> di <%= r.author %>
+            <span class="role-badge <%= r.hidden ? 'role-admin' : 'role-user' %>"><%= r.hidden ? 'nascosta' : 'visibile' %></span>
+            <span class="user-pts"><%= r.reports %> segnalazion<%= r.reports === 1 ? 'e' : 'i' %></span>
+          </span>
+          <a class="btn-mini" href="/storie/media/<%= r.media_path.split('/').pop() %>" target="_blank" rel="noopener">Vedi foto</a>
+          <form action="/admin/segnalazioni/<%= r.id %>/ignora" method="post" class="inline">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn-mini" type="submit">Ignora</button>
+          </form>
+          <form action="/storie/<%= r.id %>/elimina" method="post" class="inline"
+                data-confirm="Eliminare questa storia segnalata?">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn-mini" type="submit"><%- icon('trash') %> Elimina</button>
+          </form>
+        </li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <p class="muted small">Nessuna storia segnalata al momento.</p>
+  <% } %>
+</section>
+
+<%# ── BACKUP DATABASE ──────────────────────────────────────────────── %>
+<% const backupList = (typeof backups !== 'undefined' && backups) ? backups : []; %>
+<section class="card">
+  <h2 class="staff-title"><%- icon('save') %> Backup database</h2>
+  <p class="muted small">Uno snapshot automatico ogni 6 ore (ultimi 30 conservati), più uno prima di ogni Reset Gioco. Copia locale sul server.</p>
+  <form action="/admin/backup" method="post" style="margin-bottom:.8rem">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <button class="btn-mini" type="submit"><%- icon('save') %> Backup ora</button>
+  </form>
+  <% if (backupList.length) { %>
+    <ul class="user-list">
+      <% backupList.slice(0, 15).forEach((b) => { %>
+        <li class="user-row">
+          <span class="user-name"><%= b.name %>
+            <span class="user-pts"><%= (b.size / 1024 / 1024).toFixed(1) %> MB</span>
+          </span>
+          <a class="btn-mini" href="/admin/backup/<%= b.name %>"><%- icon('save') %> Scarica</a>
+        </li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <p class="muted small">Nessun backup ancora creato.</p>
+  <% } %>
+</section>
+
+<%# ── REGISTRO AZIONI (AUDIT LOG) ──────────────────────────────────── %>
+<% const logRows = (typeof auditLog !== 'undefined' && auditLog) ? auditLog : []; %>
+<section class="card">
+  <h2 class="staff-title"><%- icon('list') %> Registro azioni <span class="tag tag-on">ultime <%= logRows.length %></span></h2>
+  <p class="muted small">Traccia di chi ha fatto cosa: ruoli, bonus punti, missioni, reset, notifiche, 2FA.</p>
+  <% if (logRows.length) { %>
+    <ul class="audit-list">
+      <% logRows.forEach((l) => { %>
+        <li class="audit-row">
+          <span class="audit-time"><%= l.created_at %></span>
+          <span class="audit-who"><%= l.nickname %></span>
+          <span class="audit-action"><%= l.action %></span>
+          <% if (l.details) { %><span class="audit-details"><%= l.details %></span><% } %>
+        </li>
+      <% }) %>
+    </ul>
+  <% } else { %>
+    <p class="muted small">Nessuna azione registrata ancora.</p>
+  <% } %>
+</section>
+
 <script src="/admin.js?v=2" defer></script>

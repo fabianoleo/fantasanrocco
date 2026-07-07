@@ -39,7 +39,7 @@ function checkImageMagicBytes(filePath) {
   } catch { return null; }
 }
 
-const { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR } = require('./db');
+const { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR } = require('./db');
 const { placesWithEvents } = require('./data/mapPlaces');
 const auth = require('./auth');
 
@@ -151,6 +151,40 @@ async function pushToUser(userId, payload) {
   const rows = db.prepare('SELECT endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ?').all(userId);
   await Promise.all(rows.map((r) => _pushSend(_subObj(r), payload)));
   return rows.length;
+}
+
+// ── Backup automatico del database (copia locale a rotazione) ──────────────
+// Usa l'API di backup online di SQLite (sicura anche con WAL e scritture in
+// corso): produce un file .db consistente senza bloccare il sito.
+const BACKUP_KEEP = 30;                       // quanti snapshot tenere
+const BACKUP_EVERY_MS = 6 * 60 * 60 * 1000;   // ogni 6 ore
+function runBackup(reason) {
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const file = `backup-${stamp}${reason ? '-' + reason : ''}.db`;
+  const dest = path.join(BACKUPS_DIR, file);
+  return db.backup(dest)
+    .then(() => {
+      // Rotazione: tiene solo gli ultimi BACKUP_KEEP file
+      const files = fs.readdirSync(BACKUPS_DIR)
+        .filter((f) => f.endsWith('.db'))
+        .map((f) => ({ f, t: fs.statSync(path.join(BACKUPS_DIR, f)).mtimeMs }))
+        .sort((a, b) => b.t - a.t);
+      files.slice(BACKUP_KEEP).forEach(({ f }) => { try { fs.unlinkSync(path.join(BACKUPS_DIR, f)); } catch (e) {} });
+      console.log(`[BACKUP] creato ${file}`);
+      return file;
+    })
+    .catch((err) => { console.error('[BACKUP] fallito:', err.message); return null; });
+}
+runBackup('avvio');                                          // uno subito all'avvio del server
+setInterval(() => runBackup(), BACKUP_EVERY_MS);
+
+// ── Audit log: traccia le azioni sensibili dello staff ──────────────────────
+function audit(req, action, details) {
+  try {
+    db.prepare('INSERT INTO audit_log (user_id, nickname, action, details, ip) VALUES (?, ?, ?, ?, ?)')
+      .run(req.currentUser ? req.currentUser.id : null, req.currentUser ? req.currentUser.nickname : '—',
+        action, details ? String(details).slice(0, 300) : null, (req.ip || '').replace('::ffff:', ''));
+  } catch (e) { console.error('[AUDIT]', e.message); }
 }
 
 app.use(session({
@@ -448,6 +482,17 @@ function isMissionActiveNow(m) {
   return true;
 }
 
+// Healthcheck: usato da Docker/monitoraggio esterno per sapere se il server
+// è vivo E il database risponde davvero (non solo "il processo esiste").
+app.get('/health', (req, res) => {
+  try {
+    db.prepare('SELECT 1').get();
+    res.status(200).json({ ok: true });
+  } catch (e) {
+    res.status(503).json({ ok: false });
+  }
+});
+
 // =========================================================================
 //  PAGINE PUBBLICHE
 // =========================================================================
@@ -709,6 +754,10 @@ app.post('/registrati', registerLimiter, (req, res) => {
     flash(req, 'error', 'La password deve avere almeno 8 caratteri.');
     return res.redirect('/registrati');
   }
+  if (!req.body.privacy_ok || !req.body.age_ok) {
+    flash(req, 'error', 'Devi accettare la privacy policy e confermare l\'età per registrarti.');
+    return res.redirect('/registrati');
+  }
 
   const existsNick = db.prepare('SELECT id FROM users WHERE nickname = ?').get(nickname);
   if (existsNick) {
@@ -721,7 +770,7 @@ app.post('/registrati', registerLimiter, (req, res) => {
     return res.redirect('/registrati');
   }
 
-  db.prepare('INSERT INTO users (nickname, email, password_hash) VALUES (?, ?, ?)')
+  db.prepare("INSERT INTO users (nickname, email, password_hash, privacy_accepted_at) VALUES (?, ?, ?, datetime('now'))")
     .run(nickname, email, auth.hashPassword(password));
 
   res.render('register-done', { title: 'Registrazione completata', nickname });
@@ -850,6 +899,7 @@ app.post('/2fa/attiva', auth.requireLogin, (req, res) => {
   db.prepare('UPDATE users SET totp_secret = ?, totp_enabled = 1, totp_backup_codes = ? WHERE id = ?')
     .run(secret, JSON.stringify(hashes), u.id);
   delete req.session.totpSetup;
+  audit(req, '2fa.attiva', u.nickname);
   res.render('twofa', { title: 'Sicurezza · 2FA', enabled: true, qrSvg: null, secret: null, backupCodes: plain });
 });
 
@@ -860,6 +910,7 @@ app.post('/2fa/disattiva', auth.requireLogin, (req, res) => {
     return res.redirect('/2fa');
   }
   db.prepare('UPDATE users SET totp_enabled = 0, totp_secret = NULL, totp_backup_codes = NULL WHERE id = ?').run(u.id);
+  audit(req, '2fa.disattiva', u.nickname);
   flash(req, 'success', 'Verifica in due passaggi disattivata.');
   res.redirect('/2fa');
 });
@@ -898,6 +949,14 @@ app.get('/programmazione', (req, res) => {
 
 app.get('/storia', (req, res) => {
   res.render('storia', { title: 'La Storia di San Rocco' });
+});
+
+app.get('/privacy', (req, res) => {
+  res.render('privacy', {
+    title: 'Privacy Policy',
+    updatedAt: new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }),
+    contactEmail: process.env.PRIVACY_CONTACT_EMAIL || process.env.EMAIL_USER || 'info@fantasanrocco.com',
+  });
 });
 
 // ── Mini-gioco «Corri San Rocco» ──────────────────────────────────────────
@@ -1551,9 +1610,9 @@ function activeStoriesGrouped(currentUser) {
     SELECT s.id, s.user_id, s.media_path, s.created_at, u.nickname, u.avatar_path,
            (SELECT 1 FROM story_views v WHERE v.story_id = s.id AND v.user_id = ?) AS viewed
     FROM stories s JOIN users u ON u.id = s.user_id
-    WHERE s.expires_at > datetime('now')
+    WHERE s.expires_at > datetime('now') AND (s.hidden = 0 OR s.user_id = ?)
     ORDER BY s.created_at ASC
-  `).all(currentUser.id);
+  `).all(currentUser.id, currentUser.id);
 
   const byUser = new Map();
   for (const r of rows) {
@@ -1647,6 +1706,23 @@ app.post('/storie/:id/elimina', auth.requireLogin, (req, res) => {
   if (st && (st.user_id === req.currentUser.id || staff)) {
     fs.unlink(path.join(STORIES_DIR, path.basename(st.media_path)), () => {});
     db.prepare('DELETE FROM stories WHERE id = ?').run(id); // story_views via ON DELETE CASCADE
+    if (staff && st.user_id !== req.currentUser.id) audit(req, 'storia.elimina', `#${id} (staff)`);
+  }
+  if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true });
+  res.redirect(safeBack(req));
+});
+
+const STORY_REPORT_HIDE_AT = 2;   // dopo N segnalazioni distinte la storia si nasconde in attesa di revisione
+app.post('/storie/:id/segnala', auth.requireLogin, verifyCsrf, (req, res) => {
+  const id = Number(req.params.id);
+  const st = db.prepare('SELECT id FROM stories WHERE id = ?').get(id);
+  if (st) {
+    try {
+      db.prepare('INSERT INTO story_reports (story_id, reporter_id, reason) VALUES (?, ?, ?)')
+        .run(id, req.currentUser.id, (req.body.reason || '').trim().slice(0, 200) || null);
+    } catch (e) { /* già segnalata da questo utente: UNIQUE, ignora */ }
+    const n = db.prepare('SELECT COUNT(*) AS n FROM story_reports WHERE story_id = ?').get(id).n;
+    if (n >= STORY_REPORT_HIDE_AT) db.prepare('UPDATE stories SET hidden = 1 WHERE id = ?').run(id);
   }
   if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true });
   res.redirect(safeBack(req));
@@ -1743,7 +1819,17 @@ app.get('/admin', auth.requireAdmin, async (req, res) => {
     try { qrSvg = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' }); } catch (e) {}
     return { ...c, url, qrSvg };
   }));
-  res.render('admin', { title: 'Admin', missions, users, codes, baseUrl });
+  const backups = fs.readdirSync(BACKUPS_DIR)
+    .filter((f) => f.endsWith('.db'))
+    .map((f) => { const s = fs.statSync(path.join(BACKUPS_DIR, f)); return { name: f, size: s.size, mtime: s.mtimeMs }; })
+    .sort((a, b) => b.mtime - a.mtime);
+  const auditLog = db.prepare('SELECT * FROM audit_log ORDER BY id DESC LIMIT 100').all();
+  const reportedStories = db.prepare(`SELECT s.id, s.media_path, s.hidden, u.nickname AS author,
+      COUNT(r.id) AS reports
+    FROM stories s JOIN users u ON u.id = s.user_id
+    JOIN story_reports r ON r.story_id = s.id
+    GROUP BY s.id ORDER BY reports DESC, s.id DESC`).all();
+  res.render('admin', { title: 'Admin', missions, users, codes, baseUrl, backups, auditLog, reportedStories });
 });
 
 app.post('/admin/codici', auth.requireAdmin, (req, res) => {
@@ -1757,12 +1843,14 @@ app.post('/admin/codici', auth.requireAdmin, (req, res) => {
   db.transaction(() => {
     for (let i = 0; i < qty; i++) ins.run(crypto.randomBytes(5).toString('hex'), points, label);
   })();
+  audit(req, 'codici.crea', `${qty}× ${points}pt${label ? ' "' + label + '"' : ''}`);
   flash(req, 'success', `Creat${qty === 1 ? 'o' : 'i'} ${qty} codic${qty === 1 ? 'e' : 'i'} premio da ${points} punti. Ogni QR vale una sola persona.`);
   res.redirect('/admin');
 });
 
 app.post('/admin/codici/:code/elimina', auth.requireAdmin, (req, res) => {
   db.prepare('DELETE FROM reward_codes WHERE code = ?').run(req.params.code);
+  audit(req, 'codici.elimina', req.params.code);
   flash(req, 'success', 'Codice premio eliminato.');
   res.redirect('/admin');
 });
@@ -1776,6 +1864,7 @@ app.post('/admin/push', auth.requireAdmin, async (req, res) => {
   if (!body) { flash(req, 'error', 'Scrivi il testo della notifica.'); return res.redirect('/admin'); }
   let n = 0;
   try { n = await pushBroadcast({ title, body, url }); } catch (e) { console.error('[PUSH] broadcast', e.message); }
+  audit(req, 'push.invia', `"${title}: ${body}" -> ${n} dispositivi`);
   flash(req, 'success', `Notifica inviata a ${n} dispositiv${n === 1 ? 'o' : 'i'}.`);
   res.redirect('/admin');
 });
@@ -1799,6 +1888,7 @@ app.post('/admin/missioni', auth.requireAdmin, (req, res) => {
     pushBroadcast({ title: 'Nuova missione!', body: title, url: '/missioni' })
       .catch((e) => console.error('[PUSH] nuova missione', e.message));
   }
+  audit(req, 'missione.crea', title);
   flash(req, 'success', 'Missione creata.');
   res.redirect('/admin');
 });
@@ -1818,12 +1908,15 @@ app.post('/admin/missioni/:id/modifica', auth.requireAdmin, (req, res) => {
     b.archived ? 1 : 0,
     req.params.id,
   );
+  audit(req, 'missione.modifica', `#${req.params.id} ${(b.title || '').trim()}`);
   flash(req, 'success', 'Missione aggiornata.');
   res.redirect('/admin');
 });
 
 app.post('/admin/missioni/:id/elimina', auth.requireAdmin, (req, res) => {
+  const m = db.prepare('SELECT title FROM missions WHERE id = ?').get(req.params.id);
   db.prepare('DELETE FROM missions WHERE id = ?').run(req.params.id);
+  audit(req, 'missione.elimina', `#${req.params.id} ${m ? m.title : ''}`);
   flash(req, 'success', 'Missione eliminata.');
   res.redirect('/admin');
 });
@@ -1839,6 +1932,9 @@ app.post('/admin/reset-gioco', auth.requireAdmin, (req, res) => {
     flash(req, 'error', 'Password admin errata. Reset annullato.');
     return res.redirect('/admin');
   }
+  // Backup di sicurezza PRIMA di un'operazione distruttiva (best-effort, non blocca).
+  runBackup('pre-reset');
+
   // Raccoglie i file su disco PRIMA di cancellare le righe (per rimuoverli dopo)
   const photoFiles  = db.prepare('SELECT photo_path FROM submissions WHERE photo_path IS NOT NULL').all().map((r) => r.photo_path);
   const storyFiles  = db.prepare('SELECT media_path FROM stories').all().map((r) => r.media_path);
@@ -1865,6 +1961,7 @@ app.post('/admin/reset-gioco', auth.requireAdmin, (req, res) => {
   rmFiles(STORIES_DIR, storyFiles);
   rmFiles(AVATARS_DIR, avatarFiles);
 
+  audit(req, 'reset.gioco', `${photoFiles.length} prove, ${storyFiles.length} storie eliminate`);
   flash(req, 'success', 'Reset completato: utenti, prove, storie e classifica azzerati. Missioni e codici premio mantenuti.');
   res.redirect('/admin');
 });
@@ -1879,6 +1976,7 @@ app.post('/admin/utenti/:id/ruolo', auth.requireAdmin, (req, res) => {
     if (admins <= 1) { flash(req, 'error', 'Non puoi rimuovere l\'ultimo admin.'); return res.redirect('/admin'); }
   }
   db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, target.id);
+  audit(req, 'utente.ruolo', `${target.nickname} -> ${role}`);
   flash(req, 'success', `Ruolo di ${target.nickname} aggiornato a ${role}.`);
   res.redirect('/admin');
 });
@@ -1892,8 +1990,37 @@ app.post('/admin/utenti/:id/bonus', auth.requireAdmin, (req, res) => {
   if (!Number.isFinite(pts) || pts === 0) { flash(req, 'error', 'Inserisci un numero di punti valido (diverso da 0).'); return res.redirect('/admin'); }
   const reason = (req.body.reason || '').trim().slice(0, 120);
   db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(pts, target.id);
+  audit(req, 'utente.bonus', `${target.nickname}: ${pts > 0 ? '+' : ''}${pts}pt${reason ? ' (' + reason + ')' : ''}`);
   const segno = pts > 0 ? '+' : '';
   flash(req, 'success', `${segno}${pts} punti a ${target.nickname}${reason ? ' (' + reason + ')' : ''}. Totale ora: ${userPoints(target.id)}.`);
+  res.redirect('/admin');
+});
+
+// ── Backup: esegui ora / scarica uno snapshot ──────────────────────────────
+app.post('/admin/backup', auth.requireAdmin, async (req, res) => {
+  const file = await runBackup('manuale');
+  audit(req, 'backup.manuale', file || 'fallito');
+  flash(req, file ? 'success' : 'error', file ? `Backup creato: ${file}` : 'Backup fallito: controlla i log del server.');
+  res.redirect('/admin');
+});
+
+app.get('/admin/backup/:name', auth.requireAdmin, (req, res) => {
+  // Whitelist stretta: solo nomi generati da runBackup, niente attraversamento di percorso
+  const name = req.params.name;
+  if (!/^backup-[A-Za-z0-9_.-]+\.db$/.test(name)) return res.status(400).send('Nome non valido.');
+  const full = path.join(BACKUPS_DIR, name);
+  if (!fs.existsSync(full)) return res.status(404).send('Backup non trovato.');
+  audit(req, 'backup.scarica', name);
+  res.download(full, name);
+});
+
+// ── Segnalazioni storie: ignora (le storie si eliminano dal pulsante esistente) ──
+app.post('/admin/segnalazioni/:storyId/ignora', auth.requireAdmin, (req, res) => {
+  const id = Number(req.params.storyId);
+  db.prepare('DELETE FROM story_reports WHERE story_id = ?').run(id);
+  db.prepare('UPDATE stories SET hidden = 0 WHERE id = ?').run(id);
+  audit(req, 'segnalazione.ignora', `storia #${id}`);
+  flash(req, 'success', 'Segnalazioni ignorate: la storia torna visibile.');
   res.redirect('/admin');
 });
 

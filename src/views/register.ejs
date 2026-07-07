@@ -12,6 +12,14 @@
     <label>Password
       <input type="password" name="password" required minlength="8" placeholder="almeno 8 caratteri">
     </label>
+    <label class="check">
+      <input type="checkbox" name="privacy_ok" required>
+      Ho letto e accetto la <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a> (email e foto caricate)
+    </label>
+    <label class="check">
+      <input type="checkbox" name="age_ok" required>
+      Dichiaro di avere almeno 14 anni, oppure di avere l'autorizzazione di un genitore/tutore
+    </label>
     <button class="btn" type="submit">Crea account</button>
   </form>
   <p class="muted small" style="margin-top:1rem">Hai già un account? <a href="/login">Accedi</a></p>

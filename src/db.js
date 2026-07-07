@@ -14,11 +14,13 @@ const DATA_DIR = process.env.DATA_DIR
 const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');     // foto-prova (private)
 const AVATARS_DIR = path.join(DATA_DIR, 'avatars');     // foto profilo (pubbliche)
 const STORIES_DIR = path.join(DATA_DIR, 'stories');     // foto delle storie (24h)
+const BACKUPS_DIR = path.join(DATA_DIR, 'backups');      // snapshot automatici del database
 
 // Assicura che le cartelle esistano
 fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 fs.mkdirSync(AVATARS_DIR, { recursive: true });
 fs.mkdirSync(STORIES_DIR, { recursive: true });
+fs.mkdirSync(BACKUPS_DIR, { recursive: true });
 
 const db = new Database(path.join(DATA_DIR, 'fantasanrocco.db'));
 db.pragma('journal_mode = WAL'); // più robusto con letture/scritture concorrenti
@@ -131,4 +133,34 @@ try { db.exec('ALTER TABLE users ADD COLUMN totp_secret TEXT'); } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN totp_enabled INTEGER NOT NULL DEFAULT 0'); } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN totp_backup_codes TEXT'); } catch {}  // JSON di hash
 
-module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR };
+// GDPR: data/ora di accettazione della privacy policy in registrazione (prova del consenso)
+try { db.exec('ALTER TABLE users ADD COLUMN privacy_accepted_at TEXT'); } catch {}
+
+// Registro delle azioni sensibili (chi ha fatto cosa, quando): trasparenza e
+// tracciabilità per un pannello con più admin/moderatori.
+db.exec(`
+CREATE TABLE IF NOT EXISTS audit_log (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  nickname    TEXT NOT NULL,          -- copia testuale: resta leggibile anche se l'utente viene eliminato
+  action      TEXT NOT NULL,
+  details     TEXT,
+  ip          TEXT,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`);
+
+// Segnalazioni delle storie (contenuti pubblici tra utenti): revisione manuale staff.
+db.exec(`
+CREATE TABLE IF NOT EXISTS story_reports (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  story_id    INTEGER NOT NULL REFERENCES stories(id) ON DELETE CASCADE,
+  reporter_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  reason      TEXT,
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(story_id, reporter_id)
+);
+`);
+try { db.exec('ALTER TABLE stories ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0'); } catch {}
+
+module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR };

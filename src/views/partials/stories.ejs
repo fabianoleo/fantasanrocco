@@ -43,5 +43,5 @@
 
   <script type="application/json" id="fsrStories"><%- JSON.stringify({ me: storiesData.me, csrf: csrfToken, users: storiesData.users.map(function(u){ return { id: u.id, name: u.name, avatar: u.avatar, initials: u.initials, stories: u.stories }; }) }).replace(/</g, '\\u003c') %></script>
 </section>
-<script src="/stories.js?v=2" defer></script>
+<script src="/stories.js?v=3" defer></script>
 <% } %>

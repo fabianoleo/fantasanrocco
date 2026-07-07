@@ -14,4 +14,9 @@ COPY . .
 ENV DATA_DIR=/data
 EXPOSE 3000
 
+# Docker usa questo per sapere se il container va riavviato: fallisce se il
+# processo non risponde o il database non è raggiungibile (vedi /health).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD node -e "require('http').get('http://127.0.0.1:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+
 CMD ["node", "src/server.js"]
