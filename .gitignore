@@ -4,6 +4,9 @@ data/*.db
 data/*.db-*
 data/uploads/*
 !data/uploads/.gitkeep
+# Backup del database: contengono dati reali degli utenti → MAI su git
+data/backups/
+data/**/*.db
 .DS_Store
 **/.DS_Store
 npm-debug.log*
