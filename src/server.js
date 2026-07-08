@@ -366,6 +366,7 @@ app.get('/api/online/debug', auth.requireStaff, (req, res) => {
 //   una voce qui sotto con src, title, (cover opzionale) e duration in secondi.
 //   La durata si può leggere con:  afinfo public/radio/tuofile.mp3
 const RADIO_PLAYLIST = [
+  { src: "/radio/corri-san-rocco.mp3", title: "Corri San Rocco — Inno FantaSanRocco", cover: "/images/logo.png", duration: 195 },
   { src: "/radio/lda-aka-7even-andamento-lento-visual-video-ft-tullio-de-pisc.mp3", title: "LDA, Aka 7even — Andamento Lento ft. Tullio De Piscopo", cover: "/images/artisti/lda-aka7even.jpg", duration: 212 },
   { src: "/radio/lda-aka-7even-poesie-clandestine-official-video-sanremo-2026.mp3", title: "LDA, Aka 7even — Poesie Clandestine", cover: "/images/artisti/lda-aka7even.jpg", duration: 209 },
   { src: "/radio/mazzariello-amarsi-per-lavoro-sanremo-giovani-2025.mp3", title: "Mazzariello — Amarsi Per Lavoro", cover: "/images/artisti/mazzariello.jpg", duration: 185 },
@@ -808,7 +809,9 @@ app.post('/login', loginLimiter, (req, res) => {
   const nickname = (req.body.nickname || '').trim();
   const password = req.body.password || '';
   const remember = req.body.remember === '1' || req.body.remember === 'on';
-  const user = db.prepare('SELECT * FROM users WHERE nickname = ?').get(nickname);
+  // Login con nickname (esatto) OPPURE email (senza distinzione maiuscole/minuscole).
+  const user = db.prepare('SELECT * FROM users WHERE nickname = ? OR lower(email) = lower(?) ORDER BY (nickname = ?) DESC LIMIT 1')
+    .get(nickname, nickname, nickname);
   // Esegue sempre bcrypt (tempo costante) — previene timing oracle anche se il nickname non esiste
   const passwordOk = auth.verifyPassword(password, user?.password_hash || BCRYPT_SENTINEL);
   if (!user || !passwordOk) {
