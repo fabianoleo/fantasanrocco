@@ -3960,3 +3960,17 @@ textarea:focus-visible,
 .audit-who { font-weight: 700; color: var(--gold-2); }
 .audit-action { font-family: ui-monospace, Menlo, monospace; background: rgba(212,160,26,.12); padding: .05rem .4rem; border-radius: 6px; }
 .audit-details { color: var(--text-2); }
+
+/* ── Profilo: storico punti ──────────────────────────────────────── */
+.pf-points-card { border: 1px solid rgba(255,255,255,.08); border-radius: 14px; background: rgba(255,255,255,.02); overflow: hidden; margin-bottom: 1.4rem; }
+.pf-history { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
+.pf-hist-row { display: flex; align-items: center; gap: .7rem; padding: .6rem .9rem; border-bottom: 1px solid rgba(255,255,255,.05); }
+.pf-hist-row:last-child { border-bottom: none; }
+.pf-hist-pts { flex-shrink: 0; min-width: 52px; text-align: right; font-weight: 800; font-family: var(--font-heading); }
+.pf-hist-pts.pos { color: #43d17a; }
+.pf-hist-pts.neg { color: var(--red, #e05252); }
+.pf-hist-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.pf-hist-date { flex-shrink: 0; font-size: .74rem; color: var(--text-2); font-family: ui-monospace, Menlo, monospace; }
+.pf-hist-empty { padding: 1rem .9rem; color: var(--text-2); text-align: center; }
+.pf-hist-total { display: flex; justify-content: space-between; align-items: center; padding: .7rem .9rem; background: rgba(212,160,26,.08); border-top: 1px solid rgba(212,160,26,.2); }
+.pf-hist-total strong { color: var(--gold-2); font-size: 1.1rem; }

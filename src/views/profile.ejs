@@ -84,6 +84,36 @@
   <button id="pushBtn" type="button" class="btn">🔔 Attiva avvisi (+100 punti)</button>
 </section>
 
+<%# ── STORICO PUNTI ─────────────────────────────────────────────────── %>
+<h2 class="pf-section-title">Storico punti</h2>
+<%
+  const approvedSubs = subs.filter((s) => s.status === 'approved');
+  const missionPts = approvedSubs.reduce((a, s) => a + (s.points || 0), 0);
+  const otherPts = total - missionPts;   // ruota, slot, premi, bonus avvisi… (points_adjust)
+%>
+<div class="pf-points-card">
+  <ul class="pf-history">
+    <% approvedSubs.forEach((s) => { %>
+      <li class="pf-hist-row">
+        <span class="pf-hist-pts pos">+<%= s.points %></span>
+        <span class="pf-hist-label"><%= s.title %></span>
+        <span class="pf-hist-date"><%= (s.reviewed_at || s.created_at || '').slice(0, 10) %></span>
+      </li>
+    <% }) %>
+    <% if (otherPts !== 0) { %>
+      <li class="pf-hist-row">
+        <span class="pf-hist-pts <%= otherPts > 0 ? 'pos' : 'neg' %>"><%= otherPts > 0 ? '+' : '' %><%= otherPts %></span>
+        <span class="pf-hist-label">Giochi e bonus <span class="muted small">· ruota, slot, premi, avvisi</span></span>
+        <span class="pf-hist-date">—</span>
+      </li>
+    <% } %>
+    <% if (!approvedSubs.length && otherPts === 0) { %>
+      <li class="pf-hist-empty">Ancora nessun punto: completa una missione o attiva gli avvisi!</li>
+    <% } %>
+  </ul>
+  <div class="pf-hist-total"><span>Totale</span><strong><%= total %> punti</strong></div>
+</div>
+
 <%# ── PROVE ──────────────────────────────────────────────────────── %>
 <h2 class="pf-section-title">Le mie prove</h2>
 
