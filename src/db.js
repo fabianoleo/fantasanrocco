@@ -136,6 +136,10 @@ try { db.exec('ALTER TABLE users ADD COLUMN totp_backup_codes TEXT'); } catch {}
 // GDPR: data/ora di accettazione della privacy policy in registrazione (prova del consenso)
 try { db.exec('ALTER TABLE users ADD COLUMN privacy_accepted_at TEXT'); } catch {}
 
+// Bonus notifiche: 1 se l'utente ha ricevuto i +100 punti perché ha le push
+// attive. Legato all'esistenza di un'iscrizione: se le disattiva, si toglie.
+try { db.exec('ALTER TABLE users ADD COLUMN notif_bonus INTEGER NOT NULL DEFAULT 0'); } catch {}
+
 // Registro delle azioni sensibili (chi ha fatto cosa, quando): trasparenza e
 // tracciabilità per un pannello con più admin/moderatori.
 db.exec(`

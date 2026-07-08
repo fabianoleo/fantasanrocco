@@ -47,59 +47,98 @@
   function setBtn(btn, state) {
     if (!btn) return;
     var labels = {
-      on: '🔔 Avvisi attivi',
-      off: '🔔 Attiva avvisi',
+      on: '🔔 Avvisi attivi · tocca per disattivare',
+      off: '🔔 Attiva avvisi (+100 punti)',
       unsupported: 'Avvisi non supportati',
       install: 'Installa l’app per gli avvisi',
+      working: 'Un attimo…',
     };
     btn.textContent = labels[state] || labels.off;
-    btn.disabled = (state === 'unsupported' || state === 'on');
+    btn.disabled = (state === 'unsupported' || state === 'working');
     btn.setAttribute('data-state', state);
+  }
+  function post(url, body) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': meta('csrf-token') || '' },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    }).then(function (r) { return r.json(); });
+  }
+  function updateBalance(balance) {
+    if (balance == null) return;
+    var nb = document.querySelector('.nav-balance-val');
+    if (nb) { nb.textContent = balance; nb.classList.remove('bump'); void nb.offsetWidth; nb.classList.add('bump'); }
   }
   function refreshBtn(btn) {
     if (!pushSupported()) { setBtn(btn, 'unsupported'); return; }
     if (isIOS && !isStandalone) { setBtn(btn, 'install'); return; }
-    if (Notification.permission === 'granted') {
-      navigator.serviceWorker.ready.then(function (reg) {
-        return reg.pushManager.getSubscription();
-      }).then(function (sub) { setBtn(btn, sub ? 'on' : 'off'); });
-    } else {
-      setBtn(btn, 'off');
-    }
+    navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.getSubscription(); })
+      .then(function (sub) {
+        if (sub && Notification.permission === 'granted') {
+          setBtn(btn, 'on');
+          // ri-sincronizza col server (idempotente): assicura user_id + bonus coerente
+          post('/api/push/subscribe', sub).then(function (d) { if (d && d.balance != null) updateBalance(d.balance); }).catch(function () {});
+        } else if (sub) {
+          // Permesso revocato dal browser ma iscrizione ancora presente:
+          // disiscrivi e togli il bonus (anti-trucco).
+          var ep = sub.endpoint;
+          sub.unsubscribe().catch(function () {});
+          post('/api/push/unsubscribe', { endpoint: ep }).then(function (d) { if (d && d.balance != null) updateBalance(d.balance); }).catch(function () {});
+          setBtn(btn, 'off');
+        } else {
+          setBtn(btn, 'off');
+        }
+      }).catch(function () { setBtn(btn, 'off'); });
   }
   function enablePush(btn) {
     var key = meta('vapid-public-key');
     if (!key) { alert('Notifiche non configurate sul server.'); return; }
+    setBtn(btn, 'working');
     Notification.requestPermission().then(function (perm) {
       if (perm !== 'granted') { setBtn(btn, 'off'); return; }
       return navigator.serviceWorker.ready.then(function (reg) {
         return reg.pushManager.getSubscription().then(function (sub) {
-          return sub || reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlB64ToUint8Array(key),
-          });
+          return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8Array(key) });
         });
       }).then(function (sub) {
-        return fetch('/api/push/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': meta('csrf-token') || '' },
-          credentials: 'include',
-          body: JSON.stringify(sub),
-        });
-      }).then(function () { setBtn(btn, 'on'); });
+        return post('/api/push/subscribe', sub);
+      }).then(function (d) {
+        setBtn(btn, 'on');
+        if (d && d.balance != null) updateBalance(d.balance);
+        if (d && d.awarded) alert('Avvisi attivati! +' + (d.bonus || 100) + ' punti 🎉\nNota: se disattivi gli avvisi, i punti bonus verranno tolti.');
+      });
     }).catch(function () { setBtn(btn, 'off'); });
+  }
+  function disablePush(btn) {
+    setBtn(btn, 'working');
+    navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.getSubscription(); })
+      .then(function (sub) {
+        var ep = sub ? sub.endpoint : null;
+        var un = sub ? sub.unsubscribe() : Promise.resolve();
+        return un.then(function () { return post('/api/push/unsubscribe', { endpoint: ep }); });
+      }).then(function (d) {
+        setBtn(btn, 'off');
+        if (d && d.balance != null) updateBalance(d.balance);
+        if (d && d.removed) alert('Avvisi disattivati. I 100 punti bonus sono stati rimossi.');
+      }).catch(function () { refreshBtn(btn); });
   }
   window.addEventListener('load', function () {
     var btn = document.getElementById('pushBtn');
     if (!btn) return;
     refreshBtn(btn);
     btn.addEventListener('click', function () {
-      if (btn.getAttribute('data-state') === 'on') return;
+      if (btn.disabled) return;
       if (isIOS && !isStandalone) {
         alert('Su iPhone: prima aggiungi l’app alla schermata Home (Condividi → Aggiungi alla Home), poi riaprila da lì per attivare gli avvisi.');
         return;
       }
-      enablePush(btn);
+      if (btn.getAttribute('data-state') === 'on') {
+        if (!window.confirm('Disattivare gli avvisi? Perderai i 100 punti bonus.')) return;
+        disablePush(btn);
+      } else {
+        enablePush(btn);
+      }
     });
   });
 })();
