@@ -2025,6 +2025,12 @@ app.post('/admin/utenti/:id/bonus', auth.requireAdmin, (req, res) => {
   db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(pts, target.id);
   audit(req, 'utente.bonus', `${target.nickname}: ${pts > 0 ? '+' : ''}${pts}pt${reason ? ' (' + reason + ')' : ''}`);
   const segno = pts > 0 ? '+' : '';
+  // Notifica push all'utente interessato (solo se ha le notifiche attive)
+  pushToUser(target.id, {
+    title: pts > 0 ? '🎉 Punti bonus!' : 'Punti aggiornati',
+    body: `${segno}${pts} punti${reason ? ' · ' + reason : ''}`,
+    url: '/profilo',
+  }).catch((e) => console.error('[PUSH] bonus', e.message));
   flash(req, 'success', `${segno}${pts} punti a ${target.nickname}${reason ? ' (' + reason + ')' : ''}. Totale ora: ${userPoints(target.id)}.`);
   res.redirect('/admin');
 });
