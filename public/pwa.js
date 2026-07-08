@@ -65,6 +65,12 @@
       body: JSON.stringify(body),
     }).then(function (r) { return r.json(); });
   }
+  // Ricorda l'endpoint dell'iscrizione: se Chrome la cancella (revoca dalle
+  // impostazioni), al prossimo avvio possiamo comunque dire al server di
+  // togliere l'iscrizione e il bonus, anche senza più l'oggetto subscription.
+  function rememberEndpoint(ep) { try { localStorage.setItem('fsrPushEndpoint', ep); } catch (e) {} }
+  function rememberedEndpoint() { try { return localStorage.getItem('fsrPushEndpoint'); } catch (e) { return null; } }
+  function forgetEndpoint() { try { localStorage.removeItem('fsrPushEndpoint'); } catch (e) {} }
   function updateBalance(balance) {
     if (balance == null) return;
     var nb = document.querySelector('.nav-balance-val');
@@ -75,18 +81,22 @@
     if (isIOS && !isStandalone) { setBtn(btn, 'install'); return; }
     navigator.serviceWorker.ready.then(function (reg) { return reg.pushManager.getSubscription(); })
       .then(function (sub) {
-        if (sub && Notification.permission === 'granted') {
+        var granted = (Notification.permission === 'granted');
+        if (sub && granted) {
+          // Attivo: ricorda l'endpoint e ri-sincronizza col server (idempotente)
+          rememberEndpoint(sub.endpoint);
           setBtn(btn, 'on');
-          // ri-sincronizza col server (idempotente): assicura user_id + bonus coerente
           post('/api/push/subscribe', sub).then(function (d) { if (d && d.balance != null) updateBalance(d.balance); }).catch(function () {});
-        } else if (sub) {
-          // Permesso revocato dal browser ma iscrizione ancora presente:
-          // disiscrivi e togli il bonus (anti-trucco).
-          var ep = sub.endpoint;
-          sub.unsubscribe().catch(function () {});
-          post('/api/push/unsubscribe', { endpoint: ep }).then(function (d) { if (d && d.balance != null) updateBalance(d.balance); }).catch(function () {});
-          setBtn(btn, 'off');
         } else {
+          // Non attivo: permesso revocato o iscrizione cancellata (anche dalle
+          // impostazioni di Chrome). Se c'era un'iscrizione — attuale o ricordata
+          // — avvisa il server perché elimini il record e tolga il bonus.
+          var ep = (sub && sub.endpoint) || rememberedEndpoint();
+          if (sub) sub.unsubscribe().catch(function () {});
+          if (ep) {
+            post('/api/push/unsubscribe', { endpoint: ep }).then(function (d) { if (d && d.balance != null) updateBalance(d.balance); }).catch(function () {});
+            forgetEndpoint();
+          }
           setBtn(btn, 'off');
         }
       }).catch(function () { setBtn(btn, 'off'); });
@@ -102,6 +112,7 @@
           return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlB64ToUint8Array(key) });
         });
       }).then(function (sub) {
+        rememberEndpoint(sub.endpoint);
         return post('/api/push/subscribe', sub);
       }).then(function (d) {
         setBtn(btn, 'on');
@@ -118,6 +129,7 @@
         var un = sub ? sub.unsubscribe() : Promise.resolve();
         return un.then(function () { return post('/api/push/unsubscribe', { endpoint: ep }); });
       }).then(function (d) {
+        forgetEndpoint();
         setBtn(btn, 'off');
         if (d && d.balance != null) updateBalance(d.balance);
         if (d && d.removed) alert('Avvisi disattivati. I 100 punti bonus sono stati rimossi.');
