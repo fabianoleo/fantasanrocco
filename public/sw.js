@@ -5,7 +5,7 @@
      funzionano anche senza segnale dopo la prima visita.
    • Notifiche push (Web Push): mostra la notifica e gestisce il click.
    =================================================================== */
-const VERSION = 'fsr-v2';
+const VERSION = 'fsr-v3';
 const CORE = ['/offline.html', '/icons/icon-192.png', '/manifest.json'];
 
 self.addEventListener('install', (e) => {
@@ -33,8 +33,13 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;                 // solo GET, mai POST
   const url = new URL(req.url);
 
-  // Pagine (navigazioni): rete prima, poi cache, poi pagina offline
+  // Pagine (navigazioni): rete prima, poi cache, poi pagina offline.
+  // Le pagine sensibili (admin/2FA/login) non vengono mai salvate in cache:
+  // su un dispositivo condiviso non deve restare una copia offline dello
+  // storico del pannello admin o dei flussi di autenticazione.
   if (req.mode === 'navigate') {
+    const noStore = /^\/(admin|2fa|login)(\/|$|\?)/.test(url.pathname + '');
+    if (noStore) { e.respondWith(fetch(req).catch(() => caches.match('/offline.html'))); return; }
     e.respondWith(
       fetch(req)
         .then((res) => {

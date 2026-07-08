@@ -2,6 +2,7 @@
 .env.*
 data/
 .git
+.gitignore
 node_modules/
 _originali/
 _da-sistemare/
@@ -9,3 +10,9 @@ _da-sistemare/
 npm-debug.log*
 /tmp/
 avvia.sh
+.claude/
+*.md
+IMG_*.JPG
+Dockerfile
+docker-compose.yml
+fly.toml
