@@ -190,3 +190,18 @@
     <button class="btn" type="submit" style="margin-top:1rem">Aggiorna password</button>
   </form>
 </div>
+
+<%# ── ELIMINA ACCOUNT ─────────────────────────────────────────────── %>
+<div class="pf-form-card pf-danger-card">
+  <p class="pf-form-title"><%- icon('trash') %> Elimina account</p>
+  <p class="muted small">Elimina definitivamente il tuo account e tutti i tuoi dati (prove, foto, storie, punti).
+    <strong>Azione irreversibile.</strong></p>
+  <form action="/profilo/elimina" method="post" autocomplete="off" style="max-width:440px"
+        data-confirm="Sei sicuro di voler eliminare per sempre il tuo account e tutti i tuoi dati?">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label>Conferma la password per procedere
+      <input type="password" name="password" required autocomplete="current-password" placeholder="la tua password">
+    </label>
+    <button class="btn btn-no" type="submit" style="margin-top:1rem"><%- icon('trash') %> Elimina il mio account</button>
+  </form>
+</div>

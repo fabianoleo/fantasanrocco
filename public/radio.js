@@ -85,6 +85,16 @@
     if (cover) cover.style.backgroundImage = cov;
     if (durEl) durEl.textContent = fmt(d.duration);
     if (typeof d.listeners === 'number') updateListeners(d.listeners);
+    // Media Session: traccia + controlli sulla schermata di blocco / centro di controllo
+    if ('mediaSession' in navigator) {
+      try {
+        const art = d.cover ? [{ src: d.cover, sizes: '512x512', type: /\.png$/i.test(d.cover) ? 'image/png' : 'image/jpeg' }] : [];
+        navigator.mediaSession.metadata = new MediaMetadata({ title: d.title || 'Radio San Rocco', artist: 'Radio San Rocco', album: 'FantaSanRocco', artwork: art });
+        navigator.mediaSession.setActionHandler('play', function () { tuneIn(); });
+        navigator.mediaSession.setActionHandler('pause', function () { tuneOut(); });
+        navigator.mediaSession.setActionHandler('stop', function () { tuneOut(); });
+      } catch (e) {}
+    }
   }
 
   async function fetchNow() {
@@ -134,8 +144,8 @@
   };
 
   // Lo stato UI segue lo stato reale dell'audio
-  audio.addEventListener('play', () => { setState('playing'); startPinging(); });
-  audio.addEventListener('pause', () => { setState('paused'); stopPinging(); });
+  audio.addEventListener('play', () => { setState('playing'); startPinging(); if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing'; });
+  audio.addEventListener('pause', () => { setState('paused'); stopPinging(); if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused'; });
 
   // Avanzamento barra + tempi
   audio.addEventListener('timeupdate', () => {

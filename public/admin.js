@@ -2,18 +2,7 @@
    Admin — QR premio: scarica come PNG o copia l'immagine negli appunti.
    L'SVG del QR viene disegnato su un canvas e convertito in PNG.
    =================================================================== */
-// Conferma prima di inviare i form marcati con data-confirm.
-// (La CSP ha script-src-attr 'none' → gli onsubmit inline non funzionano,
-//  quindi la conferma va agganciata qui via addEventListener.)
-(function () {
-  'use strict';
-  var forms = document.querySelectorAll('form[data-confirm]');
-  Array.prototype.forEach.call(forms, function (f) {
-    f.addEventListener('submit', function (e) {
-      if (!window.confirm(f.getAttribute('data-confirm'))) e.preventDefault();
-    });
-  });
-})();
+// (La conferma dei form data-confirm è ora gestita globalmente in app.js.)
 
 (function () {
   'use strict';

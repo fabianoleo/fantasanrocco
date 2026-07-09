@@ -3975,3 +3975,7 @@ textarea:focus-visible,
 .pf-hist-empty { padding: 1rem .9rem; color: var(--text-2); text-align: center; }
 .pf-hist-total { display: flex; justify-content: space-between; align-items: center; padding: .7rem .9rem; background: rgba(212,160,26,.08); border-top: 1px solid rgba(212,160,26,.2); }
 .pf-hist-total strong { color: var(--gold-2); font-size: 1.1rem; }
+
+/* Profilo: card "elimina account" */
+.pf-danger-card { border-color: rgba(224,82,82,.32); }
+.pf-danger-card .pf-form-title { color: #e05252; }

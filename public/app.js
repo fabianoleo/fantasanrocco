@@ -304,3 +304,13 @@ document.addEventListener('click', async (e) => {
   // Rete di sicurezza: non lasciare mai le colonne invisibili
   setTimeout(reveal, 1600);
 })();
+
+// ── Conferma prima di inviare i form con data-confirm (globale) ──────
+// (La CSP blocca gli onsubmit inline → serve un handler in JS esterno.)
+(function () {
+  document.querySelectorAll('form[data-confirm]').forEach(function (f) {
+    f.addEventListener('submit', function (e) {
+      if (!window.confirm(f.getAttribute('data-confirm'))) e.preventDefault();
+    });
+  });
+})();

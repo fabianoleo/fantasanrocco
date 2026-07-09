@@ -75,8 +75,8 @@ app.use(helmet({
     directives: {
       defaultSrc:     ["'self'"],
       scriptSrc:      ["'self'"],
-      styleSrc:       ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      fontSrc:        ["'self'", 'https://fonts.gstatic.com'],
+      styleSrc:       ["'self'", "'unsafe-inline'", 'https://fonts.bunny.net'],
+      fontSrc:        ["'self'", 'https://fonts.bunny.net'],
       imgSrc:         ["'self'", 'data:', 'blob:', 'https://*.basemaps.cartocdn.com'],
       connectSrc:     ["'self'"],
       frameAncestors: ["'none'"],
@@ -985,6 +985,13 @@ app.get('/privacy', (req, res) => {
   });
 });
 
+app.get('/termini', (req, res) => {
+  res.render('termini', {
+    title: 'Termini di servizio',
+    updatedAt: new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' }),
+  });
+});
+
 // ── Mini-gioco «Corri San Rocco» ──────────────────────────────────────────
 app.get('/gioco', (req, res) => {
   const achievements = userGameAchievements(req.currentUser ? req.currentUser.id : null);
@@ -1586,6 +1593,39 @@ app.post('/profilo/avatar/rimuovi', auth.requireLogin, verifyCsrf, (req, res) =>
   db.prepare('UPDATE users SET avatar_path = NULL WHERE id = ?').run(req.currentUser.id);
   flash(req, 'success', 'Foto profilo rimossa. Ora mostri le tue iniziali.');
   res.redirect('/profilo');
+});
+
+// Cancellazione account (diritto all'oblio GDPR): l'utente elimina sé stesso.
+// Richiede la password (re-autenticazione) per evitare cancellazioni accidentali/CSRF.
+app.post('/profilo/elimina', auth.requireLogin, verifyCsrf, (req, res) => {
+  const u = req.currentUser;
+  if (!auth.verifyPassword(req.body.password || '', u.password_hash)) {
+    flash(req, 'error', 'Password errata: account non eliminato.');
+    return res.redirect('/profilo');
+  }
+  // File su disco da rimuovere (prima di cancellare le righe)
+  const photoFiles  = db.prepare('SELECT photo_path FROM submissions WHERE user_id = ? AND photo_path IS NOT NULL').all(u.id).map((r) => r.photo_path);
+  const storyFiles  = db.prepare('SELECT media_path FROM stories WHERE user_id = ?').all(u.id).map((r) => r.media_path);
+  const avatarFile  = u.avatar_path;
+
+  db.transaction(() => {
+    // Sgancia i riferimenti con vincolo NO ACTION (altrimenti il DELETE fallisce)
+    db.prepare('UPDATE invites SET used = 0, used_by_user_id = NULL, used_at = NULL WHERE used_by_user_id = ?').run(u.id);
+    db.prepare('UPDATE invites SET created_by = NULL WHERE created_by = ?').run(u.id);
+    db.prepare('UPDATE submissions SET reviewed_by = NULL WHERE reviewed_by = ?').run(u.id);
+    // Elimina l'utente: submissions, stories, story_views, push_subscriptions vanno a
+    // cascata; reward_codes.claimed_by torna NULL (codice di nuovo riscattabile).
+    db.prepare('DELETE FROM users WHERE id = ?').run(u.id);
+  })();
+
+  const rm = (dir, names) => names.forEach((n) => { if (n) fs.unlink(path.join(dir, path.basename(n)), () => {}); });
+  rm(UPLOADS_DIR, photoFiles);
+  rm(STORIES_DIR, storyFiles);
+  if (avatarFile) fs.unlink(path.join(AVATARS_DIR, path.basename(avatarFile)), () => {});
+
+  delete req.session.userId;   // logout (l'utente non esiste più)
+  flash(req, 'success', 'Il tuo account e i tuoi dati sono stati eliminati. Ci dispiace vederti andare!');
+  res.redirect('/');
 });
 
 // Avatar serviti pubblicamente (non sono dati sensibili come le foto-prova)
