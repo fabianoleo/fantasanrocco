@@ -147,26 +147,35 @@
   <ul class="user-list">
     <% users.forEach((u) => { %>
       <li class="user-row">
-        <span class="user-name"><%= u.nickname %>
+        <div class="user-head">
+          <span class="user-name"><%= u.nickname %></span>
           <span class="role-badge role-<%= u.role %>"><%= u.role %></span>
           <span class="user-pts"><%= u.points %> pt</span>
-        </span>
-        <form action="/admin/utenti/<%= u.id %>/ruolo" method="post" class="inline">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <select name="role">
-            <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>user</option>
-            <option value="moderator" <%= u.role === 'moderator' ? 'selected' : '' %>>moderator</option>
-            <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>admin</option>
-          </select>
-          <button class="btn-mini" type="submit">Aggiorna</button>
-        </form>
-        <form action="/admin/utenti/<%= u.id %>/bonus" method="post" class="inline user-bonus"
-              data-confirm="Assegnare i punti bonus a questo utente?">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <input type="number" name="points" value="500" step="1" aria-label="Punti bonus" title="Punti bonus (negativi per correggere)">
-          <input type="text" name="reason" placeholder="Motivo (es. Contest Instagram)" aria-label="Motivo" maxlength="120">
-          <button class="btn-mini" type="submit">+ Bonus</button>
-        </form>
+        </div>
+        <div class="user-actions">
+          <form action="/admin/utenti/<%= u.id %>/ruolo" method="post" class="user-role-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label class="field-mini">Ruolo
+              <select name="role">
+                <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>user</option>
+                <option value="moderator" <%= u.role === 'moderator' ? 'selected' : '' %>>moderator</option>
+                <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>admin</option>
+              </select>
+            </label>
+            <button class="btn-mini" type="submit">Aggiorna</button>
+          </form>
+          <form action="/admin/utenti/<%= u.id %>/bonus" method="post" class="user-bonus"
+                data-confirm="Assegnare i punti bonus a questo utente?">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label class="field-mini">Punti
+              <input type="number" name="points" value="500" step="1" aria-label="Punti bonus" title="Punti bonus (negativi per correggere)">
+            </label>
+            <label class="field-mini field-grow">Motivo
+              <input type="text" name="reason" placeholder="es. Contest Instagram" aria-label="Motivo" maxlength="120">
+            </label>
+            <button class="btn-mini" type="submit">+ Bonus</button>
+          </form>
+        </div>
       </li>
     <% }) %>
   </ul>

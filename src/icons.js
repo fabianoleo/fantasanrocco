@@ -168,6 +168,9 @@ const PATHS = {
     '<rect x="3" y="3" width="18" height="18" rx="5" />' +
     '<circle cx="12" cy="12" r="4" />' +
     '<circle cx="17" cy="7" r="1.1" fill="currentColor" stroke="none" />',
+  // TikTok: nota musicale con "coda"
+  tiktok:
+    '<path d="M14 4v10.5a3.5 3.5 0 1 1-3-3.46" /><path d="M14 4a5 5 0 0 0 5 5" />',
   // Controlli player
   play:
     '<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" />',
