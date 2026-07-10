@@ -991,6 +991,28 @@ app.get('/palio', (req, res) => {
   res.render('palio', { title: 'Palio dei Fuochi', fuochisti: PALIO_FUOCHISTI });
 });
 
+// ── Pronostico Palio dei Fuochi: helper condivisi ──────────────────────────
+function palioState() {
+  return db.prepare('SELECT * FROM palio_pronostico WHERE id = 1').get()
+    || { id: 1, open: 1, winner: null, points: 500, resolved_at: null };
+}
+// Conteggio voti per ciascun fuochista (array parallelo a PALIO_FUOCHISTI)
+function palioVoteCounts() {
+  const counts = PALIO_FUOCHISTI.map(() => 0);
+  for (const r of db.prepare('SELECT choice, COUNT(*) AS n FROM palio_predictions GROUP BY choice').all()) {
+    if (r.choice >= 0 && r.choice < counts.length) counts[r.choice] = r.n;
+  }
+  return counts;
+}
+function palioMyChoice(userId) {
+  const r = db.prepare('SELECT choice FROM palio_predictions WHERE user_id = ?').get(userId);
+  return r ? r.choice : null;
+}
+// Nome breve del fuochista per etichette compatte (senza forma societaria)
+function palioShortName(name) {
+  return name.replace(/\s+(s\.a\.s\.|s\.r\.l\.|Fireworks Events|Fireworks|Events).*$/i, '').trim() || name;
+}
+
 app.get('/privacy', (req, res) => {
   res.render('privacy', {
     title: 'Privacy Policy',
@@ -1433,7 +1455,36 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
       completedBy: completedCount[m.id] || 0,
     };
   });
-  res.render('missions', { title: 'Missioni', missions: list });
+  // Pronostico Palio dei Fuochi (card speciale in cima alla pagina)
+  const pst = palioState();
+  const pronostico = {
+    open: !!pst.open && pst.winner === null,
+    resolved: pst.winner !== null,
+    winner: pst.winner,
+    points: pst.points,
+    fuochisti: PALIO_FUOCHISTI.map((f) => f.name),
+    myChoice: palioMyChoice(req.currentUser.id),
+  };
+  res.render('missions', { title: 'Missioni', missions: list, pronostico });
+});
+
+// Salva/aggiorna il pronostico dell'utente (una scelta tra i 6 fuochisti)
+app.post('/missioni/pronostico', auth.requireLogin, verifyCsrf, (req, res) => {
+  const st = palioState();
+  if (!st.open || st.winner !== null) {
+    flash(req, 'error', 'I pronostici sono chiusi.');
+    return res.redirect('/missioni');
+  }
+  const choice = parseInt(req.body.choice, 10);
+  if (!Number.isInteger(choice) || choice < 0 || choice >= PALIO_FUOCHISTI.length) {
+    flash(req, 'error', 'Seleziona un fuochista valido.');
+    return res.redirect('/missioni');
+  }
+  db.prepare(`INSERT INTO palio_predictions (user_id, choice) VALUES (?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET choice = excluded.choice, updated_at = datetime('now')`)
+    .run(req.currentUser.id, choice);
+  flash(req, 'success', `Pronostico salvato: ${PALIO_FUOCHISTI[choice].name}. In bocca al lupo! 🎆`);
+  res.redirect('/missioni');
 });
 
 app.get('/missioni/:id', auth.requireLogin, (req, res) => {
@@ -1916,7 +1967,19 @@ app.get('/admin', auth.requireAdmin, async (req, res) => {
     FROM stories s JOIN users u ON u.id = s.user_id
     JOIN story_reports r ON r.story_id = s.id
     GROUP BY s.id ORDER BY reports DESC, s.id DESC`).all();
-  res.render('admin', { title: 'Admin', missions, users, codes, baseUrl, backups, auditLog, reportedStories });
+  // Pronostico Palio dei Fuochi: stato + distribuzione voti
+  const pst = palioState();
+  const counts = palioVoteCounts();
+  const totalVotes = counts.reduce((a, b) => a + b, 0);
+  const pronostico = {
+    open: !!pst.open,
+    winner: pst.winner,
+    points: pst.points,
+    resolved: pst.winner !== null,
+    totalVotes,
+    fuochisti: PALIO_FUOCHISTI.map((f, i) => ({ name: f.name, short: palioShortName(f.name), votes: counts[i] })),
+  };
+  res.render('admin', { title: 'Admin', missions, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico });
 });
 
 app.post('/admin/codici', auth.requireAdmin, (req, res) => {
@@ -2086,6 +2149,73 @@ app.post('/admin/utenti/:id/bonus', auth.requireAdmin, (req, res) => {
     url: '/profilo',
   }).catch((e) => console.error('[PUSH] bonus', e.message));
   flash(req, 'success', `${segno}${pts} punti a ${target.nickname}${reason ? ' (' + reason + ')' : ''}. Totale ora: ${userPoints(target.id)}.`);
+  res.redirect('/admin');
+});
+
+// ── Pronostico Palio dei Fuochi (admin) ────────────────────────────────────
+// Apre/chiude i pronostici e imposta i punti in palio.
+app.post('/admin/pronostico/impostazioni', auth.requireAdmin, (req, res) => {
+  const st = palioState();
+  if (st.winner !== null) { flash(req, 'error', 'Pronostico già chiuso: annullalo prima di modificarlo.'); return res.redirect('/admin'); }
+  const open = req.body.open === '1' ? 1 : 0;
+  let points = parseInt(req.body.points, 10);
+  if (!Number.isFinite(points) || points < 0) points = st.points;
+  db.prepare('UPDATE palio_pronostico SET open = ?, points = ? WHERE id = 1').run(open, points);
+  audit(req, 'pronostico.impostazioni', `open=${open} punti=${points}`);
+  flash(req, 'success', `Pronostico ${open ? 'aperto' : 'chiuso'} · ${points} punti in palio.`);
+  res.redirect('/admin');
+});
+
+// Dichiara il vincitore e accredita i punti a chi ha indovinato (idempotente:
+// storna eventuali accrediti precedenti prima di riassegnare, così si può correggere).
+app.post('/admin/pronostico/vincitore', auth.requireAdmin, (req, res) => {
+  const winner = parseInt(req.body.winner, 10);
+  if (!Number.isInteger(winner) || winner < 0 || winner >= PALIO_FUOCHISTI.length) {
+    flash(req, 'error', 'Seleziona un fuochista vincitore valido.'); return res.redirect('/admin');
+  }
+  const st = palioState();
+  const points = st.points;
+  const winners = db.transaction(() => {
+    // Storna accrediti precedenti (in caso di ri-dichiarazione)
+    for (const p of db.prepare('SELECT user_id, awarded_points FROM palio_predictions WHERE awarded_points <> 0').all()) {
+      db.prepare('UPDATE users SET points_adjust = points_adjust - ? WHERE id = ?').run(p.awarded_points, p.user_id);
+    }
+    db.prepare('UPDATE palio_predictions SET awarded_points = 0 WHERE awarded_points <> 0').run();
+    // Accredita ai vincitori
+    const win = db.prepare('SELECT user_id FROM palio_predictions WHERE choice = ?').all(winner);
+    if (points > 0) {
+      for (const p of win) {
+        db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(points, p.user_id);
+      }
+      db.prepare('UPDATE palio_predictions SET awarded_points = ? WHERE choice = ?').run(points, winner);
+    }
+    db.prepare("UPDATE palio_pronostico SET winner = ?, open = 0, resolved_at = datetime('now') WHERE id = 1").run(winner);
+    return win.map((p) => p.user_id);
+  })();
+  audit(req, 'pronostico.vincitore', `${PALIO_FUOCHISTI[winner].name} · ${winners.length} vincitori · ${points}pt`);
+  // Notifica push ai vincitori
+  for (const uid of winners) {
+    pushToUser(uid, {
+      title: '🎆 Hai vinto il pronostico!',
+      body: `${PALIO_FUOCHISTI[winner].name} ha vinto il Palio: +${points} punti!`,
+      url: '/classifica',
+    }).catch((e) => console.error('[PUSH] pronostico', e.message));
+  }
+  flash(req, 'success', `Vincitore: ${PALIO_FUOCHISTI[winner].name}. Accreditati ${points} punti a ${winners.length} utenti.`);
+  res.redirect('/admin');
+});
+
+// Annulla il pronostico: storna i punti e riapre le votazioni.
+app.post('/admin/pronostico/reset', auth.requireAdmin, (req, res) => {
+  db.transaction(() => {
+    for (const p of db.prepare('SELECT user_id, awarded_points FROM palio_predictions WHERE awarded_points <> 0').all()) {
+      db.prepare('UPDATE users SET points_adjust = points_adjust - ? WHERE id = ?').run(p.awarded_points, p.user_id);
+    }
+    db.prepare('UPDATE palio_predictions SET awarded_points = 0 WHERE awarded_points <> 0').run();
+    db.prepare("UPDATE palio_pronostico SET winner = NULL, open = 1, resolved_at = NULL WHERE id = 1").run();
+  })();
+  audit(req, 'pronostico.reset', 'punti stornati, votazioni riaperte');
+  flash(req, 'success', 'Pronostico annullato: punti stornati e votazioni riaperte.');
   res.redirect('/admin');
 });
 

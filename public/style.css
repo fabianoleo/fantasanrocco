@@ -4142,3 +4142,92 @@ textarea:focus-visible,
 @media (prefers-reduced-motion: reduce) {
   .palio-card, .palio-card:hover { transition: none; transform: none; }
 }
+
+/* =========================================================================
+   PRONOSTICO PALIO DEI FUOCHI — card missione speciale + admin
+   ========================================================================= */
+.prono-card {
+  position: relative; overflow: hidden;
+  margin-bottom: 1.4rem; padding: 1.4rem 1.4rem 1.5rem; border-radius: 18px;
+  background: linear-gradient(160deg, rgba(28,14,8,.96), rgba(9,9,22,.97));
+  border: 1px solid rgba(232,78,27,.32);
+  box-shadow: 0 14px 40px rgba(232,78,27,.1);
+}
+.prono-glow {
+  position: absolute; right: -60px; top: -80px; width: 260px; height: 260px; pointer-events: none;
+  background: radial-gradient(circle, rgba(232,78,27,.32) 0%, transparent 64%); filter: blur(6px);
+}
+.prono-head { display: flex; align-items: center; gap: .9rem; position: relative; z-index: 1; }
+.prono-ico {
+  flex-shrink: 0; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 12px;
+  background: rgba(232,78,27,.14); border: 1px solid rgba(232,78,27,.3); color: var(--fire);
+}
+.prono-ico svg { width: 24px; height: 24px; }
+.prono-kicker {
+  font-family: var(--font-heading); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--fire); margin-bottom: .15rem;
+}
+.prono-title { font-family: var(--font-heading); font-weight: 800; font-size: 1.25rem; color: var(--gold-2); line-height: 1.15; }
+.prono-prize {
+  margin-left: auto; flex-shrink: 0; font-family: var(--font-heading); font-weight: 800; font-size: 1rem;
+  color: #fff; padding: .4rem .8rem; border-radius: 999px;
+  background: linear-gradient(135deg, var(--fire-2), var(--fire)); box-shadow: 0 3px 12px rgba(232,78,27,.35);
+}
+.prono-desc { margin-top: 1rem; color: var(--text); font-size: .95rem; line-height: 1.6; position: relative; z-index: 1; }
+.prono-current { color: var(--gold-2); font-size: .9rem; }
+.prono-current svg { width: 1em; height: 1em; vertical-align: -2px; }
+
+.prono-form { margin-top: 1rem; position: relative; z-index: 1; }
+.prono-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .55rem; margin-bottom: 1rem; }
+.prono-opt {
+  display: flex; align-items: center; gap: .6rem; cursor: pointer;
+  padding: .7rem .85rem; border-radius: 12px;
+  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.09);
+  transition: border-color .18s var(--ease), background .18s var(--ease);
+}
+.prono-opt:hover { border-color: rgba(232,78,27,.45); background: rgba(232,78,27,.06); }
+.prono-opt input { position: absolute; opacity: 0; width: 0; height: 0; }
+.prono-opt-num { font-family: 'Cinzel Decorative', serif; font-weight: 900; font-size: 1.1rem; color: transparent; -webkit-text-stroke: 1.2px rgba(232,78,27,.6); flex-shrink: 0; }
+.prono-opt-name { flex: 1 1 auto; min-width: 0; font-size: .9rem; font-weight: 600; color: var(--text); }
+.prono-opt-tick {
+  flex-shrink: 0; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,.2); color: transparent; transition: all .18s var(--ease);
+}
+.prono-opt-tick svg { width: 13px; height: 13px; }
+.prono-opt.is-checked, .prono-opt:has(input:checked) {
+  border-color: var(--fire); background: rgba(232,78,27,.12);
+  box-shadow: inset 0 0 0 1px rgba(232,78,27,.4);
+}
+.prono-opt.is-checked .prono-opt-tick, .prono-opt:has(input:checked) .prono-opt-tick {
+  background: var(--fire); border-color: var(--fire); color: #fff;
+}
+.prono-opt:focus-within { outline: 2px solid var(--gold-2); outline-offset: 2px; }
+.prono-btn { width: 100%; justify-content: center; }
+
+.prono-result { margin-top: 1rem; padding: 1rem 1.1rem; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.09); position: relative; z-index: 1; }
+.prono-result.is-win { border-color: rgba(74,222,128,.4); background: rgba(74,222,128,.08); }
+.prono-result.is-lose { border-color: rgba(255,255,255,.12); }
+.prono-winner { font-family: var(--font-heading); font-weight: 700; color: var(--gold-2); font-size: 1.05rem; }
+.prono-winner svg { width: 1.05em; height: 1.05em; vertical-align: -3px; color: var(--gold-2); }
+.prono-outcome { margin-top: .5rem; color: var(--text); font-size: .95rem; }
+.prono-outcome-win { color: #86efac; }
+.prono-outcome svg { width: 1em; height: 1em; vertical-align: -2px; }
+
+/* Admin: distribuzione voti */
+.prono-admin-dist { display: flex; flex-direction: column; gap: .45rem; margin-top: .8rem; }
+.prono-adist-row { display: grid; grid-template-columns: minmax(120px, 1.4fr) 3fr auto; align-items: center; gap: .6rem; font-size: .82rem; }
+.prono-adist-name { color: var(--text-2); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prono-adist-name svg { width: 13px; height: 13px; vertical-align: -2px; color: var(--gold-2); }
+.prono-adist-row.is-winner .prono-adist-name { color: var(--gold-2); }
+.prono-adist-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; }
+.prono-adist-bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--fire), var(--gold-2)); transition: width .3s var(--ease); }
+.prono-adist-row.is-winner .prono-adist-bar span { background: linear-gradient(90deg, #4ade80, var(--gold-2)); }
+.prono-adist-val { color: var(--text-3); font-weight: 600; white-space: nowrap; font-size: .78rem; }
+
+@media (max-width: 560px) {
+  .prono-options { grid-template-columns: 1fr; }
+  .prono-adist-row { grid-template-columns: minmax(90px, 1.2fr) 2fr auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .prono-opt, .prono-opt-tick, .prono-adist-bar span { transition: none; }
+}

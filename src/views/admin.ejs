@@ -140,6 +140,75 @@
   </form>
 </section>
 
+<% if (typeof pronostico !== 'undefined' && pronostico) { %>
+<section class="card">
+  <h2 class="staff-title"><%- icon('fireworks') %> Pronostico Palio dei Fuochi</h2>
+  <p class="muted small">
+    Gli utenti scelgono un fuochista dalla pagina Missioni. Dichiara il vincitore
+    e i punti vengono accreditati automaticamente a chi ha indovinato.
+    <strong><%= pronostico.totalVotes %></strong> pronostici totali ·
+    <% if (pronostico.resolved) { %>
+      <span class="tag tag-off">chiuso · vincitore dichiarato</span>
+    <% } else if (pronostico.open) { %>
+      <span class="tag tag-on">votazioni aperte</span>
+    <% } else { %>
+      <span class="tag tag-off">votazioni chiuse (nessun vincitore)</span>
+    <% } %>
+  </p>
+
+  <%# Distribuzione voti %>
+  <div class="prono-admin-dist">
+    <% pronostico.fuochisti.forEach((f, i) => {
+         const pct = pronostico.totalVotes ? Math.round(f.votes / pronostico.totalVotes * 100) : 0; %>
+      <div class="prono-adist-row <%= pronostico.winner === i ? 'is-winner' : '' %>">
+        <span class="prono-adist-name"><%= i + 1 %>. <%= f.short %><% if (pronostico.winner === i) { %> <%- icon('trophy') %><% } %></span>
+        <span class="prono-adist-bar"><span style="width:<%= pct %>%"></span></span>
+        <span class="prono-adist-val"><%= f.votes %> · <%= pct %>%</span>
+      </div>
+    <% }) %>
+  </div>
+
+  <% if (!pronostico.resolved) { %>
+    <%# Impostazioni: apri/chiudi + punti %>
+    <form action="/admin/pronostico/impostazioni" method="post" class="mission-form" style="margin-top:1rem">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="row">
+        <label>Punti in palio
+          <input type="number" name="points" value="<%= pronostico.points %>" min="0" step="1">
+        </label>
+        <label class="check"><input type="checkbox" name="open" value="1" <%= pronostico.open ? 'checked' : '' %>> Votazioni aperte</label>
+      </div>
+      <button class="btn" type="submit"><%- icon('save') %> Salva impostazioni</button>
+    </form>
+
+    <%# Dichiara il vincitore %>
+    <form action="/admin/pronostico/vincitore" method="post" class="mission-form" style="margin-top:1rem"
+          data-confirm="Dichiarare questo fuochista vincitore e accreditare i punti a chi ha indovinato?">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>Fuochista vincitore
+        <select name="winner" required>
+          <option value="" disabled selected>— scegli il vincitore —</option>
+          <% pronostico.fuochisti.forEach((f, i) => { %>
+            <option value="<%= i %>"><%= i + 1 %>. <%= f.name %></option>
+          <% }) %>
+        </select>
+      </label>
+      <button class="btn btn-no" type="submit"><%- icon('trophy') %> Dichiara vincitore e assegna punti</button>
+    </form>
+  <% } else { %>
+    <p class="muted small" style="margin-top:1rem">
+      Vincitore attuale: <strong><%= pronostico.fuochisti[pronostico.winner].name %></strong>.
+      Per correggere, annulla il pronostico (storna i punti e riapre le votazioni).
+    </p>
+    <form action="/admin/pronostico/reset" method="post" class="danger-form"
+          data-confirm="Annullare il pronostico? Verranno stornati i punti assegnati e riaperte le votazioni.">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn btn-no" type="submit"><%- icon('repeat') %> Annulla pronostico e storna punti</button>
+    </form>
+  <% } %>
+</section>
+<% } %>
+
 <section class="card">
   <h2 class="staff-title"><%- icon('people') %> Utenti e ruoli (<%= users.length %>)</h2>
   <p class="muted small">Promuovi i tuoi collaboratori a <strong>moderatore</strong> (validano le prove)

@@ -1,6 +1,62 @@
 <h1>Missioni</h1>
 <p class="muted">Tocca una missione per inviare la tua prova. <span style="color:var(--green)"><%- icon('dot') %></span> = puoi farla ora.</p>
 
+<%# ── Pronostico Palio dei Fuochi ─────────────────────────────────── %>
+<% if (typeof pronostico !== 'undefined' && pronostico) { %>
+  <section class="prono-card">
+    <div class="prono-glow" aria-hidden="true"></div>
+    <div class="prono-head">
+      <span class="prono-ico"><%- icon('fireworks') %></span>
+      <div>
+        <p class="prono-kicker">Missione speciale · Pronostico</p>
+        <h2 class="prono-title">Chi vince il Palio dei Fuochi?</h2>
+      </div>
+      <span class="prono-prize"><%= pronostico.points %> pt</span>
+    </div>
+
+    <% if (pronostico.resolved) { %>
+      <%# Risultato dichiarato %>
+      <% const won = pronostico.myChoice !== null && pronostico.myChoice === pronostico.winner; %>
+      <div class="prono-result <%= won ? 'is-win' : (pronostico.myChoice !== null ? 'is-lose' : '') %>">
+        <p class="prono-winner"><%- icon('trophy') %> Vincitore: <strong><%= pronostico.fuochisti[pronostico.winner] %></strong></p>
+        <% if (won) { %>
+          <p class="prono-outcome prono-outcome-win"><%- icon('sparkle') %> Hai indovinato! <strong>+<%= pronostico.points %> punti</strong> accreditati.</p>
+        <% } else if (pronostico.myChoice !== null) { %>
+          <p class="prono-outcome">Avevi scelto <strong><%= pronostico.fuochisti[pronostico.myChoice] %></strong>. Sarà per la prossima! 🎆</p>
+        <% } else { %>
+          <p class="prono-outcome">Non avevi fatto il tuo pronostico.</p>
+        <% } %>
+      </div>
+
+    <% } else if (pronostico.open) { %>
+      <%# Votazioni aperte %>
+      <p class="prono-desc">Scegli <strong>un solo</strong> fuochista: se indovina il vincitore del Palio, ti porti a casa <strong><%= pronostico.points %> punti</strong>.
+        <% if (pronostico.myChoice !== null) { %><br><span class="prono-current"><%- icon('check-circle') %> Il tuo pronostico: <strong><%= pronostico.fuochisti[pronostico.myChoice] %></strong> — puoi ancora cambiarlo.</span><% } %>
+      </p>
+      <form action="/missioni/pronostico" method="post" class="prono-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="prono-options">
+          <% pronostico.fuochisti.forEach((name, i) => { %>
+            <label class="prono-opt <%= pronostico.myChoice === i ? 'is-checked' : '' %>">
+              <input type="radio" name="choice" value="<%= i %>" <%= pronostico.myChoice === i ? 'checked' : '' %> required>
+              <span class="prono-opt-num"><%= String(i + 1).padStart(2, '0') %></span>
+              <span class="prono-opt-name"><%= name %></span>
+              <span class="prono-opt-tick"><%- icon('check') %></span>
+            </label>
+          <% }) %>
+        </div>
+        <button class="btn prono-btn" type="submit"><%- icon('fireworks') %> <%= pronostico.myChoice !== null ? 'Aggiorna il pronostico' : 'Conferma il pronostico' %></button>
+      </form>
+
+    <% } else { %>
+      <%# Chiuse, verdetto in attesa %>
+      <p class="prono-desc"><%- icon('hourglass') %> Pronostici chiusi. In attesa del verdetto del Palio!
+        <% if (pronostico.myChoice !== null) { %><br><span class="prono-current">Il tuo pronostico: <strong><%= pronostico.fuochisti[pronostico.myChoice] %></strong></span><% } %>
+      </p>
+    <% } %>
+  </section>
+<% } %>
+
 <div class="mission-grid">
   <% missions.forEach((m) => { %>
     <a class="mission-card <%= m.activeNow ? '' : 'inactive' %>" href="/missioni/<%= m.id %>">

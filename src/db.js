@@ -167,4 +167,28 @@ CREATE TABLE IF NOT EXISTS story_reports (
 `);
 try { db.exec('ALTER TABLE stories ADD COLUMN hidden INTEGER NOT NULL DEFAULT 0'); } catch {}
 
+// Pronostico Palio dei Fuochi: ogni utente sceglie UN fuochista (0-5); chi indovina
+// vince punti. awarded_points memorizza quanto già accreditato (per storno idempotente).
+db.exec(`
+CREATE TABLE IF NOT EXISTS palio_predictions (
+  user_id        INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  choice         INTEGER NOT NULL,          -- indice 0-5 del fuochista scelto
+  awarded_points INTEGER NOT NULL DEFAULT 0,-- punti già accreditati per questa scelta
+  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`);
+
+// Stato del pronostico (riga singola id=1): aperto/chiuso, vincitore, punti in palio.
+db.exec(`
+CREATE TABLE IF NOT EXISTS palio_pronostico (
+  id          INTEGER PRIMARY KEY CHECK (id = 1),
+  open        INTEGER NOT NULL DEFAULT 1,    -- 1 = si può ancora pronosticare
+  winner      INTEGER,                        -- indice 0-5 del vincitore, NULL finché non dichiarato
+  points      INTEGER NOT NULL DEFAULT 500,   -- punti per chi indovina
+  resolved_at TEXT
+);
+`);
+db.prepare('INSERT OR IGNORE INTO palio_pronostico (id, open, winner, points) VALUES (1, 1, NULL, 500)').run();
+
 module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR };
