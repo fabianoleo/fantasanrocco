@@ -4194,13 +4194,30 @@ textarea:focus-visible,
   border: 1.5px solid rgba(255,255,255,.2); color: transparent; transition: all .18s var(--ease);
 }
 .prono-opt-tick svg { width: 13px; height: 13px; }
-.prono-opt.is-checked, .prono-opt:has(input:checked) {
+/* Scelta attualmente selezionata (in fuoco). is-current è guidata da JS;
+   :has(input:checked) è il fallback CSS se il JS non gira. */
+.prono-opt.is-current, .prono-opt:has(input:checked) {
   border-color: var(--fire); background: rgba(232,78,27,.12);
   box-shadow: inset 0 0 0 1px rgba(232,78,27,.4);
 }
-.prono-opt.is-checked .prono-opt-tick, .prono-opt:has(input:checked) .prono-opt-tick {
+.prono-opt.is-current .prono-opt-tick, .prono-opt:has(input:checked) .prono-opt-tick {
   background: var(--fire); border-color: var(--fire); color: #fff;
 }
+/* Scelta salvata in precedenza ma che si sta abbandonando: grigia + sbarrata,
+   con l'etichetta "in uscita", così è chiaro che verrà sostituita. */
+.prono-opt.is-outgoing {
+  opacity: .55; border-style: dashed; border-color: rgba(255,255,255,.2);
+  background: rgba(255,255,255,.02);
+}
+.prono-opt.is-outgoing .prono-opt-name { text-decoration: line-through; text-decoration-color: rgba(255,255,255,.4); color: var(--text-2); }
+.prono-opt.is-outgoing .prono-opt-num { -webkit-text-stroke-color: rgba(255,255,255,.28); }
+.prono-opt.is-outgoing .prono-opt-tick { border-color: rgba(255,255,255,.2); }
+.prono-opt-flag {
+  display: none; flex-shrink: 0; font-size: .6rem; text-transform: uppercase; letter-spacing: .08em;
+  font-weight: 700; color: var(--text-2);
+  padding: .12rem .45rem; border-radius: 999px; border: 1px solid rgba(255,255,255,.18);
+}
+.prono-opt.is-outgoing .prono-opt-flag { display: inline-block; }
 .prono-opt:focus-within { outline: 2px solid var(--gold-2); outline-offset: 2px; }
 .prono-btn { width: 100%; justify-content: center; }
 

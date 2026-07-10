@@ -1907,6 +1907,18 @@ app.post('/moderazione/:id/:azione', auth.requireStaff, (req, res) => {
     flash(req, 'error', 'Già gestita da un altro moderatore (oppure non esiste più).');
   } else {
     flash(req, 'success', azione === 'approved' ? 'Approvata ✅' : 'Rifiutata ❌');
+    // Notifica push all'utente quando la sua prova viene approvata (punti accreditati)
+    if (azione === 'approved') {
+      const sub = db.prepare(`SELECT s.user_id, m.title, m.points
+        FROM submissions s JOIN missions m ON m.id = s.mission_id WHERE s.id = ?`).get(req.params.id);
+      if (sub) {
+        pushToUser(sub.user_id, {
+          title: '✅ Missione approvata!',
+          body: `«${sub.title}» validata: +${sub.points} punti!`,
+          url: '/classifica',
+        }).catch((e) => console.error('[PUSH] approvazione', e.message));
+      }
+    }
   }
   res.redirect('/moderazione');
 });

@@ -314,3 +314,24 @@ document.addEventListener('click', async (e) => {
     });
   });
 })();
+
+// ── Pronostico Palio: evidenzia la scelta attuale e "sbiadisce" la precedente ──
+// Quando l'utente cambia scelta, la nuova opzione va in fuoco e quella salvata
+// in precedenza diventa "in uscita" (grigia/sbarrata), per far capire che verrà
+// sostituita solo dopo la conferma.
+(function () {
+  var form = document.querySelector('.prono-form');
+  if (!form) return;
+  var savedAttr = form.getAttribute('data-saved');
+  var saved = (savedAttr === null || savedAttr === '') ? null : parseInt(savedAttr, 10);
+  var opts = Array.prototype.slice.call(form.querySelectorAll('.prono-opt'));
+  function sync() {
+    opts.forEach(function (o, i) {
+      var checked = o.querySelector('input').checked;
+      o.classList.toggle('is-current', checked);
+      o.classList.toggle('is-outgoing', saved !== null && i === saved && !checked);
+    });
+  }
+  form.addEventListener('change', sync);
+  sync();
+})();

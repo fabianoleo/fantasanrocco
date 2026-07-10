@@ -33,14 +33,15 @@
       <p class="prono-desc">Scegli <strong>un solo</strong> fuochista: se indovina il vincitore del Palio, ti porti a casa <strong><%= pronostico.points %> punti</strong>.
         <% if (pronostico.myChoice !== null) { %><br><span class="prono-current"><%- icon('check-circle') %> Il tuo pronostico: <strong><%= pronostico.fuochisti[pronostico.myChoice] %></strong> — puoi ancora cambiarlo.</span><% } %>
       </p>
-      <form action="/missioni/pronostico" method="post" class="prono-form">
+      <form action="/missioni/pronostico" method="post" class="prono-form" data-saved="<%= pronostico.myChoice === null ? '' : pronostico.myChoice %>">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="prono-options">
           <% pronostico.fuochisti.forEach((name, i) => { %>
-            <label class="prono-opt <%= pronostico.myChoice === i ? 'is-checked' : '' %>">
+            <label class="prono-opt <%= pronostico.myChoice === i ? 'is-current' : '' %>">
               <input type="radio" name="choice" value="<%= i %>" <%= pronostico.myChoice === i ? 'checked' : '' %> required>
               <span class="prono-opt-num"><%= String(i + 1).padStart(2, '0') %></span>
               <span class="prono-opt-name"><%= name %></span>
+              <span class="prono-opt-flag">in uscita</span>
               <span class="prono-opt-tick"><%- icon('check') %></span>
             </label>
           <% }) %>
