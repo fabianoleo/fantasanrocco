@@ -1,0 +1,74 @@
+<%# ── HERO ────────────────────────────────────────────────────── %>
+<div class="palio-hero lp-full">
+  <span class="palio-hero-glow" aria-hidden="true"></span>
+  <div class="palio-hero-inner">
+    <p class="palio-kicker"><%- icon('fireworks') %> 18 Agosto 2026 &nbsp;·&nbsp; Ore 22:30</p>
+    <h1 class="palio-title">Palio dei Fuochi</h1>
+    <p class="palio-sub">XXVI Edizione &mdash; Città di Siano (SA)</p>
+    <p class="palio-memorial"><%- icon('candle') %> Memorial Don Franco Aliberti</p>
+  </div>
+</div>
+
+<%# ── STRISCIA INFO ───────────────────────────────────────────── %>
+<div class="palio-meta lp-full">
+  <div class="palio-meta-grid">
+    <div class="palio-meta-item">
+      <span class="palio-meta-ico"><%- icon('moon') %></span>
+      <span class="palio-meta-label">Data</span>
+      <span class="palio-meta-val">18 Agosto</span>
+    </div>
+    <div class="palio-meta-item">
+      <span class="palio-meta-ico"><%- icon('clock') %></span>
+      <span class="palio-meta-label">Orario</span>
+      <span class="palio-meta-val">Ore 22:30</span>
+    </div>
+    <div class="palio-meta-item">
+      <span class="palio-meta-ico"><%- icon('flame') %></span>
+      <span class="palio-meta-label">Edizione</span>
+      <span class="palio-meta-val">XXVI</span>
+    </div>
+    <div class="palio-meta-item">
+      <span class="palio-meta-ico"><%- icon('pin') %></span>
+      <span class="palio-meta-label">Luogo</span>
+      <span class="palio-meta-val">Siano (SA)</span>
+    </div>
+  </div>
+</div>
+
+<%# ── I SEI FUOCHISTI ─────────────────────────────────────────── %>
+<section class="palio-section lp-full">
+  <div class="palio-section-inner">
+    <header class="palio-section-head">
+      <p class="palio-section-kicker">La sfida nel cielo di Siano</p>
+      <h2 class="palio-section-title">I sei fuochisti e i rioni</h2>
+      <p class="palio-section-sub">Ogni squadra pirotecnica gareggia per i propri rioni: sei spettacoli, un solo cielo.</p>
+    </header>
+
+    <div class="palio-grid">
+      <% fuochisti.forEach((f, i) => { %>
+        <article class="palio-card">
+          <div class="palio-card-top">
+            <span class="palio-num"><%= String(i + 1).padStart(2, '0') %></span>
+            <div class="palio-card-titles">
+              <h3 class="palio-name"><%= f.name %></h3>
+              <% if (f.place) { %><p class="palio-place"><%- icon('pin') %><%= f.place %></p><% } %>
+            </div>
+          </div>
+          <p class="palio-rioni-label"><%= f.rioni.length > 1 ? 'Rioni' : 'Rione' %></p>
+          <ul class="palio-rioni">
+            <% f.rioni.forEach((r) => { %>
+              <li class="palio-rione"><%= r %></li>
+            <% }) %>
+          </ul>
+          <% if (f.note) { %>
+            <p class="palio-note"><%- icon('sparkle') %> <%= f.note %></p>
+          <% } %>
+        </article>
+      <% }) %>
+    </div>
+
+    <div class="palio-back">
+      <a href="/programmazione" class="palio-back-link"><%- icon('repeat') %> Torna alla programmazione</a>
+    </div>
+  </div>
+</section>
