@@ -1,11 +1,13 @@
 /* ===================================================================
    FantaSanRocco — Service Worker
-   • Offline: pagine (network-first + fallback cache/offline), statici,
-     tile mappa (CARTO) e font (cache-first) → programma e mappa
-     funzionano anche senza segnale dopo la prima visita.
+   • Offline: pagine (network-first + fallback cache/offline) e statici
+     same-origin (cache-first) → il programma resta consultabile offline.
+   • I tile della mappa (CARTO) e i font NON vengono intercettati: sono
+     risorse cross-origin e passarle dal SW le rompeva (tile grigi / font
+     sballati). Le gestisce direttamente il browser, come deve essere.
    • Notifiche push (Web Push): mostra la notifica e gestisce il click.
    =================================================================== */
-const VERSION = 'fsr-v3';
+const VERSION = 'fsr-v4';
 const CORE = ['/offline.html', '/icons/icon-192.png', '/manifest.json'];
 
 self.addEventListener('install', (e) => {
@@ -22,7 +24,8 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-function isTile(url) { return url.hostname.endsWith('basemaps.cartocdn.com'); }
+// Solo statici SAME-ORIGIN: mai risorse cross-origin (tile mappa, font…),
+// che passate dal SW diventano opache e possono rompersi / avvelenare la cache.
 function isStatic(url) {
   return url.origin === self.location.origin &&
     /\.(css|js|png|jpe?g|webp|avif|svg|gif|woff2?|ttf|mp3|ico|json)$/i.test(url.pathname);
@@ -52,10 +55,10 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Tile mappa + statici SAME-ORIGIN: cache-first con aggiornamento in background.
-  // NB: i font di Google NON vengono intercettati → li gestisce il browser come
-  // sempre (evita rotture del design dopo la prima navigazione).
-  if (isTile(url) || isStatic(url)) {
+  // Solo statici SAME-ORIGIN: cache-first con aggiornamento in background.
+  // Le risorse cross-origin (tile mappa CARTO, font) NON si toccano → le
+  // gestisce il browser, così non si rompono dopo la prima visita.
+  if (isStatic(url)) {
     e.respondWith(
       caches.match(req).then((cached) => {
         const network = fetch(req)

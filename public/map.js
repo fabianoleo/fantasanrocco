@@ -30,7 +30,27 @@
     maxZoom: 19, subdomains: 'abcd',
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
   }).addTo(map);
-  setTimeout(function () { map.invalidateSize(); }, 200);
+
+  // ── Robustezza dimensioni: la mappa deve sempre combaciare col container.
+  // Un solo invalidateSize non basta (init sotto la piega, immagini/font che
+  // spostano il layout, mobile, rotazione). Lo richiamiamo su più eventi.
+  function fixSize() { map.invalidateSize(); }
+  [50, 250, 600, 1200].forEach(function (t) { setTimeout(fixSize, t); });
+  window.addEventListener('load', fixSize);
+  window.addEventListener('orientationchange', function () { setTimeout(fixSize, 250); });
+  var rt;
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(fixSize, 150); });
+  if ('ResizeObserver' in window) {
+    var ro = new ResizeObserver(function () { fixSize(); });
+    ro.observe(mapEl);
+  }
+  // Ricalcola quando la mappa entra davvero in vista (era nascosta sotto la piega)
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { fixSize(); } });
+    }, { threshold: 0.01 });
+    io.observe(mapEl);
+  }
 
   // ── Marker personalizzati (numerati: legame con lista e card) ──
   function pinHtml(num, delay) {
