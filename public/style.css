@@ -2780,6 +2780,55 @@ body { overflow-x: clip; }
 .st-ch-body strong { color: var(--gold-2); font-weight: 600; }
 .st-ch-body:last-child { margin-bottom: 0; }
 
+/* ── Storia · Timeline animata (linea che si riempie allo scroll) ── */
+.st-timeline { position: relative; padding: 1.5rem 1.25rem 4rem; }
+.st-tl-inner { position: relative; max-width: 1100px; margin: 0 auto; }
+
+.st-tl-entry { position: relative; display: flex; flex-direction: column; padding-top: 3.5rem; }
+.st-tl-entry:first-child { padding-top: 1rem; }
+
+.st-tl-marker { position: relative; display: flex; align-items: flex-start; margin-bottom: 1.4rem; }
+/* Pallino ancorato al binario */
+.st-tl-dot {
+  position: absolute; left: 0.75rem; top: .1rem;
+  height: 2.5rem; width: 2.5rem; border-radius: 50%;
+  background: var(--bg); border: 1px solid rgba(212,160,26,.28);
+  display: grid; place-items: center;
+}
+.st-tl-dot::after {
+  content: ''; height: .85rem; width: .85rem; border-radius: 50%;
+  background: rgba(212,160,26,.55); border: 1px solid rgba(212,160,26,.7);
+}
+.st-tl-head { padding-left: 4.4rem; }
+.st-timeline .st-ch-num { font-size: 2.7rem; margin-bottom: .15rem; }
+.st-tl-content { padding-left: 4.4rem; }
+
+/* Binario verticale + porzione animata */
+.st-tl-rail {
+  position: absolute; left: 2rem; top: 0; bottom: 0; width: 2px; overflow: hidden;
+  background: linear-gradient(to bottom, transparent 0%, rgba(212,160,26,.16) 12%, rgba(212,160,26,.16) 88%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+          mask-image: linear-gradient(to bottom, transparent, #000 8%, #000 92%, transparent);
+}
+.st-tl-fill {
+  position: absolute; left: 0; top: 0; width: 2px; height: 0; border-radius: 2px;
+  background: linear-gradient(to top, var(--fire) 0%, var(--gold-2) 32%, transparent 100%);
+}
+
+@media (min-width: 768px) {
+  .st-timeline { padding: 2rem 2.5rem 5rem; }
+  .st-tl-entry { flex-direction: row; gap: 3.5rem; padding-top: 8rem; }
+  .st-tl-entry:first-child { padding-top: 2.5rem; }
+  .st-tl-marker { position: sticky; top: 6rem; z-index: 30; width: 340px; flex-shrink: 0; margin-bottom: 0; align-self: flex-start; }
+  .st-tl-head { padding-left: 5rem; }
+  .st-timeline .st-ch-num { font-size: clamp(3.5rem, 8vw, 6rem); }
+  .st-tl-content { padding-left: 1rem; padding-right: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .st-tl-fill { height: 100% !important; }
+}
+
 /* Pull quote */
 .st-pull {
   border-left: 3px solid rgba(212,160,26,.4);

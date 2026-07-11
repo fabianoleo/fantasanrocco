@@ -335,3 +335,36 @@ document.addEventListener('click', async (e) => {
   form.addEventListener('change', sync);
   sync();
 })();
+
+// ── Storia: timeline con linea che si riempie mentre si scorre ──────────
+// Ricrea l'effetto scroll-driven (stile Aceternity) in vanilla JS. Attivo
+// solo dove esiste #stTimeline. Progresso mappato come offset "start 10%"..
+// "end 50%": la linea parte quando la timeline entra e si completa uscendo.
+(function () {
+  var tl = document.getElementById('stTimeline');
+  var fill = document.getElementById('stTlFill');
+  if (!tl || !fill) return;
+  var rail = tl.querySelector('.st-tl-rail');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) { fill.style.height = '100%'; return; }
+  fill.style.transition = 'height .1s linear';
+
+  function update() {
+    var rect = tl.getBoundingClientRect();
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    // p=0 quando il top è al 10% del viewport, p=1 quando il bottom è al 50%
+    var denom = rect.height - 0.4 * vh;
+    var p = denom > 0 ? (0.1 * vh - rect.top) / denom : 0;
+    p = Math.max(0, Math.min(1, p));
+    fill.style.height = (p * (rail ? rail.offsetHeight : rect.height)) + 'px';
+  }
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () { update(); ticking = false; });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  update();
+})();
