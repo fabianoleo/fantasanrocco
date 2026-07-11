@@ -62,6 +62,7 @@
     model.scale.setScalar(2.3 / maxDim);
     pivot.add(model);
     canvas.classList.add('is-ready');
+    screen.classList.add('is-loaded');   // nasconde il loader "LOADING"
     onScroll();
     if (prefersReduced) { renderFrame(performance.now()); } else { startLoop(); }
   }

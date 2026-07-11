@@ -3,6 +3,21 @@
   <section class="intro3d" aria-label="Benvenuto nel Fanta San Rocco">
     <div class="intro3d-stage">
       <canvas id="introCanvas" class="intro3d-canvas" data-model="/models/fanta-san-rocco-logo.glb?v=2" aria-hidden="true"></canvas>
+      <%# Loader "LOADING" (cubi 3D) mostrato mentre il logo si carica %>
+      <div class="intro3d-loader" id="introLoader" role="status" aria-label="Caricamento in corso">
+        <div class="ld-grid">
+          <% 'LOADING'.split('').forEach(function (ch, i) { %>
+            <div class="ld-cube" style="--i:<%= i %>">
+              <span class="ld-face ld-front"><%= ch %></span>
+              <span class="ld-face ld-back"></span>
+              <span class="ld-face ld-right"></span>
+              <span class="ld-face ld-left"></span>
+              <span class="ld-face ld-top"></span>
+              <span class="ld-face ld-bottom"></span>
+            </div>
+          <% }) %>
+        </div>
+      </div>
       <%# Fallback visivo se il 3D non è disponibile %>
       <div class="intro3d-fallback" aria-hidden="true"><%- icon('logo-firework') %></div>
     </div>
