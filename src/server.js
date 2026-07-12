@@ -381,6 +381,10 @@ const RADIO_PLAYLIST = [
   { src: "/radio/mazzariello-per-un-milione-di-euro-official-video.mp3", title: "Mazzariello — Per Un Milione Di Euro", cover: "/images/artisti/mazzariello.jpg", duration: 180 },
   { src: "/radio/samurai-jay-ossessione.mp3", title: "Samurai Jay — Ossessione", duration: 188 },
   { src: "/radio/serena-brancale-levante-delia-al-mio-paese-testolyrics.mp3", title: "Serena Brancale, Levante, DELIA — Al Mio Paese", cover: "/images/galleria/palio-fuochi.jpg", duration: 198 },
+  { src: "/radio/mazzariello-cinema.mp3", title: "Mazzariello — Cinema", cover: "/images/artisti/mazzariello-cinema.jpg", duration: 215 },
+  { src: "/radio/mazzariello-parigi.mp3", title: "Mazzariello — Parigi", cover: "/images/artisti/mazzariello-parigi.jpg", duration: 214 },
+  { src: "/radio/mazzariello-senza-la-luna.mp3", title: "Mazzariello — Senza La Luna", cover: "/images/artisti/mazzariello-senza-la-luna.jpg", duration: 191 },
+  { src: "/radio/mazzariello-paracadute.mp3", title: "Mazzariello — Paracadute", cover: "/images/artisti/mazzariello-paracadute.jpg", duration: 196 },
 ];
 // Riferimento fisso della timeline: la posizione "in onda" si calcola da qui.
 const RADIO_EPOCH = Date.UTC(2026, 0, 1, 0, 0, 0);
