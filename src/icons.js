@@ -171,6 +171,13 @@ const PATHS = {
   // TikTok: nota musicale con "coda"
   tiktok:
     '<path d="M14 4v10.5a3.5 3.5 0 1 1-3-3.46" /><path d="M14 4a5 5 0 0 0 5 5" />',
+  // Audio on/off (toggle suoni slot)
+  'volume-on':
+    '<path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor" stroke="none" />' +
+    '<path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" />',
+  'volume-off':
+    '<path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor" stroke="none" />' +
+    '<path d="M16 9.5 21 14.5" /><path d="M21 9.5 16 14.5" />',
   // Controlli player
   play:
     '<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" />',

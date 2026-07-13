@@ -17,6 +17,33 @@
   const elFlash = document.getElementById('czFlash');
   const reels = [0, 1, 2].map((i) => document.getElementById('czReel' + i));
   const betBtns = [...root.querySelectorAll('.cz-bet')];
+  const sound = window.SlotSound || null;   // suoni sintetizzati (nessun file esterno)
+
+  // ── Pulsante mute ──────────────────────────────────────────────
+  const elMute = document.getElementById('czMute');
+  function syncMuteUI() {
+    if (!elMute || !sound) return;
+    const isMuted = sound.isMuted();
+    elMute.classList.toggle('is-muted', isMuted);
+    elMute.setAttribute('aria-pressed', String(isMuted));
+    elMute.setAttribute('aria-label', isMuted ? 'Attiva i suoni della slot' : 'Disattiva i suoni della slot');
+    elMute.innerHTML = icon(isMuted ? 'volume-off' : 'volume-on');
+  }
+  function icon(name) {
+    // Duplica solo le due varianti necessarie (evita di dipendere dal template EJS lato client)
+    const P = 'fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"';
+    const inner = name === 'volume-off'
+      ? '<path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor" stroke="none" /><path d="M16 9.5 21 14.5" /><path d="M21 9.5 16 14.5" />'
+      : '<path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor" stroke="none" /><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" />';
+    return '<svg class="ico" viewBox="0 0 24 24" ' + P + ' aria-hidden="true" focusable="false">' + inner + '</svg>';
+  }
+  if (elMute) {
+    syncMuteUI();
+    elMute.addEventListener('click', () => {
+      if (sound) { sound.unlock(); sound.toggleMute(); }
+      syncMuteUI();
+    });
+  }
 
   // Mappa simbolo → markup SVG (dai <template id="sym-KEY">)
   const SYM = {};
@@ -53,6 +80,7 @@
 
   betBtns.forEach((b) => b.addEventListener('click', () => {
     if (spinning || b.disabled) return;
+    if (sound) { sound.unlock(); sound.click(); }
     bet = parseInt(b.dataset.bet, 10);
     betBtns.forEach((x) => x.classList.toggle('sel', x === b));
   }));
@@ -96,7 +124,13 @@
 
   function spin() {
     if (spinning) return;
-    if (balance < bet) { elOutcome.innerHTML = '<span class="lose">Punti insufficienti per questa puntata.</span>'; return; }
+    if (sound) sound.unlock();
+    if (balance < bet) {
+      elOutcome.innerHTML = '<span class="lose">Punti insufficienti per questa puntata.</span>';
+      if (sound) sound.error();
+      return;
+    }
+    if (sound) sound.click();
     spinning = true; elSpin.disabled = true; elOutcome.textContent = '';
     reels.forEach((r) => r.classList.remove('win'));
 
@@ -107,20 +141,40 @@
     }).then((rs) => rs.json().then((data) => ({ ok: rs.ok, data }))).then(({ ok, data }) => {
       if (!ok || !data.ok) {
         elOutcome.innerHTML = '<span class="lose">' + (data && data.message ? data.message : 'Errore, riprova.') + '</span>';
+        if (sound) sound.error();
         spinning = false; elSpin.disabled = false; refreshBets();
         return;
       }
       const durs = [1500, 1950, 2450];
       data.reels.forEach((k, i) => spinReel(reels[i], k, durs[i]));
+
+      // Ticking ritmato mentre i rulli girano (rallenta man mano che si avvicina lo stop)
+      let tickTimer = null;
+      if (sound) {
+        let elapsed = 0;
+        const scheduleTick = () => {
+          sound.tick();
+          elapsed += 1;
+          const remaining = durs[2] - elapsed * 90;
+          if (remaining > 60) tickTimer = setTimeout(scheduleTick, remaining < 260 ? 140 : 90);
+        };
+        scheduleTick();
+      }
+      // Un "clack" meccanico quando ciascun rullo si ferma
+      durs.forEach((d, i) => setTimeout(() => { if (sound) sound.reelStop(i); }, d));
+
       setTimeout(() => {
+        if (tickTimer) clearTimeout(tickTimer);
         setBalance(data.balance);
         showOutcome(data);
-        if (data.jackpot) arcadeFlash('JACKPOT!');
-        else if (data.win && data.kind === 'tris') arcadeFlash('TRIS!');
+        if (data.jackpot) { arcadeFlash('JACKPOT!'); if (sound) sound.jackpot(); }
+        else if (data.win && data.kind === 'tris') { arcadeFlash('TRIS!'); if (sound) sound.win(); }
+        else if (data.win) { if (sound) sound.win(); }
         spinning = false; elSpin.disabled = false;
       }, durs[2] + 180);
     }).catch(() => {
       elOutcome.innerHTML = '<span class="lose">Connessione assente. Riprova.</span>';
+      if (sound) sound.error();
       spinning = false; elSpin.disabled = false; refreshBets();
     });
   }
