@@ -32,13 +32,14 @@
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <% if (m.requires_photo) { %>
         <label>Foto (obbligatoria)
-          <input type="file" name="foto" accept="image/*" capture="environment" required>
+          <input type="file" name="foto" accept="image/*" required>
         </label>
       <% } else { %>
         <label>Foto (facoltativa)
-          <input type="file" name="foto" accept="image/*" capture="environment">
+          <input type="file" name="foto" accept="image/*">
         </label>
       <% } %>
+      <p class="muted small" style="margin-top:.4rem">Puoi scattare al momento o scegliere una foto dalla galleria.</p>
       <label>Nota per lo staff (facoltativa)
         <input type="text" name="note" maxlength="200" placeholder="es. erano le 23, vicino alla cassa">
       </label>
