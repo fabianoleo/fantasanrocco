@@ -379,12 +379,13 @@ const RADIO_PLAYLIST = [
   { src: "/radio/mazzariello-nostalgia-karaoke-lyric-video.mp3", title: "Mazzariello — Nostalgia & Karaoke", cover: "/images/artisti/mazzariello.jpg", duration: 217 },
   { src: "/radio/mazzariello-orchidee-visual-video.mp3", title: "Mazzariello — Orchidee", cover: "/images/artisti/mazzariello.jpg", duration: 183 },
   { src: "/radio/mazzariello-per-un-milione-di-euro-official-video.mp3", title: "Mazzariello — Per Un Milione Di Euro", cover: "/images/artisti/mazzariello.jpg", duration: 180 },
-  { src: "/radio/samurai-jay-ossessione.mp3", title: "Samurai Jay — Ossessione", duration: 188 },
-  { src: "/radio/serena-brancale-levante-delia-al-mio-paese-testolyrics.mp3", title: "Serena Brancale, Levante, DELIA — Al Mio Paese", cover: "/images/galleria/palio-fuochi.jpg", duration: 198 },
-  { src: "/radio/mazzariello-cinema.mp3", title: "Mazzariello — Cinema", cover: "/images/artisti/mazzariello-cinema.jpg", duration: 215 },
-  { src: "/radio/mazzariello-parigi.mp3", title: "Mazzariello — Parigi", cover: "/images/artisti/mazzariello-parigi.jpg", duration: 214 },
-  { src: "/radio/mazzariello-senza-la-luna.mp3", title: "Mazzariello — Senza La Luna", cover: "/images/artisti/mazzariello-senza-la-luna.jpg", duration: 191 },
-  { src: "/radio/mazzariello-paracadute.mp3", title: "Mazzariello — Paracadute", cover: "/images/artisti/mazzariello-paracadute.jpg", duration: 196 },
+  { src: "/radio/samurai-jay-ossessione.mp3", title: "Samurai Jay — Ossessione", cover: "/images/artisti/samurai-jay-ossessione.jpg", duration: 188 },
+  { src: "/radio/serena-brancale-levante-delia-al-mio-paese-testolyrics.mp3", title: "Serena Brancale, Levante, DELIA — Al Mio Paese", cover: "/images/artisti/al-mio-paese.jpg", duration: 198 },
+  { src: "/radio/serena-brancale-anema-e-core.mp3", title: "Serena Brancale — Anema e Core", cover: "/images/artisti/serena-brancale-anema-e-core.jpg", duration: 185 },
+  { src: "/radio/mikesueg-cinema.mp3", title: "Mikesueg — Cinema", cover: "/images/artisti/mikesueg-cinema.jpg", duration: 215 },
+  { src: "/radio/mikesueg-parigi.mp3", title: "Mikesueg — Parigi", cover: "/images/artisti/mikesueg-parigi.jpg", duration: 214 },
+  { src: "/radio/mikesueg-senza-la-luna.mp3", title: "Mikesueg — Senza La Luna", cover: "/images/artisti/mikesueg-senza-la-luna.jpg", duration: 191 },
+  { src: "/radio/mikesueg-paracadute.mp3", title: "Mikesueg — Paracadute", cover: "/images/artisti/mikesueg-paracadute.jpg", duration: 196 },
 ];
 // Riferimento fisso della timeline: la posizione "in onda" si calcola da qui.
 const RADIO_EPOCH = Date.UTC(2026, 0, 1, 0, 0, 0);
