@@ -256,6 +256,20 @@
       <button class="btn" type="submit">Invia notifica</button>
     </form>
   </section>
+
+  <section class="card">
+    <h2 class="staff-title"><%- icon('camera') %> Avvisi nuove prove <span class="tag <%= notifSubmissions ? 'tag-on' : 'tag-off' %>"><%= notifSubmissions ? 'attivi' : 'disattivi' %></span></h2>
+    <p class="muted small">
+      Ricevi una notifica push <strong>solo per te</strong> ogni volta che un utente carica una prova da validare.
+      È una <strong>categoria separata</strong>: puoi spegnerla senza perdere le altre notifiche.
+      Serve comunque avere le notifiche del dispositivo attive.
+    </p>
+    <form action="/admin/notifiche-prove" method="post" class="mission-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="check"><input type="checkbox" name="notif_submissions" value="1" <%= notifSubmissions ? 'checked' : '' %>> Avvisami a ogni nuova prova caricata</label>
+      <button class="btn" type="submit"><%- icon('save') %> Salva preferenza</button>
+    </form>
+  </section>
 </div>
 
 <% if (typeof pronostico !== 'undefined' && pronostico) { %>

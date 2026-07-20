@@ -140,6 +140,11 @@ try { db.exec('ALTER TABLE users ADD COLUMN privacy_accepted_at TEXT'); } catch 
 // attive. Legato all'esistenza di un'iscrizione: se le disattiva, si toglie.
 try { db.exec('ALTER TABLE users ADD COLUMN notif_bonus INTEGER NOT NULL DEFAULT 0'); } catch {}
 
+// Preferenza staff: 1 = ricevo la notifica push quando un utente carica una
+// prova da validare. Categoria SEPARATA dalle notifiche normali → si può
+// disattivare solo questa. Rilevante solo per admin/moderatori.
+try { db.exec('ALTER TABLE users ADD COLUMN notif_submissions INTEGER NOT NULL DEFAULT 1'); } catch {}
+
 // Registro delle azioni sensibili (chi ha fatto cosa, quando): trasparenza e
 // tracciabilità per un pannello con più admin/moderatori.
 db.exec(`

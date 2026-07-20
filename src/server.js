@@ -1569,6 +1569,22 @@ app.post('/missioni/:id/invia', auth.requireLogin, (req, res) => {
       flash(req, 'error', 'Hai già inviato questa missione (in attesa o approvata).');
       return res.redirect(`/missioni/${m.id}`);
     }
+    // Avvisa lo staff che ha attivato la categoria "nuove prove" (separata dalle
+    // notifiche normali). Non blocca la risposta all'utente.
+    try {
+      const staff = db.prepare(
+        "SELECT id FROM users WHERE role IN ('admin','moderator') AND notif_submissions = 1 AND id <> ?"
+      ).all(req.currentUser.id);
+      for (const s of staff) {
+        pushToUser(s.id, {
+          title: '📸 Nuova prova da validare',
+          body: `${req.currentUser.nickname} ha inviato «${m.title}»`,
+          url: '/moderazione',
+          tag: 'nuova-prova',
+        }).catch((e) => console.error('[PUSH] nuova prova', e.message));
+      }
+    } catch (e) { console.error('[PUSH] nuova prova (query)', e.message); }
+
     flash(req, 'success', 'Prova inviata! Ora aspetta la validazione dello staff. 📨');
     res.redirect('/missioni');
   });
@@ -1996,7 +2012,8 @@ app.get('/admin', auth.requireAdmin, async (req, res) => {
     totalVotes,
     fuochisti: PALIO_FUOCHISTI.map((f, i) => ({ name: f.name, short: palioShortName(f.name), votes: counts[i] })),
   };
-  res.render('admin', { title: 'Admin', missions, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico });
+  res.render('admin', { title: 'Admin', missions, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico,
+    notifSubmissions: !!req.currentUser.notif_submissions });
 });
 
 app.post('/admin/codici', auth.requireAdmin, (req, res) => {
@@ -2033,6 +2050,15 @@ app.post('/admin/push', auth.requireAdmin, async (req, res) => {
   try { n = await pushBroadcast({ title, body, url }); } catch (e) { console.error('[PUSH] broadcast', e.message); }
   audit(req, 'push.invia', `"${title}: ${body}" -> ${n} dispositivi`);
   flash(req, 'success', `Notifica inviata a ${n} dispositiv${n === 1 ? 'o' : 'i'}.`);
+  res.redirect('/admin');
+});
+
+// Preferenza personale dello staff: ricevere o no la notifica quando un utente
+// carica una prova (categoria separata dalle notifiche normali).
+app.post('/admin/notifiche-prove', auth.requireAdmin, (req, res) => {
+  const on = req.body.notif_submissions ? 1 : 0;
+  db.prepare('UPDATE users SET notif_submissions = ? WHERE id = ?').run(on, req.currentUser.id);
+  flash(req, 'success', on ? 'Riceverai una notifica a ogni nuova prova caricata.' : 'Non riceverai più le notifiche delle nuove prove.');
   res.redirect('/admin');
 });
 
