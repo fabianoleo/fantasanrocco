@@ -1,357 +1,499 @@
+<%
+  // Variabili condivise (usate sia nelle tile che nei pannelli)
+  const codeList   = (typeof codes !== 'undefined' && codes) ? codes : [];
+  const reports    = (typeof reportedStories !== 'undefined' && reportedStories) ? reportedStories : [];
+  const backupList = (typeof backups !== 'undefined' && backups) ? backups : [];
+  const logRows    = (typeof auditLog !== 'undefined' && auditLog) ? auditLog : [];
+  const pronoStatus = (typeof pronostico !== 'undefined' && pronostico)
+    ? (pronostico.resolved ? 'chiuso' : (pronostico.open ? 'aperto' : 'in pausa'))
+    : null;
+%>
+
 <h1 class="staff-title"><%- icon('gear') %> Pannello Admin</h1>
-<p class="muted small" style="margin-top:-.4rem"><a href="/2fa"><%- icon('lock') %> Sicurezza account · attiva la verifica in due passaggi (2FA)</a></p>
 
-<section class="card">
-  <h2 class="staff-title"><%- icon('plus') %> Nuova missione</h2>
-  <form action="/admin/missioni" method="post" class="mission-form">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <label>Titolo
-      <input type="text" name="title" required placeholder="es. 🥃 Shot con Zio Max">
-    </label>
-    <label>Descrizione
-      <textarea name="description" rows="2" placeholder="Cosa deve fare il partecipante"></textarea>
-    </label>
-    <div class="row">
-      <label>Punti
-        <input type="number" name="points" value="50" min="0">
-      </label>
-      <label class="check"><input type="checkbox" name="requires_photo" checked> Richiede foto</label>
-      <label class="check"><input type="checkbox" name="repeatable"> Ripetibile</label>
-      <label class="check"><input type="checkbox" name="notify"> 🔔 Avvisa tutti</label>
-    </div>
-    <div class="row">
-      <label>Attiva da (facoltativo)
-        <input type="datetime-local" name="active_from">
-      </label>
-      <label>Attiva fino a (facoltativo)
-        <input type="datetime-local" name="active_to">
-      </label>
-    </div>
-    <button class="btn" type="submit">Crea missione</button>
-  </form>
-</section>
+<%# ══════════════ HUB: tutte le cose principali a colpo d'occhio ══════════════ %>
+<div class="adm-hub" id="admHub">
 
-<section class="card">
-  <h2 class="staff-title"><%- icon('list') %> Missioni esistenti (<%= missions.length %>)</h2>
-  <% missions.forEach((m) => { %>
-    <details class="admin-mission">
-      <summary>
-        <span><% if (m.archived) { %><%- icon('archive') %> <% } %><%= m.title %></span>
-        <span class="points-badge"><%= m.points %> pt</span>
-      </summary>
-      <form action="/admin/missioni/<%= m.id %>/modifica" method="post" class="mission-form">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <label>Titolo<input type="text" name="title" value="<%= m.title %>" required></label>
-        <label>Descrizione<textarea name="description" rows="2"><%= m.description %></textarea></label>
-        <div class="row">
-          <label>Punti<input type="number" name="points" value="<%= m.points %>" min="0"></label>
-          <label class="check"><input type="checkbox" name="requires_photo" <%= m.requires_photo ? 'checked' : '' %>> Foto</label>
-          <label class="check"><input type="checkbox" name="repeatable" <%= m.repeatable ? 'checked' : '' %>> Ripetibile</label>
-          <label class="check"><input type="checkbox" name="archived" <%= m.archived ? 'checked' : '' %>> Archivia</label>
-        </div>
-        <div class="row">
-          <label>Attiva da<input type="text" name="active_from" value="<%= m.active_from || '' %>" placeholder="2026-08-16 18:00"></label>
-          <label>Attiva fino a<input type="text" name="active_to" value="<%= m.active_to || '' %>" placeholder="2026-08-17 03:00"></label>
-        </div>
-        <div class="mod-actions">
-          <button class="btn" type="submit"><%- icon('save') %> Salva</button>
-        </div>
-      </form>
-      <form action="/admin/missioni/<%= m.id %>/elimina" method="post" class="danger-form"
-            data-confirm="Eliminare definitivamente questa missione e le sue prove?">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button class="btn btn-no" type="submit"><%- icon('trash') %> Elimina</button>
-      </form>
-    </details>
-  <% }) %>
-</section>
+  <button type="button" class="adm-tile" data-panel="missioni">
+    <span class="adm-tile-ico"><%- icon('list') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Missioni</span>
+      <span class="adm-tile-desc">Crea, modifica e archivia le missioni</span>
+    </span>
+    <span class="adm-tile-badge"><%= missions.length %></span>
+  </button>
 
-<section class="card">
-  <h2 class="staff-title"><%- icon('gift') %> Codici premio (link / QR)</h2>
-  <p class="muted small">
-    Genera uno o più QR premio: il <strong>primo utente loggato</strong> che scansiona un QR riceve i punti,
-    chi arriva dopo non guadagna nulla. Ogni QR è <strong>monouso</strong> — creane quanti te ne servono, tutti
-    dello stesso valore, e stampali ai vari punti della festa.
-  </p>
-  <form action="/admin/codici" method="post" class="mission-form">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <div class="row">
-      <label>Punti in palio
-        <input type="number" name="points" value="50" min="1" required>
-      </label>
-      <label style="width:130px">Quanti QR
-        <input type="number" name="quantity" value="1" min="1" max="100" title="Da 1 a 100 QR in un colpo">
-      </label>
-      <label style="flex:1 1 200px">Etichetta (facoltativa, solo per te)
-        <input type="text" name="label" placeholder="es. QR stand gadget">
-      </label>
-    </div>
-    <button class="btn" type="submit"><%- icon('plus') %> Genera QR premio</button>
-  </form>
+  <button type="button" class="adm-tile" data-panel="premi">
+    <span class="adm-tile-ico"><%- icon('gift') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Codici premio</span>
+      <span class="adm-tile-desc">Genera e stampa i QR premio</span>
+    </span>
+    <span class="adm-tile-badge"><%= codeList.length %></span>
+  </button>
 
-  <% const codeList = (typeof codes !== 'undefined' && codes) ? codes : []; %>
-  <% if (codeList.length) { %>
-    <p class="muted small" style="margin-top:.4rem"><%= codeList.length %> QR totali · usa <kbd>Ctrl/Cmd + P</kbd> per stamparli.</p>
-    <div class="reward-grid">
-      <% codeList.forEach((c) => { %>
-        <div class="reward-qr <%= c.claimed_by ? 'is-used' : '' %>" data-code="<%= c.code %>">
-          <div class="reward-qr-img"><%- c.qrSvg %></div>
-          <div class="reward-qr-meta">
-            <span class="points-badge"><%= c.points %> pt</span>
-            <% if (c.claimed_by) { %>
-              <span class="tag tag-off">usato<% if (c.claimer) { %> · <%= c.claimer %><% } %></span>
-            <% } else { %>
-              <span class="tag tag-on">libero</span>
-            <% } %>
-          </div>
-          <div class="reward-qr-code"><% if (c.label) { %><strong><%= c.label %></strong> · <% } %>/r/<%= c.code %></div>
-          <div class="reward-qr-actions">
-            <button type="button" class="btn-mini qr-dl"><%- icon('save') %> Scarica</button>
-            <button type="button" class="btn-mini qr-copy"><%- icon('camera') %> Copia</button>
-          </div>
-          <form action="/admin/codici/<%= c.code %>/elimina" method="post" class="reward-qr-del"
-                data-confirm="Eliminare questo QR premio?">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button class="btn-mini" type="submit" aria-label="Elimina QR"><%- icon('trash') %></button>
-          </form>
-        </div>
-      <% }) %>
-    </div>
-  <% } else { %>
-    <p class="muted small">Nessun QR premio ancora. Creane qui sopra.</p>
+  <button type="button" class="adm-tile" data-panel="notifiche">
+    <span class="adm-tile-ico"><%- icon('bell') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Notifiche push</span>
+      <span class="adm-tile-desc">Invia un avviso a tutti</span>
+    </span>
+  </button>
+
+  <% if (typeof pronostico !== 'undefined' && pronostico) { %>
+  <button type="button" class="adm-tile" data-panel="pronostico">
+    <span class="adm-tile-ico"><%- icon('fireworks') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Pronostico Palio</span>
+      <span class="adm-tile-desc"><%= pronostico.totalVotes %> pronostici · <%= pronoStatus %></span>
+    </span>
+  </button>
   <% } %>
-</section>
 
-<section class="card">
-  <h2 class="staff-title">🔔 Invia una notifica</h2>
-  <p class="muted small">Arriva a tutti quelli che hanno attivato gli avvisi (app installata). Es. «Il Palio dei Fuochi inizia tra 30 minuti!».</p>
-  <form action="/admin/push" method="post" class="mission-form">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <label>Titolo
-      <input type="text" name="title" maxlength="80" placeholder="FantaSanRocco" value="FantaSanRocco">
-    </label>
-    <label>Messaggio
-      <input type="text" name="body" maxlength="180" required placeholder="Il Palio dei Fuochi inizia tra 30 minuti!">
-    </label>
-    <label>Apri alla pagina (facoltativo)
-      <input type="text" name="url" placeholder="/programmazione" value="/">
-    </label>
-    <button class="btn" type="submit">Invia notifica</button>
-  </form>
-</section>
+  <button type="button" class="adm-tile" data-panel="utenti">
+    <span class="adm-tile-ico"><%- icon('people') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Utenti e ruoli</span>
+      <span class="adm-tile-desc">Ruoli, punti bonus</span>
+    </span>
+    <span class="adm-tile-badge"><%= users.length %></span>
+  </button>
 
-<% if (typeof pronostico !== 'undefined' && pronostico) { %>
-<section class="card">
-  <h2 class="staff-title"><%- icon('fireworks') %> Pronostico Palio dei Fuochi</h2>
-  <p class="muted small">
-    Gli utenti scelgono un fuochista dalla pagina Missioni. Dichiara il vincitore
-    e i punti vengono accreditati automaticamente a chi ha indovinato.
-    <strong><%= pronostico.totalVotes %></strong> pronostici totali ·
-    <% if (pronostico.resolved) { %>
-      <span class="tag tag-off">chiuso · vincitore dichiarato</span>
-    <% } else if (pronostico.open) { %>
-      <span class="tag tag-on">votazioni aperte</span>
-    <% } else { %>
-      <span class="tag tag-off">votazioni chiuse (nessun vincitore)</span>
-    <% } %>
-  </p>
+  <button type="button" class="adm-tile" data-panel="segnalazioni">
+    <span class="adm-tile-ico"><%- icon('warning') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Storie segnalate</span>
+      <span class="adm-tile-desc">Modera i contenuti segnalati</span>
+    </span>
+    <% if (reports.length) { %><span class="adm-tile-badge is-alert"><%= reports.length %></span><% } %>
+  </button>
 
-  <%# Distribuzione voti %>
-  <div class="prono-admin-dist">
-    <% pronostico.fuochisti.forEach((f, i) => {
-         const pct = pronostico.totalVotes ? Math.round(f.votes / pronostico.totalVotes * 100) : 0; %>
-      <div class="prono-adist-row <%= pronostico.winner === i ? 'is-winner' : '' %>">
-        <span class="prono-adist-name"><%= i + 1 %>. <%= f.short %><% if (pronostico.winner === i) { %> <%- icon('trophy') %><% } %></span>
-        <span class="prono-adist-bar"><span style="width:<%= pct %>%"></span></span>
-        <span class="prono-adist-val"><%= f.votes %> · <%= pct %>%</span>
+  <button type="button" class="adm-tile" data-panel="backup">
+    <span class="adm-tile-ico"><%- icon('save') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Backup database</span>
+      <span class="adm-tile-desc">Snapshot e download</span>
+    </span>
+    <span class="adm-tile-badge"><%= backupList.length %></span>
+  </button>
+
+  <button type="button" class="adm-tile" data-panel="log">
+    <span class="adm-tile-ico"><%- icon('list') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Registro azioni</span>
+      <span class="adm-tile-desc">Chi ha fatto cosa</span>
+    </span>
+  </button>
+
+  <a class="adm-tile" href="/2fa">
+    <span class="adm-tile-ico"><%- icon('lock') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Sicurezza (2FA)</span>
+      <span class="adm-tile-desc">Verifica in due passaggi</span>
+    </span>
+  </a>
+
+  <button type="button" class="adm-tile adm-tile-danger" data-panel="reset">
+    <span class="adm-tile-ico"><%- icon('bolt') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Reset Gioco</span>
+      <span class="adm-tile-desc">Azzera i dati di gioco · solo test</span>
+    </span>
+  </button>
+
+</div>
+
+<%# ══════════════ PANNELLI DI DETTAGLIO (uno visibile alla volta) ══════════════ %>
+
+<%# ── MISSIONI ─────────────────────────────────────────────────────── %>
+<div class="adm-panel" id="p-missioni" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
+
+  <section class="card">
+    <h2 class="staff-title"><%- icon('plus') %> Nuova missione</h2>
+    <form action="/admin/missioni" method="post" class="mission-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>Titolo
+        <input type="text" name="title" required placeholder="es. 🥃 Shot con Zio Max">
+      </label>
+      <label>Descrizione
+        <textarea name="description" rows="2" placeholder="Cosa deve fare il partecipante"></textarea>
+      </label>
+      <div class="row">
+        <label>Punti
+          <input type="number" name="points" value="50" min="0">
+        </label>
+        <label class="check"><input type="checkbox" name="requires_photo" checked> Richiede foto</label>
+        <label class="check"><input type="checkbox" name="repeatable"> Ripetibile</label>
+        <label class="check"><input type="checkbox" name="notify"> 🔔 Avvisa tutti</label>
       </div>
-    <% }) %>
-  </div>
+      <div class="row">
+        <label>Attiva da (facoltativo)
+          <input type="datetime-local" name="active_from">
+        </label>
+        <label>Attiva fino a (facoltativo)
+          <input type="datetime-local" name="active_to">
+        </label>
+      </div>
+      <button class="btn" type="submit">Crea missione</button>
+    </form>
+  </section>
 
-  <% if (!pronostico.resolved) { %>
-    <%# Impostazioni: apri/chiudi + punti %>
-    <form action="/admin/pronostico/impostazioni" method="post" class="mission-form" style="margin-top:1rem">
+  <section class="card">
+    <h2 class="staff-title"><%- icon('list') %> Missioni esistenti (<%= missions.length %>)</h2>
+    <% missions.forEach((m) => { %>
+      <details class="admin-mission">
+        <summary>
+          <span><% if (m.archived) { %><%- icon('archive') %> <% } %><%= m.title %></span>
+          <span class="points-badge"><%= m.points %> pt</span>
+        </summary>
+        <form action="/admin/missioni/<%= m.id %>/modifica" method="post" class="mission-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <label>Titolo<input type="text" name="title" value="<%= m.title %>" required></label>
+          <label>Descrizione<textarea name="description" rows="2"><%= m.description %></textarea></label>
+          <div class="row">
+            <label>Punti<input type="number" name="points" value="<%= m.points %>" min="0"></label>
+            <label class="check"><input type="checkbox" name="requires_photo" <%= m.requires_photo ? 'checked' : '' %>> Foto</label>
+            <label class="check"><input type="checkbox" name="repeatable" <%= m.repeatable ? 'checked' : '' %>> Ripetibile</label>
+            <label class="check"><input type="checkbox" name="archived" <%= m.archived ? 'checked' : '' %>> Archivia</label>
+          </div>
+          <div class="row">
+            <label>Attiva da<input type="text" name="active_from" value="<%= m.active_from || '' %>" placeholder="2026-08-16 18:00"></label>
+            <label>Attiva fino a<input type="text" name="active_to" value="<%= m.active_to || '' %>" placeholder="2026-08-17 03:00"></label>
+          </div>
+          <div class="mod-actions">
+            <button class="btn" type="submit"><%- icon('save') %> Salva</button>
+          </div>
+        </form>
+        <form action="/admin/missioni/<%= m.id %>/elimina" method="post" class="danger-form"
+              data-confirm="Eliminare definitivamente questa missione e le sue prove?">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="btn btn-no" type="submit"><%- icon('trash') %> Elimina</button>
+        </form>
+      </details>
+    <% }) %>
+  </section>
+</div>
+
+<%# ── CODICI PREMIO ────────────────────────────────────────────────── %>
+<div class="adm-panel" id="p-premi" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
+
+  <section class="card">
+    <h2 class="staff-title"><%- icon('gift') %> Codici premio (link / QR)</h2>
+    <p class="muted small">
+      Genera uno o più QR premio: il <strong>primo utente loggato</strong> che scansiona un QR riceve i punti,
+      chi arriva dopo non guadagna nulla. Ogni QR è <strong>monouso</strong> — creane quanti te ne servono, tutti
+      dello stesso valore, e stampali ai vari punti della festa.
+    </p>
+    <form action="/admin/codici" method="post" class="mission-form">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="row">
         <label>Punti in palio
-          <input type="number" name="points" value="<%= pronostico.points %>" min="0" step="1">
+          <input type="number" name="points" value="50" min="1" required>
         </label>
-        <label class="check"><input type="checkbox" name="open" value="1" <%= pronostico.open ? 'checked' : '' %>> Votazioni aperte</label>
+        <label style="width:130px">Quanti QR
+          <input type="number" name="quantity" value="1" min="1" max="100" title="Da 1 a 100 QR in un colpo">
+        </label>
+        <label style="flex:1 1 200px">Etichetta (facoltativa, solo per te)
+          <input type="text" name="label" placeholder="es. QR stand gadget">
+        </label>
       </div>
-      <button class="btn" type="submit"><%- icon('save') %> Salva impostazioni</button>
+      <button class="btn" type="submit"><%- icon('plus') %> Genera QR premio</button>
     </form>
 
-    <%# Dichiara il vincitore %>
-    <form action="/admin/pronostico/vincitore" method="post" class="mission-form" style="margin-top:1rem"
-          data-confirm="Dichiarare questo fuochista vincitore e accreditare i punti a chi ha indovinato?">
+    <% if (codeList.length) { %>
+      <p class="muted small" style="margin-top:.4rem"><%= codeList.length %> QR totali · usa <kbd>Ctrl/Cmd + P</kbd> per stamparli.</p>
+      <div class="reward-grid">
+        <% codeList.forEach((c) => { %>
+          <div class="reward-qr <%= c.claimed_by ? 'is-used' : '' %>" data-code="<%= c.code %>">
+            <div class="reward-qr-img"><%- c.qrSvg %></div>
+            <div class="reward-qr-meta">
+              <span class="points-badge"><%= c.points %> pt</span>
+              <% if (c.claimed_by) { %>
+                <span class="tag tag-off">usato<% if (c.claimer) { %> · <%= c.claimer %><% } %></span>
+              <% } else { %>
+                <span class="tag tag-on">libero</span>
+              <% } %>
+            </div>
+            <div class="reward-qr-code"><% if (c.label) { %><strong><%= c.label %></strong> · <% } %>/r/<%= c.code %></div>
+            <div class="reward-qr-actions">
+              <button type="button" class="btn-mini qr-dl"><%- icon('save') %> Scarica</button>
+              <button type="button" class="btn-mini qr-copy"><%- icon('camera') %> Copia</button>
+            </div>
+            <form action="/admin/codici/<%= c.code %>/elimina" method="post" class="reward-qr-del"
+                  data-confirm="Eliminare questo QR premio?">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="btn-mini" type="submit" aria-label="Elimina QR"><%- icon('trash') %></button>
+            </form>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p class="muted small">Nessun QR premio ancora. Creane qui sopra.</p>
+    <% } %>
+  </section>
+</div>
+
+<%# ── NOTIFICHE PUSH ───────────────────────────────────────────────── %>
+<div class="adm-panel" id="p-notifiche" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
+
+  <section class="card">
+    <h2 class="staff-title"><%- icon('bell') %> Invia una notifica</h2>
+    <p class="muted small">Arriva a tutti quelli che hanno attivato gli avvisi (app installata). Es. «Il Palio dei Fuochi inizia tra 30 minuti!».</p>
+    <form action="/admin/push" method="post" class="mission-form">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <label>Fuochista vincitore
-        <select name="winner" required>
-          <option value="" disabled selected>— scegli il vincitore —</option>
-          <% pronostico.fuochisti.forEach((f, i) => { %>
-            <option value="<%= i %>"><%= i + 1 %>. <%= f.name %></option>
-          <% }) %>
-        </select>
+      <label>Titolo
+        <input type="text" name="title" maxlength="80" placeholder="FantaSanRocco" value="FantaSanRocco">
       </label>
-      <button class="btn btn-no" type="submit"><%- icon('trophy') %> Dichiara vincitore e assegna punti</button>
+      <label>Messaggio
+        <input type="text" name="body" maxlength="180" required placeholder="Il Palio dei Fuochi inizia tra 30 minuti!">
+      </label>
+      <label>Apri alla pagina (facoltativo)
+        <input type="text" name="url" placeholder="/programmazione" value="/">
+      </label>
+      <button class="btn" type="submit">Invia notifica</button>
     </form>
-  <% } else { %>
-    <p class="muted small" style="margin-top:1rem">
-      Vincitore attuale: <strong><%= pronostico.fuochisti[pronostico.winner].name %></strong>.
-      Per correggere, annulla il pronostico (storna i punti e riapre le votazioni).
+  </section>
+</div>
+
+<% if (typeof pronostico !== 'undefined' && pronostico) { %>
+<%# ── PRONOSTICO PALIO ─────────────────────────────────────────────── %>
+<div class="adm-panel" id="p-pronostico" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
+
+  <section class="card">
+    <h2 class="staff-title"><%- icon('fireworks') %> Pronostico Palio dei Fuochi</h2>
+    <p class="muted small">
+      Gli utenti scelgono un fuochista dalla pagina Missioni. Dichiara il vincitore
+      e i punti vengono accreditati automaticamente a chi ha indovinato.
+      <strong><%= pronostico.totalVotes %></strong> pronostici totali ·
+      <% if (pronostico.resolved) { %>
+        <span class="tag tag-off">chiuso · vincitore dichiarato</span>
+      <% } else if (pronostico.open) { %>
+        <span class="tag tag-on">votazioni aperte</span>
+      <% } else { %>
+        <span class="tag tag-off">votazioni chiuse (nessun vincitore)</span>
+      <% } %>
     </p>
-    <form action="/admin/pronostico/reset" method="post" class="danger-form"
-          data-confirm="Annullare il pronostico? Verranno stornati i punti assegnati e riaperte le votazioni.">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <button class="btn btn-no" type="submit"><%- icon('repeat') %> Annulla pronostico e storna punti</button>
-    </form>
-  <% } %>
-</section>
+
+    <%# Distribuzione voti %>
+    <div class="prono-admin-dist">
+      <% pronostico.fuochisti.forEach((f, i) => {
+           const pct = pronostico.totalVotes ? Math.round(f.votes / pronostico.totalVotes * 100) : 0; %>
+        <div class="prono-adist-row <%= pronostico.winner === i ? 'is-winner' : '' %>">
+          <span class="prono-adist-name"><%= i + 1 %>. <%= f.short %><% if (pronostico.winner === i) { %> <%- icon('trophy') %><% } %></span>
+          <span class="prono-adist-bar"><span style="width:<%= pct %>%"></span></span>
+          <span class="prono-adist-val"><%= f.votes %> · <%= pct %>%</span>
+        </div>
+      <% }) %>
+    </div>
+
+    <% if (!pronostico.resolved) { %>
+      <%# Impostazioni: apri/chiudi + punti %>
+      <form action="/admin/pronostico/impostazioni" method="post" class="mission-form" style="margin-top:1rem">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="row">
+          <label>Punti in palio
+            <input type="number" name="points" value="<%= pronostico.points %>" min="0" step="1">
+          </label>
+          <label class="check"><input type="checkbox" name="open" value="1" <%= pronostico.open ? 'checked' : '' %>> Votazioni aperte</label>
+        </div>
+        <button class="btn" type="submit"><%- icon('save') %> Salva impostazioni</button>
+      </form>
+
+      <%# Dichiara il vincitore %>
+      <form action="/admin/pronostico/vincitore" method="post" class="mission-form" style="margin-top:1rem"
+            data-confirm="Dichiarare questo fuochista vincitore e accreditare i punti a chi ha indovinato?">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <label>Fuochista vincitore
+          <select name="winner" required>
+            <option value="" disabled selected>— scegli il vincitore —</option>
+            <% pronostico.fuochisti.forEach((f, i) => { %>
+              <option value="<%= i %>"><%= i + 1 %>. <%= f.name %></option>
+            <% }) %>
+          </select>
+        </label>
+        <button class="btn btn-no" type="submit"><%- icon('trophy') %> Dichiara vincitore e assegna punti</button>
+      </form>
+    <% } else { %>
+      <p class="muted small" style="margin-top:1rem">
+        Vincitore attuale: <strong><%= pronostico.fuochisti[pronostico.winner].name %></strong>.
+        Per correggere, annulla il pronostico (storna i punti e riapre le votazioni).
+      </p>
+      <form action="/admin/pronostico/reset" method="post" class="danger-form"
+            data-confirm="Annullare il pronostico? Verranno stornati i punti assegnati e riaperte le votazioni.">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn btn-no" type="submit"><%- icon('repeat') %> Annulla pronostico e storna punti</button>
+      </form>
+    <% } %>
+  </section>
+</div>
 <% } %>
 
-<section class="card">
-  <h2 class="staff-title"><%- icon('people') %> Utenti e ruoli (<%= users.length %>)</h2>
-  <p class="muted small">Promuovi i tuoi collaboratori a <strong>moderatore</strong> (validano le prove)
-    o <strong>admin</strong> (gestiscono tutto). Solo gli utenti normali compaiono in classifica.</p>
-  <ul class="user-list">
-    <% users.forEach((u) => { %>
-      <li class="user-row">
-        <div class="user-head">
-          <span class="user-name"><%= u.nickname %></span>
-          <span class="role-badge role-<%= u.role %>"><%= u.role %></span>
-          <span class="user-pts"><%= u.points %> pt</span>
-        </div>
-        <div class="user-actions">
-          <form action="/admin/utenti/<%= u.id %>/ruolo" method="post" class="user-role-form">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <label class="field-mini">Ruolo
-              <select name="role">
-                <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>user</option>
-                <option value="moderator" <%= u.role === 'moderator' ? 'selected' : '' %>>moderator</option>
-                <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>admin</option>
-              </select>
-            </label>
-            <button class="btn-mini" type="submit">Aggiorna</button>
-          </form>
-          <form action="/admin/utenti/<%= u.id %>/bonus" method="post" class="user-bonus"
-                data-confirm="Assegnare i punti bonus a questo utente?">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <label class="field-mini">Punti
-              <input type="number" name="points" value="500" step="1" aria-label="Punti bonus" title="Punti bonus (negativi per correggere)">
-            </label>
-            <label class="field-mini field-grow">Motivo
-              <input type="text" name="reason" placeholder="es. Contest Instagram" aria-label="Motivo" maxlength="120">
-            </label>
-            <button class="btn-mini" type="submit">+ Bonus</button>
-          </form>
-        </div>
-      </li>
-    <% }) %>
-  </ul>
-</section>
+<%# ── UTENTI E RUOLI ───────────────────────────────────────────────── %>
+<div class="adm-panel" id="p-utenti" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
 
-<section class="card reset-card">
-  <h2 class="staff-title"><%- icon('bolt') %> Reset Gioco <span class="tag tag-off">solo test</span></h2>
-  <p class="muted small">
-    Cancella <strong>tutti gli utenti non-admin</strong> (con email liberate: si potrà
-    ri-registrare la stessa mail), le loro <strong>prove e foto</strong>, le <strong>storie</strong>
-    e azzera la <strong>classifica</strong>. Restano <strong>missioni</strong> e <strong>codici premio</strong>
-    (i link/QR tornano riscattabili). Gli account admin restano, ma con statistiche di gioco azzerate.
-    <strong>Azione irreversibile.</strong>
-  </p>
-  <form action="/admin/reset-gioco" method="post"
-        data-confirm="⚠️ RESET DEFINITIVO: vuoi davvero cancellare tutti i dati di gioco? Gli admin rimarranno.">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <label style="margin-bottom:.5rem">
-      Scrivi <strong>RESET</strong> per confermare
-      <input type="text" name="conferma" placeholder="RESET" autocomplete="off"
-             style="max-width:160px; margin-top:.3rem">
-    </label>
-    <label style="margin-bottom:.5rem; margin-top:.5rem">
-      Inserisci la tua <strong>password admin</strong>
-      <input type="password" name="admin_password" placeholder="Password" autocomplete="current-password"
-             style="max-width:220px; margin-top:.3rem">
-    </label>
-    <div>
-      <button class="btn btn-no" type="submit"><%- icon('bolt') %> Reset Gioco</button>
-    </div>
-  </form>
-</section>
+  <section class="card">
+    <h2 class="staff-title"><%- icon('people') %> Utenti e ruoli (<%= users.length %>)</h2>
+    <p class="muted small">Promuovi i tuoi collaboratori a <strong>moderatore</strong> (validano le prove)
+      o <strong>admin</strong> (gestiscono tutto). Solo gli utenti normali compaiono in classifica.</p>
+    <ul class="user-list">
+      <% users.forEach((u) => { %>
+        <li class="user-row">
+          <div class="user-head">
+            <span class="user-name"><%= u.nickname %></span>
+            <span class="role-badge role-<%= u.role %>"><%= u.role %></span>
+            <span class="user-pts"><%= u.points %> pt</span>
+          </div>
+          <div class="user-actions">
+            <form action="/admin/utenti/<%= u.id %>/ruolo" method="post" class="user-role-form">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <label class="field-mini">Ruolo
+                <select name="role">
+                  <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>user</option>
+                  <option value="moderator" <%= u.role === 'moderator' ? 'selected' : '' %>>moderator</option>
+                  <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>admin</option>
+                </select>
+              </label>
+              <button class="btn-mini" type="submit">Aggiorna</button>
+            </form>
+            <form action="/admin/utenti/<%= u.id %>/bonus" method="post" class="user-bonus"
+                  data-confirm="Assegnare i punti bonus a questo utente?">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <label class="field-mini">Punti
+                <input type="number" name="points" value="500" step="1" aria-label="Punti bonus" title="Punti bonus (negativi per correggere)">
+              </label>
+              <label class="field-mini field-grow">Motivo
+                <input type="text" name="reason" placeholder="es. Contest Instagram" aria-label="Motivo" maxlength="120">
+              </label>
+              <button class="btn-mini" type="submit">+ Bonus</button>
+            </form>
+          </div>
+        </li>
+      <% }) %>
+    </ul>
+  </section>
+</div>
 
 <%# ── STORIE SEGNALATE ─────────────────────────────────────────────── %>
-<% const reports = (typeof reportedStories !== 'undefined' && reportedStories) ? reportedStories : []; %>
-<section class="card">
-  <h2 class="staff-title"><%- icon('warning') %> Storie segnalate <span class="tag <%= reports.length ? 'tag-off' : 'tag-on' %>"><%= reports.length %></span></h2>
-  <% if (reports.length) { %>
-    <ul class="user-list">
-      <% reports.forEach((r) => { %>
-        <li class="user-row">
-          <span class="user-name">Storia #<%= r.id %> di <%= r.author %>
-            <span class="role-badge <%= r.hidden ? 'role-admin' : 'role-user' %>"><%= r.hidden ? 'nascosta' : 'visibile' %></span>
-            <span class="user-pts"><%= r.reports %> segnalazion<%= r.reports === 1 ? 'e' : 'i' %></span>
-          </span>
-          <a class="btn-mini" href="/storie/media/<%= r.media_path.split('/').pop() %>" target="_blank" rel="noopener">Vedi foto</a>
-          <form action="/admin/segnalazioni/<%= r.id %>/ignora" method="post" class="inline">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button class="btn-mini" type="submit">Ignora</button>
-          </form>
-          <form action="/storie/<%= r.id %>/elimina" method="post" class="inline"
-                data-confirm="Eliminare questa storia segnalata?">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button class="btn-mini" type="submit"><%- icon('trash') %> Elimina</button>
-          </form>
-        </li>
-      <% }) %>
-    </ul>
-  <% } else { %>
-    <p class="muted small">Nessuna storia segnalata al momento.</p>
-  <% } %>
-</section>
+<div class="adm-panel" id="p-segnalazioni" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
+
+  <section class="card">
+    <h2 class="staff-title"><%- icon('warning') %> Storie segnalate <span class="tag <%= reports.length ? 'tag-off' : 'tag-on' %>"><%= reports.length %></span></h2>
+    <% if (reports.length) { %>
+      <ul class="user-list">
+        <% reports.forEach((r) => { %>
+          <li class="user-row">
+            <span class="user-name">Storia #<%= r.id %> di <%= r.author %>
+              <span class="role-badge <%= r.hidden ? 'role-admin' : 'role-user' %>"><%= r.hidden ? 'nascosta' : 'visibile' %></span>
+              <span class="user-pts"><%= r.reports %> segnalazion<%= r.reports === 1 ? 'e' : 'i' %></span>
+            </span>
+            <a class="btn-mini" href="/storie/media/<%= r.media_path.split('/').pop() %>" target="_blank" rel="noopener">Vedi foto</a>
+            <form action="/admin/segnalazioni/<%= r.id %>/ignora" method="post" class="inline">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="btn-mini" type="submit">Ignora</button>
+            </form>
+            <form action="/storie/<%= r.id %>/elimina" method="post" class="inline"
+                  data-confirm="Eliminare questa storia segnalata?">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="btn-mini" type="submit"><%- icon('trash') %> Elimina</button>
+            </form>
+          </li>
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <p class="muted small">Nessuna storia segnalata al momento.</p>
+    <% } %>
+  </section>
+</div>
 
 <%# ── BACKUP DATABASE ──────────────────────────────────────────────── %>
-<% const backupList = (typeof backups !== 'undefined' && backups) ? backups : []; %>
-<section class="card">
-  <h2 class="staff-title"><%- icon('save') %> Backup database</h2>
-  <p class="muted small">Uno snapshot automatico ogni 6 ore (ultimi 30 conservati), più uno prima di ogni Reset Gioco. Copia locale sul server.</p>
-  <form action="/admin/backup" method="post" style="margin-bottom:.8rem">
-    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <button class="btn-mini" type="submit"><%- icon('save') %> Backup ora</button>
-  </form>
-  <% if (backupList.length) { %>
-    <ul class="user-list">
-      <% backupList.slice(0, 15).forEach((b) => { %>
-        <li class="user-row">
-          <span class="user-name"><%= b.name %>
-            <span class="user-pts"><%= (b.size / 1024 / 1024).toFixed(1) %> MB</span>
-          </span>
-          <a class="btn-mini" href="/admin/backup/<%= b.name %>"><%- icon('save') %> Scarica</a>
-        </li>
-      <% }) %>
-    </ul>
-  <% } else { %>
-    <p class="muted small">Nessun backup ancora creato.</p>
-  <% } %>
-</section>
+<div class="adm-panel" id="p-backup" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
+
+  <section class="card">
+    <h2 class="staff-title"><%- icon('save') %> Backup database</h2>
+    <p class="muted small">Uno snapshot automatico ogni 6 ore (ultimi 30 conservati), più uno prima di ogni Reset Gioco. Copia locale sul server.</p>
+    <form action="/admin/backup" method="post" style="margin-bottom:.8rem">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn-mini" type="submit"><%- icon('save') %> Backup ora</button>
+    </form>
+    <% if (backupList.length) { %>
+      <ul class="user-list">
+        <% backupList.slice(0, 15).forEach((b) => { %>
+          <li class="user-row">
+            <span class="user-name"><%= b.name %>
+              <span class="user-pts"><%= (b.size / 1024 / 1024).toFixed(1) %> MB</span>
+            </span>
+            <a class="btn-mini" href="/admin/backup/<%= b.name %>"><%- icon('save') %> Scarica</a>
+          </li>
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <p class="muted small">Nessun backup ancora creato.</p>
+    <% } %>
+  </section>
+</div>
 
 <%# ── REGISTRO AZIONI (AUDIT LOG) ──────────────────────────────────── %>
-<% const logRows = (typeof auditLog !== 'undefined' && auditLog) ? auditLog : []; %>
-<section class="card">
-  <h2 class="staff-title"><%- icon('list') %> Registro azioni <span class="tag tag-on">ultime <%= logRows.length %></span></h2>
-  <p class="muted small">Traccia di chi ha fatto cosa: ruoli, bonus punti, missioni, reset, notifiche, 2FA.</p>
-  <% if (logRows.length) { %>
-    <ul class="audit-list">
-      <% logRows.forEach((l) => { %>
-        <li class="audit-row">
-          <span class="audit-time"><%= l.created_at %></span>
-          <span class="audit-who"><%= l.nickname %></span>
-          <span class="audit-action"><%= l.action %></span>
-          <% if (l.details) { %><span class="audit-details"><%= l.details %></span><% } %>
-        </li>
-      <% }) %>
-    </ul>
-  <% } else { %>
-    <p class="muted small">Nessuna azione registrata ancora.</p>
-  <% } %>
-</section>
+<div class="adm-panel" id="p-log" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
 
-<script src="/admin.js?v=3" defer></script>
+  <section class="card">
+    <h2 class="staff-title"><%- icon('list') %> Registro azioni <span class="tag tag-on">ultime <%= logRows.length %></span></h2>
+    <p class="muted small">Traccia di chi ha fatto cosa: ruoli, bonus punti, missioni, reset, notifiche, 2FA.</p>
+    <% if (logRows.length) { %>
+      <ul class="audit-list">
+        <% logRows.forEach((l) => { %>
+          <li class="audit-row">
+            <span class="audit-time"><%= l.created_at %></span>
+            <span class="audit-who"><%= l.nickname %></span>
+            <span class="audit-action"><%= l.action %></span>
+            <% if (l.details) { %><span class="audit-details"><%= l.details %></span><% } %>
+          </li>
+        <% }) %>
+      </ul>
+    <% } else { %>
+      <p class="muted small">Nessuna azione registrata ancora.</p>
+    <% } %>
+  </section>
+</div>
+
+<%# ── RESET GIOCO ──────────────────────────────────────────────────── %>
+<div class="adm-panel" id="p-reset" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
+
+  <section class="card reset-card">
+    <h2 class="staff-title"><%- icon('bolt') %> Reset Gioco <span class="tag tag-off">solo test</span></h2>
+    <p class="muted small">
+      Cancella <strong>tutti gli utenti non-admin</strong> (con email liberate: si potrà
+      ri-registrare la stessa mail), le loro <strong>prove e foto</strong>, le <strong>storie</strong>
+      e azzera la <strong>classifica</strong>. Restano <strong>missioni</strong> e <strong>codici premio</strong>
+      (i link/QR tornano riscattabili). Gli account admin restano, ma con statistiche di gioco azzerate.
+      <strong>Azione irreversibile.</strong>
+    </p>
+    <form action="/admin/reset-gioco" method="post"
+          data-confirm="⚠️ RESET DEFINITIVO: vuoi davvero cancellare tutti i dati di gioco? Gli admin rimarranno.">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label style="margin-bottom:.5rem">
+        Scrivi <strong>RESET</strong> per confermare
+        <input type="text" name="conferma" placeholder="RESET" autocomplete="off"
+               style="max-width:160px; margin-top:.3rem">
+      </label>
+      <label style="margin-bottom:.5rem; margin-top:.5rem">
+        Inserisci la tua <strong>password admin</strong>
+        <input type="password" name="admin_password" placeholder="Password" autocomplete="current-password"
+               style="max-width:220px; margin-top:.3rem">
+      </label>
+      <div>
+        <button class="btn btn-no" type="submit"><%- icon('bolt') %> Reset Gioco</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<script src="/admin.js?v=4" defer></script>

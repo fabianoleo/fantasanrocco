@@ -12,7 +12,10 @@
 }
 .sia-sub { color: var(--text-2); font-size: 1rem; line-height: 1.6; max-width: 600px; margin: 0 auto; }
 
-.sia-wrap { padding: 0 1.25rem 2.5rem; }
+/* Contesto d'impilamento proprio: così gli z-index interni di Leaflet (controlli
+   fino a 1000, bottom-sheet 1500) NON sfuggono sopra la nav/menu (z-index 200+).
+   Vale sia desktop che mobile. */
+.sia-wrap { padding: 0 1.25rem 2.5rem; position: relative; z-index: 0; }
 .sia-grid { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 1.1rem; }
 @media (min-width: 900px) { .sia-grid { grid-template-columns: minmax(0, 1fr) 372px; align-items: start; } }
 

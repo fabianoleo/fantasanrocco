@@ -31,6 +31,14 @@ const PLACES = [
     image: '',
   },
   {
+    id: 'piazza-mercato',
+    name: 'Piazza Mercato',
+    coordinates: [40.804533, 14.702660], // da OpenStreetMap (way 1422489896) — sede del Palio dei Fuochi
+    address: 'Piazza Mercato, Siano (SA)',
+    description: '',
+    image: '',
+  },
+  {
     id: 'siano-centro',
     name: 'Siano — Vie del centro',
     coordinates: null, // TODO: aggiungi [lat, lng] (processione e street band girano per le vie)
@@ -52,7 +60,7 @@ const EVENTS = [
   { title: 'LDA & Aka 7even',                      day: 'Lun 17', time: '21:30', location: 'Piazza Borsellino, Siano', image: '/images/artisti/lda-aka7even.jpg' },
   { title: 'Luna Park',                            day: 'Mar 18', time: '10:30', location: 'Siano' },
   { title: 'Vagaband',                             day: 'Mar 18', time: '18:30', location: 'Strade di Siano' },
-  { title: 'Palio dei Fuochi',                     day: 'Mar 18', time: '23:30', location: 'Siano' },
+  { title: 'Palio dei Fuochi',                     day: 'Mar 18', time: '22:30', location: 'Piazza Mercato, Siano' },
 ];
 
 // Normalizza il testo "location" di un evento → id del luogo sulla mappa.
@@ -60,6 +68,7 @@ function placeIdForLocation(loc) {
   const s = (loc || '').toLowerCase();
   if (s.includes('san rocco')) return 'piazza-san-rocco';
   if (s.includes('borsellino')) return 'piazza-borsellino';
+  if (s.includes('mercato')) return 'piazza-mercato';   // Palio dei Fuochi
   // "Siano", "Vie di Siano", "Strade di Siano" → centro/vie del paese
   return 'siano-centro';
 }

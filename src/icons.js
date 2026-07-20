@@ -171,6 +171,15 @@ const PATHS = {
   // TikTok: nota musicale con "coda"
   tiktok:
     '<path d="M14 4v10.5a3.5 3.5 0 1 1-3-3.46" /><path d="M14 4a5 5 0 0 0 5 5" />',
+  // Campanello (notifiche)
+  bell:
+    '<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z" /><path d="M10 20a2 2 0 0 0 4 0" />',
+  // Griglia / dashboard
+  grid:
+    '<rect x="3" y="3" width="7.5" height="7.5" rx="1.5" /><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" /><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" /><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5" />',
+  // Freccia indietro
+  'arrow-left':
+    '<path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />',
   // Audio on/off (toggle suoni slot)
   'volume-on':
     '<path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor" stroke="none" />' +

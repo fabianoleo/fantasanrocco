@@ -4297,3 +4297,61 @@ textarea:focus-visible,
 @media (prefers-reduced-motion: reduce) {
   .prono-opt, .prono-opt-tick, .prono-adist-bar span { transition: none; }
 }
+
+/* =========================================================================
+   ADMIN DASHBOARD — hub a tile + pannelli di dettaglio
+   ========================================================================= */
+.adm-hub {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: .9rem; margin: 1.2rem 0 2rem;
+}
+.adm-tile {
+  position: relative; display: flex; align-items: center; gap: .85rem;
+  text-align: left; width: 100%; cursor: pointer;
+  padding: 1.1rem 1.15rem; border-radius: 16px;
+  background: var(--bg-card); border: 1px solid rgba(255,255,255,.07);
+  color: var(--text); font: inherit;
+  transition: border-color .18s var(--ease), transform .18s var(--ease), box-shadow .18s var(--ease), background .18s var(--ease);
+}
+.adm-tile:hover {
+  border-color: rgba(212,160,26,.45); transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(0,0,0,.4);
+}
+.adm-tile:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 2px; }
+.adm-tile-ico {
+  flex-shrink: 0; width: 46px; height: 46px; display: grid; place-items: center;
+  border-radius: 12px; color: var(--gold-2);
+  background: rgba(212,160,26,.1); border: 1px solid rgba(212,160,26,.22);
+}
+.adm-tile-ico svg { width: 22px; height: 22px; }
+.adm-tile-body { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.adm-tile-title { font-family: var(--font-heading); font-weight: 700; font-size: 1.02rem; color: var(--gold-2); }
+.adm-tile-desc { font-size: .8rem; color: var(--text-2); line-height: 1.35; }
+.adm-tile-badge {
+  position: absolute; top: .7rem; right: .8rem;
+  min-width: 22px; height: 22px; padding: 0 .4rem; border-radius: 999px;
+  display: grid; place-items: center; font-size: .72rem; font-weight: 700;
+  color: var(--gold-2); background: rgba(212,160,26,.14); border: 1px solid rgba(212,160,26,.25);
+}
+.adm-tile-badge.is-alert { color: #fff; background: linear-gradient(135deg, var(--fire-2), var(--fire)); border-color: transparent; }
+/* Tile pericolosa (reset) */
+.adm-tile-danger .adm-tile-ico { color: #e05252; background: rgba(224,82,82,.1); border-color: rgba(224,82,82,.28); }
+.adm-tile-danger .adm-tile-title { color: #e98686; }
+.adm-tile-danger:hover { border-color: rgba(224,82,82,.5); }
+
+/* Bottone "torna al pannello" in cima a ogni dettaglio */
+.adm-back {
+  display: inline-flex; align-items: center; gap: .45rem; cursor: pointer;
+  margin-bottom: 1.1rem; padding: .5rem 1rem; border-radius: 999px;
+  font-family: var(--font-heading); font-size: .82rem; color: var(--text-2);
+  background: transparent; border: 1px solid rgba(255,255,255,.12);
+  transition: color .18s var(--ease), border-color .18s var(--ease), background .18s var(--ease);
+}
+.adm-back:hover { color: var(--gold-2); border-color: rgba(212,160,26,.4); background: rgba(212,160,26,.06); }
+.adm-back svg { width: 16px; height: 16px; }
+
+@media (max-width: 520px) {
+  .adm-hub { grid-template-columns: 1fr 1fr; gap: .6rem; }
+  .adm-tile { flex-direction: column; align-items: flex-start; gap: .55rem; padding: .9rem; }
+  .adm-tile-desc { display: none; }
+}

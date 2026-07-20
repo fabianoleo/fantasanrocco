@@ -1,8 +1,63 @@
 /* ===================================================================
-   Admin — QR premio: scarica come PNG o copia l'immagine negli appunti.
+   Admin — dashboard hub + QR premio.
+   • Navigazione hub↔pannelli: la home mostra le tile; al clic si apre il
+     singolo pannello (gli altri restano nascosti). Deep-link via hash
+     (#missioni…) → back del browser e link condivisibili funzionano.
+   • QR premio: scarica come PNG o copia l'immagine negli appunti.
    L'SVG del QR viene disegnato su un canvas e convertito in PNG.
    =================================================================== */
 // (La conferma dei form data-confirm è ora gestita globalmente in app.js.)
+
+// ── Dashboard: hub ↔ pannelli ──────────────────────────────────────
+(function () {
+  'use strict';
+  var hub = document.getElementById('admHub');
+  if (!hub) return;
+  var panels = Array.prototype.slice.call(document.querySelectorAll('.adm-panel'));
+  var tiles = Array.prototype.slice.call(document.querySelectorAll('.adm-tile[data-panel]'));
+
+  function panelEl(key) { return document.getElementById('p-' + key); }
+
+  function showHub() {
+    hub.hidden = false;
+    panels.forEach(function (p) { p.hidden = true; });
+  }
+  function openPanel(key) {
+    var el = panelEl(key);
+    if (!el) { showHub(); return; }
+    hub.hidden = true;
+    panels.forEach(function (p) { p.hidden = (p !== el); });
+    // porta in cima il pannello aperto
+    window.scrollTo({ top: 0, behavior: 'auto' });
+    var h = el.querySelector('.staff-title'); if (h) { try { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } catch (e) {} }
+  }
+
+  function syncFromHash() {
+    var key = (location.hash || '').replace(/^#/, '');
+    if (key && panelEl(key)) openPanel(key);
+    else showHub();
+  }
+
+  tiles.forEach(function (t) {
+    t.addEventListener('click', function () {
+      var key = t.getAttribute('data-panel');
+      if (location.hash === '#' + key) syncFromHash();   // già lì: forza apertura
+      else location.hash = key;                           // → hashchange → apertura
+    });
+  });
+  document.querySelectorAll('.adm-back[data-back]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      // preferisci il "back" del browser se veniamo dall'hub, altrimenti pulisci l'hash
+      if (location.hash) { history.pushState('', document.title, location.pathname + location.search); }
+      showHub();
+    });
+  });
+
+  window.addEventListener('hashchange', syncFromHash);
+  // All'avvio: se c'è un flash (azione appena eseguita) e conosciamo l'ultimo
+  // pannello, riaprilo; altrimenti rispetta l'hash; altrimenti mostra l'hub.
+  syncFromHash();
+})();
 
 (function () {
   'use strict';
