@@ -368,12 +368,19 @@
       <label>Domanda
         <input type="text" name="title" required maxlength="140" placeholder="es. Chi vince la gara di ballo?">
       </label>
+      <label>Descrizione (facoltativa)
+        <textarea name="description" rows="2" maxlength="400" placeholder="Se la lasci vuota, viene usato un testo di default."></textarea>
+      </label>
       <label>Opzioni (una per riga, min. 2)
         <textarea name="options" rows="4" required placeholder="Squadra Rossa&#10;Squadra Blu&#10;Squadra Verde"></textarea>
       </label>
-      <label style="max-width:160px">Punti a chi indovina
-        <input type="number" name="points" value="100" min="0" step="1">
-      </label>
+      <div class="row">
+        <label style="max-width:160px">Punti a chi indovina
+          <input type="number" name="points" value="100" min="0" step="1">
+        </label>
+        <label class="check"><input type="checkbox" name="multi" value="1"> Consenti più risposte</label>
+      </div>
+      <p class="muted small" style="margin-top:-.3rem">Con più risposte consentite, chi ne seleziona più d'una prende <strong>metà punti</strong> se indovina.</p>
       <button class="btn" type="submit"><%- icon('plus') %> Crea pronostico</button>
     </form>
   </section>
@@ -385,8 +392,9 @@
           <% if (p.resolved) { %><span class="tag tag-off">chiuso · esito dichiarato</span>
           <% } else if (p.open) { %><span class="tag tag-on">aperto</span>
           <% } else { %><span class="tag tag-off">chiuso</span><% } %>
+          <% if (p.multi) { %><span class="tag">più risposte</span><% } %>
         </h2>
-        <p class="muted small"><strong><%= p.totalVotes %></strong> voti · <%= p.points %> punti in palio</p>
+        <p class="muted small"><strong><%= p.totalVotes %></strong> voti · <%= p.points %> punti in palio<% if (p.multi) { %> · più risposte = metà punti<% } %></p>
 
         <div class="prono-admin-dist">
           <% p.options.forEach((o, i) => {

@@ -1020,40 +1020,51 @@ function palioShortName(name) {
 
 // ── Pronostici generici (creabili dal pannello) ────────────────────────────
 function predOptions(row) { try { const a = JSON.parse(row.options); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+// Indici scelti da un voto (voto multiplo → più indici). Ricade su [choice] per i voti vecchi.
+function voteChoices(row) {
+  if (row.choices) { try { const a = JSON.parse(row.choices); if (Array.isArray(a)) return a; } catch (e) {} }
+  return (row.choice === null || row.choice === undefined) ? [] : [row.choice];
+}
+// Conteggio voti per opzione: nel voto multiplo un utente conta su ogni opzione scelta.
 function predVoteCounts(predId, nOpts) {
   const counts = new Array(nOpts).fill(0);
-  for (const r of db.prepare('SELECT choice, COUNT(*) AS n FROM prediction_votes WHERE prediction_id = ? GROUP BY choice').all(predId)) {
-    if (r.choice >= 0 && r.choice < nOpts) counts[r.choice] = r.n;
+  for (const r of db.prepare('SELECT choice, choices FROM prediction_votes WHERE prediction_id = ?').all(predId)) {
+    for (const c of voteChoices(r)) if (c >= 0 && c < nOpts) counts[c]++;
   }
   return counts;
 }
-// Pronostici visibili al giocatore (non archiviati): con la sua scelta.
+// Pronostici visibili al giocatore (non archiviati): con le sue scelte.
 function predictionsForUser(userId) {
   const rows = db.prepare('SELECT * FROM predictions WHERE archived = 0 ORDER BY (winner IS NOT NULL), id DESC').all();
   return rows.map((p) => {
     const opts = predOptions(p);
-    const mine = db.prepare('SELECT choice FROM prediction_votes WHERE prediction_id = ? AND user_id = ?').get(p.id, userId);
+    const mine = db.prepare('SELECT choice, choices FROM prediction_votes WHERE prediction_id = ? AND user_id = ?').get(p.id, userId);
     return {
-      id: p.id, title: p.title, options: opts, points: p.points,
+      id: p.id, title: p.title, description: p.description || '', options: opts, points: p.points, multi: !!p.multi,
       open: !!p.open && p.winner === null, resolved: p.winner !== null, winner: p.winner,
-      myChoice: mine ? mine.choice : null,
+      myChoices: mine ? voteChoices(mine) : [],
     };
   });
 }
 // Riassegna i punti di un pronostico (storno idempotente + accredito ai giusti).
-// winnerIdx null = solo storno (annullamento). Restituisce gli id dei vincitori.
+// winnerIdx null = solo storno. Chi ha indovinato ma ha scelto PIÙ opzioni prende
+// metà punti (arrotondati per difetto). Restituisce gli id dei vincitori.
 function predictionAward(pred, winnerIdx) {
   return db.transaction(() => {
     for (const v of db.prepare('SELECT user_id, awarded_points FROM prediction_votes WHERE prediction_id = ? AND awarded_points <> 0').all(pred.id)) {
       db.prepare('UPDATE users SET points_adjust = points_adjust - ? WHERE id = ?').run(v.awarded_points, v.user_id);
     }
     db.prepare('UPDATE prediction_votes SET awarded_points = 0 WHERE prediction_id = ? AND awarded_points <> 0').run(pred.id);
-    let winners = [];
-    if (winnerIdx !== null && winnerIdx !== undefined) {
-      winners = db.prepare('SELECT user_id FROM prediction_votes WHERE prediction_id = ? AND choice = ?').all(pred.id, winnerIdx).map((v) => v.user_id);
-      if (pred.points > 0) {
-        for (const uid of winners) db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(pred.points, uid);
-        db.prepare('UPDATE prediction_votes SET awarded_points = ? WHERE prediction_id = ? AND choice = ?').run(pred.points, pred.id, winnerIdx);
+    const winners = [];
+    if (winnerIdx !== null && winnerIdx !== undefined && pred.points > 0) {
+      for (const v of db.prepare('SELECT user_id, choice, choices FROM prediction_votes WHERE prediction_id = ?').all(pred.id)) {
+        const chosen = voteChoices(v);
+        if (!chosen.includes(winnerIdx)) continue;
+        const pts = chosen.length > 1 ? Math.floor(pred.points / 2) : pred.points;   // hedge → metà punti
+        if (pts <= 0) continue;
+        db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(pts, v.user_id);
+        db.prepare('UPDATE prediction_votes SET awarded_points = ? WHERE prediction_id = ? AND user_id = ?').run(pts, pred.id, v.user_id);
+        winners.push(v.user_id);
       }
     }
     return winners;
@@ -1540,14 +1551,20 @@ app.post('/pronostici/:id/vota', auth.requireLogin, verifyCsrf, (req, res) => {
   if (!p) { flash(req, 'error', 'Pronostico inesistente.'); return res.redirect('/missioni'); }
   if (!p.open || p.winner !== null) { flash(req, 'error', 'Questo pronostico è chiuso.'); return res.redirect('/missioni'); }
   const opts = predOptions(p);
-  const choice = parseInt(req.body.choice, 10);
-  if (!Number.isInteger(choice) || choice < 0 || choice >= opts.length) {
-    flash(req, 'error', 'Seleziona un\'opzione valida.'); return res.redirect('/missioni');
-  }
-  db.prepare(`INSERT INTO prediction_votes (prediction_id, user_id, choice) VALUES (?, ?, ?)
-    ON CONFLICT(prediction_id, user_id) DO UPDATE SET choice = excluded.choice, updated_at = datetime('now')`)
-    .run(p.id, req.currentUser.id, choice);
-  flash(req, 'success', `Pronostico salvato: ${opts[choice]}. In bocca al lupo!`);
+  // choice può arrivare come singolo valore o come array (checkbox multiple)
+  let raw = req.body.choice;
+  if (raw === undefined) raw = [];
+  else if (!Array.isArray(raw)) raw = [raw];
+  let chosen = [...new Set(raw.map((v) => parseInt(v, 10)))].filter((v) => Number.isInteger(v) && v >= 0 && v < opts.length);
+  if (!chosen.length) { flash(req, 'error', 'Seleziona almeno un\'opzione.'); return res.redirect('/missioni'); }
+  if (!p.multi) chosen = [chosen[0]];   // se non è multi-risposta, tieni solo la prima
+  chosen.sort((a, b) => a - b);
+  db.prepare(`INSERT INTO prediction_votes (prediction_id, user_id, choice, choices) VALUES (?, ?, ?, ?)
+    ON CONFLICT(prediction_id, user_id) DO UPDATE SET choice = excluded.choice, choices = excluded.choices, updated_at = datetime('now')`)
+    .run(p.id, req.currentUser.id, chosen[0], JSON.stringify(chosen));
+  const names = chosen.map((i) => opts[i]).join(', ');
+  const halved = p.multi && chosen.length > 1;
+  flash(req, 'success', `Pronostico salvato: ${names}.${halved ? ' (più risposte → punti dimezzati se indovini)' : ''} In bocca al lupo!`);
   res.redirect('/missioni');
 });
 
@@ -2076,8 +2093,8 @@ app.get('/admin', auth.requireAdmin, async (req, res) => {
     const opts = predOptions(p);
     const vc = predVoteCounts(p.id, opts.length);
     return {
-      id: p.id, title: p.title, points: p.points, open: !!p.open, winner: p.winner,
-      resolved: p.winner !== null, archived: !!p.archived,
+      id: p.id, title: p.title, description: p.description || '', points: p.points, multi: !!p.multi,
+      open: !!p.open, winner: p.winner, resolved: p.winner !== null, archived: !!p.archived,
       totalVotes: vc.reduce((a, b) => a + b, 0),
       options: opts.map((name, i) => ({ name, votes: vc[i] })),
     };
@@ -2335,12 +2352,15 @@ app.post('/admin/pronostico/reset', auth.requireAdmin, (req, res) => {
 // ── Pronostici generici (admin): crea / imposta / vincitore / annulla / elimina ──
 app.post('/admin/pronostici', auth.requireAdmin, (req, res) => {
   const title = (req.body.title || '').trim().slice(0, 140);
+  const description = (req.body.description || '').trim().slice(0, 400);
   const opts = (req.body.options || '').split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 20);
   let points = parseInt(req.body.points, 10); if (!Number.isFinite(points) || points < 0) points = 100;
+  const multi = req.body.multi ? 1 : 0;
   if (!title) { flash(req, 'error', 'Scrivi la domanda del pronostico.'); return res.redirect('/admin'); }
   if (opts.length < 2) { flash(req, 'error', 'Servono almeno 2 opzioni (una per riga).'); return res.redirect('/admin'); }
-  const r = db.prepare('INSERT INTO predictions (title, options, points) VALUES (?, ?, ?)').run(title, JSON.stringify(opts), points);
-  audit(req, 'pronostico.crea', `${title} (${opts.length} opzioni, ${points}pt)`);
+  db.prepare('INSERT INTO predictions (title, description, options, points, multi) VALUES (?, ?, ?, ?, ?)')
+    .run(title, description, JSON.stringify(opts), points, multi);
+  audit(req, 'pronostico.crea', `${title} (${opts.length} opzioni, ${points}pt${multi ? ', multi' : ''})`);
   flash(req, 'success', `Pronostico creato: «${title}».`);
   res.redirect('/admin');
 });

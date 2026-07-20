@@ -221,5 +221,12 @@ CREATE TABLE IF NOT EXISTS prediction_votes (
 );
 CREATE INDEX IF NOT EXISTS idx_pvotes_pred ON prediction_votes(prediction_id);
 `);
+// multi=1 → più risposte consentite (chi ne sceglie più d'una prende metà punti).
+// description → testo mostrato all'utente (se vuoto, la card usa quello di default).
+try { db.exec("ALTER TABLE predictions ADD COLUMN multi INTEGER NOT NULL DEFAULT 0"); } catch {}
+try { db.exec("ALTER TABLE predictions ADD COLUMN description TEXT NOT NULL DEFAULT ''"); } catch {}
+// choices → JSON array degli indici scelti (per il voto multiplo). NULL sui voti
+// vecchi: si ricade su [choice].
+try { db.exec("ALTER TABLE prediction_votes ADD COLUMN choices TEXT"); } catch {}
 
 module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR };
