@@ -320,20 +320,22 @@ document.addEventListener('click', async (e) => {
 // in precedenza diventa "in uscita" (grigia/sbarrata), per far capire che verrà
 // sostituita solo dopo la conferma.
 (function () {
-  var form = document.querySelector('.prono-form');
-  if (!form) return;
-  var savedAttr = form.getAttribute('data-saved');
-  var saved = (savedAttr === null || savedAttr === '') ? null : parseInt(savedAttr, 10);
-  var opts = Array.prototype.slice.call(form.querySelectorAll('.prono-opt'));
-  function sync() {
-    opts.forEach(function (o, i) {
-      var checked = o.querySelector('input').checked;
-      o.classList.toggle('is-current', checked);
-      o.classList.toggle('is-outgoing', saved !== null && i === saved && !checked);
-    });
-  }
-  form.addEventListener('change', sync);
-  sync();
+  var forms = Array.prototype.slice.call(document.querySelectorAll('.prono-form'));
+  if (!forms.length) return;
+  forms.forEach(function (form) {
+    var savedAttr = form.getAttribute('data-saved');
+    var saved = (savedAttr === null || savedAttr === '') ? null : parseInt(savedAttr, 10);
+    var opts = Array.prototype.slice.call(form.querySelectorAll('.prono-opt'));
+    function sync() {
+      opts.forEach(function (o, i) {
+        var checked = o.querySelector('input').checked;
+        o.classList.toggle('is-current', checked);
+        o.classList.toggle('is-outgoing', saved !== null && i === saved && !checked);
+      });
+    }
+    form.addEventListener('change', sync);
+    sync();
+  });
 })();
 
 // ── Storia: timeline con linea che si riempie mentre si scorre ──────────

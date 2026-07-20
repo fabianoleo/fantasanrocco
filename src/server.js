@@ -1018,6 +1018,48 @@ function palioShortName(name) {
   return name.replace(/\s+(s\.a\.s\.|s\.r\.l\.|Fireworks Events|Fireworks|Events).*$/i, '').trim() || name;
 }
 
+// ── Pronostici generici (creabili dal pannello) ────────────────────────────
+function predOptions(row) { try { const a = JSON.parse(row.options); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function predVoteCounts(predId, nOpts) {
+  const counts = new Array(nOpts).fill(0);
+  for (const r of db.prepare('SELECT choice, COUNT(*) AS n FROM prediction_votes WHERE prediction_id = ? GROUP BY choice').all(predId)) {
+    if (r.choice >= 0 && r.choice < nOpts) counts[r.choice] = r.n;
+  }
+  return counts;
+}
+// Pronostici visibili al giocatore (non archiviati): con la sua scelta.
+function predictionsForUser(userId) {
+  const rows = db.prepare('SELECT * FROM predictions WHERE archived = 0 ORDER BY (winner IS NOT NULL), id DESC').all();
+  return rows.map((p) => {
+    const opts = predOptions(p);
+    const mine = db.prepare('SELECT choice FROM prediction_votes WHERE prediction_id = ? AND user_id = ?').get(p.id, userId);
+    return {
+      id: p.id, title: p.title, options: opts, points: p.points,
+      open: !!p.open && p.winner === null, resolved: p.winner !== null, winner: p.winner,
+      myChoice: mine ? mine.choice : null,
+    };
+  });
+}
+// Riassegna i punti di un pronostico (storno idempotente + accredito ai giusti).
+// winnerIdx null = solo storno (annullamento). Restituisce gli id dei vincitori.
+function predictionAward(pred, winnerIdx) {
+  return db.transaction(() => {
+    for (const v of db.prepare('SELECT user_id, awarded_points FROM prediction_votes WHERE prediction_id = ? AND awarded_points <> 0').all(pred.id)) {
+      db.prepare('UPDATE users SET points_adjust = points_adjust - ? WHERE id = ?').run(v.awarded_points, v.user_id);
+    }
+    db.prepare('UPDATE prediction_votes SET awarded_points = 0 WHERE prediction_id = ? AND awarded_points <> 0').run(pred.id);
+    let winners = [];
+    if (winnerIdx !== null && winnerIdx !== undefined) {
+      winners = db.prepare('SELECT user_id FROM prediction_votes WHERE prediction_id = ? AND choice = ?').all(pred.id, winnerIdx).map((v) => v.user_id);
+      if (pred.points > 0) {
+        for (const uid of winners) db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(pred.points, uid);
+        db.prepare('UPDATE prediction_votes SET awarded_points = ? WHERE prediction_id = ? AND choice = ?').run(pred.points, pred.id, winnerIdx);
+      }
+    }
+    return winners;
+  })();
+}
+
 app.get('/privacy', (req, res) => {
   res.render('privacy', {
     title: 'Privacy Policy',
@@ -1470,7 +1512,7 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
     fuochisti: PALIO_FUOCHISTI.map((f) => f.name),
     myChoice: palioMyChoice(req.currentUser.id),
   };
-  res.render('missions', { title: 'Missioni', missions: list, pronostico });
+  res.render('missions', { title: 'Missioni', missions: list, pronostico, predictions: predictionsForUser(req.currentUser.id) });
 });
 
 // Salva/aggiorna il pronostico dell'utente (una scelta tra i 6 fuochisti)
@@ -1489,6 +1531,23 @@ app.post('/missioni/pronostico', auth.requireLogin, verifyCsrf, (req, res) => {
     ON CONFLICT(user_id) DO UPDATE SET choice = excluded.choice, updated_at = datetime('now')`)
     .run(req.currentUser.id, choice);
   flash(req, 'success', `Pronostico salvato: ${PALIO_FUOCHISTI[choice].name}. In bocca al lupo! 🎆`);
+  res.redirect('/missioni');
+});
+
+// Voto su un pronostico generico
+app.post('/pronostici/:id/vota', auth.requireLogin, verifyCsrf, (req, res) => {
+  const p = db.prepare('SELECT * FROM predictions WHERE id = ? AND archived = 0').get(req.params.id);
+  if (!p) { flash(req, 'error', 'Pronostico inesistente.'); return res.redirect('/missioni'); }
+  if (!p.open || p.winner !== null) { flash(req, 'error', 'Questo pronostico è chiuso.'); return res.redirect('/missioni'); }
+  const opts = predOptions(p);
+  const choice = parseInt(req.body.choice, 10);
+  if (!Number.isInteger(choice) || choice < 0 || choice >= opts.length) {
+    flash(req, 'error', 'Seleziona un\'opzione valida.'); return res.redirect('/missioni');
+  }
+  db.prepare(`INSERT INTO prediction_votes (prediction_id, user_id, choice) VALUES (?, ?, ?)
+    ON CONFLICT(prediction_id, user_id) DO UPDATE SET choice = excluded.choice, updated_at = datetime('now')`)
+    .run(p.id, req.currentUser.id, choice);
+  flash(req, 'success', `Pronostico salvato: ${opts[choice]}. In bocca al lupo!`);
   res.redirect('/missioni');
 });
 
@@ -2012,7 +2071,18 @@ app.get('/admin', auth.requireAdmin, async (req, res) => {
     totalVotes,
     fuochisti: PALIO_FUOCHISTI.map((f, i) => ({ name: f.name, short: palioShortName(f.name), votes: counts[i] })),
   };
-  res.render('admin', { title: 'Admin', missions, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico,
+  // Pronostici generici: elenco con opzioni, voti e stato
+  const predictions = db.prepare('SELECT * FROM predictions ORDER BY (winner IS NOT NULL), id DESC').all().map((p) => {
+    const opts = predOptions(p);
+    const vc = predVoteCounts(p.id, opts.length);
+    return {
+      id: p.id, title: p.title, points: p.points, open: !!p.open, winner: p.winner,
+      resolved: p.winner !== null, archived: !!p.archived,
+      totalVotes: vc.reduce((a, b) => a + b, 0),
+      options: opts.map((name, i) => ({ name, votes: vc[i] })),
+    };
+  });
+  res.render('admin', { title: 'Admin', missions, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico, predictions,
     notifSubmissions: !!req.currentUser.notif_submissions });
 });
 
@@ -2259,6 +2329,73 @@ app.post('/admin/pronostico/reset', auth.requireAdmin, (req, res) => {
   })();
   audit(req, 'pronostico.reset', 'punti stornati, votazioni riaperte');
   flash(req, 'success', 'Pronostico annullato: punti stornati e votazioni riaperte.');
+  res.redirect('/admin');
+});
+
+// ── Pronostici generici (admin): crea / imposta / vincitore / annulla / elimina ──
+app.post('/admin/pronostici', auth.requireAdmin, (req, res) => {
+  const title = (req.body.title || '').trim().slice(0, 140);
+  const opts = (req.body.options || '').split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 20);
+  let points = parseInt(req.body.points, 10); if (!Number.isFinite(points) || points < 0) points = 100;
+  if (!title) { flash(req, 'error', 'Scrivi la domanda del pronostico.'); return res.redirect('/admin'); }
+  if (opts.length < 2) { flash(req, 'error', 'Servono almeno 2 opzioni (una per riga).'); return res.redirect('/admin'); }
+  const r = db.prepare('INSERT INTO predictions (title, options, points) VALUES (?, ?, ?)').run(title, JSON.stringify(opts), points);
+  audit(req, 'pronostico.crea', `${title} (${opts.length} opzioni, ${points}pt)`);
+  flash(req, 'success', `Pronostico creato: «${title}».`);
+  res.redirect('/admin');
+});
+
+app.post('/admin/pronostici/:id/impostazioni', auth.requireAdmin, (req, res) => {
+  const p = db.prepare('SELECT * FROM predictions WHERE id = ?').get(req.params.id);
+  if (!p) { flash(req, 'error', 'Pronostico inesistente.'); return res.redirect('/admin'); }
+  if (p.winner !== null) { flash(req, 'error', 'Pronostico già chiuso: annullalo prima di modificarlo.'); return res.redirect('/admin'); }
+  const open = req.body.open === '1' ? 1 : 0;
+  let points = parseInt(req.body.points, 10); if (!Number.isFinite(points) || points < 0) points = p.points;
+  db.prepare('UPDATE predictions SET open = ?, points = ? WHERE id = ?').run(open, points, p.id);
+  audit(req, 'pronostico.impostazioni', `#${p.id} open=${open} punti=${points}`);
+  flash(req, 'success', `«${p.title}»: ${open ? 'aperto' : 'chiuso'} · ${points} punti.`);
+  res.redirect('/admin');
+});
+
+app.post('/admin/pronostici/:id/vincitore', auth.requireAdmin, (req, res) => {
+  const p = db.prepare('SELECT * FROM predictions WHERE id = ?').get(req.params.id);
+  if (!p) { flash(req, 'error', 'Pronostico inesistente.'); return res.redirect('/admin'); }
+  const opts = predOptions(p);
+  const winner = parseInt(req.body.winner, 10);
+  if (!Number.isInteger(winner) || winner < 0 || winner >= opts.length) {
+    flash(req, 'error', 'Seleziona un\'opzione vincente valida.'); return res.redirect('/admin');
+  }
+  const winners = predictionAward(p, winner);
+  db.prepare("UPDATE predictions SET winner = ?, open = 0, resolved_at = datetime('now') WHERE id = ?").run(winner, p.id);
+  audit(req, 'pronostico.vincitore', `#${p.id} «${opts[winner]}» · ${winners.length} vincitori · ${p.points}pt`);
+  for (const uid of winners) {
+    pushToUser(uid, {
+      title: '🎯 Hai vinto il pronostico!',
+      body: `«${p.title}» → ${opts[winner]}: +${p.points} punti!`,
+      url: '/classifica',
+    }).catch((e) => console.error('[PUSH] pronostico generico', e.message));
+  }
+  flash(req, 'success', `Vincitore: ${opts[winner]}. Accreditati ${p.points} punti a ${winners.length} utenti.`);
+  res.redirect('/admin');
+});
+
+app.post('/admin/pronostici/:id/reset', auth.requireAdmin, (req, res) => {
+  const p = db.prepare('SELECT * FROM predictions WHERE id = ?').get(req.params.id);
+  if (!p) { flash(req, 'error', 'Pronostico inesistente.'); return res.redirect('/admin'); }
+  predictionAward(p, null);   // storna soltanto
+  db.prepare("UPDATE predictions SET winner = NULL, open = 1, resolved_at = NULL WHERE id = ?").run(p.id);
+  audit(req, 'pronostico.reset', `#${p.id} annullato`);
+  flash(req, 'success', 'Pronostico annullato: punti stornati e votazioni riaperte.');
+  res.redirect('/admin');
+});
+
+app.post('/admin/pronostici/:id/elimina', auth.requireAdmin, (req, res) => {
+  const p = db.prepare('SELECT * FROM predictions WHERE id = ?').get(req.params.id);
+  if (!p) { flash(req, 'error', 'Pronostico inesistente.'); return res.redirect('/admin'); }
+  predictionAward(p, null);   // storna eventuali punti assegnati prima di eliminare
+  db.prepare('DELETE FROM predictions WHERE id = ?').run(p.id);   // i voti vanno a cascata
+  audit(req, 'pronostico.elimina', `#${p.id} «${p.title}»`);
+  flash(req, 'success', `Pronostico «${p.title}» eliminato.`);
   res.redirect('/admin');
 });
 

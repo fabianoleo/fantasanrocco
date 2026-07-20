@@ -58,6 +58,60 @@
   </section>
 <% } %>
 
+<%# ── Pronostici generici (creati dall'admin) ─────────────────────── %>
+<% if (typeof predictions !== 'undefined' && predictions && predictions.length) { %>
+  <% predictions.forEach((pr) => { %>
+    <section class="prono-card">
+      <div class="prono-glow" aria-hidden="true"></div>
+      <div class="prono-head">
+        <span class="prono-ico"><%- icon('target') %></span>
+        <div>
+          <p class="prono-kicker">Pronostico</p>
+          <h2 class="prono-title"><%= pr.title %></h2>
+        </div>
+        <span class="prono-prize"><%= pr.points %> pt</span>
+      </div>
+
+      <% if (pr.resolved) { %>
+        <% const won = pr.myChoice !== null && pr.myChoice === pr.winner; %>
+        <div class="prono-result <%= won ? 'is-win' : (pr.myChoice !== null ? 'is-lose' : '') %>">
+          <p class="prono-winner"><%- icon('trophy') %> Esito: <strong><%= pr.options[pr.winner] %></strong></p>
+          <% if (won) { %>
+            <p class="prono-outcome prono-outcome-win"><%- icon('sparkle') %> Hai indovinato! <strong>+<%= pr.points %> punti</strong> accreditati.</p>
+          <% } else if (pr.myChoice !== null) { %>
+            <p class="prono-outcome">Avevi scelto <strong><%= pr.options[pr.myChoice] %></strong>. Sarà per la prossima!</p>
+          <% } else { %>
+            <p class="prono-outcome">Non avevi fatto il tuo pronostico.</p>
+          <% } %>
+        </div>
+      <% } else if (pr.open) { %>
+        <p class="prono-desc">Scegli <strong>una sola</strong> opzione: se indovini, ti porti a casa <strong><%= pr.points %> punti</strong>.
+          <% if (pr.myChoice !== null) { %><br><span class="prono-current"><%- icon('check-circle') %> La tua scelta: <strong><%= pr.options[pr.myChoice] %></strong> — puoi ancora cambiarla.</span><% } %>
+        </p>
+        <form action="/pronostici/<%= pr.id %>/vota" method="post" class="prono-form" data-saved="<%= pr.myChoice === null ? '' : pr.myChoice %>">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="prono-options">
+            <% pr.options.forEach((name, i) => { %>
+              <label class="prono-opt <%= pr.myChoice === i ? 'is-current' : '' %>">
+                <input type="radio" name="choice" value="<%= i %>" <%= pr.myChoice === i ? 'checked' : '' %> required>
+                <span class="prono-opt-num"><%= String(i + 1).padStart(2, '0') %></span>
+                <span class="prono-opt-name"><%= name %></span>
+                <span class="prono-opt-flag">in uscita</span>
+                <span class="prono-opt-tick"><%- icon('check') %></span>
+              </label>
+            <% }) %>
+          </div>
+          <button class="btn prono-btn" type="submit"><%- icon('target') %> <%= pr.myChoice !== null ? 'Aggiorna il pronostico' : 'Conferma il pronostico' %></button>
+        </form>
+      <% } else { %>
+        <p class="prono-desc"><%- icon('hourglass') %> Pronostico chiuso. In attesa dell'esito!
+          <% if (pr.myChoice !== null) { %><br><span class="prono-current">La tua scelta: <strong><%= pr.options[pr.myChoice] %></strong></span><% } %>
+        </p>
+      <% } %>
+    </section>
+  <% }) %>
+<% } %>
+
 <div class="mission-grid">
   <% missions.forEach((m) => { %>
     <a class="mission-card <%= m.activeNow ? '' : 'inactive' %>" href="/missioni/<%= m.id %>">

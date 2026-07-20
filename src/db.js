@@ -196,4 +196,30 @@ CREATE TABLE IF NOT EXISTS palio_pronostico (
 `);
 db.prepare('INSERT OR IGNORE INTO palio_pronostico (id, open, winner, points) VALUES (1, 1, NULL, 500)').run();
 
+// Pronostici generici (creabili dal pannello admin): domanda + opzioni libere.
+// Separati dal pronostico speciale del Palio. options = JSON array di stringhe.
+db.exec(`
+CREATE TABLE IF NOT EXISTS predictions (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  title       TEXT NOT NULL,
+  options     TEXT NOT NULL,                 -- JSON: ["Opzione A","Opzione B", ...]
+  points      INTEGER NOT NULL DEFAULT 100,  -- punti per chi indovina
+  open        INTEGER NOT NULL DEFAULT 1,    -- 1 = si può ancora pronosticare
+  winner      INTEGER,                        -- indice opzione vincente, NULL finché non dichiarato
+  archived    INTEGER NOT NULL DEFAULT 0,    -- nascosto ai giocatori
+  created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+  resolved_at TEXT
+);
+CREATE TABLE IF NOT EXISTS prediction_votes (
+  prediction_id  INTEGER NOT NULL REFERENCES predictions(id) ON DELETE CASCADE,
+  user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  choice         INTEGER NOT NULL,           -- indice opzione scelta
+  awarded_points INTEGER NOT NULL DEFAULT 0, -- punti già accreditati (storno idempotente)
+  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (prediction_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_pvotes_pred ON prediction_votes(prediction_id);
+`);
+
 module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR };

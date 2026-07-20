@@ -50,6 +50,15 @@
   </button>
   <% } %>
 
+  <button type="button" class="adm-tile" data-panel="pronostici">
+    <span class="adm-tile-ico"><%- icon('target') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Pronostici</span>
+      <span class="adm-tile-desc">Crea pronostici personalizzati</span>
+    </span>
+    <% if (typeof predictions !== 'undefined' && predictions.length) { %><span class="adm-tile-badge"><%= predictions.length %></span><% } %>
+  </button>
+
   <button type="button" class="adm-tile" data-panel="utenti">
     <span class="adm-tile-ico"><%- icon('people') %></span>
     <span class="adm-tile-body">
@@ -345,6 +354,92 @@
   </section>
 </div>
 <% } %>
+
+<%# ── PRONOSTICI GENERICI ──────────────────────────────────────────── %>
+<div class="adm-panel" id="p-pronostici" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
+
+  <section class="card">
+    <h2 class="staff-title"><%- icon('plus') %> Nuovo pronostico</h2>
+    <p class="muted small">Crea un pronostico personalizzato: comparirà come card nella pagina Missioni.
+      Gli utenti scelgono un'opzione; quando dichiari l'esito, chi indovina riceve i punti.</p>
+    <form action="/admin/pronostici" method="post" class="mission-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label>Domanda
+        <input type="text" name="title" required maxlength="140" placeholder="es. Chi vince la gara di ballo?">
+      </label>
+      <label>Opzioni (una per riga, min. 2)
+        <textarea name="options" rows="4" required placeholder="Squadra Rossa&#10;Squadra Blu&#10;Squadra Verde"></textarea>
+      </label>
+      <label style="max-width:160px">Punti a chi indovina
+        <input type="number" name="points" value="100" min="0" step="1">
+      </label>
+      <button class="btn" type="submit"><%- icon('plus') %> Crea pronostico</button>
+    </form>
+  </section>
+
+  <% if (typeof predictions !== 'undefined' && predictions.length) { %>
+    <% predictions.forEach((p) => { %>
+      <section class="card">
+        <h2 class="staff-title"><%- icon('target') %> <%= p.title %>
+          <% if (p.resolved) { %><span class="tag tag-off">chiuso · esito dichiarato</span>
+          <% } else if (p.open) { %><span class="tag tag-on">aperto</span>
+          <% } else { %><span class="tag tag-off">chiuso</span><% } %>
+        </h2>
+        <p class="muted small"><strong><%= p.totalVotes %></strong> voti · <%= p.points %> punti in palio</p>
+
+        <div class="prono-admin-dist">
+          <% p.options.forEach((o, i) => {
+               const pct = p.totalVotes ? Math.round(o.votes / p.totalVotes * 100) : 0; %>
+            <div class="prono-adist-row <%= p.winner === i ? 'is-winner' : '' %>">
+              <span class="prono-adist-name"><%= i + 1 %>. <%= o.name %><% if (p.winner === i) { %> <%- icon('trophy') %><% } %></span>
+              <span class="prono-adist-bar"><span style="width:<%= pct %>%"></span></span>
+              <span class="prono-adist-val"><%= o.votes %> · <%= pct %>%</span>
+            </div>
+          <% }) %>
+        </div>
+
+        <% if (!p.resolved) { %>
+          <form action="/admin/pronostici/<%= p.id %>/impostazioni" method="post" class="mission-form" style="margin-top:1rem">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="row">
+              <label>Punti in palio<input type="number" name="points" value="<%= p.points %>" min="0" step="1"></label>
+              <label class="check"><input type="checkbox" name="open" value="1" <%= p.open ? 'checked' : '' %>> Votazioni aperte</label>
+            </div>
+            <button class="btn" type="submit"><%- icon('save') %> Salva impostazioni</button>
+          </form>
+
+          <form action="/admin/pronostici/<%= p.id %>/vincitore" method="post" class="mission-form" style="margin-top:1rem"
+                data-confirm="Dichiarare questa opzione vincente e accreditare i punti a chi ha indovinato?">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label>Opzione vincente
+              <select name="winner" required>
+                <option value="" disabled selected>— scegli l'esito —</option>
+                <% p.options.forEach((o, i) => { %><option value="<%= i %>"><%= i + 1 %>. <%= o.name %></option><% }) %>
+              </select>
+            </label>
+            <button class="btn btn-no" type="submit"><%- icon('trophy') %> Dichiara esito e assegna punti</button>
+          </form>
+        <% } else { %>
+          <p class="muted small" style="margin-top:1rem">Esito attuale: <strong><%= p.options[p.winner].name %></strong>. Per correggere, annulla (storna i punti).</p>
+          <form action="/admin/pronostici/<%= p.id %>/reset" method="post" class="danger-form"
+                data-confirm="Annullare questo pronostico? Verranno stornati i punti e riaperte le votazioni.">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn btn-no" type="submit"><%- icon('repeat') %> Annulla e storna punti</button>
+          </form>
+        <% } %>
+
+        <form action="/admin/pronostici/<%= p.id %>/elimina" method="post" class="danger-form" style="margin-top:.8rem"
+              data-confirm="Eliminare definitivamente questo pronostico e tutti i suoi voti? I punti assegnati verranno stornati.">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="btn-mini" type="submit"><%- icon('trash') %> Elimina pronostico</button>
+        </form>
+      </section>
+    <% }) %>
+  <% } else { %>
+    <section class="card"><p class="muted small">Nessun pronostico personalizzato ancora. Creane uno qui sopra.</p></section>
+  <% } %>
+</div>
 
 <%# ── UTENTI E RUOLI ───────────────────────────────────────────────── %>
 <div class="adm-panel" id="p-utenti" hidden>
