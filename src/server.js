@@ -2373,7 +2373,7 @@ app.get('/admin', auth.requireAdmin, async (req, res) => {
     };
   });
   res.render('admin', { title: 'Admin', missions, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico, predictions,
-    notifSubmissions: !!req.currentUser.notif_submissions });
+    sezioni: SECTIONS, notifSubmissions: !!req.currentUser.notif_submissions });
 });
 
 app.post('/admin/codici', auth.requireAdmin, (req, res) => {
@@ -2467,9 +2467,11 @@ app.post('/admin/missioni', auth.requireAdmin, (req, res) => {
   // Con un'uscita programmata la missione nasce archiviata: resta nascosta
   // fino all'orario indicato, poi esce da sola.
   const publishAt = (b.publish_at || '').trim() || null;
-  const info = db.prepare(`INSERT INTO missions
-    (title, description, points, requires_photo, repeatable, active_from, active_to, archived, publish_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+  // Sezione: solo una delle quattro previste, altrimenti niente (sfida speciale)
+  const section = SECTIONS.some((s) => s.key === b.section) ? b.section : null;
+  db.prepare(`INSERT INTO missions
+    (title, description, points, requires_photo, repeatable, active_from, active_to, archived, publish_at, section)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
     title,
     (b.description || '').trim(),
     parseInt(b.points, 10) || 0,
@@ -2479,6 +2481,7 @@ app.post('/admin/missioni', auth.requireAdmin, (req, res) => {
     (b.active_to || '').trim() || null,
     (publishAt || b.archived) ? 1 : 0,
     publishAt,
+    section,
   );
   if (b.notify && !publishAt) {
     pushBroadcast({ title: 'Nuova missione!', body: title, url: '/missioni' })
@@ -2500,8 +2503,9 @@ app.post('/admin/missioni/:id/modifica', auth.requireAdmin, (req, res) => {
   // Se c'è un'uscita programmata la missione deve restare archiviata: sarebbe
   // assurdo "programmare" qualcosa che è già visibile.
   const archived = publishAt ? 1 : (b.archived ? 1 : 0);
+  const section = SECTIONS.some((s) => s.key === b.section) ? b.section : null;
   db.prepare(`UPDATE missions SET
-    title=?, description=?, points=?, requires_photo=?, repeatable=?, active_from=?, active_to=?, archived=?, publish_at=?
+    title=?, description=?, points=?, requires_photo=?, repeatable=?, active_from=?, active_to=?, archived=?, publish_at=?, section=?
     WHERE id=?`).run(
     (b.title || '').trim(),
     (b.description || '').trim(),
@@ -2512,6 +2516,7 @@ app.post('/admin/missioni/:id/modifica', auth.requireAdmin, (req, res) => {
     (b.active_to || '').trim() || null,
     archived,
     publishAt,
+    section,
     req.params.id,
   );
   audit(req, 'missione.modifica', `#${req.params.id} ${(b.title || '').trim()}`);

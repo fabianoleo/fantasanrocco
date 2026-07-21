@@ -153,6 +153,14 @@
         </label>
       </div>
       <div class="row">
+        <label class="field-grow">Sezione (conta per il bonus da 100 punti)
+          <select name="section">
+            <option value="">Nessuna — sfida speciale</option>
+            <% (typeof sezioni !== 'undefined' ? sezioni : []).forEach((s) => { %>
+              <option value="<%= s.key %>"><%= s.label %></option>
+            <% }) %>
+          </select>
+        </label>
         <label class="field-grow">Uscita programmata (facoltativo) — per le missioni flash
           <input type="text" name="publish_at" placeholder="2026-08-17 23:45">
         </label>
@@ -191,6 +199,14 @@
             <label>Attiva fino a<input type="text" name="active_to" value="<%= m.active_to || '' %>" placeholder="2026-08-17 03:00"></label>
           </div>
           <div class="row">
+            <label class="field-grow">Sezione
+              <select name="section">
+                <option value="">Nessuna — sfida speciale</option>
+                <% (typeof sezioni !== 'undefined' ? sezioni : []).forEach((s) => { %>
+                  <option value="<%= s.key %>" <%= m.section === s.key ? 'selected' : '' %>><%= s.label %></option>
+                <% }) %>
+              </select>
+            </label>
             <label class="field-grow">Uscita programmata (lascia vuoto per gestirla a mano)
               <input type="text" name="publish_at" value="<%= m.publish_at || '' %>" placeholder="2026-08-17 23:45">
             </label>
