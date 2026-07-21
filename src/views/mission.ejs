@@ -1,13 +1,15 @@
 <a href="/missioni" class="back">← Tutte le missioni</a>
 
 <section class="card">
+  <% const r = missionParts(m.title); %>
   <div class="mission-head">
-    <h1><%= m.title %></h1>
+    <h1><span class="m-bonus big">BONUS</span> <span class="m-name"><%= r.name %></span></h1>
     <span class="points-badge big"><%= m.points %> pt</span>
   </div>
   <p><%= m.description %></p>
 
   <div class="mission-meta">
+    <% if (r.label) { %><span class="rar-chip rar-<%= r.key %>"><span class="rar-dot" aria-hidden="true"><%= r.emoji %></span> <%= r.label %></span><% } %>
     <% if (m.repeatable) { %><span class="tag"><%- icon('repeat') %> Ripetibile (più volte)</span><% } else { %><span class="tag">1 volta al giorno</span><% } %>
     <% if (m.requires_photo) { %><span class="tag"><%- icon('camera') %> Foto obbligatoria</span><% } else { %><span class="tag">Senza foto</span><% } %>
     <% if (activeNow) { %><span class="tag tag-live"><%- icon('dot') %> Attiva ora</span><% } else { %><span class="tag tag-off"><%- icon('alarm') %> Non attiva ora</span><% } %>

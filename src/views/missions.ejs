@@ -2,63 +2,6 @@
 <p class="muted">Tocca una missione per inviare la tua prova. <span style="color:var(--green)"><%- icon('dot') %></span> = puoi farla ora.<br>
   <span class="small">Ogni missione si può fare <strong>una volta al giorno</strong> (il giorno va dalle 18:00 alle 17:59 del giorno dopo). Quelle <em>ripetibili</em> si possono rifare più volte.</span></p>
 
-<%# ── Pronostico Palio dei Fuochi ─────────────────────────────────── %>
-<% if (typeof pronostico !== 'undefined' && pronostico) { %>
-  <section class="prono-card">
-    <div class="prono-glow" aria-hidden="true"></div>
-    <div class="prono-head">
-      <span class="prono-ico"><%- icon('fireworks') %></span>
-      <div>
-        <p class="prono-kicker">Missione speciale · Pronostico</p>
-        <h2 class="prono-title">Chi vince il Palio dei Fuochi?</h2>
-      </div>
-      <span class="prono-prize"><%= pronostico.points %> pt</span>
-    </div>
-
-    <% if (pronostico.resolved) { %>
-      <%# Risultato dichiarato %>
-      <% const won = pronostico.myChoice !== null && pronostico.myChoice === pronostico.winner; %>
-      <div class="prono-result <%= won ? 'is-win' : (pronostico.myChoice !== null ? 'is-lose' : '') %>">
-        <p class="prono-winner"><%- icon('trophy') %> Vincitore: <strong><%= pronostico.fuochisti[pronostico.winner] %></strong></p>
-        <% if (won) { %>
-          <p class="prono-outcome prono-outcome-win"><%- icon('sparkle') %> Hai indovinato! <strong>+<%= pronostico.points %> punti</strong> accreditati.</p>
-        <% } else if (pronostico.myChoice !== null) { %>
-          <p class="prono-outcome">Avevi scelto <strong><%= pronostico.fuochisti[pronostico.myChoice] %></strong>. Sarà per la prossima! 🎆</p>
-        <% } else { %>
-          <p class="prono-outcome">Non avevi fatto il tuo pronostico.</p>
-        <% } %>
-      </div>
-
-    <% } else if (pronostico.open) { %>
-      <%# Votazioni aperte %>
-      <p class="prono-desc">Scegli <strong>un solo</strong> fuochista: se indovina il vincitore del Palio, ti porti a casa <strong><%= pronostico.points %> punti</strong>.
-        <% if (pronostico.myChoice !== null) { %><br><span class="prono-current"><%- icon('check-circle') %> Il tuo pronostico: <strong><%= pronostico.fuochisti[pronostico.myChoice] %></strong> — puoi ancora cambiarlo.</span><% } %>
-      </p>
-      <form action="/missioni/pronostico" method="post" class="prono-form" data-saved="<%= pronostico.myChoice === null ? '' : pronostico.myChoice %>">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <div class="prono-options">
-          <% pronostico.fuochisti.forEach((name, i) => { %>
-            <label class="prono-opt <%= pronostico.myChoice === i ? 'is-current' : '' %>">
-              <input type="radio" name="choice" value="<%= i %>" <%= pronostico.myChoice === i ? 'checked' : '' %> required>
-              <span class="prono-opt-num"><%= String(i + 1).padStart(2, '0') %></span>
-              <span class="prono-opt-name"><%= name %></span>
-              <span class="prono-opt-flag">in uscita</span>
-              <span class="prono-opt-tick"><%- icon('check') %></span>
-            </label>
-          <% }) %>
-        </div>
-        <button class="btn prono-btn" type="submit"><%- icon('fireworks') %> <%= pronostico.myChoice !== null ? 'Aggiorna il pronostico' : 'Conferma il pronostico' %></button>
-      </form>
-
-    <% } else { %>
-      <%# Chiuse, verdetto in attesa %>
-      <p class="prono-desc"><%- icon('hourglass') %> Pronostici chiusi. In attesa del verdetto del Palio!
-        <% if (pronostico.myChoice !== null) { %><br><span class="prono-current">Il tuo pronostico: <strong><%= pronostico.fuochisti[pronostico.myChoice] %></strong></span><% } %>
-      </p>
-    <% } %>
-  </section>
-<% } %>
-
 <%# ── Pronostici generici (creati dall'admin) ─────────────────────── %>
 <% if (typeof predictions !== 'undefined' && predictions && predictions.length) { %>
   <% predictions.forEach((pr) => { %>
@@ -127,7 +70,7 @@
     <h2 class="staff-title"><%- icon('trophy') %> Sezioni · completa tutte le missioni di una sezione e prendi <strong>+<%= sectionBonus %> punti</strong></h2>
     <div class="ms-secgrid">
       <% secs.forEach((s) => { %>
-        <div class="ms-secprog ms-sec-<%= s.color %> <%= s.completed ? 'is-done' : '' %>">
+        <a class="ms-secprog ms-sec-<%= s.color %> <%= s.completed ? 'is-done' : '' %>" href="#sez-<%= s.key %>">
           <span class="ms-secprog-top">
             <span class="ms-secprog-name"><%= s.label %></span>
             <span class="ms-secprog-val"><%= s.done %>/<%= s.total %></span>
@@ -136,7 +79,7 @@
           <span class="ms-secprog-foot">
             <% if (s.completed) { %><%- icon('check-circle') %> Completata · +<%= s.bonus %> pt<% } else { %>Mancano <%= s.total - s.done %> · +<%= s.bonus %> pt<% } %>
           </span>
-        </div>
+        </a>
       <% }) %>
     </div>
   </section>
@@ -155,7 +98,7 @@
 %>
 <% groups.forEach((g) => { %>
   <% if (g.sec) { %>
-    <div class="ms-sechead ms-sec-<%= g.sec.color %> <%= g.sec.completed ? 'is-done' : '' %>">
+    <div class="ms-sechead ms-sec-<%= g.sec.color %> <%= g.sec.completed ? 'is-done' : '' %>" id="sez-<%= g.sec.key %>">
       <span><%= g.sec.label %> (<%= g.sec.total %>)</span>
       <span class="ms-sechead-badge"><%= g.sec.done %>/<%= g.sec.total %> · +<%= g.sec.bonus %> pt</span>
     </div>
@@ -164,33 +107,69 @@
   <% } %>
 
   <div class="mission-grid">
-    <% g.list.forEach((m) => { %>
-      <a class="mission-card <%= m.activeNow ? '' : 'inactive' %>" href="/missioni/<%= m.id %>">
+    <%# Il pronostico del Palio conta come tappa di "Paese & Tradizione", ma si
+        vota su /palio: qui c'è solo il collegamento. %>
+    <% if (g.sec && g.sec.key === 'paese' && typeof palioLink !== 'undefined' && palioLink) { %>
+      <a class="mission-card mission-card-link" href="/palio#pronostico">
         <div class="mission-head">
-          <h3><%= m.title %></h3>
-          <span class="points-badge"><%= m.points %> pt</span>
+          <h3><span class="m-bonus">BONUS</span> <span class="m-name">Pronostico del Palio</span></h3>
+          <span class="points-badge"><%= palioLink.points %> pt</span>
         </div>
-        <p class="mission-desc"><%= m.description %></p>
+        <p class="mission-desc">Indovina quale fuochista vince il Palio. Si vota nella pagina <strong>Palio dei Fuochi</strong>: basta dare una risposta perché conti per questa sezione.</p>
         <div class="mission-meta">
-          <% if (m.hasApproved && !m.repeatable) { %>
-            <span class="tag tag-ok"><%- icon('check-circle') %> Fatta oggi</span>
-          <% } else if (m.hasPending) { %>
-            <span class="tag tag-pending"><%- icon('hourglass') %> In attesa</span>
-          <% } %>
-          <% if (m.repeatable) { %><span class="tag"><%- icon('repeat') %> Ripetibile</span><% } %>
-          <% if (m.requires_photo) { %><span class="tag"><%- icon('camera') %> Foto</span><% } %>
-          <% if (!m.activeNow) { %>
-            <span class="tag tag-off"><%- icon('alarm') %> Non attiva ora</span>
+          <% if (palioLink.voted) { %>
+            <span class="tag tag-ok"><%- icon('check-circle') %> Pronostico dato</span>
+          <% } else if (palioLink.open) { %>
+            <span class="tag tag-live"><%- icon('dot') %> Da fare</span>
           <% } else { %>
-            <span class="tag tag-live"><%- icon('dot') %> Attiva</span>
+            <span class="tag tag-off"><%- icon('hourglass') %> Pronostici chiusi</span>
           <% } %>
-        </div>
-        <div class="mission-counter">
-          <span class="mc-icon"><%- icon('people') %></span>
-          <span class="mc-val"><%= m.completedBy %></span>
-          <span class="mc-label"><%= m.completedBy === 1 ? 'persona ha completato' : 'persone hanno completato' %></span>
+          <span class="tag"><%- icon('fireworks') %> Vai al Palio →</span>
         </div>
       </a>
+    <% } %>
+    <% g.list.forEach((m) => { %>
+      <% if (m.locked) { %>
+        <%# Non ancora sbloccata: si vede solo la rarità, il resto è un velo. %>
+        <div class="mission-card is-locked" aria-label="Missione bloccata, rarità <%= m.rarity.label %>, <%= m.points %> punti<%= m.unlockLabel ? ', si sblocca il ' + m.unlockLabel : '' %>">
+          <div class="mission-head">
+            <span class="rar-chip rar-<%= m.rarity.key %>"><span class="rar-dot" aria-hidden="true"><%= m.rarity.emoji %></span> <%= m.rarity.label %></span>
+            <span class="points-badge"><%= m.points %> pt</span>
+          </div>
+          <div class="mlock-skel" aria-hidden="true"><span></span><span></span><span></span></div>
+          <div class="mission-meta">
+            <span class="tag tag-off"><%- icon('lock') %> <%= m.unlockLabel ? 'Si sblocca il ' + m.unlockLabel : 'Non ancora disponibile' %></span>
+          </div>
+        </div>
+      <% } else { %>
+        <a class="mission-card <%= m.activeNow ? '' : 'inactive' %>" href="/missioni/<%= m.id %>">
+          <div class="mission-head">
+            <h3><span class="m-bonus">BONUS</span> <span class="m-name"><%= m.rarity.name %></span></h3>
+            <span class="points-badge"><%= m.points %> pt</span>
+          </div>
+          <p class="mission-desc"><%= m.description %></p>
+          <div class="mission-meta">
+            <% if (m.rarity.label) { %><span class="rar-chip rar-<%= m.rarity.key %>"><span class="rar-dot" aria-hidden="true"><%= m.rarity.emoji %></span> <%= m.rarity.label %></span><% } %>
+            <% if (m.hasApproved && !m.repeatable) { %>
+              <span class="tag tag-ok"><%- icon('check-circle') %> Fatta oggi</span>
+            <% } else if (m.hasPending) { %>
+              <span class="tag tag-pending"><%- icon('hourglass') %> In attesa</span>
+            <% } %>
+            <% if (m.repeatable) { %><span class="tag"><%- icon('repeat') %> Ripetibile</span><% } %>
+            <% if (m.requires_photo) { %><span class="tag"><%- icon('camera') %> Foto</span><% } %>
+            <% if (m.expired) { %>
+              <span class="tag tag-off"><%- icon('alarm') %> Scaduta</span>
+            <% } else { %>
+              <span class="tag tag-live"><%- icon('dot') %> Attiva</span>
+            <% } %>
+          </div>
+          <div class="mission-counter">
+            <span class="mc-icon"><%- icon('people') %></span>
+            <span class="mc-val"><%= m.completedBy %></span>
+            <span class="mc-label"><%= m.completedBy === 1 ? 'persona ha completato' : 'persone hanno completato' %></span>
+          </div>
+        </a>
+      <% } %>
     <% }) %>
   </div>
 <% }) %>

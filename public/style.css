@@ -4446,3 +4446,56 @@ textarea:focus-visible,
 .ms-secprog.ms-sec-green  .ms-secprog-name { color: #4ade80; }
 .ms-secprog.ms-sec-purple .ms-secprog-name { color: #a78bfa; }
 .ms-secprog.ms-sec-blue   .ms-secprog-name { color: #60a5fa; }
+
+/* =========================================================================
+   MISSIONI · etichetta BONUS, chip rarità e card bloccate
+   ========================================================================= */
+.m-bonus {
+  display: inline-block; margin-right: .35rem; padding: .1rem .42rem;
+  border-radius: 6px; background: rgba(212, 160, 26, .16);
+  border: 1px solid var(--border-gold); color: var(--gold-2);
+  font-family: var(--font-heading); font-size: .62rem; font-weight: 800;
+  letter-spacing: .09em; vertical-align: middle; transform: translateY(-1px);
+}
+.m-bonus.big { font-size: .72rem; padding: .16rem .55rem; }
+.m-name { vertical-align: middle; }
+
+/* Chip rarità: il pallino colorato è il codice, il testo lo esplicita
+   (il colore non è mai l'unico indicatore). */
+.rar-chip {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: .2rem .55rem; border-radius: 999px;
+  background: var(--glass); border: 1px solid var(--border);
+  font-size: .7rem; font-weight: 700; letter-spacing: .02em; color: var(--text-2);
+}
+.rar-dot { font-size: .74rem; line-height: 1; }
+.rar-chip.rar-non-comune  { color: #7ee0a0; border-color: rgba(46, 204, 113, .3);  background: rgba(46, 204, 113, .09); }
+.rar-chip.rar-rara        { color: #8fb6ff; border-color: rgba(91, 141, 238, .32); background: rgba(91, 141, 238, .1); }
+.rar-chip.rar-epica       { color: #c4a4ff; border-color: rgba(167, 139, 250, .34); background: rgba(167, 139, 250, .1); }
+.rar-chip.rar-leggendaria { color: #ffc17a; border-color: rgba(232, 134, 30, .38); background: rgba(232, 134, 30, .12); }
+
+/* ── Card bloccata: titolo e descrizione non arrivano proprio al browser,
+   al loro posto tre barre sfocate. Non è un link: non c'è nulla da aprire. */
+.mission-card.is-locked { cursor: default; opacity: .78; }
+.mission-card.is-locked:hover { transform: none; border-color: var(--border); }
+.mission-card.is-locked:hover::after { opacity: 0; }
+.mlock-skel { display: flex; flex-direction: column; gap: .5rem; margin: .9rem 0 .2rem; filter: blur(4px); }
+.mlock-skel span {
+  display: block; height: 12px; border-radius: 6px;
+  background: linear-gradient(90deg, rgba(255,255,255,.13), rgba(255,255,255,.05));
+}
+.mlock-skel span:nth-child(1) { width: 78%; height: 16px; }
+.mlock-skel span:nth-child(2) { width: 100%; }
+.mlock-skel span:nth-child(3) { width: 54%; }
+.mission-card.is-locked .rar-chip { font-size: .78rem; padding: .3rem .7rem; }
+
+/* ── Le card di progresso sono scorciatoie: portano alla loro sezione ────── */
+a.ms-secprog { text-decoration: none; color: inherit; cursor: pointer; transition: border-color .2s var(--ease), background .2s var(--ease); }
+a.ms-secprog:hover { border-color: var(--border-gold); background: var(--glass-hover); }
+a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3px; }
+/* La barra in alto è sticky: senza questo l'ancora finisce sotto al menu. */
+.ms-sechead { scroll-margin-top: 5.5rem; }
+
+/* Card "ponte" verso il pronostico del Palio (non è una missione vera) */
+.mission-card-link { border-color: var(--border-gold); background:
+  linear-gradient(160deg, rgba(212,160,26,.07), transparent 60%), var(--bg-card); }

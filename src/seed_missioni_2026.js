@@ -41,7 +41,7 @@ const MISSIONS = [
   m('Fuori Orario', 'Scatta una foto davanti a un bar dopo la chiusura.', 'comune', { sec: 'paese' }),
   m("E' Tiemp Bell...", "Pubblica una foto anni '80 sul gruppo Facebook del paese (Sei di Siano se…).", 'non-comune', { sec: 'paese' }),
   m("Ngopp a' Cappell", 'Scatta una foto panoramica del paese.', 'non-comune', { sec: 'paese' }),
-  m("Annanz' a Chies", 'Scatta una foto di gruppo sulla panchina principale.', 'comune', { sec: 'paese' }),
+  m("Annanz' a Chies", 'Scatta una foto sulle scale della chiesa.', 'comune', { sec: 'paese' }),
   m('Benvenuti a Siano', 'Scatta una foto davanti alla scritta con una posa creativa.', 'non-comune', { sec: 'paese' }),
   m('Colazione dei Campioni', 'Fai colazione con i vestiti della sera prima e scatta una foto.', 'non-comune', { sec: 'paese' }),
   m('Quattro Frecce', 'Scatta una foto di un parcheggio creativo (targa oscurata).', 'comune', { sec: 'paese' }),
@@ -58,7 +58,7 @@ const MISSIONS = [
   m("O' Vin ca Percoc e Nu…", 'Scatta una foto del famoso "vino con la percoca".', 'comune', { sec: 'food' }),
   m('Lo Zio di Siano', 'Scatta una foto mentre bevi con Zio Max.', 'rara', { sec: 'food' }),
   m("O' Mast", 'Scatta una foto mentre bevi con il proprietario di un bar.', 'rara', { sec: 'food' }),
-  m("Ngopp o Pont", 'Scatta una foto con il paninaro di "ngopp ’o pont".', 'rara', { sec: 'food' }),
+  m("Ngopp o' Pont", 'Scatta una foto con il paninaro di "ngopp o’ pont".', 'rara', { sec: 'food' }),
   m('Fila Infinita', 'Scatta una foto mentre sei in una lunga fila al bar.', 'non-comune', { sec: 'food' }),
 
   // ── SOCIAL & PARTY (13) ──────────────────────────────────────────

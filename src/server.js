@@ -57,6 +57,25 @@ app.set('layout', 'layout');
 // Helper icone SVG disponibile in tutte le view: <%- icon('flame') %>
 app.locals.icon = require('./icons').icon;
 
+// Rarità: nel DB il titolo è salvato come "🔵 Primo Cittadino", cioè con
+// l'emoji-pallino davanti. Qui la stacco dal nome così le view possono
+// mostrarla come etichetta a sé ("BONUS · Primo Cittadino" + chip rarità).
+const RARITIES = {
+  '⚪': { key: 'comune',       label: 'Comune' },
+  '🟢': { key: 'non-comune',   label: 'Non comune' },
+  '🔵': { key: 'rara',         label: 'Rara' },
+  '🟣': { key: 'epica',        label: 'Epica' },
+  '🟠': { key: 'leggendaria',  label: 'Leggendaria' },
+};
+function missionParts(title) {
+  const t = String(title || '').trim();
+  for (const [emoji, r] of Object.entries(RARITIES)) {
+    if (t.startsWith(emoji)) return { emoji, key: r.key, label: r.label, name: t.slice(emoji.length).trim() };
+  }
+  return { emoji: '', key: '', label: '', name: t };
+}
+app.locals.missionParts = missionParts;
+
 // Helper iniziali: dal nome/nickname ricava 1-2 lettere per l'avatar fallback
 app.locals.initials = (name) => {
   const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
@@ -509,6 +528,24 @@ function isMissionActiveNow(m) {
   if (m.active_from && now < romeStringToDate(m.active_from).getTime()) return false;
   if (m.active_to && now > romeStringToDate(m.active_to).getTime()) return false;
   return true;
+}
+
+// "Non attiva" ha due significati molto diversi: una sfida del 16 agosto vista
+// il 14 è una SORPRESA da non rovinare, una vista il 18 è semplicemente scaduta.
+// Solo la prima va nascosta.
+function missionState(m) {
+  const now = Date.now();
+  if (m.active_from && now < romeStringToDate(m.active_from).getTime()) return 'locked';
+  if (m.active_to && now > romeStringToDate(m.active_to).getTime()) return 'expired';
+  return 'active';
+}
+
+const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
+  'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+// "2026-08-16 00:00:00" → "16 agosto"
+function romeDayLabel(s) {
+  const mm = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+  return mm ? `${Number(mm[3])} ${MESI[Number(mm[2]) - 1]}` : null;
 }
 
 // Healthcheck: usato da Docker/monitoraggio esterno per sapere se il server
@@ -993,7 +1030,18 @@ const PALIO_FUOCHISTI = [
 ];
 
 app.get('/palio', (req, res) => {
-  res.render('palio', { title: 'Palio dei Fuochi', fuochisti: PALIO_FUOCHISTI });
+  // Il pronostico vive qui (non più fra le missioni). Ai non loggati mostro
+  // comunque la card, con l'invito ad accedere al posto delle opzioni.
+  const pst = palioState();
+  const pronostico = {
+    open: !!pst.open && pst.winner === null,
+    resolved: pst.winner !== null,
+    winner: pst.winner,
+    points: pst.points,
+    fuochisti: PALIO_FUOCHISTI.map((f) => f.name),
+    myChoice: req.currentUser ? palioMyChoice(req.currentUser.id) : null,
+  };
+  res.render('palio', { title: 'Palio dei Fuochi', fuochisti: PALIO_FUOCHISTI, pronostico });
 });
 
 // ── Pronostico Palio dei Fuochi: helper condivisi ──────────────────────────
@@ -1259,6 +1307,11 @@ function sectionProgress(userId) {
     GROUP BY m.section`).all(userId);
   const map = {};
   for (const r of rows) map[r.sec] = { total: r.total, done: r.done };
+  // Il pronostico del Palio non è una missione (vive su /palio e non passa dalle
+  // prove), ma conta come tappa di "Paese & Tradizione": basta aver votato.
+  const paese = map.paese || (map.paese = { total: 0, done: 0 });
+  paese.total += 1;
+  if (palioMyChoice(userId) !== null) paese.done += 1;
   return map;
 }
 // Accredita il bonus per le sezioni appena completate (idempotente). Ritorna le
@@ -1579,9 +1632,19 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
 
   const list = missions.map((m) => {
     const statuses = byMission[m.id] || [];
+    const state = missionState(m);
+    const locked = state === 'locked';
     return {
       ...m,
-      activeNow: isMissionActiveNow(m),
+      // Di una missione ancora bloccata NON mando titolo e descrizione al
+      // browser: la sfocatura è solo estetica, la sorpresa va tolta dall'HTML.
+      title: locked ? null : m.title,
+      description: locked ? null : m.description,
+      rarity: missionParts(m.title),
+      locked,
+      expired: state === 'expired',
+      unlockLabel: locked ? romeDayLabel(m.active_from) : null,
+      activeNow: state === 'active',
       hasPending:    statuses.includes('pending'),
       hasApproved:   statuses.includes('approved'),
       canSubmit: m.repeatable
@@ -1590,15 +1653,14 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
       completedBy: completedCount[m.id] || 0,
     };
   });
-  // Pronostico Palio dei Fuochi (card speciale in cima alla pagina)
+  // Il pronostico del Palio è su /palio: qui resta solo la "tappa" della
+  // sezione Paese & Tradizione, che rimanda lì.
   const pst = palioState();
-  const pronostico = {
+  const palioLink = {
+    points: pst.points,
     open: !!pst.open && pst.winner === null,
     resolved: pst.winner !== null,
-    winner: pst.winner,
-    points: pst.points,
-    fuochisti: PALIO_FUOCHISTI.map((f) => f.name),
-    myChoice: palioMyChoice(req.currentUser.id),
+    voted: palioMyChoice(req.currentUser.id) !== null,
   };
   // Progresso delle sezioni tematiche (bonus una tantum al completamento)
   const prog = sectionProgress(req.currentUser.id);
@@ -1609,7 +1671,7 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
     return { ...s, total: p.total, done: p.done, completed: p.total > 0 && p.done >= p.total, awarded: awardedSet.has(s.key), bonus: SECTION_BONUS };
   }).filter((s) => s.total > 0);
 
-  res.render('missions', { title: 'Missioni', missions: list, pronostico, sections, sectionBonus: SECTION_BONUS, predictions: predictionsForUser(req.currentUser.id) });
+  res.render('missions', { title: 'Missioni', missions: list, palioLink, sections, sectionBonus: SECTION_BONUS, predictions: predictionsForUser(req.currentUser.id) });
 });
 
 // Salva/aggiorna il pronostico dell'utente (una scelta tra i 6 fuochisti)
@@ -1617,18 +1679,24 @@ app.post('/missioni/pronostico', auth.requireLogin, verifyCsrf, (req, res) => {
   const st = palioState();
   if (!st.open || st.winner !== null) {
     flash(req, 'error', 'I pronostici sono chiusi.');
-    return res.redirect('/missioni');
+    return res.redirect('/palio#pronostico');
   }
   const choice = parseInt(req.body.choice, 10);
   if (!Number.isInteger(choice) || choice < 0 || choice >= PALIO_FUOCHISTI.length) {
     flash(req, 'error', 'Seleziona un fuochista valido.');
-    return res.redirect('/missioni');
+    return res.redirect('/palio#pronostico');
   }
   db.prepare(`INSERT INTO palio_predictions (user_id, choice) VALUES (?, ?)
     ON CONFLICT(user_id) DO UPDATE SET choice = excluded.choice, updated_at = datetime('now')`)
     .run(req.currentUser.id, choice);
   flash(req, 'success', `Pronostico salvato: ${PALIO_FUOCHISTI[choice].name}. In bocca al lupo! 🎆`);
-  res.redirect('/missioni');
+  // Il voto è l'ultima tappa di "Paese & Tradizione" per molti: qui può
+  // scattare il bonus di sezione, che altrimenti si controlla solo in moderazione.
+  for (const s of checkAndAwardSections(req.currentUser.id)) {
+    audit(req, 'sezione.bonus', `${s.label} → +${SECTION_BONUS}pt a user#${req.currentUser.id}`);
+    flash(req, 'success', `🏅 Sezione "${s.label}" completata: +${SECTION_BONUS} punti bonus!`);
+  }
+  res.redirect('/palio#pronostico');
 });
 
 // Voto su un pronostico generico
@@ -1657,6 +1725,13 @@ app.post('/pronostici/:id/vota', auth.requireLogin, verifyCsrf, (req, res) => {
 app.get('/missioni/:id', auth.requireLogin, (req, res) => {
   const m = db.prepare('SELECT * FROM missions WHERE id = ? AND archived = 0').get(req.params.id);
   if (!m) return res.status(404).render('error', { title: 'Non trovata', message: 'Missione inesistente.' });
+  // Missione non ancora sbloccata: niente dettaglio, altrimenti basterebbe
+  // indovinare l'URL per leggere in anticipo le sfide dei giorni successivi.
+  if (missionState(m) === 'locked') {
+    const when = romeDayLabel(m.active_from);
+    flash(req, 'info', `Questa missione si sblocca${when ? ' il ' + when : ' più avanti'}. Per ora vedi solo la rarità!`);
+    return res.redirect('/missioni');
+  }
   const statuses = db.prepare('SELECT status FROM submissions WHERE user_id = ? AND mission_id = ? AND created_at >= ?')
     .all(req.currentUser.id, m.id, festivalDayStartSQL()).map((r) => r.status);
   const canSubmit = m.repeatable
