@@ -4502,3 +4502,28 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
 /* Card "ponte" verso il pronostico del Palio (non è una missione vera) */
 .mission-card-link { border-color: var(--border-gold); background:
   linear-gradient(160deg, rgba(212,160,26,.07), transparent 60%), var(--bg-card); }
+
+/* Testo solo per i lettori di schermo (etichette di campi già chiari a vista) */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ── Admin · utenti: email e cancellazione account ───────────────────────── */
+.user-email { margin: .1rem 0 .5rem; font-size: .78rem; }
+.user-email a { color: var(--text-2); text-decoration: none; border-bottom: 1px dotted rgba(255,255,255,.2); }
+.user-email a:hover { color: var(--gold-2); border-bottom-color: var(--gold-2); }
+.user-email svg, .user-email .muted svg { width: 13px; height: 13px; vertical-align: -2px; opacity: .6; }
+.user-email .muted { font-style: italic; }
+
+/* Azione distruttiva: visivamente separata dal resto, mai accanto per sbaglio */
+.user-danger {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem;
+  margin-top: .6rem; padding-top: .6rem; border-top: 1px dashed rgba(231,76,60,.28);
+}
+.btn-danger {
+  display: inline-flex; align-items: center; gap: .35rem;
+  color: #ff9a90; background: rgba(231,76,60,.12); border: 1px solid rgba(231,76,60,.4);
+}
+.btn-danger:hover:not(:disabled) { color: #fff; background: rgba(231,76,60,.28); border-color: rgba(231,76,60,.65); }
+.btn-danger svg { width: 14px; height: 14px; }

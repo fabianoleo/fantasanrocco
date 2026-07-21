@@ -200,3 +200,51 @@
   .cz-title { animation: none; }
   .cz-wheel-svg { transition: transform 2.5s ease-out; }
 }
+
+/* ── Puntata libera ──────────────────────────────────────────────────────
+   Affianca le scorciatoie: campo numerico + passi da 5 + "Max". */
+.cz-betcustom { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+.cz-betstep {
+  width: 44px; height: 44px; flex: 0 0 auto; cursor: pointer;
+  font-family: var(--font-heading); font-size: 1.4rem; line-height: 1;
+  color: var(--gold-2); background: rgba(243,198,75,.08);
+  border: 1px solid var(--border-gold); border-radius: 12px;
+  transition: transform .12s var(--ease), background .2s var(--ease);
+}
+.cz-betstep:hover:not(:disabled) { background: rgba(243,198,75,.16); }
+.cz-betstep:active:not(:disabled) { transform: scale(.92); }
+.cz-betfield {
+  display: flex; align-items: center; gap: .25rem;
+  height: 44px; padding: 0 .7rem; border-radius: 12px;
+  background: rgba(0,0,0,.35); border: 1px solid var(--border-gold);
+}
+.cz-betfield:focus-within { border-color: var(--gold-2); box-shadow: 0 0 0 3px rgba(243,198,75,.18); }
+.cz-betinput {
+  width: 4.2ch; min-width: 4.2ch; border: 0; background: none; padding: 0;
+  color: var(--gold-2); font-family: var(--font-heading); font-weight: 800;
+  font-size: 1.05rem; text-align: right; -moz-appearance: textfield;
+}
+.cz-betinput::-webkit-outer-spin-button,
+.cz-betinput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.cz-betinput:focus { outline: none; }
+.cz-betunit { font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); }
+.cz-betmax {
+  height: 44px; padding: 0 .9rem; cursor: pointer; border-radius: 12px;
+  font-family: var(--font-heading); font-weight: 700; font-size: .8rem;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--gold-2); background: rgba(243,198,75,.08); border: 1px solid var(--border-gold);
+  transition: transform .12s var(--ease), background .2s var(--ease);
+}
+.cz-betmax:hover:not(:disabled) { background: rgba(243,198,75,.16); }
+.cz-betmax:active:not(:disabled) { transform: scale(.95); }
+.cz-betstep:disabled, .cz-betmax:disabled, .cz-betinput:disabled { opacity: .4; cursor: not-allowed; }
+.cz-beterr { width: 100%; margin: .1rem 0 0; font-size: .74rem; color: var(--text-2); }
+.cz-beterr.is-warn { color: #e8a33c; }
+/* Su schermo stretto: scorciatoie, campo e Gira uno sotto l'altro, a tutta larghezza */
+@media (max-width: 560px) {
+  .cz-controls { flex-direction: column; align-items: stretch; }
+  .cz-bets, .cz-betcustom { justify-content: center; }
+  .cz-bet { flex: 1; min-height: 44px; }
+  .cz-betfield { flex: 1; justify-content: flex-end; }
+  .cz-beterr { text-align: center; }
+}

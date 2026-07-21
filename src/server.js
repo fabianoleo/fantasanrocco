@@ -600,6 +600,10 @@ app.get('/premio', (req, res) => {
 // ────────────────────────────────────────────────────────────────────────────
 const GALLERIA_PROCESSIONE = [
   { file: 'sanrocco-processione.jpg',   caption: 'San Rocco pronto ad essere portato in processione — l\'immagine votiva proiettata alle sue spalle' },
+  { file: 'processione-chiesa-gremita.webp', caption: 'La chiesa gremita in attesa: da qui il Santo esce per la processione' },
+  { file: 'processione-piazza.webp',    caption: 'Il Santo attraversa la piazza tra la folla, mentre il suo volto illumina le facciate del paese' },
+  { file: 'processione-petali.webp',    caption: 'Una pioggia di petali di rosa accoglie San Rocco lungo il percorso' },
+  { file: 'processione-fiori.webp',     caption: 'San Rocco tra fiori, luminarie e videomapping: la notte più attesa dell\'anno' },
   { file: 'sanrocco-applausi.jpg',      caption: 'San Rocco ricoperto dagli applausi del suo popolo in uscita dalla processione' },
   { file: 'sanrocco-rientro-fuochi.jpg',caption: 'San Rocco pronto a rientrare in chiesa, acclamato dal suo popolo e onorato con fuochi d\'artificio' },
   { file: 'processione.jpg',            caption: 'San Rocco portato a spalla per le vie di Siano' },
@@ -1446,7 +1450,12 @@ const SLOT_SYMBOLS = [
 ];
 const SLOT_TRIPLE = { ciliegia: 3, percoca: 6, vino: 12, braciola: 25, fuoco: 55, sanrocco: 188 };
 const SLOT_PAIR   = { ciliegia: 0, percoca: 1, vino: 1.5, braciola: 3, fuoco: 8, sanrocco: 12 };
-const SLOT_BETS   = [10, 20, 50, 100];
+// Scorciatoie in alto, ma la puntata è libera fra MIN e MAX (interi).
+// Il tetto serve a non far esplodere la classifica: un tris di San Rocco paga
+// ×188, quindi la vincita massima possibile è SLOT_BET_MAX × 188.
+const SLOT_BETS    = [10, 20, 50, 100];
+const SLOT_BET_MIN = 5;
+const SLOT_BET_MAX = 500;
 
 // Valuta una giocata (3 simboli) → moltiplicatore sulla puntata + descrizione.
 function evalSlot(reels) {
@@ -1470,6 +1479,8 @@ app.get('/slot', auth.requireLogin, (req, res) => {
     title: 'Slot di San Rocco',
     symbols: SLOT_SYMBOLS.map((s) => s.key),
     bets: SLOT_BETS,
+    betMin: SLOT_BET_MIN,
+    betMax: SLOT_BET_MAX,
     triple: SLOT_TRIPLE,
     pair: SLOT_PAIR,
     balance: userPoints(req.currentUser.id),
@@ -1477,9 +1488,16 @@ app.get('/slot', auth.requireLogin, (req, res) => {
 });
 
 app.post('/slot/gira', auth.requireLogin, slotLimiter, (req, res) => {
-  const bet = parseInt(req.body.bet, 10);
-  if (!SLOT_BETS.includes(bet)) {
-    return res.status(400).json({ ok: false, error: 'bet', message: 'Puntata non valida.' });
+  // Puntata libera: qui NON ci si fida di nulla che arrivi dal browser.
+  // Deve essere un intero dentro i limiti; il controllo sul saldo è più sotto,
+  // dentro la transazione, per evitare doppie giocate in parallelo.
+  const bet = Number.parseInt(req.body.bet, 10);
+  if (!Number.isInteger(bet) || bet < SLOT_BET_MIN || bet > SLOT_BET_MAX) {
+    return res.status(400).json({
+      ok: false,
+      error: 'bet',
+      message: `Puntata non valida: da ${SLOT_BET_MIN} a ${SLOT_BET_MAX} punti.`,
+    });
   }
   let out = null;
   const ok = db.transaction(() => {
@@ -1919,26 +1937,23 @@ app.post('/profilo/avatar/rimuovi', auth.requireLogin, verifyCsrf, (req, res) =>
   res.redirect('/profilo');
 });
 
-// Cancellazione account (diritto all'oblio GDPR): l'utente elimina sé stesso.
-// Richiede la password (re-autenticazione) per evitare cancellazioni accidentali/CSRF.
-app.post('/profilo/elimina', auth.requireLogin, verifyCsrf, (req, res) => {
-  const u = req.currentUser;
-  if (!auth.verifyPassword(req.body.password || '', u.password_hash)) {
-    flash(req, 'error', 'Password errata: account non eliminato.');
-    return res.redirect('/profilo');
-  }
-  // File su disco da rimuovere (prima di cancellare le righe)
-  const photoFiles  = db.prepare('SELECT photo_path FROM submissions WHERE user_id = ? AND photo_path IS NOT NULL').all(u.id).map((r) => r.photo_path);
-  const storyFiles  = db.prepare('SELECT media_path FROM stories WHERE user_id = ?').all(u.id).map((r) => r.media_path);
-  const avatarFile  = u.avatar_path;
+// Rimuove un utente e TUTTO ciò che gli appartiene: righe del database e file
+// su disco (foto-prova, storie, avatar). Usata sia dall'utente che si cancella
+// da solo, sia dall'admin che cancella un account. È irreversibile.
+function purgeUser(u) {
+  // I percorsi dei file vanno letti PRIMA del DELETE, poi le righe non ci sono più
+  const photoFiles = db.prepare('SELECT photo_path FROM submissions WHERE user_id = ? AND photo_path IS NOT NULL').all(u.id).map((r) => r.photo_path);
+  const storyFiles = db.prepare('SELECT media_path FROM stories WHERE user_id = ?').all(u.id).map((r) => r.media_path);
+  const avatarFile = u.avatar_path;
 
   db.transaction(() => {
     // Sgancia i riferimenti con vincolo NO ACTION (altrimenti il DELETE fallisce)
     db.prepare('UPDATE invites SET used = 0, used_by_user_id = NULL, used_at = NULL WHERE used_by_user_id = ?').run(u.id);
     db.prepare('UPDATE invites SET created_by = NULL WHERE created_by = ?').run(u.id);
     db.prepare('UPDATE submissions SET reviewed_by = NULL WHERE reviewed_by = ?').run(u.id);
-    // Elimina l'utente: submissions, stories, story_views, push_subscriptions vanno a
-    // cascata; reward_codes.claimed_by torna NULL (codice di nuovo riscattabile).
+    // Elimina l'utente: submissions, stories, story_views, push_subscriptions,
+    // section_bonuses, prediction_votes e palio_predictions vanno a cascata;
+    // reward_codes.claimed_by torna NULL (codice di nuovo riscattabile).
     db.prepare('DELETE FROM users WHERE id = ?').run(u.id);
   })();
 
@@ -1947,6 +1962,18 @@ app.post('/profilo/elimina', auth.requireLogin, verifyCsrf, (req, res) => {
   rm(STORIES_DIR, storyFiles);
   if (avatarFile) fs.unlink(path.join(AVATARS_DIR, path.basename(avatarFile)), () => {});
 
+  return { foto: photoFiles.length, storie: storyFiles.length };
+}
+
+// Cancellazione account (diritto all'oblio GDPR): l'utente elimina sé stesso.
+// Richiede la password (re-autenticazione) per evitare cancellazioni accidentali/CSRF.
+app.post('/profilo/elimina', auth.requireLogin, verifyCsrf, (req, res) => {
+  const u = req.currentUser;
+  if (!auth.verifyPassword(req.body.password || '', u.password_hash)) {
+    flash(req, 'error', 'Password errata: account non eliminato.');
+    return res.redirect('/profilo');
+  }
+  purgeUser(u);
   delete req.session.userId;   // logout (l'utente non esiste più)
   flash(req, 'success', 'Il tuo account e i tuoi dati sono stati eliminati. Ci dispiace vederti andare!');
   res.redirect('/');
@@ -2497,6 +2524,34 @@ app.post('/admin/utenti/:id/ruolo', auth.requireAdmin, (req, res) => {
   db.prepare('UPDATE users SET role = ? WHERE id = ?').run(role, target.id);
   audit(req, 'utente.ruolo', `${target.nickname} -> ${role}`);
   flash(req, 'success', `Ruolo di ${target.nickname} aggiornato a ${role}.`);
+  res.redirect('/admin');
+});
+
+// Cancellazione di un account da parte dell'admin. È irreversibile e porta via
+// anche foto, storie e avatar della persona, quindi:
+//  · serve la password dell'admin (una form inviata per sbaglio non basta)
+//  · non ci si può cancellare da soli da qui (si usa il proprio profilo)
+//  · non si può cancellare un altro admin: prima va retrocesso, così serve un
+//    passaggio in più e non si perde per sbaglio l'ultimo accesso al pannello
+app.post('/admin/utenti/:id/elimina', auth.requireAdmin, (req, res) => {
+  const target = auth.getUserById(req.params.id);
+  if (!target) { flash(req, 'error', 'Utente inesistente.'); return res.redirect('/admin'); }
+  if (target.id === req.currentUser.id) {
+    flash(req, 'error', 'Non puoi cancellare il tuo account da qui: usa il tuo profilo.');
+    return res.redirect('/admin');
+  }
+  if (target.role === 'admin') {
+    flash(req, 'error', `${target.nickname} è admin: portalo prima a "user", poi potrai eliminarlo.`);
+    return res.redirect('/admin');
+  }
+  if (!auth.verifyPassword(req.body.admin_password || '', req.currentUser.password_hash)) {
+    flash(req, 'error', 'Password admin errata: nessun account eliminato.');
+    return res.redirect('/admin');
+  }
+  const nickname = target.nickname;
+  const removed = purgeUser(target);
+  audit(req, 'utente.elimina', `${nickname} (#${target.id}) · ${removed.foto} foto, ${removed.storie} storie`);
+  flash(req, 'success', `Account di ${nickname} eliminato, insieme a ${removed.foto} foto e ${removed.storie} storie.`);
   res.redirect('/admin');
 });
 

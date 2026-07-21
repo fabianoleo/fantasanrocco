@@ -80,7 +80,7 @@ const MISSIONS = [
   m('Partitella', 'Scatta una foto durante una partita con il pallone in piazza.', 'non-comune', { sec: 'sport' }),
   m('Ultras', 'Scatta una foto indossando la maglia di una squadra di calcio del paese.', 'non-comune', { sec: 'sport' }),
   m('Dirigenza', 'Scatta una foto con un dirigente di una delle squadre di calcio del paese.', 'non-comune', { sec: 'sport' }),
-  m('Man of the Match', 'Scatta una foto con un calciatore di una delle squadre del paese.', 'non-comune', { sec: 'sport' }),
+  m('Man of the Match', 'Scatta una foto con un calciatore di una delle squadre del paese.', 'non-comune', { rep: true, sec: 'sport' }),
   m('Meet the Team', 'Scatta una foto con uno dei membri del team "Fanta San Rocco".', 'rara', { sec: 'sport' }),
   m('Benedizione', 'Scatta una foto con il parroco.', 'rara', { sec: 'sport' }),
   m("A' Ciort", 'Acquista un biglietto della lotteria di San Rocco e documentalo con una foto.', 'epica', { sec: 'sport' }),

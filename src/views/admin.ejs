@@ -63,7 +63,7 @@
     <span class="adm-tile-ico"><%- icon('people') %></span>
     <span class="adm-tile-body">
       <span class="adm-tile-title">Utenti e ruoli</span>
-      <span class="adm-tile-desc">Ruoli, punti bonus</span>
+      <span class="adm-tile-desc">Ruoli, email, punti bonus, cancellazione</span>
     </span>
     <span class="adm-tile-badge"><%= users.length %></span>
   </button>
@@ -473,6 +473,13 @@
             <span class="role-badge role-<%= u.role %>"><%= u.role %></span>
             <span class="user-pts"><%= u.points %> pt</span>
           </div>
+          <p class="user-email">
+            <% if (u.email) { %>
+              <a href="mailto:<%= u.email %>"><%- icon('mail') %> <%= u.email %></a>
+            <% } else { %>
+              <span class="muted"><%- icon('mail') %> nessuna email registrata</span>
+            <% } %>
+          </p>
           <div class="user-actions">
             <form action="/admin/utenti/<%= u.id %>/ruolo" method="post" class="user-role-form">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -496,6 +503,17 @@
               </label>
               <button class="btn-mini" type="submit">+ Bonus</button>
             </form>
+            <% if (u.role !== 'admin' && u.id !== currentUser.id) { %>
+              <form action="/admin/utenti/<%= u.id %>/elimina" method="post" class="user-danger"
+                    data-confirm="Eliminare DEFINITIVAMENTE l'account di <%= u.nickname %>? Spariscono anche le sue foto, storie e punti. Non si torna indietro.">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <label class="field-mini field-grow">La tua password admin
+                  <input type="password" name="admin_password" placeholder="Password" autocomplete="current-password"
+                         aria-label="La tua password admin, per confermare l'eliminazione">
+                </label>
+                <button class="btn-mini btn-danger" type="submit"><%- icon('trash') %> Elimina account</button>
+              </form>
+            <% } %>
           </div>
         </li>
       <% }) %>

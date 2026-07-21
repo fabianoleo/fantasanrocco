@@ -174,6 +174,9 @@ const PATHS = {
   // Campanello (notifiche)
   bell:
     '<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6z" /><path d="M10 20a2 2 0 0 0 4 0" />',
+  // Busta (email dell'utente nel pannello admin)
+  mail:
+    '<rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3.5 7 8.5 6 8.5-6" />',
   // Grafico a barre (statistiche)
   chart:
     '<path d="M4 20V10" /><path d="M10 20V4" /><path d="M16 20v-7" /><path d="M22 20H2" />',
