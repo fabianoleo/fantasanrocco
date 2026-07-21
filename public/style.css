@@ -96,7 +96,10 @@
 
 /* ---------- Reset --------------------------------------------------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+/* Scorrimento morbido per le ancore, MA non sulla home: lì c'è la sezione
+   "pinnata" con ScrollTrigger, e scroll-behavior:smooth litiga con il pin
+   (è una incompatibilità nota di GSAP) facendo saltare la pagina. */
+html:not(:has(.cine)) { scroll-behavior: smooth; }
 
 /* ---------- Scrollbar ----------------------------------------------- */
 ::-webkit-scrollbar { width: 6px; }

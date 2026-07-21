@@ -26,7 +26,14 @@
   }
 
   const gsap = window.gsap;
-  gsap.registerPlugin(window.ScrollTrigger);
+  const ScrollTrigger = window.ScrollTrigger;
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Su iOS/Android la barra degli indirizzi si ritrae scorrendo, e durante una
+  // chiamata la barra di stato diventa più alta: ogni volta cambia
+  // window.innerHeight. Senza questo, ScrollTrigger rifà i conti del pin a metà
+  // animazione e la sezione salta, lasciando buchi vuoti sotto al contenuto.
+  ScrollTrigger.config({ ignoreMobileResize: true });
 
   const metricValue = parseInt(root.dataset.metric || "105", 10);
   const q = (sel) => root.querySelector(sel);
@@ -58,17 +65,26 @@
   window.addEventListener("mousemove", onMouseMove, { passive: true });
 
   // 2. Timeline cinematografica con pin sullo scroll
-  const isMobile = window.innerWidth < 768;
-
+  //
+  // matchMedia invece di un `isMobile` letto una volta sola: al cambio di
+  // breakpoint (rotazione dello schermo, finestra ridimensionata) GSAP smonta
+  // la timeline e la ricostruisce con le misure giuste. Prima restavano quelle
+  // del primo caricamento e il pin non combaciava più con la pagina.
   let ctx;
   try {
-  ctx = gsap.context(() => {
+  ctx = gsap.matchMedia(root);
+  ctx.add({ isMobile: '(max-width: 767px)', isDesktop: '(min-width: 768px)' }, (mmCtx) => {
+    const { isMobile } = mmCtx.conditions;
+    // Altezza del viewport fissata alla costruzione: su iOS "vh" vale sempre
+    // il viewport GRANDE (barra nascosta), quindi una card 92vh sborda sotto
+    // alla barra degli indirizzi quando questa è visibile.
+    const vh = window.innerHeight;
     // Il testo hero è VISIBILE già dal primo frame (autoAlpha:1): così anche
     // un tab in background — dove requestAnimationFrame è in pausa — non
     // resta mai bianco. L'intro anima solo trasformazioni.
     gsap.set(".text-track", { autoAlpha: 1, y: 60, scale: 0.85, filter: "blur(20px)", rotationX: -20 });
     gsap.set(".text-days", { autoAlpha: 1, clipPath: "inset(0 100% 0 0)" });
-    gsap.set(".main-card", { y: window.innerHeight + 200, autoAlpha: 1 });
+    gsap.set(".main-card", { y: vh + 200, autoAlpha: 1 });
     gsap.set([".card-left-text", ".card-right-text", ".mockup-scroll-wrapper", ".floating-badge", ".phone-widget"], { autoAlpha: 0 });
     gsap.set(".cta-wrapper", { autoAlpha: 0, scale: 0.8, filter: "blur(30px)" });
 
@@ -86,8 +102,12 @@
         start: "top top",
         end: "+=" + scrollEnd,
         pin: true,
+        pinSpacing: true,
         scrub: 1,
-        anticipatePin: 1,
+        // anticipatePin serve contro il "flash" da rotellina veloce, ma sul
+        // touch anticipa il pin durante lo swipe e fa scattare la sezione.
+        anticipatePin: isMobile ? 0 : 1,
+        invalidateOnRefresh: true,
       },
     });
 
@@ -114,14 +134,58 @@
       })
       .to(".main-card", {
         width: isMobile ? "92vw" : "85vw",
-        height: isMobile ? "92vh" : "85vh",
+        height: Math.round(vh * (isMobile ? 0.92 : 0.85)),
         borderRadius: isMobile ? "32px" : "40px",
         ease: "expo.inOut",
         duration: 1.8,
       }, "pullback")
       .to(".cta-wrapper", { scale: 1, filter: "blur(0px)", ease: "expo.inOut", duration: 1.8 }, "pullback")
-      .to(".main-card", { y: -window.innerHeight - 300, ease: "power3.in", duration: 1.5 });
-  }, root);
+      .to(".main-card", { y: -vh - 300, ease: "power3.in", duration: 1.5 });
+  });
+
+  // ── Ricalcoli ──────────────────────────────────────────────────────
+  // Il pin "incide" le misure della sezione nel momento in cui nasce. Se in
+  // quell'istante font, logo 3D o immagini non sono ancora a posto, resta
+  // incastrato con numeri sbagliati: la pagina va in sovrapposizione e lo
+  // scroll non torna. Qui lo rimisuriamo appena il layout si assesta.
+  let refreshTimer = 0;
+  function refreshSoon() {
+    clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 120);
+  }
+  window.addEventListener("load", refreshSoon);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(refreshSoon);
+  window.addEventListener("orientationchange", refreshSoon);
+
+  // Solo la LARGHEZZA: l'altezza cambia in continuazione sul telefono (barra
+  // degli indirizzi che si ritrae) e rimisurare a ogni scroll è proprio ciò
+  // che faceva saltare la sezione.
+  if (window.ResizeObserver) {
+    let lastW = document.documentElement.clientWidth;
+    new ResizeObserver(() => {
+      const w = document.documentElement.clientWidth;
+      if (w === lastW) return;
+      lastW = w;
+      refreshSoon();
+    }).observe(document.documentElement);
+  }
+
+  // Rete di sicurezza: se un evento di resize non arriva (succede dentro le
+  // webview e i browser in-app di Instagram/Facebook), il pin resta con misure
+  // sbagliate e la pagina è inutilizzabile. Qui ce ne accorgiamo scorrendo e
+  // rimisuriamo, al massimo 3 volte. Guardiamo solo la LARGHEZZA e il caso
+  // "altezza zero": l'altezza da sola oscilla sempre per la barra del browser.
+  let heals = 0;
+  window.addEventListener("scroll", () => {
+    if (heals >= 3) return;
+    // innerWidth e non clientWidth: la sezione è larga 100vw, che su desktop
+    // include la barra di scorrimento (6px) — altrimenti sembrerebbe sempre
+    // fuori misura e rimisureremmo per niente.
+    const r = root.getBoundingClientRect();
+    if (r.height > 0 && Math.abs(r.width - window.innerWidth) < 2) return;
+    heals++;
+    ScrollTrigger.refresh();
+  }, { passive: true });
   } catch (err) {
     // GSAP presente ma qualcosa è andato storto → versione statica, mai vuota
     if (ctx) ctx.revert();
