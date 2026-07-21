@@ -8,7 +8,7 @@
   <p><%= m.description %></p>
 
   <div class="mission-meta">
-    <% if (m.repeatable) { %><span class="tag"><%- icon('repeat') %> Ripetibile</span><% } else { %><span class="tag">1 sola volta</span><% } %>
+    <% if (m.repeatable) { %><span class="tag"><%- icon('repeat') %> Ripetibile (più volte)</span><% } else { %><span class="tag">1 volta al giorno</span><% } %>
     <% if (m.requires_photo) { %><span class="tag"><%- icon('camera') %> Foto obbligatoria</span><% } else { %><span class="tag">Senza foto</span><% } %>
     <% if (activeNow) { %><span class="tag tag-live"><%- icon('dot') %> Attiva ora</span><% } else { %><span class="tag tag-off"><%- icon('alarm') %> Non attiva ora</span><% } %>
   </div>
@@ -20,7 +20,7 @@
 </section>
 
 <% if (statuses.includes('approved') && !m.repeatable) { %>
-  <div class="card"><p class="tag-ok"><%- icon('check-circle') %> Hai già completato questa missione. Bravo/a!</p></div>
+  <div class="card"><p class="tag-ok"><%- icon('check-circle') %> Fatta oggi! Potrai rifarla dal prossimo giorno-festa (dalle 18:00).</p></div>
 <% } else if (statuses.includes('pending')) { %>
   <div class="card"><p class="tag-pending"><%- icon('hourglass') %> Hai una prova in attesa di validazione per questa missione.</p></div>
 <% } %>

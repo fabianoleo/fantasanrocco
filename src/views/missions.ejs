@@ -1,5 +1,6 @@
 <h1>Missioni</h1>
-<p class="muted">Tocca una missione per inviare la tua prova. <span style="color:var(--green)"><%- icon('dot') %></span> = puoi farla ora.</p>
+<p class="muted">Tocca una missione per inviare la tua prova. <span style="color:var(--green)"><%- icon('dot') %></span> = puoi farla ora.<br>
+  <span class="small">Ogni missione si può fare <strong>una volta al giorno</strong> (il giorno va dalle 18:00 alle 17:59 del giorno dopo). Quelle <em>ripetibili</em> si possono rifare più volte.</span></p>
 
 <%# ── Pronostico Palio dei Fuochi ─────────────────────────────────── %>
 <% if (typeof pronostico !== 'undefined' && pronostico) { %>
@@ -119,36 +120,80 @@
   <% }) %>
 <% } %>
 
-<div class="mission-grid">
-  <% missions.forEach((m) => { %>
-    <a class="mission-card <%= m.activeNow ? '' : 'inactive' %>" href="/missioni/<%= m.id %>">
-      <div class="mission-head">
-        <h3><%= m.title %></h3>
-        <span class="points-badge"><%= m.points %> pt</span>
-      </div>
-      <p class="mission-desc"><%= m.description %></p>
-      <div class="mission-meta">
-        <% if (m.hasApproved && !m.repeatable) { %>
-          <span class="tag tag-ok"><%- icon('check-circle') %> Completata</span>
-        <% } else if (m.hasPending) { %>
-          <span class="tag tag-pending"><%- icon('hourglass') %> In attesa</span>
-        <% } %>
-        <% if (m.repeatable) { %><span class="tag"><%- icon('repeat') %> Ripetibile</span><% } %>
-        <% if (m.requires_photo) { %><span class="tag"><%- icon('camera') %> Foto</span><% } %>
-        <% if (!m.activeNow) { %>
-          <span class="tag tag-off"><%- icon('alarm') %> Non attiva ora</span>
-        <% } else { %>
-          <span class="tag tag-live"><%- icon('dot') %> Attiva</span>
-        <% } %>
-      </div>
-      <div class="mission-counter">
-        <span class="mc-icon"><%- icon('people') %></span>
-        <span class="mc-val"><%= m.completedBy %></span>
-        <span class="mc-label"><%= m.completedBy === 1 ? 'persona ha completato' : 'persone hanno completato' %></span>
-      </div>
-    </a>
-  <% }) %>
-</div>
+<%# ── Progresso sezioni (bonus al completamento) ──────────────────── %>
+<% const secs = (typeof sections !== 'undefined' && sections) ? sections : []; %>
+<% if (secs.length) { %>
+  <section class="card ms-secpanel">
+    <h2 class="staff-title"><%- icon('trophy') %> Sezioni · completa tutte le missioni di una sezione e prendi <strong>+<%= sectionBonus %> punti</strong></h2>
+    <div class="ms-secgrid">
+      <% secs.forEach((s) => { %>
+        <div class="ms-secprog ms-sec-<%= s.color %> <%= s.completed ? 'is-done' : '' %>">
+          <span class="ms-secprog-top">
+            <span class="ms-secprog-name"><%= s.label %></span>
+            <span class="ms-secprog-val"><%= s.done %>/<%= s.total %></span>
+          </span>
+          <span class="ms-secprog-bar"><span style="width:<%= Math.round(s.done / s.total * 100) %>%"></span></span>
+          <span class="ms-secprog-foot">
+            <% if (s.completed) { %><%- icon('check-circle') %> Completata · +<%= s.bonus %> pt<% } else { %>Mancano <%= s.total - s.done %> · +<%= s.bonus %> pt<% } %>
+          </span>
+        </div>
+      <% }) %>
+    </div>
+  </section>
+<% } %>
+
+<%
+  // Raggruppa le missioni per sezione; quelle senza sezione (sfide giornaliere,
+  // flash) finiscono in un gruppo a parte.
+  const groups = [];
+  secs.forEach((s) => {
+    const ms = missions.filter((m) => m.section === s.key);
+    if (ms.length) groups.push({ sec: s, list: ms });
+  });
+  const others = missions.filter((m) => !m.section);
+  if (others.length) groups.push({ sec: null, list: others });
+%>
+<% groups.forEach((g) => { %>
+  <% if (g.sec) { %>
+    <div class="ms-sechead ms-sec-<%= g.sec.color %> <%= g.sec.completed ? 'is-done' : '' %>">
+      <span><%= g.sec.label %> (<%= g.sec.total %>)</span>
+      <span class="ms-sechead-badge"><%= g.sec.done %>/<%= g.sec.total %> · +<%= g.sec.bonus %> pt</span>
+    </div>
+  <% } else { %>
+    <div class="ms-sechead ms-sec-other"><span>Sfide speciali</span></div>
+  <% } %>
+
+  <div class="mission-grid">
+    <% g.list.forEach((m) => { %>
+      <a class="mission-card <%= m.activeNow ? '' : 'inactive' %>" href="/missioni/<%= m.id %>">
+        <div class="mission-head">
+          <h3><%= m.title %></h3>
+          <span class="points-badge"><%= m.points %> pt</span>
+        </div>
+        <p class="mission-desc"><%= m.description %></p>
+        <div class="mission-meta">
+          <% if (m.hasApproved && !m.repeatable) { %>
+            <span class="tag tag-ok"><%- icon('check-circle') %> Fatta oggi</span>
+          <% } else if (m.hasPending) { %>
+            <span class="tag tag-pending"><%- icon('hourglass') %> In attesa</span>
+          <% } %>
+          <% if (m.repeatable) { %><span class="tag"><%- icon('repeat') %> Ripetibile</span><% } %>
+          <% if (m.requires_photo) { %><span class="tag"><%- icon('camera') %> Foto</span><% } %>
+          <% if (!m.activeNow) { %>
+            <span class="tag tag-off"><%- icon('alarm') %> Non attiva ora</span>
+          <% } else { %>
+            <span class="tag tag-live"><%- icon('dot') %> Attiva</span>
+          <% } %>
+        </div>
+        <div class="mission-counter">
+          <span class="mc-icon"><%- icon('people') %></span>
+          <span class="mc-val"><%= m.completedBy %></span>
+          <span class="mc-label"><%= m.completedBy === 1 ? 'persona ha completato' : 'persone hanno completato' %></span>
+        </div>
+      </a>
+    <% }) %>
+  </div>
+<% }) %>
 <% if (missions.length === 0) { %>
   <p class="muted">Nessuna missione disponibile al momento. Torna più tardi!</p>
 <% } %>

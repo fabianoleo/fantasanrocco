@@ -1,0 +1,126 @@
+<a href="/admin" class="adm-back" style="text-decoration:none"><%- icon('arrow-left') %> Torna al pannello</a>
+
+<h1 class="staff-title"><%- icon('chart') %> Statistiche</h1>
+<p class="muted small">Dati aggregati e anonimi sull'attività dei giocatori. Nessun dato personale sensibile.</p>
+
+<%# ── Filtro periodo ─────────────────────────────────────────────── %>
+<div class="st-range">
+  <% ranges.forEach((r) => { %>
+    <a class="st-range-btn <%= r.key === range.key ? 'is-active' : '' %>" href="/admin/statistiche?range=<%= r.key %>"><%= r.label %></a>
+  <% }) %>
+</div>
+
+<%# ── KPI ─────────────────────────────────────────────────────────── %>
+<div class="st-kpis">
+  <% function kpiCard(ico, val, label, cls) { %>
+    <div class="st-kpi <%= cls || '' %>">
+      <span class="st-kpi-ico"><%- icon(ico) %></span>
+      <span class="st-kpi-val"><%= val %></span>
+      <span class="st-kpi-label"><%= label %></span>
+    </div>
+  <% } %>
+  <% kpiCard('people', kpi.newUsers, 'Nuovi iscritti') %>
+  <% kpiCard('camera', kpi.subs, 'Prove inviate') %>
+  <% kpiCard('check', kpi.approved, 'Prove approvate') %>
+  <% kpiCard('hourglass', kpi.pending, 'In attesa') %>
+  <% kpiCard('bolt', kpi.activeUsers, 'Utenti attivi') %>
+  <% kpiCard('trophy', kpi.missionPoints, 'Punti da missioni') %>
+  <% kpiCard('sparkle', kpi.stories, 'Storie pubblicate') %>
+  <% kpiCard('target', kpi.votes, 'Voti pronostici') %>
+</div>
+
+<%# ── Grafico: prove inviate per giorno ──────────────────────────── %>
+<%
+  const maxSubs = Math.max(1, ...series.map((s) => s.subs));
+  const maxReg  = Math.max(1, ...series.map((s) => s.users));
+  const CW = 680, CH = 200, PADB = 26, PADL = 4;
+  const n = series.length;
+  const bw = (CW - PADL) / n;
+%>
+<section class="card st-chart-card">
+  <h2 class="staff-title"><%- icon('camera') %> Prove inviate per giorno</h2>
+  <div class="st-chart">
+    <svg viewBox="0 0 <%= CW %> <%= CH %>" preserveAspectRatio="none" role="img" aria-label="Prove per giorno">
+      <% series.forEach((s, i) => {
+           const h = Math.round((CH - PADB) * s.subs / maxSubs);
+           const x = PADL + i * bw; %>
+        <rect class="st-bar" x="<%= (x + bw*0.15).toFixed(1) %>" y="<%= (CH - PADB - h).toFixed(1) %>"
+              width="<%= (bw*0.7).toFixed(1) %>" height="<%= Math.max(0,h) %>" rx="2">
+          <title><%= s.label %>: <%= s.subs %> prove</title>
+        </rect>
+        <% if (n <= 15 || i % Math.ceil(n/10) === 0) { %>
+          <text class="st-axis" x="<%= (x + bw/2).toFixed(1) %>" y="<%= CH - 8 %>" text-anchor="middle"><%= s.label %></text>
+        <% } %>
+      <% }) %>
+    </svg>
+  </div>
+  <p class="muted small">Massimo giornaliero: <strong><%= maxSubs %></strong> prove.</p>
+</section>
+
+<%# ── Grafico: iscrizioni per giorno ─────────────────────────────── %>
+<section class="card st-chart-card">
+  <h2 class="staff-title"><%- icon('people') %> Nuovi iscritti per giorno</h2>
+  <div class="st-chart">
+    <svg viewBox="0 0 <%= CW %> <%= CH %>" preserveAspectRatio="none" role="img" aria-label="Iscritti per giorno">
+      <% series.forEach((s, i) => {
+           const h = Math.round((CH - PADB) * s.users / maxReg);
+           const x = PADL + i * bw; %>
+        <rect class="st-bar st-bar-alt" x="<%= (x + bw*0.15).toFixed(1) %>" y="<%= (CH - PADB - h).toFixed(1) %>"
+              width="<%= (bw*0.7).toFixed(1) %>" height="<%= Math.max(0,h) %>" rx="2">
+          <title><%= s.label %>: <%= s.users %> iscritti</title>
+        </rect>
+        <% if (n <= 15 || i % Math.ceil(n/10) === 0) { %>
+          <text class="st-axis" x="<%= (x + bw/2).toFixed(1) %>" y="<%= CH - 8 %>" text-anchor="middle"><%= s.label %></text>
+        <% } %>
+      <% }) %>
+    </svg>
+  </div>
+</section>
+
+<%# ── Prove per stato ────────────────────────────────────────────── %>
+<%
+  const totSt = kpi.approved + kpi.pending + kpi.rejected || 1;
+  const pct = (v) => Math.round(v / totSt * 100);
+%>
+<section class="card">
+  <h2 class="staff-title"><%- icon('list') %> Esito delle prove (nel periodo)</h2>
+  <div class="st-statusbar">
+    <span class="st-seg st-seg-ok" style="width:<%= pct(kpi.approved) %>%" title="Approvate: <%= kpi.approved %>"></span>
+    <span class="st-seg st-seg-wait" style="width:<%= pct(kpi.pending) %>%" title="In attesa: <%= kpi.pending %>"></span>
+    <span class="st-seg st-seg-no" style="width:<%= pct(kpi.rejected) %>%" title="Rifiutate: <%= kpi.rejected %>"></span>
+  </div>
+  <div class="st-legend">
+    <span><i class="st-dot st-dot-ok"></i> Approvate <strong><%= kpi.approved %></strong></span>
+    <span><i class="st-dot st-dot-wait"></i> In attesa <strong><%= kpi.pending %></strong></span>
+    <span><i class="st-dot st-dot-no"></i> Rifiutate <strong><%= kpi.rejected %></strong></span>
+  </div>
+</section>
+
+<%# ── Top missioni + Top utenti ──────────────────────────────────── %>
+<div class="st-cols">
+  <section class="card">
+    <h2 class="staff-title"><%- icon('list') %> Missioni più completate</h2>
+    <% if (topMissions.length) { const mx = Math.max(1, ...topMissions.map(t=>t.c)); %>
+      <% topMissions.forEach((t) => { %>
+        <div class="st-rankrow">
+          <span class="st-rank-name"><%= t.title %></span>
+          <span class="st-rank-bar"><span style="width:<%= Math.round(t.c/mx*100) %>%"></span></span>
+          <span class="st-rank-val"><%= t.c %></span>
+        </div>
+      <% }) %>
+    <% } else { %><p class="muted small">Nessuna prova approvata nel periodo.</p><% } %>
+  </section>
+
+  <section class="card">
+    <h2 class="staff-title"><%- icon('people') %> Giocatori più attivi</h2>
+    <% if (topUsers.length) { const mx = Math.max(1, ...topUsers.map(t=>t.c)); %>
+      <% topUsers.forEach((t) => { %>
+        <div class="st-rankrow">
+          <span class="st-rank-name"><%= t.nickname %></span>
+          <span class="st-rank-bar"><span style="width:<%= Math.round(t.c/mx*100) %>%"></span></span>
+          <span class="st-rank-val"><%= t.c %></span>
+        </div>
+      <% }) %>
+    <% } else { %><p class="muted small">Nessuna attività nel periodo.</p><% } %>
+  </section>
+</div>

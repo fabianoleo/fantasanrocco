@@ -102,6 +102,19 @@ try { db.exec('ALTER TABLE users ADD COLUMN streak_day INTEGER NOT NULL DEFAULT 
 try { db.exec('ALTER TABLE users ADD COLUMN streak_last_day TEXT'); } catch {}
 // game_key: marca una "missione" come traguardo del mini-gioco (esclusa dalle missioni-foto)
 try { db.exec('ALTER TABLE missions ADD COLUMN game_key TEXT'); } catch {}
+// Sezione tematica della missione (paese/food/social/sport): completare TUTTE le
+// missioni di una sezione dà un bonus. NULL per sfide giornaliere/flash.
+try { db.exec('ALTER TABLE missions ADD COLUMN section TEXT'); } catch {}
+
+// Bonus-sezione già accreditati (un utente lo riceve una sola volta per sezione).
+db.exec(`
+CREATE TABLE IF NOT EXISTS section_bonuses (
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  section    TEXT NOT NULL,
+  awarded_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, section)
+);
+`);
 
 // Codici premio monouso (link/QR): il PRIMO utente loggato che apre il link
 // riscatta i punti; chi arriva dopo non guadagna nulla.

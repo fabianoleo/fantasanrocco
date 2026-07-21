@@ -505,9 +505,9 @@ function escapeHtml(s) {
 
 // Helper: una missione è attiva adesso?
 function isMissionActiveNow(m) {
-  const now = new Date();
-  if (m.active_from && now < new Date(m.active_from.replace(' ', 'T'))) return false;
-  if (m.active_to && now > new Date(m.active_to.replace(' ', 'T'))) return false;
+  const now = Date.now();
+  if (m.active_from && now < romeStringToDate(m.active_from).getTime()) return false;
+  if (m.active_to && now > romeStringToDate(m.active_to).getTime()) return false;
   return true;
 }
 
@@ -1205,6 +1205,79 @@ function romeDate(daysAgo) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' })
     .format(new Date(Date.now() - (daysAgo || 0) * 86400000));
 }
+// Offset di Roma (ms) per un dato istante: wall-clock Roma − UTC (gestisce l'ora legale).
+function romeOffsetMs(date) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  }).formatToParts(date).map((x) => [x.type, x.value]));
+  const hh = p.hour === '24' ? '00' : p.hour;
+  return Date.UTC(+p.year, +p.month - 1, +p.day, +hh, +p.minute, +p.second) - date.getTime();
+}
+// Converte una stringa "YYYY-MM-DD HH:MM[:SS]" intesa come ora ITALIANA in un
+// istante (Date), così le finestre attive delle missioni sono coerenti col fuso
+// di Siano qualunque sia il timezone del server (Docker spesso è UTC).
+function romeStringToDate(s) {
+  const m = String(s).trim().match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (!m) return new Date(String(s).replace(' ', 'T'));
+  const guessUTC = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0));
+  return new Date(guessUTC - romeOffsetMs(new Date(guessUTC)));
+}
+// "Giorno-festa" delle missioni: va dalle 18:00 (ora italiana) del giorno X alle
+// 17:59:59 del giorno X+1. Ritorna l'inizio del giorno-festa CORRENTE come stringa
+// UTC 'YYYY-MM-DD HH:MM:SS', confrontabile con submissions.created_at (UTC).
+function festivalDayStartSQL(now = new Date()) {
+  const off = romeOffsetMs(now);
+  const rome = new Date(now.getTime() + off);   // wall-clock Roma nei campi UTC
+  let y = rome.getUTCFullYear(), mo = rome.getUTCMonth(), d = rome.getUTCDate();
+  if (rome.getUTCHours() < 18) {                // prima delle 18 → giorno-festa iniziato ieri
+    const prev = new Date(Date.UTC(y, mo, d) - 86400000);
+    y = prev.getUTCFullYear(); mo = prev.getUTCMonth(); d = prev.getUTCDate();
+  }
+  return new Date(Date.UTC(y, mo, d, 18, 0, 0) - off).toISOString().slice(0, 19).replace('T', ' ');
+}
+
+// ── Sezioni tematiche delle missioni fisse ─────────────────────────────────
+// Completare TUTTE le missioni di una sezione (almeno una prova approvata per
+// ciascuna) dà un bonus una tantum.
+const SECTIONS = [
+  { key: 'paese',  label: 'Paese & Tradizione',     color: 'gold' },
+  { key: 'food',   label: 'Food & Drink',           color: 'green' },
+  { key: 'social', label: 'Social & Party',         color: 'purple' },
+  { key: 'sport',  label: 'Sport, Team & Comunità', color: 'blue' },
+];
+const SECTION_BONUS = 100;
+// Progresso per sezione di un utente: { key: { total, done } }
+function sectionProgress(userId) {
+  const rows = db.prepare(`
+    SELECT m.section AS sec, COUNT(*) AS total,
+      SUM(CASE WHEN EXISTS(
+        SELECT 1 FROM submissions s WHERE s.mission_id = m.id AND s.user_id = ? AND s.status = 'approved'
+      ) THEN 1 ELSE 0 END) AS done
+    FROM missions m
+    WHERE m.section IS NOT NULL AND m.archived = 0
+    GROUP BY m.section`).all(userId);
+  const map = {};
+  for (const r of rows) map[r.sec] = { total: r.total, done: r.done };
+  return map;
+}
+// Accredita il bonus per le sezioni appena completate (idempotente). Ritorna le
+// sezioni premiate ora.
+function checkAndAwardSections(userId) {
+  const prog = sectionProgress(userId);
+  const awarded = [];
+  for (const s of SECTIONS) {
+    const p = prog[s.key];
+    if (!p || p.total <= 0 || p.done < p.total) continue;
+    if (db.prepare('SELECT 1 FROM section_bonuses WHERE user_id = ? AND section = ?').get(userId, s.key)) continue;
+    db.transaction(() => {
+      const ins = db.prepare('INSERT OR IGNORE INTO section_bonuses (user_id, section) VALUES (?, ?)').run(userId, s.key);
+      if (ins.changes) db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(SECTION_BONUS, userId);
+    })();
+    awarded.push(s);
+  }
+  return awarded;
+}
 
 // ── Streak giornaliero (7 giorni, bonus crescente, poi riparte) ─────────
 const STREAK_BONUS = [5, 10, 15, 25, 40, 60, 100];   // giorno 1..7
@@ -1486,7 +1559,11 @@ app.post('/reset-password/:token', (req, res) => {
 // =========================================================================
 app.get('/missioni', auth.requireLogin, (req, res) => {
   const missions = db.prepare('SELECT * FROM missions WHERE archived = 0 AND game_key IS NULL ORDER BY points DESC, id ASC').all();
-  const mySubs = db.prepare('SELECT mission_id, status FROM submissions WHERE user_id = ?').all(req.currentUser.id);
+  // Le missioni si possono rifare una volta per "giorno-festa" (18:00→17:59): per il
+  // blocco guardo solo le prove del giorno-festa corrente. Le ripetibili non bloccano mai.
+  const dayStart = festivalDayStartSQL();
+  const mySubs = db.prepare('SELECT mission_id, status FROM submissions WHERE user_id = ? AND created_at >= ?')
+    .all(req.currentUser.id, dayStart);
   const byMission = {};
   for (const s of mySubs) {
     (byMission[s.mission_id] = byMission[s.mission_id] || []).push(s.status);
@@ -1523,7 +1600,16 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
     fuochisti: PALIO_FUOCHISTI.map((f) => f.name),
     myChoice: palioMyChoice(req.currentUser.id),
   };
-  res.render('missions', { title: 'Missioni', missions: list, pronostico, predictions: predictionsForUser(req.currentUser.id) });
+  // Progresso delle sezioni tematiche (bonus una tantum al completamento)
+  const prog = sectionProgress(req.currentUser.id);
+  const awardedSet = new Set(db.prepare('SELECT section FROM section_bonuses WHERE user_id = ?')
+    .all(req.currentUser.id).map((r) => r.section));
+  const sections = SECTIONS.map((s) => {
+    const p = prog[s.key] || { total: 0, done: 0 };
+    return { ...s, total: p.total, done: p.done, completed: p.total > 0 && p.done >= p.total, awarded: awardedSet.has(s.key), bonus: SECTION_BONUS };
+  }).filter((s) => s.total > 0);
+
+  res.render('missions', { title: 'Missioni', missions: list, pronostico, sections, sectionBonus: SECTION_BONUS, predictions: predictionsForUser(req.currentUser.id) });
 });
 
 // Salva/aggiorna il pronostico dell'utente (una scelta tra i 6 fuochisti)
@@ -1571,8 +1657,8 @@ app.post('/pronostici/:id/vota', auth.requireLogin, verifyCsrf, (req, res) => {
 app.get('/missioni/:id', auth.requireLogin, (req, res) => {
   const m = db.prepare('SELECT * FROM missions WHERE id = ? AND archived = 0').get(req.params.id);
   if (!m) return res.status(404).render('error', { title: 'Non trovata', message: 'Missione inesistente.' });
-  const statuses = db.prepare('SELECT status FROM submissions WHERE user_id = ? AND mission_id = ?')
-    .all(req.currentUser.id, m.id).map((r) => r.status);
+  const statuses = db.prepare('SELECT status FROM submissions WHERE user_id = ? AND mission_id = ? AND created_at >= ?')
+    .all(req.currentUser.id, m.id, festivalDayStartSQL()).map((r) => r.status);
   const canSubmit = m.repeatable
     ? true
     : !(statuses.includes('pending') || statuses.includes('approved'));
@@ -1626,8 +1712,9 @@ app.post('/missioni/:id/invia', auth.requireLogin, (req, res) => {
     let inserted;
     try {
       inserted = db.transaction(() => {
-        const statuses = db.prepare('SELECT status FROM submissions WHERE user_id = ? AND mission_id = ?')
-          .all(req.currentUser.id, m.id).map((r) => r.status);
+        // Blocco solo entro il giorno-festa corrente (18:00→17:59). Le ripetibili mai.
+        const statuses = db.prepare('SELECT status FROM submissions WHERE user_id = ? AND mission_id = ? AND created_at >= ?')
+          .all(req.currentUser.id, m.id, festivalDayStartSQL()).map((r) => r.status);
         const blocked = m.repeatable
           ? false
           : (statuses.includes('pending') || statuses.includes('approved'));
@@ -1642,7 +1729,7 @@ app.post('/missioni/:id/invia', auth.requireLogin, (req, res) => {
     }
     if (!inserted) {
       if (req.file) fs.unlink(path.join(UPLOADS_DIR, req.file.filename), () => {});
-      flash(req, 'error', 'Hai già inviato questa missione (in attesa o approvata).');
+      flash(req, 'error', 'Hai già fatto questa missione oggi. Le missioni si rinnovano ogni giorno alle 18:00.');
       return res.redirect(`/missioni/${m.id}`);
     }
     // Avvisa lo staff che ha attivato la categoria "nuove prove" (separata dalle
@@ -2014,6 +2101,18 @@ app.post('/moderazione/:id/:azione', auth.requireStaff, (req, res) => {
           body: `«${sub.title}» validata: +${sub.points} punti!`,
           url: '/classifica',
         }).catch((e) => console.error('[PUSH] approvazione', e.message));
+
+        // Questa approvazione può aver completato una sezione → bonus una tantum
+        try {
+          for (const s of checkAndAwardSections(sub.user_id)) {
+            audit(req, 'sezione.bonus', `${s.label} → +${SECTION_BONUS}pt a user#${sub.user_id}`);
+            pushToUser(sub.user_id, {
+              title: '🏅 Sezione completata!',
+              body: `Hai finito "${s.label}": +${SECTION_BONUS} punti bonus!`,
+              url: '/missioni',
+            }).catch((e) => console.error('[PUSH] bonus sezione', e.message));
+          }
+        } catch (e) { console.error('[SEZIONI] bonus', e.message); }
       }
     }
   }
@@ -2048,6 +2147,71 @@ app.get('/r/:code', (req, res) => {
   }
   // Qualcun altro è arrivato prima
   return res.render('claim', { title: 'Premio', outcome: 'used', rc });
+});
+
+// ── Statistiche (admin): aggregati anonimi, filtrabili per periodo ─────────
+app.get('/admin/statistiche', auth.requireAdmin, (req, res) => {
+  const RANGES = [
+    { key: '1', label: 'Ieri', days: 1 },
+    { key: '7', label: '7 giorni', days: 7 },
+    { key: '15', label: '15 giorni', days: 15 },
+    { key: '30', label: '30 giorni', days: 30 },
+    { key: 'all', label: 'Sempre', days: null },
+  ];
+  const range = RANGES.find((r) => r.key === String(req.query.range)) || RANGES[1];
+  const days = range.days;                       // null = tutto
+  // "since" come stringa UTC confrontabile con created_at (datetime('now') = UTC)
+  const since = days ? new Date(Date.now() - days * 86400000).toISOString().slice(0, 19).replace('T', ' ') : null;
+  const F = since ? ' AND created_at >= @since' : '';
+  const P = { since };
+  const one = (sql) => (db.prepare(sql).get(P) || {}).n || 0;
+
+  // KPI
+  const kpi = {
+    newUsers:    one(`SELECT COUNT(*) n FROM users WHERE 1=1${F}`),
+    totalUsers:  db.prepare('SELECT COUNT(*) n FROM users').get().n,
+    subs:        one(`SELECT COUNT(*) n FROM submissions WHERE 1=1${F}`),
+    approved:    one(`SELECT COUNT(*) n FROM submissions WHERE status='approved'${F}`),
+    pending:     one(`SELECT COUNT(*) n FROM submissions WHERE status='pending'${F}`),
+    rejected:    one(`SELECT COUNT(*) n FROM submissions WHERE status='rejected'${F}`),
+    stories:     one(`SELECT COUNT(*) n FROM stories WHERE 1=1${F}`),
+    votes:       one(`SELECT COUNT(*) n FROM prediction_votes WHERE 1=1${F}`)
+                 + one(`SELECT COUNT(*) n FROM palio_predictions WHERE 1=1${F}`),
+  };
+  // Utenti attivi nel periodo (hanno inviato una prova o una storia)
+  kpi.activeUsers = db.prepare(`SELECT COUNT(*) n FROM (
+      SELECT user_id FROM submissions WHERE 1=1${F}
+      UNION SELECT user_id FROM stories WHERE 1=1${F})`).get(P).n;
+  // Punti distribuiti da prove approvate nel periodo (approx: reviewed_at nel range)
+  const RF = since ? ' AND s.reviewed_at >= @since' : '';
+  kpi.missionPoints = (db.prepare(`SELECT COALESCE(SUM(m.points),0) n FROM submissions s
+      JOIN missions m ON m.id = s.mission_id WHERE s.status='approved'${RF}`).get(P) || {}).n || 0;
+
+  // Serie giornaliera (prove al giorno) — per il grafico. Bucket per data UTC.
+  const nDays = days || 30;                       // "tutto" → mostra ultimi 30 gg
+  const map = {};
+  for (const r of db.prepare(`SELECT date(created_at) d, COUNT(*) c FROM submissions
+      WHERE created_at >= datetime('now', ?) GROUP BY d`).all(`-${nDays} days`)) map[r.d] = r.c;
+  const usersMap = {};
+  for (const r of db.prepare(`SELECT date(created_at) d, COUNT(*) c FROM users
+      WHERE created_at >= datetime('now', ?) GROUP BY d`).all(`-${nDays} days`)) usersMap[r.d] = r.c;
+  const series = [];
+  for (let i = nDays - 1; i >= 0; i--) {
+    const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+    series.push({ date: d, label: d.slice(8) + '/' + d.slice(5, 7), subs: map[d] || 0, users: usersMap[d] || 0 });
+  }
+  // Top missioni per completamenti approvati nel periodo
+  const topMissions = db.prepare(`SELECT m.title, COUNT(*) c FROM submissions s
+      JOIN missions m ON m.id = s.mission_id
+      WHERE s.status='approved'${since ? ' AND s.created_at >= @since' : ''}
+      GROUP BY s.mission_id ORDER BY c DESC LIMIT 8`).all(P);
+  // Top utenti più attivi (n. prove inviate) nel periodo — solo nickname (già pubblico)
+  const topUsers = db.prepare(`SELECT u.nickname, COUNT(*) c FROM submissions s
+      JOIN users u ON u.id = s.user_id
+      WHERE 1=1${since ? ' AND s.created_at >= @since' : ''}
+      GROUP BY s.user_id ORDER BY c DESC LIMIT 8`).all(P);
+
+  res.render('statistiche', { title: 'Statistiche', ranges: RANGES, range, kpi, series, topMissions, topUsers });
 });
 
 app.get('/admin', auth.requireAdmin, async (req, res) => {
