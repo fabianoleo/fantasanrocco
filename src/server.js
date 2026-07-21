@@ -228,6 +228,13 @@ function audit(req, action, details) {
         action, details ? String(details).slice(0, 300) : null, (req.ip || '').replace('::ffff:', ''));
   } catch (e) { console.error('[AUDIT]', e.message); }
 }
+// Voce di registro senza una richiesta dietro (azioni automatiche del server).
+function auditSystem(action, details) {
+  try {
+    db.prepare('INSERT INTO audit_log (user_id, nickname, action, details, ip) VALUES (NULL, ?, ?, ?, ?)')
+      .run('sistema', action, details ? String(details).slice(0, 300) : null, '—');
+  } catch (e) { console.error('[AUDIT]', e.message); }
+}
 
 app.use(session({
   store: new SqliteStore({ client: db, expired: { clear: true, intervalMs: 900000 } }),
@@ -2415,13 +2422,54 @@ app.post('/admin/notifiche-prove', auth.requireAdmin, (req, res) => {
   res.redirect('/admin');
 });
 
+// ── Uscita di una missione: dall'archivio al pubblico ──────────────────────
+// Due strade, stesso risultato: la spunta "archiviata" tolta a mano, oppure
+// l'orario programmato che scade. In entrambi i casi parte lo stesso annuncio,
+// così una missione flash non compare mai in silenzio.
+function missionAnnouncement(m) {
+  return {
+    title: '🚨 Nuova missione disponibile!',
+    body: `${m.title} · ${m.points} punti`,
+    url: '/missioni',
+    tag: 'missione-' + m.id,   // sostituisce l'avviso precedente della stessa missione
+  };
+}
+function announceMission(m) {
+  pushBroadcast(missionAnnouncement(m))
+    .then((n) => console.log(`[MISSIONI] «${m.title}» annunciata a ${n} dispositivi`))
+    .catch((e) => console.error('[PUSH] uscita missione', e.message));
+}
+
+// Controllo periodico: pubblica le missioni la cui ora è arrivata. publish_at
+// viene azzerato nella stessa UPDATE, quindi anche se due controlli si
+// accavallassero l'annuncio parte una volta sola.
+function publishDueMissions() {
+  try {
+    const now = Date.now();
+    const due = db.prepare('SELECT * FROM missions WHERE archived = 1 AND publish_at IS NOT NULL').all()
+      .filter((m) => romeStringToDate(m.publish_at).getTime() <= now);
+    for (const m of due) {
+      const info = db.prepare('UPDATE missions SET archived = 0, publish_at = NULL WHERE id = ? AND archived = 1').run(m.id);
+      if (!info.changes) continue;           // qualcun altro l'ha già pubblicata
+      auditSystem('missione.uscita', `«${m.title}» pubblicata all'orario programmato (${m.publish_at})`);
+      announceMission(m);
+    }
+  } catch (e) { console.error('[MISSIONI] uscita programmata', e.message); }
+}
+const missionPublishTimer = setInterval(publishDueMissions, 20000);
+missionPublishTimer.unref?.();   // non tiene vivo il processo allo spegnimento
+publishDueMissions();            // recupera quelle scadute mentre il server era giù
+
 app.post('/admin/missioni', auth.requireAdmin, (req, res) => {
   const b = req.body;
   const title = (b.title || '').trim();
   if (!title) { flash(req, 'error', 'Il titolo è obbligatorio.'); return res.redirect('/admin'); }
-  db.prepare(`INSERT INTO missions
-    (title, description, points, requires_photo, repeatable, active_from, active_to)
-    VALUES (?, ?, ?, ?, ?, ?, ?)`).run(
+  // Con un'uscita programmata la missione nasce archiviata: resta nascosta
+  // fino all'orario indicato, poi esce da sola.
+  const publishAt = (b.publish_at || '').trim() || null;
+  const info = db.prepare(`INSERT INTO missions
+    (title, description, points, requires_photo, repeatable, active_from, active_to, archived, publish_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
     title,
     (b.description || '').trim(),
     parseInt(b.points, 10) || 0,
@@ -2429,20 +2477,31 @@ app.post('/admin/missioni', auth.requireAdmin, (req, res) => {
     b.repeatable ? 1 : 0,
     (b.active_from || '').trim() || null,
     (b.active_to || '').trim() || null,
+    (publishAt || b.archived) ? 1 : 0,
+    publishAt,
   );
-  if (b.notify) {
+  if (b.notify && !publishAt) {
     pushBroadcast({ title: 'Nuova missione!', body: title, url: '/missioni' })
       .catch((e) => console.error('[PUSH] nuova missione', e.message));
   }
-  audit(req, 'missione.crea', title);
-  flash(req, 'success', 'Missione creata.');
+  audit(req, 'missione.crea', title + (publishAt ? ` (uscita programmata: ${publishAt})` : ''));
+  flash(req, 'success', publishAt
+    ? `Missione creata e programmata: esce il ${publishAt} e la notifica parte da sola.`
+    : 'Missione creata.');
   res.redirect('/admin');
 });
 
 app.post('/admin/missioni/:id/modifica', auth.requireAdmin, (req, res) => {
   const b = req.body;
+  const prima = db.prepare('SELECT archived FROM missions WHERE id = ?').get(req.params.id);
+  if (!prima) { flash(req, 'error', 'Missione inesistente.'); return res.redirect('/admin'); }
+
+  const publishAt = (b.publish_at || '').trim() || null;
+  // Se c'è un'uscita programmata la missione deve restare archiviata: sarebbe
+  // assurdo "programmare" qualcosa che è già visibile.
+  const archived = publishAt ? 1 : (b.archived ? 1 : 0);
   db.prepare(`UPDATE missions SET
-    title=?, description=?, points=?, requires_photo=?, repeatable=?, active_from=?, active_to=?, archived=?
+    title=?, description=?, points=?, requires_photo=?, repeatable=?, active_from=?, active_to=?, archived=?, publish_at=?
     WHERE id=?`).run(
     (b.title || '').trim(),
     (b.description || '').trim(),
@@ -2451,11 +2510,23 @@ app.post('/admin/missioni/:id/modifica', auth.requireAdmin, (req, res) => {
     b.repeatable ? 1 : 0,
     (b.active_from || '').trim() || null,
     (b.active_to || '').trim() || null,
-    b.archived ? 1 : 0,
+    archived,
+    publishAt,
     req.params.id,
   );
   audit(req, 'missione.modifica', `#${req.params.id} ${(b.title || '').trim()}`);
-  flash(req, 'success', 'Missione aggiornata.');
+
+  // Archiviata → pubblica: è un'uscita a mano, annunciala come quelle programmate.
+  // La spunta permette di NON avvisare (utile se stavi solo correggendo un errore).
+  const uscitaOra = prima.archived === 1 && archived === 0;
+  if (uscitaOra && b.notify) {
+    const m = db.prepare('SELECT id, title, points FROM missions WHERE id = ?').get(req.params.id);
+    auditSystem('missione.uscita', `«${m.title}» pubblicata a mano da ${req.currentUser.nickname}`);
+    announceMission(m);
+  }
+  flash(req, 'success', uscitaOra
+    ? (b.notify ? 'Missione pubblicata: notifica inviata a tutti.' : 'Missione pubblicata (senza notifica).')
+    : (publishAt ? `Missione aggiornata: esce il ${publishAt}.` : 'Missione aggiornata.'));
   res.redirect('/admin');
 });
 

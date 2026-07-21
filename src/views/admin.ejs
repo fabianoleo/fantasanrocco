@@ -152,6 +152,15 @@
           <input type="datetime-local" name="active_to">
         </label>
       </div>
+      <div class="row">
+        <label class="field-grow">Uscita programmata (facoltativo) — per le missioni flash
+          <input type="text" name="publish_at" placeholder="2026-08-17 23:45">
+        </label>
+      </div>
+      <p class="muted small mission-hint">
+        <%- icon('alarm') %> Metti qui un orario e la missione nasce <strong>nascosta</strong>: esce da sola
+        a quell'ora, con la notifica a tutti. Così prepari le flash con giorni di anticipo.
+      </p>
       <button class="btn" type="submit">Crea missione</button>
     </form>
   </section>
@@ -161,7 +170,9 @@
     <% missions.forEach((m) => { %>
       <details class="admin-mission">
         <summary>
-          <span><% if (m.archived) { %><%- icon('archive') %> <% } %><%= m.title %></span>
+          <span><% if (m.archived) { %><%- icon('archive') %> <% } %><%= m.title %>
+            <% if (m.publish_at) { %><span class="mission-sched"><%- icon('alarm') %> esce il <%= m.publish_at %></span><% } %>
+          </span>
           <span class="points-badge"><%= m.points %> pt</span>
         </summary>
         <form action="/admin/missioni/<%= m.id %>/modifica" method="post" class="mission-form">
@@ -173,11 +184,22 @@
             <label class="check"><input type="checkbox" name="requires_photo" <%= m.requires_photo ? 'checked' : '' %>> Foto</label>
             <label class="check"><input type="checkbox" name="repeatable" <%= m.repeatable ? 'checked' : '' %>> Ripetibile</label>
             <label class="check"><input type="checkbox" name="archived" <%= m.archived ? 'checked' : '' %>> Archivia</label>
+            <label class="check"><input type="checkbox" name="notify" checked> 🔔 Avvisa tutti quando esce</label>
           </div>
           <div class="row">
             <label>Attiva da<input type="text" name="active_from" value="<%= m.active_from || '' %>" placeholder="2026-08-16 18:00"></label>
             <label>Attiva fino a<input type="text" name="active_to" value="<%= m.active_to || '' %>" placeholder="2026-08-17 03:00"></label>
           </div>
+          <div class="row">
+            <label class="field-grow">Uscita programmata (lascia vuoto per gestirla a mano)
+              <input type="text" name="publish_at" value="<%= m.publish_at || '' %>" placeholder="2026-08-17 23:45">
+            </label>
+          </div>
+          <p class="muted small mission-hint">
+            <%- icon('alarm') %> Con un orario qui, la missione resta archiviata fino a quel momento, poi esce
+            da sola e parte la notifica. Senza orario, esce quando togli la spunta <strong>Archivia</strong>
+            (e la notifica parte lo stesso, a meno che tu non tolga <strong>Avvisa tutti</strong>).
+          </p>
           <div class="mod-actions">
             <button class="btn" type="submit"><%- icon('save') %> Salva</button>
           </div>

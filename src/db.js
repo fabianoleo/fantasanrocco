@@ -105,6 +105,10 @@ try { db.exec('ALTER TABLE missions ADD COLUMN game_key TEXT'); } catch {}
 // Sezione tematica della missione (paese/food/social/sport): completare TUTTE le
 // missioni di una sezione dà un bonus. NULL per sfide giornaliere/flash.
 try { db.exec('ALTER TABLE missions ADD COLUMN section TEXT'); } catch {}
+// Uscita programmata: se valorizzata (orario italiano "YYYY-MM-DD HH:MM"), a
+// quell'ora la missione viene tolta dall'archivio da sola e parte la notifica.
+// Si azzera appena pubblicata, così non riparte una seconda volta.
+try { db.exec('ALTER TABLE missions ADD COLUMN publish_at TEXT'); } catch {}
 
 // Bonus-sezione già accreditati (un utente lo riceve una sola volta per sezione).
 db.exec(`
