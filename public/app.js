@@ -21,6 +21,111 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+// ── Visualizzatore foto (resta dentro l'app) ────────────────────────
+// I link marcati data-lightbox aprono la foto in un pannello sopra la pagina
+// invece di portare al file grezzo, da cui non si torna indietro. L'href resta
+// valido: se il JS non parte, il link funziona comunque come prima.
+// Con data-group più foto formano un gruppo e si alternano nella STESSA
+// posizione — è così che si confrontano due immagini quasi uguali.
+(function () {
+  var overlay = null, img = null, didascalia = null, contatore = null, frecce = null;
+  var gruppo = [], indice = 0, scrollBloccato = 0, aperto = false;
+
+  function costruisci() {
+    overlay = document.createElement('div');
+    overlay.className = 'lb';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.innerHTML =
+      '<button type="button" class="lb-close" aria-label="Chiudi">&times;</button>' +
+      '<div class="lb-stage"><img class="lb-img" alt=""></div>' +
+      '<div class="lb-bar">' +
+        '<button type="button" class="lb-nav lb-prev" aria-label="Foto precedente">&#8249;</button>' +
+        '<p class="lb-cap"></p>' +
+        '<button type="button" class="lb-nav lb-next" aria-label="Foto successiva">&#8250;</button>' +
+      '</div>' +
+      '<p class="lb-count"></p>';
+    document.body.appendChild(overlay);
+    img = overlay.querySelector('.lb-img');
+    didascalia = overlay.querySelector('.lb-cap');
+    contatore = overlay.querySelector('.lb-count');
+    frecce = overlay.querySelectorAll('.lb-nav');
+
+    overlay.querySelector('.lb-close').addEventListener('click', chiudi);
+    overlay.addEventListener('click', function (e) {
+      // clic sullo sfondo (non sull'immagine né sui comandi) → chiude
+      if (e.target === overlay || e.target.classList.contains('lb-stage')) chiudi();
+    });
+    // Toccare la foto alterna fra le immagini del gruppo: il confronto si fa così
+    img.addEventListener('click', function (e) { e.stopPropagation(); if (gruppo.length > 1) vai(1); });
+    overlay.querySelector('.lb-prev').addEventListener('click', function (e) { e.stopPropagation(); vai(-1); });
+    overlay.querySelector('.lb-next').addEventListener('click', function (e) { e.stopPropagation(); vai(1); });
+  }
+
+  function mostra() {
+    var l = gruppo[indice];
+    img.src = l.getAttribute('href');
+    img.alt = l.getAttribute('data-caption') || 'Foto';
+    didascalia.textContent = l.getAttribute('data-caption') || '';
+    var piuDiUna = gruppo.length > 1;
+    contatore.textContent = piuDiUna ? 'Tocca la foto per confrontare · ' + (indice + 1) + '/' + gruppo.length : '';
+    for (var i = 0; i < frecce.length; i++) frecce[i].hidden = !piuDiUna;
+  }
+  function vai(d) {
+    indice = (indice + d + gruppo.length) % gruppo.length;
+    mostra();
+  }
+
+  function apri(link) {
+    if (!overlay) costruisci();
+    var g = link.getAttribute('data-group');
+    gruppo = g ? [].slice.call(document.querySelectorAll('[data-lightbox][data-group="' + g + '"]')) : [link];
+    indice = Math.max(0, gruppo.indexOf(link));
+    mostra();
+
+    scrollBloccato = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.style.position = 'fixed';
+    document.body.style.top = '-' + scrollBloccato + 'px';
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    overlay.classList.add('is-open');
+    aperto = true;
+    // Una voce nella cronologia: sul telefono il gesto "indietro" chiude la
+    // foto invece di far uscire dalla pagina.
+    try { history.pushState({ lb: 1 }, ''); } catch (e) {}
+  }
+
+  function chiudi(daPopstate) {
+    if (!aperto) return;
+    aperto = false;
+    overlay.classList.remove('is-open');
+    img.src = '';
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    window.scrollTo({ top: scrollBloccato, behavior: 'instant' });
+    // Se chiudiamo noi (X, sfondo, Esc) togliamo la voce che avevamo aggiunto.
+    if (daPopstate !== true) { try { history.back(); } catch (e) {} }
+  }
+
+  document.addEventListener('click', function (e) {
+    var link = e.target.closest('a[data-lightbox]');
+    if (!link) return;
+    e.preventDefault();
+    apri(link);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (!aperto) return;
+    if (e.key === 'Escape') chiudi();
+    else if (e.key === 'ArrowRight' && gruppo.length > 1) vai(1);
+    else if (e.key === 'ArrowLeft' && gruppo.length > 1) vai(-1);
+  });
+  window.addEventListener('popstate', function () { if (aperto) chiudi(true); });
+})();
+
 // ── Feedback aptico (vibrazione) ────────────────────────────────────
 // Funziona su Android (browser e web app installata). Su iPhone l'API non
 // esiste: la guardia fa sì che non succeda nulla, senza errori. Pattern

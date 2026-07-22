@@ -42,17 +42,19 @@
               a <%= dup.length === 1 ? 'una prova già inviata' : dup.length + ' prove già inviate' %>.
               Guarda il confronto e decidi tu.
             </p>
-            <% dup.slice(0, 3).forEach((d) => { %>
+            <% dup.slice(0, 3).forEach((d) => { const gruppo = 'dup-' + s.id + '-' + d.id; %>
               <div class="mod-dup-row">
                 <figure class="mod-dup-fig">
-                  <a href="/uploads/<%= s.photo_path %>" target="_blank" rel="noopener">
+                  <a href="/uploads/<%= s.photo_path %>" data-lightbox data-group="<%= gruppo %>"
+                     data-caption="Questa · <%= s.nickname %> · <%= s.title %>">
                     <img src="/uploads/<%= s.photo_path %>" alt="La prova in esame" loading="lazy">
                   </a>
                   <figcaption>Questa · <%= s.nickname %></figcaption>
                 </figure>
                 <span class="mod-dup-vs" aria-hidden="true">=</span>
                 <figure class="mod-dup-fig">
-                  <a href="/uploads/<%= d.photo_path %>" target="_blank" rel="noopener">
+                  <a href="/uploads/<%= d.photo_path %>" data-lightbox data-group="<%= gruppo %>"
+                     data-caption="<%= d.stessoUtente ? 'Stesso utente' : d.nickname %> · <%= d.missione %> · <%= d.stato %>">
                     <img src="/uploads/<%= d.photo_path %>" alt="La prova già inviata" loading="lazy">
                   </a>
                   <figcaption>
@@ -69,7 +71,8 @@
         <% } %>
 
         <% if (s.photo_path) { %>
-          <a href="/uploads/<%= s.photo_path %>" target="_blank" rel="noopener">
+          <a href="/uploads/<%= s.photo_path %>" data-lightbox
+             data-caption="<%= s.nickname %> · <%= s.title %>">
             <img class="mod-photo" src="/uploads/<%= s.photo_path %>" alt="prova" loading="lazy">
           </a>
         <% } else if (s.requires_photo) { %>
