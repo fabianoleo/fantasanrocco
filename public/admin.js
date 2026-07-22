@@ -18,15 +18,36 @@
 
   function panelEl(key) { return document.getElementById('p-' + key); }
 
+  // Fa partire l'animazione di entrata. La classe si toglie a fine corsa,
+  // altrimenti riaprendo lo stesso pannello non ripartirebbe.
+  var primoGiro = true;
+  var animTimer = 0;
+  function pulisci(el) { el.classList.remove('adm-anim-in', 'adm-anim-back'); }
+  function anima(el, classe) {
+    if (primoGiro) return;                  // al caricamento della pagina niente animazione
+    pulisci(el);
+    void el.offsetWidth;                    // forza il riavvio dell'animazione
+    el.classList.add(classe);
+    // La classe si toglie a tempo, non con l'evento 'animationend': quello non
+    // arriva se l'elemento viene nascosto a metà corsa o se il browser tiene
+    // ferme le animazioni, e il pannello resterebbe inchiodato a opacità 0.
+    clearTimeout(animTimer);
+    animTimer = setTimeout(function () { pulisci(el); }, 400);
+  }
+
   function showHub() {
+    panels.forEach(function (p) { p.hidden = true; pulisci(p); });
     hub.hidden = false;
-    panels.forEach(function (p) { p.hidden = true; });
+    anima(hub, 'adm-anim-back');
+    window.scrollTo({ top: 0, behavior: 'auto' });
   }
   function openPanel(key) {
     var el = panelEl(key);
     if (!el) { showHub(); return; }
     hub.hidden = true;
-    panels.forEach(function (p) { p.hidden = (p !== el); });
+    pulisci(hub);
+    panels.forEach(function (p) { p.hidden = (p !== el); if (p !== el) pulisci(p); });
+    anima(el, 'adm-anim-in');
     // porta in cima il pannello aperto
     window.scrollTo({ top: 0, behavior: 'auto' });
     var h = el.querySelector('.staff-title'); if (h) { try { h.setAttribute('tabindex', '-1'); h.focus({ preventScroll: true }); } catch (e) {} }
@@ -57,6 +78,7 @@
   // All'avvio: se c'è un flash (azione appena eseguita) e conosciamo l'ultimo
   // pannello, riaprilo; altrimenti rispetta l'hash; altrimenti mostra l'hub.
   syncFromHash();
+  primoGiro = false;   // da qui in poi i passaggi sono animati
 })();
 
 (function () {

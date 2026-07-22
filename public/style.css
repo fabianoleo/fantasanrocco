@@ -1198,6 +1198,7 @@ body { overflow-x: clip; }
 .mobile-menu {
   display: none;
   position: fixed; inset: 0; z-index: 299;
+  width: 100%; max-width: 100%;
   background: rgba(4, 3, 10, 0.97);
   backdrop-filter: blur(32px) saturate(180%);
   -webkit-backdrop-filter: blur(32px) saturate(180%);
@@ -1205,13 +1206,31 @@ body { overflow-x: clip; }
   transform: translateX(100%);
   transition: transform .42s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
+  /* Senza questo l'asse X diventa scorrevole da solo: in CSS basta impostare
+     overflow-y perché l'altro passi da "visible" ad "auto". */
+  overflow-x: hidden;
+  /* Arrivati in fondo al menu, lo scorrimento NON prosegue sulla pagina dietro */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .mobile-menu.is-open { transform: translateX(0); }
 
 .mm-inner {
   display: flex; flex-direction: column;
   min-height: 100%;
+  width: 100%;
   padding: 5rem 2.5rem 3rem;
+  /* Il padding non deve mai aggiungersi alla larghezza dello schermo */
+  box-sizing: border-box;
+}
+/* Schermi stretti: meno margini laterali, così alle voci resta più spazio.
+   Misurato: "PROGRAMMAZIONE" è la voce più lunga e a 320px deve stare su una
+   riga sola, altrimenti viene spezzata a metà parola. */
+@media (max-width: 420px) {
+  .mm-inner { padding-left: 1.5rem; padding-right: 1.5rem; }
+}
+@media (max-width: 360px) {
+  .mm-inner { padding-left: 1.25rem; padding-right: 1.25rem; }
 }
 
 .mm-greeting {
@@ -1227,8 +1246,12 @@ body { overflow-x: clip; }
 }
 .mm-link {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 8vw, 2.8rem);
+  /* Il tetto lo detta la larghezza dello schermo: "Ruota della Fortuna" a
+     2.8rem su un telefono non ci sta, e prima sbordava a destra. */
+  font-size: clamp(1.4rem, 7.2vw, 2.8rem);
   font-weight: 700; letter-spacing: .04em;
+  line-height: 1.1;
+  overflow-wrap: break-word;   /* rete di sicurezza: nessuna parola allarga il menu */
   color: rgba(237, 232, 213, 0.18);
   padding: .55rem 0;
   border-bottom: 1px solid rgba(255,255,255,0.04);
@@ -4538,3 +4561,23 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
 .mission-sched svg { width: 12px; height: 12px; }
 .mission-hint { margin: .2rem 0 .6rem; line-height: 1.5; }
 .mission-hint svg { width: 13px; height: 13px; vertical-align: -2px; opacity: .7; }
+
+/* Un elemento con [hidden] deve sparire davvero: il display dichiarato qui
+   sopra (grid) altrimenti vince sulla regola del browser, e l'hub restava
+   visibile con il pannello accodato sotto. */
+.adm-hub[hidden], .adm-panel[hidden] { display: none !important; }
+
+/* Passaggio hub → dettaglio: il pannello entra da destra come una scheda
+   nuova, il ritorno rientra da sinistra. Le classi le mette admin.js solo
+   quando si naviga, così al primo caricamento non si anima nulla. */
+@keyframes adm-slide-in   { from { opacity: 0; transform: translateX(26px); }  to { opacity: 1; transform: none; } }
+@keyframes adm-slide-back { from { opacity: 0; transform: translateX(-26px); } to { opacity: 1; transform: none; } }
+/* Niente fill-mode "both": con quello, se l'animazione non parte o resta a
+   metà (browser che le blocca, batteria bassa, tab in secondo piano) il
+   pannello si inchioda a opacità 0 e sembra sparito. Senza, lo stato normale
+   è "visibile" e l'animazione è solo una rifinitura sopra. */
+.adm-anim-in   { animation: adm-slide-in .3s var(--ease); }
+.adm-anim-back { animation: adm-slide-back .3s var(--ease); }
+@media (prefers-reduced-motion: reduce) {
+  .adm-anim-in, .adm-anim-back { animation: none; }
+}

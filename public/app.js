@@ -28,20 +28,48 @@ document.addEventListener('click', async (e) => {
   const closeBtn  = document.getElementById('mmClose');
   if (!hamburger || !menu) return;
 
+  // Blocco della pagina sotto al menu. Su iOS `body { overflow: hidden }` non
+  // basta: il dito continua a trascinare la pagina dietro. L'unico modo
+  // affidabile è togliere il body dal flusso con position:fixed, ricordando a
+  // che altezza eravamo per rimetterlo lì alla chiusura.
+  let scrollBloccato = 0;
+  function bloccaPagina() {
+    scrollBloccato = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollBloccato}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+  }
+  function sbloccaPagina() {
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    document.body.style.overflow = '';
+    // 'instant': senza questo lo scroll-behavior smooth farebbe risalire la
+    // pagina con un'animazione visibile invece di rimetterla dov'era.
+    window.scrollTo({ top: scrollBloccato, behavior: 'instant' });
+  }
+
   function openMenu() {
     hamburger.classList.add('is-open');
     hamburger.setAttribute('aria-expanded', 'true');
     menu.classList.add('is-open');
     menu.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
+    menu.scrollTop = 0;          // il menu si riapre sempre dall'inizio
+    bloccaPagina();
   }
 
   function closeMenu() {
+    if (!menu.classList.contains('is-open')) return;
     hamburger.classList.remove('is-open');
     hamburger.setAttribute('aria-expanded', 'false');
     menu.classList.remove('is-open');
     menu.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
+    sbloccaPagina();
   }
 
   hamburger.addEventListener('click', () => {
