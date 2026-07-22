@@ -2352,6 +2352,22 @@ app.post('/moderazione/:id/:azione', auth.requireStaff, (req, res) => {
           }
         } catch (e) { console.error('[SEZIONI] bonus', e.message); }
       }
+    } else {
+      // Rifiutata: avvisiamo lo stesso, altrimenti l'utente resta ad aspettare
+      // una prova che non arriverà mai. Il tono è leggero — è un gioco di paese,
+      // non una bocciatura — e se il moderatore ha scritto un motivo lo
+      // riportiamo: senza, la persona non sa cosa correggere.
+      const sub = db.prepare(`SELECT s.user_id, s.mission_id, m.title
+        FROM submissions s JOIN missions m ON m.id = s.mission_id WHERE s.id = ?`).get(req.params.id);
+      if (sub) {
+        pushToUser(sub.user_id, {
+          title: 'Prova non validata',
+          body: reviewNote
+            ? `«${sub.title}»: ${reviewNote}`
+            : `«${sub.title}» non è stata validata. Puoi riprovare!`,
+          url: `/missioni/${sub.mission_id}`,   // porta dritto a rifarla
+        }).catch((e) => console.error('[PUSH] rifiuto', e.message));
+      }
     }
   }
   res.redirect('/moderazione');
