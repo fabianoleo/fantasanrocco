@@ -7,7 +7,7 @@
      sballati). Le gestisce direttamente il browser, come deve essere.
    • Notifiche push (Web Push): mostra la notifica e gestisce il click.
    =================================================================== */
-const VERSION = 'fsr-v7';
+const VERSION = 'fsr-v8';
 const CORE = ['/offline.html', '/icons/icon-192.png', '/manifest.json'];
 
 self.addEventListener('install', (e) => {

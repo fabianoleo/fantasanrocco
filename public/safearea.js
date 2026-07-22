@@ -32,39 +32,41 @@
     catch (e) { return false; }
   }
 
+  // Quando il sistema riserva lui la barra di stato, lo spazio che avanza fra
+  // schermo e finestra È l'altezza di quella barra: la impariamo e la teniamo
+  // da parte. Se un domani la stessa app girasse a schermo pieno (vecchie
+  // scorciatoie "translucent"), useremo la misura vera invece di una stima.
+  var MEM = 'fsr.insetTop';
+  function ricorda(v) { try { localStorage.setItem(MEM, String(v)); } catch (e) {} }
+  function ricordato() {
+    try { var v = parseFloat(localStorage.getItem(MEM)); return v > 0 && v < 100 ? v : 0; }
+    catch (e) { return 0; }
+  }
+
   function calcola() {
     var inset = daCss();
     if (inset > 0) return inset;              // il sistema ce lo dice: ci fidiamo
     if (!appInstallata()) return 0;           // nel browser la barra non è nostra
 
-    // App installata ed env() muto. Se il viewport è alto quanto lo schermo,
-    // vuol dire che la pagina occupa TUTTO, barra di stato compresa: quella
-    // striscia va coperta. Se invece il sistema l'ha già riservata, avanza
-    // spazio e non c'è nulla da fare.
     var schermo = Math.max(screen.width || 0, screen.height || 0);
     var avanzo = schermo - window.innerHeight;
-    if (avanzo > 20) return 0;
 
-    // Altezza della barra di stato per famiglia di iPhone.
-    if (schermo >= 852) return 59;   // Dynamic Island
+    // Avanza spazio → la barra di stato è già fuori dalla pagina: niente da
+    // coprire. Ne approfittiamo per imparare quanto è alta.
+    if (avanzo > 20) { ricorda(avanzo); return 0; }
+
+    // Nessun avanzo: la pagina occupa TUTTO, barra di stato compresa, e quella
+    // striscia va coperta. Usiamo la misura imparata prima; se non l'abbiamo
+    // mai vista, ripieghiamo sulla famiglia di iPhone.
+    var visto = ricordato();
+    if (visto) return visto;
+    if (schermo >= 852) return 62;   // Dynamic Island
     if (schermo >= 780) return 47;   // tacca
     return 20;                       // modelli col pulsante Home
   }
 
   function applica() {
-    var v = calcola();
-    root.style.setProperty('--safe-top', v + 'px');
-    // Lasciamo traccia di come ci siamo arrivati: la pagina Profilo la mostra
-    // in fondo, così si può leggere direttamente dal telefono.
-    window.__safeTop = {
-      scelto: v,
-      env: daCss(),
-      installata: appInstallata(),
-      standaloneIOS: window.navigator.standalone === true,
-      schermo: Math.max(screen.width || 0, screen.height || 0),
-      viewport: window.innerHeight,
-      avanzo: Math.max(screen.width || 0, screen.height || 0) - window.innerHeight,
-    };
+    root.style.setProperty('--safe-top', calcola() + 'px');
   }
 
   applica();

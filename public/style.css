@@ -4602,12 +4602,3 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
 @media (prefers-reduced-motion: reduce) {
   .adm-anim-in, .adm-anim-back { animation: none; }
 }
-
-/* Riquadro diagnostica (pagina Profilo) — solo numeri, niente fronzoli */
-.diag-pre {
-  margin: .6rem 0 0; padding: .8rem .9rem; border-radius: 10px;
-  background: rgba(0,0,0,.45); border: 1px solid var(--border);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: .78rem; line-height: 1.7; color: var(--text-2);
-  white-space: pre-wrap; word-break: break-word;
-}

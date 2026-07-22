@@ -21,27 +21,6 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-// ── Diagnostica barra di stato (riquadro in fondo al Profilo) ───────
-(function () {
-  var box = document.getElementById('diagSafeTop');
-  if (!box) return;
-  var d = window.__safeTop || {};
-  var topbar = document.querySelector('.topbar');
-  var r = topbar ? topbar.getBoundingClientRect() : null;
-  var stile = getComputedStyle(document.documentElement);
-  box.textContent = [
-    '--safe-top scelto : ' + (d.scelto !== undefined ? d.scelto + 'px' : 'NON IMPOSTATO'),
-    'env() dice        : ' + (d.env !== undefined ? d.env + 'px' : '?'),
-    'app installata    : ' + d.installata + '  (iOS standalone: ' + d.standaloneIOS + ')',
-    'schermo / viewport: ' + d.schermo + ' / ' + d.viewport + '   avanzo: ' + d.avanzo,
-    'striscia alta     : ' + getComputedStyle(document.documentElement, '::before').height,
-    'topbar y / altezza: ' + (r ? Math.round(r.top) + ' / ' + Math.round(r.height) : '?'),
-    'body padding-top  : ' + getComputedStyle(document.body).paddingTop,
-    'CSS caricato      : ' + ([].map.call(document.styleSheets, function (s) { return s.href || ''; })
-        .filter(function (h) { return /style\.css/.test(h); })[0] || '?').split('/').pop(),
-  ].join('\n');
-})();
-
 // ── Feedback aptico (vibrazione) ────────────────────────────────────
 // Funziona su Android (browser e web app installata). Su iPhone l'API non
 // esiste: la guardia fa sì che non succeda nulla, senza errori. Pattern
