@@ -52,7 +52,19 @@
   }
 
   function applica() {
-    root.style.setProperty('--safe-top', calcola() + 'px');
+    var v = calcola();
+    root.style.setProperty('--safe-top', v + 'px');
+    // Lasciamo traccia di come ci siamo arrivati: la pagina Profilo la mostra
+    // in fondo, così si può leggere direttamente dal telefono.
+    window.__safeTop = {
+      scelto: v,
+      env: daCss(),
+      installata: appInstallata(),
+      standaloneIOS: window.navigator.standalone === true,
+      schermo: Math.max(screen.width || 0, screen.height || 0),
+      viewport: window.innerHeight,
+      avanzo: Math.max(screen.width || 0, screen.height || 0) - window.innerHeight,
+    };
   }
 
   applica();
