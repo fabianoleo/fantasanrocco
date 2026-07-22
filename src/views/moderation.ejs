@@ -19,9 +19,54 @@
           <div>
             <strong><%= s.nickname %></strong> → <%= s.title %>
             <span class="points-badge"><%= s.points %> pt</span>
+            <% if (s.duplicati && s.duplicati.length) { %>
+              <span class="mod-dup-badge"><%- icon('warning') %> Già vista</span>
+            <% } %>
           </div>
           <span class="muted small"><%= s.created_at %></span>
         </div>
+
+        <%# ── Foto già vista altrove: confronto affiancato ─────────────── %>
+        <% const dup = (s.duplicati && s.duplicati.length) ? s.duplicati : null; %>
+        <% if (s.photo_path && !s.phash) { %>
+          <p class="muted small mod-noimpronta">
+            <%- icon('warning') %> Controllo duplicati non eseguito su questa foto
+            (formato che non riusciamo a leggere). Guardala tu.
+          </p>
+        <% } %>
+        <% if (dup) { %>
+          <div class="mod-dup">
+            <p class="mod-dup-head">
+              <%- icon('warning') %>
+              <strong><%= dup[0].identica ? 'Foto identica' : 'Foto quasi identica' %></strong>
+              a <%= dup.length === 1 ? 'una prova già inviata' : dup.length + ' prove già inviate' %>.
+              Guarda il confronto e decidi tu.
+            </p>
+            <% dup.slice(0, 3).forEach((d) => { %>
+              <div class="mod-dup-row">
+                <figure class="mod-dup-fig">
+                  <a href="/uploads/<%= s.photo_path %>" target="_blank" rel="noopener">
+                    <img src="/uploads/<%= s.photo_path %>" alt="La prova in esame" loading="lazy">
+                  </a>
+                  <figcaption>Questa · <%= s.nickname %></figcaption>
+                </figure>
+                <span class="mod-dup-vs" aria-hidden="true">=</span>
+                <figure class="mod-dup-fig">
+                  <a href="/uploads/<%= d.photo_path %>" target="_blank" rel="noopener">
+                    <img src="/uploads/<%= d.photo_path %>" alt="La prova già inviata" loading="lazy">
+                  </a>
+                  <figcaption>
+                    <%= d.stessoUtente ? 'Stesso utente' : d.nickname %> · <%= d.missione %><br>
+                    <span class="muted"><%= d.stato %> · <%= d.quando %></span>
+                  </figcaption>
+                </figure>
+              </div>
+            <% }) %>
+            <% if (dup.length > 3) { %>
+              <p class="muted small">…e altre <%= dup.length - 3 %>.</p>
+            <% } %>
+          </div>
+        <% } %>
 
         <% if (s.photo_path) { %>
           <a href="/uploads/<%= s.photo_path %>" target="_blank" rel="noopener">

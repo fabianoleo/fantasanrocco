@@ -20,6 +20,52 @@ const multer = require('multer');
 
 const nodemailer = require('nodemailer');
 
+// ── Impronta percettiva delle foto (riconoscere i duplicati) ───────────────
+// dHash: la foto viene ridotta a 9×8 in scala di grigi e ogni pixel viene
+// confrontato con quello alla sua destra → 64 bit. Due immagini uguali danno
+// impronte quasi identiche anche dopo ricompressione o ridimensionamento,
+// perché il rapporto di luminosità fra pixel vicini non cambia.
+//
+// Soglia scelta misurando le foto vere già caricate:
+//   file identico 0 · via WhatsApp max 4 · ricompressa max 2 · screenshot max 3
+//   foto DIVERSE fra loro: mai sotto 8
+// Con 5 restiamo dentro tutti i duplicati reali e lontani dalle foto diverse.
+// Il ritaglio deliberato (fino a 13) sfugge: allargare la soglia
+// significherebbe accusare foto diverse, e qui un falso positivo costa caro.
+const PHASH_SOGLIA = 5;
+
+async function photoHash(filePath) {
+  try {
+    const { Jimp } = require('jimp');
+    const img = await Jimp.read(filePath);
+    img.greyscale().resize({ w: 9, h: 8 });
+    let bits = '';
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        const a = img.bitmap.data[(img.bitmap.width * y + x) * 4];
+        const b = img.bitmap.data[(img.bitmap.width * y + x + 1) * 4];
+        bits += a > b ? '1' : '0';
+      }
+    }
+    return BigInt('0b' + bits).toString(16).padStart(16, '0');
+  } catch (e) {
+    // Formato che jimp non digerisce (capita con qualche AVIF/JPEG anomalo):
+    // niente impronta, la prova passa comunque. Non è un motivo per bloccarla.
+    console.error('[PHASH]', e.message);
+    return null;
+  }
+}
+
+// Quanti bit differiscono fra due impronte (distanza di Hamming)
+function phashDistanza(a, b) {
+  try {
+    let x = BigInt('0x' + a) ^ BigInt('0x' + b);
+    let n = 0;
+    while (x) { n += Number(x & 1n); x >>= 1n; }
+    return n;
+  } catch (e) { return 64; }
+}
+
 // Magic bytes check sincrono — no dipendenze esterne, no CVE, no loop infinito
 const ALLOWED_MIME = new Set(['image/jpeg','image/png','image/webp','image/gif','image/avif']);
 const MIME_TO_EXT  = { 'image/jpeg':'.jpg','image/png':'.png','image/webp':'.webp','image/gif':'.gif','image/avif':'.avif' };
@@ -1800,12 +1846,16 @@ app.get('/missioni/:id', auth.requireLogin, (req, res) => {
   });
 });
 
-app.post('/missioni/:id/invia', auth.requireLogin, (req, res) => {
+app.post('/missioni/:id/invia', auth.requireLogin, (req, res, next) => {
   const m = db.prepare('SELECT * FROM missions WHERE id = ? AND archived = 0').get(req.params.id);
   if (!m) return res.status(404).render('error', { title: 'Non trovata', message: 'Missione inesistente.' });
 
-  // Gestione upload (può fallire per dimensione/tipo)
-  upload.single('foto')(req, res, (err) => {
+  // Gestione upload (può fallire per dimensione/tipo). La callback è async
+  // perché il calcolo dell'impronta legge e decodifica il file: senza il
+  // catch finale un errore qui diventerebbe una promise rifiutata a vuoto,
+  // invisibile a Express.
+  upload.single('foto')(req, res, async (err) => {
+   try {
     if (err) {
       flash(req, 'error', err.message || 'Errore nel caricamento della foto.');
       return res.redirect(`/missioni/${m.id}`);
@@ -1840,6 +1890,11 @@ app.post('/missioni/:id/invia', auth.requireLogin, (req, res) => {
       flash(req, 'error', 'Questa missione richiede una foto come prova.');
       return res.redirect(`/missioni/${m.id}`);
     }
+    // Impronta della foto per il controllo duplicati in moderazione. Se il
+    // calcolo fallisce resta NULL e la prova prosegue: non è un motivo per
+    // rifiutare l'invio di qualcuno.
+    const phash = req.file ? await photoHash(path.join(UPLOADS_DIR, req.file.filename)) : null;
+
     // SELECT + INSERT atomico in transazione: previene doppio invio per race condition
     let inserted;
     try {
@@ -1851,8 +1906,8 @@ app.post('/missioni/:id/invia', auth.requireLogin, (req, res) => {
           ? false
           : (statuses.includes('pending') || statuses.includes('approved'));
         if (blocked) return false;
-        db.prepare('INSERT INTO submissions (user_id, mission_id, photo_path, note) VALUES (?, ?, ?, ?)')
-          .run(req.currentUser.id, m.id, req.file ? req.file.filename : null, (req.body.note || '').trim());
+        db.prepare('INSERT INTO submissions (user_id, mission_id, photo_path, note, phash) VALUES (?, ?, ?, ?, ?)')
+          .run(req.currentUser.id, m.id, req.file ? req.file.filename : null, (req.body.note || '').trim(), phash);
         return true;
       })();
     } catch (e) {
@@ -1882,6 +1937,10 @@ app.post('/missioni/:id/invia', auth.requireLogin, (req, res) => {
 
     flash(req, 'success', 'Prova inviata! Ora aspetta la validazione dello staff. 📨');
     res.redirect('/missioni');
+   } catch (e) {
+     if (req.file) fs.unlink(path.join(UPLOADS_DIR, req.file.filename), () => {});
+     next(e);
+   }
   });
 });
 
@@ -2214,6 +2273,44 @@ app.get('/moderazione', auth.requireStaff, (req, res) => {
     WHERE s.status = 'pending'
     ORDER BY u.nickname ASC, s.created_at ASC
   `).all();
+
+  // Controllo duplicati: per ogni prova in attesa cerchiamo un'altra prova con
+  // impronta quasi identica. Il confronto è su TUTTE le prove, di chiunque e
+  // di qualsiasi missione: l'imbroglio tipico è la stessa foto rimandata da un
+  // altro account o riciclata per una missione diversa.
+  const conImpronta = db.prepare(`
+    SELECT s.id, s.phash, s.photo_path, s.status, s.created_at, s.mission_id,
+           u.nickname, m.title AS mission_title
+    FROM submissions s
+    JOIN users u ON u.id = s.user_id
+    JOIN missions m ON m.id = s.mission_id
+    WHERE s.phash IS NOT NULL AND s.photo_path IS NOT NULL
+  `).all();
+
+  const STATO = { approved: 'approvata', rejected: 'rifiutata', pending: 'in attesa' };
+  for (const p of pending) {
+    p.duplicati = [];
+    if (!p.phash) continue;
+    for (const altra of conImpronta) {
+      if (altra.id === p.id) continue;
+      const d = phashDistanza(p.phash, altra.phash);
+      if (d > PHASH_SOGLIA) continue;
+      p.duplicati.push({
+        id: altra.id,
+        photo_path: altra.photo_path,
+        nickname: altra.nickname,
+        missione: altra.mission_title,
+        quando: altra.created_at,
+        stato: STATO[altra.status] || altra.status,
+        stessoUtente: altra.nickname === p.nickname,
+        identica: d === 0,
+        distanza: d,
+      });
+    }
+    // Prima le più simili, poi le più recenti
+    p.duplicati.sort((a, b) => a.distanza - b.distanza || b.id - a.id);
+  }
+
   res.render('moderation', { title: 'Moderazione', pending });
 });
 

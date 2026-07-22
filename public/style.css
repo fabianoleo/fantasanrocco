@@ -4602,3 +4602,38 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
 @media (prefers-reduced-motion: reduce) {
   .adm-anim-in, .adm-anim-back { animation: none; }
 }
+
+/* ── Moderazione · foto già vista (controllo duplicati) ──────────────────── */
+.mod-dup-badge {
+  display: inline-flex; align-items: center; gap: .3rem; margin-left: .4rem;
+  padding: .12rem .5rem; border-radius: 999px; white-space: nowrap;
+  font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: #ffc17a; background: rgba(232,134,30,.16); border: 1px solid rgba(232,134,30,.42);
+}
+.mod-dup-badge svg { width: 12px; height: 12px; }
+
+.mod-dup {
+  margin: .8rem 0; padding: .9rem 1rem; border-radius: 14px;
+  background: rgba(232,134,30,.06); border: 1px solid rgba(232,134,30,.3);
+}
+.mod-dup-head { margin: 0 0 .8rem; font-size: .86rem; line-height: 1.5; color: var(--text); }
+.mod-dup-head svg { width: 15px; height: 15px; vertical-align: -3px; color: #ffc17a; }
+
+/* Le due foto una accanto all'altra: è il confronto che decide */
+.mod-dup-row { display: flex; align-items: flex-start; gap: .6rem; margin-bottom: .8rem; }
+.mod-dup-row:last-child { margin-bottom: 0; }
+.mod-dup-fig { flex: 1; min-width: 0; margin: 0; }
+.mod-dup-fig img {
+  width: 100%; aspect-ratio: 1; object-fit: cover;
+  border-radius: 10px; border: 1px solid var(--border); display: block;
+}
+.mod-dup-fig figcaption {
+  margin-top: .35rem; font-size: .7rem; line-height: 1.4; color: var(--text-2);
+  overflow-wrap: break-word;
+}
+.mod-dup-vs {
+  flex: 0 0 auto; align-self: center; margin-top: -1.2rem;
+  font-family: var(--font-heading); font-size: 1.1rem; font-weight: 800; color: #ffc17a;
+}
+.mod-noimpronta { margin: .5rem 0; color: var(--text-2); }
+.mod-noimpronta svg { width: 13px; height: 13px; vertical-align: -2px; opacity: .7; }

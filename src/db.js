@@ -105,6 +105,12 @@ try { db.exec('ALTER TABLE missions ADD COLUMN game_key TEXT'); } catch {}
 // Sezione tematica della missione (paese/food/social/sport): completare TUTTE le
 // missioni di una sezione dà un bonus. NULL per sfide giornaliere/flash.
 try { db.exec('ALTER TABLE missions ADD COLUMN section TEXT'); } catch {}
+// Impronta percettiva della foto (dHash a 64 bit, 16 cifre esadecimali).
+// Serve a riconoscere in moderazione la stessa immagine rimandata due volte,
+// anche se ricompressa o ridimensionata. NULL se il calcolo non è riuscito.
+try { db.exec('ALTER TABLE submissions ADD COLUMN phash TEXT'); } catch {}
+try { db.exec('CREATE INDEX IF NOT EXISTS idx_submissions_phash ON submissions(phash)'); } catch {}
+
 // Uscita programmata: se valorizzata (orario italiano "YYYY-MM-DD HH:MM"), a
 // quell'ora la missione viene tolta dall'archivio da sola e parte la notifica.
 // Si azzera appena pubblicata, così non riparte una seconda volta.
