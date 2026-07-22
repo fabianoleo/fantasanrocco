@@ -126,6 +126,7 @@
   betBtns.forEach((b) => b.addEventListener('click', () => {
     if (spinning || b.disabled) return;
     if (sound) { sound.unlock(); sound.click(); }
+    if (window.fsrVibra) window.fsrVibra(10);
     setBet(parseInt(b.dataset.bet, 10));
   }));
 
@@ -208,6 +209,7 @@
       return;
     }
     if (sound) sound.click();
+    if (window.fsrVibra) window.fsrVibra(20);
     spinning = true; elOutcome.textContent = '';
     refreshBets();   // blocca puntata e Gira mentre girano i rulli
     reels.forEach((r) => r.classList.remove('win'));
@@ -239,16 +241,19 @@
         scheduleTick();
       }
       // Un "clack" meccanico quando ciascun rullo si ferma
-      durs.forEach((d, i) => setTimeout(() => { if (sound) sound.reelStop(i); }, d));
+      durs.forEach((d, i) => setTimeout(() => {
+        if (sound) sound.reelStop(i);
+        if (window.fsrVibra) window.fsrVibra(25);
+      }, d));
 
       setTimeout(() => {
         if (tickTimer) clearTimeout(tickTimer);
         spinning = false;          // prima di setBalance: e' refreshBets a riabilitare Gira
         setBalance(data.balance);
         showOutcome(data);
-        if (data.jackpot) { arcadeFlash('JACKPOT!'); if (sound) sound.jackpot(); }
-        else if (data.win && data.kind === 'tris') { arcadeFlash('TRIS!'); if (sound) sound.win(); }
-        else if (data.win) { if (sound) sound.win(); }
+        if (data.jackpot) { arcadeFlash('JACKPOT!'); if (sound) sound.jackpot(); if (window.fsrVibra) window.fsrVibra([60, 80, 60, 80, 150]); }
+        else if (data.win && data.kind === 'tris') { arcadeFlash('TRIS!'); if (sound) sound.win(); if (window.fsrVibra) window.fsrVibra([30, 60, 50]); }
+        else if (data.win) { if (sound) sound.win(); if (window.fsrVibra) window.fsrVibra([30, 60, 50]); }
       }, durs[2] + 180);
     }).catch(() => {
       elOutcome.innerHTML = '<span class="lose">Connessione assente. Riprova.</span>';

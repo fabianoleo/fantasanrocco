@@ -15,6 +15,7 @@ const SqliteStore = require('better-sqlite3-session-store')(session);
 const expressLayouts = require('express-ejs-layouts');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const compression = require('compression');
 const multer = require('multer');
 
 const nodemailer = require('nodemailer');
@@ -106,9 +107,40 @@ app.use(helmet({
   },
   hsts: { maxAge: 63072000, includeSubDomains: true, preload: true },
 }));
+// Compressione gzip/brotli di HTML, CSS e JS: style.css passa da ~180 KB a
+// ~25 KB. Immagini e audio sono già compressi di loro e il filtro di default
+// li salta. Lo stream SSE degli utenti online va escluso a mano: il
+// compressore bufferizza la risposta e gli eventi arriverebbero in ritardo.
+app.use(compression({
+  filter: (req, res) => {
+    if (req.path === '/api/online/stream') return false;
+    return compression.filter(req, res);
+  },
+}));
 app.use(express.urlencoded({ extended: false, limit: '16kb' }));
 app.use(express.json({ limit: '16kb' }));   // API JSON (es. iscrizione notifiche push)
-app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Statici con cache differenziata. I CSS/JS nostri hanno il numero di
+// versione nell'URL (style.css?v=85) e i vendor non cambiano mai: possono
+// stare in cache un anno, "immutable" = il browser non richiede nemmeno la
+// conferma. sw.js invece NON va mai in cache (deciderebbe lui le cache di
+// tutto il resto con una versione vecchia). Immagini e audio: un giorno di
+// cache piena + una settimana di "usa intanto la copia vecchia mentre
+// controlli" — così un poster sostituito con lo stesso nome si aggiorna.
+app.use(express.static(path.join(__dirname, '..', 'public'), {
+  setHeaders(res, filePath) {
+    const base = path.basename(filePath);
+    if (base === 'sw.js') {
+      res.setHeader('Cache-Control', 'no-cache');
+    } else if (/\.(css|js|glb|woff2?)$/.test(base)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (base === 'manifest.json') {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+    }
+  },
+}));
 
 // --- Sessioni (persistite su SQLite, sopravvivono ai riavvii) ---------------
 if (!process.env.SESSION_SECRET) {

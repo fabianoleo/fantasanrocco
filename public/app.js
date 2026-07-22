@@ -21,6 +21,19 @@ document.addEventListener('click', async (e) => {
   }
 });
 
+// ── Feedback aptico (vibrazione) ────────────────────────────────────
+// Funziona su Android (browser e web app installata). Su iPhone l'API non
+// esiste: la guardia fa sì che non succeda nulla, senza errori. Pattern
+// corti = "tocco" secco, non ronzio da sveglia.
+window.fsrVibra = function (pattern) {
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) { /* niente */ }
+};
+// I bottoni marcati data-haptic danno un colpetto al tocco. Il click parte
+// PRIMA che la pagina cambi, quindi funziona anche sui form che navigano.
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-haptic]')) window.fsrVibra(15);
+});
+
 // ── Hamburger / Mobile menu ─────────────────────────────────────────
 (function () {
   const hamburger = document.getElementById('hamburger');

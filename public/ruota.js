@@ -29,6 +29,7 @@
 
   function spin() {
     if (spinning || btn.disabled) return;
+    if (window.fsrVibra) window.fsrVibra(20);
     spinning = true; btn.disabled = true;
     elResult.classList.remove('show', 'jackpot');
 
@@ -59,6 +60,7 @@
         elAmt.textContent = '+' + data.points;
         elLbl.textContent = data.jackpot ? 'JACKPOT! Che fortuna 🎆' : 'punti vinti — entrano in classifica';
         elResult.classList.add('show');
+        if (window.fsrVibra) window.fsrVibra(data.jackpot ? [60, 80, 60, 80, 150] : [30, 60, 50]);
         if (data.jackpot) { elResult.classList.add('jackpot'); arcadeFlash('JACKPOT!'); }
         btn.textContent = 'Torna domani per un altro giro';
         spinning = false;
