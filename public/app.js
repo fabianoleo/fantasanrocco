@@ -296,7 +296,9 @@ document.addEventListener('click', (e) => {
   window.addEventListener('scroll', () => {
     const y = window.scrollY;
     if (y > lastY && y > 80) {
-      nav.style.transform = 'translateY(100%)';
+      // +28px: il cerchio GIOCO sporge 24px sopra la barra (più l'ombra),
+      // col solo 100% il suo arco restava a spuntare dal bordo dello schermo
+      nav.style.transform = 'translateY(calc(100% + 28px))';
       nav.style.transition = 'transform .3s var(--ease)';
     } else {
       nav.style.transform = 'translateY(0)';

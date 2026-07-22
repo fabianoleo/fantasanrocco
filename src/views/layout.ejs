@@ -25,7 +25,11 @@
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <%# "black" e NON "black-translucent": la barra di stato resta una striscia
+      di sistema nera FUORI dalla pagina (il nero si fonde col tema #04040a).
+      Con "translucent" la pagina ci finiva sotto e il contenuto che scorreva
+      si vedeva nella striscia — o serviva gonfiare la topbar per coprirla. %>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="FantaSanRocco">
   <meta name="csrf-token" content="<%= csrfToken %>">
   <meta name="vapid-public-key" content="<%= typeof vapidPublicKey !== 'undefined' ? vapidPublicKey : '' %>">
@@ -128,7 +132,7 @@
       </div>
     </div>
   </footer>
-  <script src="/app.js?v=8"></script>
+  <script src="/app.js?v=9"></script>
   <script src="/radio.js?v=7" defer></script>
   <script src="/menu.js?v=1" defer></script>
   <script src="/pwa.js?v=3" defer></script>
