@@ -369,6 +369,9 @@
           </label>
           <label class="check"><input type="checkbox" name="open" value="1" <%= pronostico.open ? 'checked' : '' %>> Votazioni aperte</label>
         </div>
+        <label>Chiusura programmata (facoltativa) — avvisa chi non ha votato ~3h prima
+          <input type="text" name="closes_at" value="<%= pronostico.closesAt || '' %>" placeholder="2026-08-18 19:30">
+        </label>
         <button class="btn" type="submit"><%- icon('save') %> Salva impostazioni</button>
       </form>
 
@@ -426,6 +429,9 @@
         </label>
         <label class="check"><input type="checkbox" name="multi" value="1"> Consenti più risposte</label>
       </div>
+      <label>Chiusura programmata (facoltativa) — avvisa chi non ha votato ~3h prima
+        <input type="text" name="closes_at" placeholder="2026-08-16 20:00">
+      </label>
       <p class="muted small" style="margin-top:-.3rem">Con più risposte consentite, chi ne seleziona più d'una prende <strong>metà punti</strong> se indovina.</p>
       <button class="btn" type="submit"><%- icon('plus') %> Crea pronostico</button>
     </form>
@@ -460,6 +466,9 @@
               <label>Punti in palio<input type="number" name="points" value="<%= p.points %>" min="0" step="1"></label>
               <label class="check"><input type="checkbox" name="open" value="1" <%= p.open ? 'checked' : '' %>> Votazioni aperte</label>
             </div>
+            <label>Chiusura programmata (facoltativa)
+              <input type="text" name="closes_at" value="<%= p.closesAt || '' %>" placeholder="2026-08-16 20:00">
+            </label>
             <button class="btn" type="submit"><%- icon('save') %> Salva impostazioni</button>
           </form>
 

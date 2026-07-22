@@ -100,6 +100,14 @@ try { db.exec('ALTER TABLE users ADD COLUMN last_wheel_day TEXT'); } catch {}
 // Streak giornaliero: giorno corrente del ciclo (1-7) e ultimo giorno rivendicato (YYYY-MM-DD)
 try { db.exec('ALTER TABLE users ADD COLUMN streak_day INTEGER NOT NULL DEFAULT 0'); } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN streak_last_day TEXT'); } catch {}
+// Giorno (YYYY-MM-DD) in cui è già partito il promemoria "streak a rischio":
+// evita di avvisare due volte lo stesso giorno.
+try { db.exec('ALTER TABLE users ADD COLUMN streak_reminded_day TEXT'); } catch {}
+// Ultimo livello per cui l'utente ha ricevuto la notifica "livello raggiunto".
+// NULL sugli account esistenti prima di questa colonna: il primo controllo lo
+// allinea al livello attuale SENZA notificare (altrimenti chi è già al
+// livello 5 da settimane riceverebbe un annuncio falso).
+try { db.exec('ALTER TABLE users ADD COLUMN level_notified INTEGER'); } catch {}
 // game_key: marca una "missione" come traguardo del mini-gioco (esclusa dalle missioni-foto)
 try { db.exec('ALTER TABLE missions ADD COLUMN game_key TEXT'); } catch {}
 // Sezione tematica della missione (paese/food/social/sport): completare TUTTE le
@@ -218,6 +226,11 @@ CREATE TABLE IF NOT EXISTS palio_pronostico (
 );
 `);
 db.prepare('INSERT OR IGNORE INTO palio_pronostico (id, open, winner, points) VALUES (1, 1, NULL, 500)').run();
+// Chiusura programmata (facoltativa, ora italiana "YYYY-MM-DD HH:MM"): se
+// impostata, un promemoria push parte una volta sola a chi non ha ancora
+// votato, circa 3 ore prima. reminder_sent evita il doppio invio.
+try { db.exec('ALTER TABLE palio_pronostico ADD COLUMN closes_at TEXT'); } catch {}
+try { db.exec('ALTER TABLE palio_pronostico ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0'); } catch {}
 
 // Pronostici generici (creabili dal pannello admin): domanda + opzioni libere.
 // Separati dal pronostico speciale del Palio. options = JSON array di stringhe.
@@ -251,5 +264,8 @@ try { db.exec("ALTER TABLE predictions ADD COLUMN description TEXT NOT NULL DEFA
 // choices → JSON array degli indici scelti (per il voto multiplo). NULL sui voti
 // vecchi: si ricade su [choice].
 try { db.exec("ALTER TABLE prediction_votes ADD COLUMN choices TEXT"); } catch {}
+// Stessa chiusura programmata facoltativa del pronostico del Palio.
+try { db.exec("ALTER TABLE predictions ADD COLUMN closes_at TEXT"); } catch {}
+try { db.exec("ALTER TABLE predictions ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0"); } catch {}
 
 module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR };

@@ -782,6 +782,34 @@ function userLevel(points) {
   };
 }
 
+// Notifica il salto di livello. Confronta col livello dell'ULTIMA notifica
+// (non con uno "prima/dopo" calcolato sul momento): così si può richiamare
+// dopo QUALSIASI variazione di punti, in qualunque ordine, senza rischio di
+// notificare due volte lo stesso salto né di perderne uno per una race
+// condition fra due azioni quasi simultanee.
+// level_notified NULL = non l'abbiamo mai controllato (account precedente a
+// questa colonna, o primo qualsiasi controllo di un utente nuovo): lo
+// allineiamo al livello attuale in silenzio, altrimenti chi è già al
+// livello 5 da settimane riceverebbe un annuncio falso al primo controllo.
+function checkLevelUp(userId) {
+  try {
+    const u = db.prepare('SELECT level_notified FROM users WHERE id = ?').get(userId);
+    if (!u) return;
+    const lvl = userLevel(userPoints(userId));
+    if (u.level_notified === null) {
+      db.prepare('UPDATE users SET level_notified = ? WHERE id = ?').run(lvl.level, userId);
+      return;
+    }
+    if (lvl.level <= u.level_notified) return;
+    db.prepare('UPDATE users SET level_notified = ? WHERE id = ?').run(lvl.level, userId);
+    pushToUser(userId, {
+      title: '⭐ Livello raggiunto!',
+      body: `Sei salito a "${lvl.title}" — livello ${lvl.level} di ${LEVELS.length}!`,
+      url: '/profilo',
+    }).catch((e) => console.error('[PUSH] livello', e.message));
+  } catch (e) { console.error('[LIVELLO]', e.message); }
+}
+
 // Classifica del mini-gioco: per punteggio record (solo chi ha giocato)
 function gameLeaderboardRows() {
   return db.prepare(`
@@ -1453,6 +1481,7 @@ app.post('/api/streak/claim', auth.requireLogin, verifyCsrf, (req, res) => {
   const bonus = STREAK_BONUS[day - 1] || 0;
   db.prepare('UPDATE users SET streak_day = ?, streak_last_day = ?, points_adjust = points_adjust + ? WHERE id = ?')
     .run(day, today, bonus, req.currentUser.id);
+  checkLevelUp(req.currentUser.id);
   res.json({ ok: true, claimed: true, day, bonus, currentDay: day, bonuses: STREAK_BONUS, balance: userPoints(req.currentUser.id) });
 });
 
@@ -1520,6 +1549,7 @@ app.post('/ruota/gira', auth.requireLogin, wheelLimiter, (req, res) => {
     return true;
   })();
   if (!ok) return res.status(429).json({ ok: false, error: 'already', message: 'Hai già girato oggi. Torna domani!' });
+  checkLevelUp(req.currentUser.id);
   res.json({ ok: true, ...result, balance: userPoints(req.currentUser.id) });
 });
 
@@ -1597,6 +1627,7 @@ app.post('/slot/gira', auth.requireLogin, slotLimiter, (req, res) => {
     return true;
   })();
   if (!ok) return res.status(400).json({ ok: false, error: 'funds', message: 'Punti insufficienti per questa puntata.' });
+  if (out.net > 0) checkLevelUp(req.currentUser.id);
   res.json({ ok: true, bet, ...out, balance: userPoints(req.currentUser.id) });
 });
 
@@ -1799,6 +1830,7 @@ app.post('/missioni/pronostico', auth.requireLogin, verifyCsrf, (req, res) => {
     audit(req, 'sezione.bonus', `${s.label} → +${SECTION_BONUS}pt a user#${req.currentUser.id}`);
     flash(req, 'success', `🏅 Sezione "${s.label}" completata: +${SECTION_BONUS} punti bonus!`);
   }
+  checkLevelUp(req.currentUser.id);
   res.redirect('/palio#pronostico');
 });
 
@@ -2228,7 +2260,14 @@ app.post('/storie/:id/elimina', auth.requireLogin, (req, res) => {
   if (st && (st.user_id === req.currentUser.id || staff)) {
     fs.unlink(path.join(STORIES_DIR, path.basename(st.media_path)), () => {});
     db.prepare('DELETE FROM stories WHERE id = ?').run(id); // story_views via ON DELETE CASCADE
-    if (staff && st.user_id !== req.currentUser.id) audit(req, 'storia.elimina', `#${id} (staff)`);
+    if (staff && st.user_id !== req.currentUser.id) {
+      audit(req, 'storia.elimina', `#${id} (staff)`);
+      pushToUser(st.user_id, {
+        title: 'Storia rimossa',
+        body: 'Un moderatore ha rimosso una tua storia.',
+        url: '/profilo',
+      }).catch((e) => console.error('[PUSH] storia rimossa', e.message));
+    }
   }
   if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true });
   res.redirect(safeBack(req));
@@ -2237,14 +2276,23 @@ app.post('/storie/:id/elimina', auth.requireLogin, (req, res) => {
 const STORY_REPORT_HIDE_AT = 2;   // dopo N segnalazioni distinte la storia si nasconde in attesa di revisione
 app.post('/storie/:id/segnala', auth.requireLogin, verifyCsrf, (req, res) => {
   const id = Number(req.params.id);
-  const st = db.prepare('SELECT id FROM stories WHERE id = ?').get(id);
+  const st = db.prepare('SELECT id, user_id, hidden FROM stories WHERE id = ?').get(id);
   if (st) {
     try {
       db.prepare('INSERT INTO story_reports (story_id, reporter_id, reason) VALUES (?, ?, ?)')
         .run(id, req.currentUser.id, (req.body.reason || '').trim().slice(0, 200) || null);
     } catch (e) { /* già segnalata da questo utente: UNIQUE, ignora */ }
     const n = db.prepare('SELECT COUNT(*) AS n FROM story_reports WHERE story_id = ?').get(id).n;
-    if (n >= STORY_REPORT_HIDE_AT) db.prepare('UPDATE stories SET hidden = 1 WHERE id = ?').run(id);
+    // Solo al MOMENTO in cui scatta (non era già nascosta): altrimenti ogni
+    // segnalazione successiva rimanderebbe lo stesso avviso all'autore.
+    if (n >= STORY_REPORT_HIDE_AT && !st.hidden) {
+      db.prepare('UPDATE stories SET hidden = 1 WHERE id = ?').run(id);
+      pushToUser(st.user_id, {
+        title: 'Storia in revisione',
+        body: 'Una tua storia è stata segnalata più volte ed è temporaneamente nascosta, in attesa che lo staff la controlli.',
+        url: '/profilo',
+      }).catch((e) => console.error('[PUSH] storia nascosta', e.message));
+    }
   }
   if (req.xhr || (req.headers.accept || '').includes('application/json')) return res.json({ ok: true });
   res.redirect(safeBack(req));
@@ -2351,6 +2399,7 @@ app.post('/moderazione/:id/:azione', auth.requireStaff, (req, res) => {
             }).catch((e) => console.error('[PUSH] bonus sezione', e.message));
           }
         } catch (e) { console.error('[SEZIONI] bonus', e.message); }
+        checkLevelUp(sub.user_id);
       }
     } else {
       // Rifiutata: avvisiamo lo stesso, altrimenti l'utente resta ad aspettare
@@ -2397,6 +2446,7 @@ app.get('/r/:code', (req, res) => {
     .run(req.currentUser.id, code);
   if (upd.changes === 1) {
     db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(rc.points, req.currentUser.id);
+    checkLevelUp(req.currentUser.id);
     return res.render('claim', { title: 'Premio riscattato!', outcome: 'won', rc, balance: userPoints(req.currentUser.id) });
   }
   // Qualcun altro è arrivato prima
@@ -2504,6 +2554,7 @@ app.get('/admin', auth.requireAdmin, async (req, res) => {
     points: pst.points,
     resolved: pst.winner !== null,
     totalVotes,
+    closesAt: pst.closes_at,
     fuochisti: PALIO_FUOCHISTI.map((f, i) => ({ name: f.name, short: palioShortName(f.name), votes: counts[i] })),
   };
   // Pronostici generici: elenco con opzioni, voti e stato
@@ -2515,6 +2566,7 @@ app.get('/admin', auth.requireAdmin, async (req, res) => {
       open: !!p.open, winner: p.winner, resolved: p.winner !== null, archived: !!p.archived,
       totalVotes: vc.reduce((a, b) => a + b, 0),
       options: opts.map((name, i) => ({ name, votes: vc[i] })),
+      closesAt: p.closes_at,
     };
   });
   res.render('admin', { title: 'Admin', missions, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico, predictions,
@@ -2604,6 +2656,90 @@ function publishDueMissions() {
 const missionPublishTimer = setInterval(publishDueMissions, 20000);
 missionPublishTimer.unref?.();   // non tiene vivo il processo allo spegnimento
 publishDueMissions();            // recupera quelle scadute mentre il server era giù
+
+// ── Promemoria "streak a rischio" ───────────────────────────────────────
+// Una volta al giorno, verso le 20 (ora italiana), avvisa chi ha una striscia
+// attiva ma non ha ancora ritirato il premio di oggi: a mezzanotte la perde.
+// streak_last_day = ieri è la condizione giusta: implica sia "striscia viva"
+// che "non ancora ritirato oggi" (altrimenti sarebbe già = oggi).
+function remindStreakAtRisk() {
+  try {
+    const ora = Number(new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Rome', hour: '2-digit', hour12: false,
+    }).format(new Date()));
+    if (ora !== 20) return;   // finestra: solo durante le 20 (ora italiana)
+    const oggi = todayStr();
+    const ieri = romeDate(1);
+    const rows = db.prepare(`
+      SELECT id FROM users
+      WHERE role = 'user' AND streak_day > 0 AND streak_last_day = ?
+        AND (streak_reminded_day IS NULL OR streak_reminded_day <> ?)
+    `).all(ieri, oggi);
+    for (const u of rows) {
+      db.prepare('UPDATE users SET streak_reminded_day = ? WHERE id = ?').run(oggi, u.id);
+      pushToUser(u.id, {
+        title: '🔥 La tua striscia rischia di spegnersi',
+        body: 'Non hai ancora ritirato il premio di oggi: torna prima di mezzanotte per non perderla!',
+        url: '/profilo',
+      }).catch((e) => console.error('[PUSH] streak', e.message));
+    }
+  } catch (e) { console.error('[STREAK] promemoria', e.message); }
+}
+const streakReminderTimer = setInterval(remindStreakAtRisk, 20 * 60 * 1000);
+streakReminderTimer.unref?.();
+remindStreakAtRisk();
+
+// ── Promemoria pronostici in scadenza ────────────────────────────────────
+// Se l'admin ha impostato una chiusura (closes_at), un avviso parte UNA
+// volta sola, circa 3 ore prima, a chi non ha ancora dato una risposta.
+// reminder_sent impedisce il doppio invio qualunque sia la frequenza del
+// controllo, purché resti sotto le 3 ore di margine.
+const PRONOSTICO_PREAVVISO_MS = 3 * 60 * 60 * 1000;
+function remindPredictionsClosing() {
+  const now = Date.now();
+  try {
+    const pst = palioState();
+    if (pst.open && pst.winner === null && pst.closes_at && !pst.reminder_sent) {
+      const chiude = romeStringToDate(pst.closes_at).getTime();
+      if (chiude > now && chiude - now <= PRONOSTICO_PREAVVISO_MS) {
+        db.prepare('UPDATE palio_pronostico SET reminder_sent = 1 WHERE id = 1').run();
+        const votanti = new Set(db.prepare('SELECT user_id FROM palio_predictions').all().map((r) => r.user_id));
+        for (const u of db.prepare("SELECT id FROM users WHERE role = 'user'").all()) {
+          if (votanti.has(u.id)) continue;
+          pushToUser(u.id, {
+            title: '⏳ Il pronostico del Palio sta per chiudere',
+            body: 'Scegli il tuo fuochista prima che chiudano le votazioni!',
+            url: '/palio#pronostico',
+          }).catch((e) => console.error('[PUSH] pronostico palio in scadenza', e.message));
+        }
+      }
+    }
+  } catch (e) { console.error('[PRONOSTICI] promemoria palio', e.message); }
+
+  try {
+    const preds = db.prepare(`
+      SELECT id, title FROM predictions
+      WHERE open = 1 AND winner IS NULL AND archived = 0 AND closes_at IS NOT NULL AND reminder_sent = 0
+    `).all();
+    for (const pr of preds) {
+      const chiude = romeStringToDate(pr.closes_at).getTime();
+      if (!(chiude > now && chiude - now <= PRONOSTICO_PREAVVISO_MS)) continue;
+      db.prepare('UPDATE predictions SET reminder_sent = 1 WHERE id = ?').run(pr.id);
+      const votanti = new Set(db.prepare('SELECT user_id FROM prediction_votes WHERE prediction_id = ?').all(pr.id).map((r) => r.user_id));
+      for (const u of db.prepare("SELECT id FROM users WHERE role = 'user'").all()) {
+        if (votanti.has(u.id)) continue;
+        pushToUser(u.id, {
+          title: '⏳ Pronostico in scadenza',
+          body: `«${pr.title}» sta per chiudere: dai la tua risposta!`,
+          url: '/missioni',
+        }).catch((e) => console.error('[PUSH] pronostico generico in scadenza', e.message));
+      }
+    }
+  } catch (e) { console.error('[PRONOSTICI] promemoria generici', e.message); }
+}
+const predictionReminderTimer = setInterval(remindPredictionsClosing, 20 * 60 * 1000);
+predictionReminderTimer.unref?.();
+remindPredictionsClosing();
 
 app.post('/admin/missioni', auth.requireAdmin, (req, res) => {
   const b = req.body;
@@ -2793,6 +2929,7 @@ app.post('/admin/utenti/:id/bonus', auth.requireAdmin, (req, res) => {
     body: `${segno}${pts} punti${reason ? ' · ' + reason : ''}`,
     url: '/profilo',
   }).catch((e) => console.error('[PUSH] bonus', e.message));
+  if (pts > 0) checkLevelUp(target.id);
   flash(req, 'success', `${segno}${pts} punti a ${target.nickname}${reason ? ' (' + reason + ')' : ''}. Totale ora: ${userPoints(target.id)}.`);
   res.redirect('/admin');
 });
@@ -2805,9 +2942,13 @@ app.post('/admin/pronostico/impostazioni', auth.requireAdmin, (req, res) => {
   const open = req.body.open === '1' ? 1 : 0;
   let points = parseInt(req.body.points, 10);
   if (!Number.isFinite(points) || points < 0) points = st.points;
-  db.prepare('UPDATE palio_pronostico SET open = ?, points = ? WHERE id = 1').run(open, points);
-  audit(req, 'pronostico.impostazioni', `open=${open} punti=${points}`);
-  flash(req, 'success', `Pronostico ${open ? 'aperto' : 'chiuso'} · ${points} punti in palio.`);
+  const closesAt = (req.body.closes_at || '').trim() || null;
+  // Se la chiusura cambia, il promemoria (se già partito) può ripartire.
+  const reminderSent = (closesAt === st.closes_at) ? (st.reminder_sent ? 1 : 0) : 0;
+  db.prepare('UPDATE palio_pronostico SET open = ?, points = ?, closes_at = ?, reminder_sent = ? WHERE id = 1')
+    .run(open, points, closesAt, reminderSent);
+  audit(req, 'pronostico.impostazioni', `open=${open} punti=${points}${closesAt ? ` chiude=${closesAt}` : ''}`);
+  flash(req, 'success', `Pronostico ${open ? 'aperto' : 'chiuso'} · ${points} punti in palio${closesAt ? ` · chiude il ${closesAt}` : ''}.`);
   res.redirect('/admin');
 });
 
@@ -2845,6 +2986,7 @@ app.post('/admin/pronostico/vincitore', auth.requireAdmin, (req, res) => {
       body: `${PALIO_FUOCHISTI[winner].name} ha vinto il Palio: +${points} punti!`,
       url: '/classifica',
     }).catch((e) => console.error('[PUSH] pronostico', e.message));
+    checkLevelUp(uid);
   }
   flash(req, 'success', `Vincitore: ${PALIO_FUOCHISTI[winner].name}. Accreditati ${points} punti a ${winners.length} utenti.`);
   res.redirect('/admin');
@@ -2871,11 +3013,12 @@ app.post('/admin/pronostici', auth.requireAdmin, (req, res) => {
   const opts = (req.body.options || '').split('\n').map((s) => s.trim()).filter(Boolean).slice(0, 20);
   let points = parseInt(req.body.points, 10); if (!Number.isFinite(points) || points < 0) points = 100;
   const multi = req.body.multi ? 1 : 0;
+  const closesAt = (req.body.closes_at || '').trim() || null;
   if (!title) { flash(req, 'error', 'Scrivi la domanda del pronostico.'); return res.redirect('/admin'); }
   if (opts.length < 2) { flash(req, 'error', 'Servono almeno 2 opzioni (una per riga).'); return res.redirect('/admin'); }
-  db.prepare('INSERT INTO predictions (title, description, options, points, multi) VALUES (?, ?, ?, ?, ?)')
-    .run(title, description, JSON.stringify(opts), points, multi);
-  audit(req, 'pronostico.crea', `${title} (${opts.length} opzioni, ${points}pt${multi ? ', multi' : ''})`);
+  db.prepare('INSERT INTO predictions (title, description, options, points, multi, closes_at) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(title, description, JSON.stringify(opts), points, multi, closesAt);
+  audit(req, 'pronostico.crea', `${title} (${opts.length} opzioni, ${points}pt${multi ? ', multi' : ''}${closesAt ? `, chiude ${closesAt}` : ''})`);
   flash(req, 'success', `Pronostico creato: «${title}».`);
   res.redirect('/admin');
 });
@@ -2886,9 +3029,12 @@ app.post('/admin/pronostici/:id/impostazioni', auth.requireAdmin, (req, res) => 
   if (p.winner !== null) { flash(req, 'error', 'Pronostico già chiuso: annullalo prima di modificarlo.'); return res.redirect('/admin'); }
   const open = req.body.open === '1' ? 1 : 0;
   let points = parseInt(req.body.points, 10); if (!Number.isFinite(points) || points < 0) points = p.points;
-  db.prepare('UPDATE predictions SET open = ?, points = ? WHERE id = ?').run(open, points, p.id);
-  audit(req, 'pronostico.impostazioni', `#${p.id} open=${open} punti=${points}`);
-  flash(req, 'success', `«${p.title}»: ${open ? 'aperto' : 'chiuso'} · ${points} punti.`);
+  const closesAt = (req.body.closes_at || '').trim() || null;
+  const reminderSent = (closesAt === p.closes_at) ? (p.reminder_sent ? 1 : 0) : 0;
+  db.prepare('UPDATE predictions SET open = ?, points = ?, closes_at = ?, reminder_sent = ? WHERE id = ?')
+    .run(open, points, closesAt, reminderSent, p.id);
+  audit(req, 'pronostico.impostazioni', `#${p.id} open=${open} punti=${points}${closesAt ? ` chiude=${closesAt}` : ''}`);
+  flash(req, 'success', `«${p.title}»: ${open ? 'aperto' : 'chiuso'} · ${points} punti${closesAt ? ` · chiude il ${closesAt}` : ''}.`);
   res.redirect('/admin');
 });
 
@@ -2909,6 +3055,7 @@ app.post('/admin/pronostici/:id/vincitore', auth.requireAdmin, (req, res) => {
       body: `«${p.title}» → ${opts[winner]}: +${p.points} punti!`,
       url: '/classifica',
     }).catch((e) => console.error('[PUSH] pronostico generico', e.message));
+    checkLevelUp(uid);
   }
   flash(req, 'success', `Vincitore: ${opts[winner]}. Accreditati ${p.points} punti a ${winners.length} utenti.`);
   res.redirect('/admin');
