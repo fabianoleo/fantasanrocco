@@ -120,7 +120,7 @@ html:not(:has(.cine)) { scroll-behavior: smooth; }
 body {
   /* App installata edge-to-edge: il documento parte sotto la barra di stato.
      Nel browser normale l'inset vale 0 e questo padding sparisce. */
-  padding-top: env(safe-area-inset-top, 0px);
+  padding-top: var(--safe-top, env(safe-area-inset-top, 0px));
   font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
@@ -140,7 +140,7 @@ body {
 html::before {
   content: '';
   position: fixed; top: 0; left: 0; right: 0;
-  height: env(safe-area-inset-top, 0px);
+  height: var(--safe-top, env(safe-area-inset-top, 0px));
   background: #04040a;
   z-index: 350;
   pointer-events: none;
@@ -182,7 +182,7 @@ img { max-width: 100%; display: block; }
   /* top: env(inset) e non 0 — quando la pagina finisce sotto la barra di
      stato (app installata edge-to-edge), la topbar si aggancia SOTTO la
      striscia riservata, non dentro. Dove l'inset vale 0 equivale a top: 0. */
-  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 200;
+  position: sticky; top: var(--safe-top, env(safe-area-inset-top, 0px)); z-index: 200;
   display: flex; align-items: center; gap: .5rem;
   padding: 0 1.5rem;
   height: 56px;
@@ -1240,7 +1240,7 @@ body { overflow-x: clip; }
   min-height: 100%;
   width: 100%;
   /* Il menu copre tutto lo schermo, tacca inclusa: scosta il contenuto. */
-  padding: calc(5rem + env(safe-area-inset-top, 0px)) 2.5rem calc(3rem + env(safe-area-inset-bottom, 0px));
+  padding: calc(5rem + var(--safe-top, env(safe-area-inset-top, 0px))) 2.5rem calc(3rem + env(safe-area-inset-bottom, 0px));
   /* Il padding non deve mai aggiungersi alla larghezza dello schermo */
   box-sizing: border-box;
 }
@@ -1711,7 +1711,7 @@ body { overflow-x: clip; }
 
 /* ── Mobile menu close button ───────────────────────────────────── */
 .mm-close {
-  position: absolute; top: calc(1.2rem + env(safe-area-inset-top, 0px)); right: 1.2rem;
+  position: absolute; top: calc(1.2rem + var(--safe-top, env(safe-area-inset-top, 0px))); right: 1.2rem;
   width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
   background: rgba(255,255,255,0.07);
