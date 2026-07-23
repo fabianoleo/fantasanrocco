@@ -4572,7 +4572,18 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
 .btn-danger:hover:not(:disabled) { color: #fff; background: rgba(231,76,60,.28); border-color: rgba(231,76,60,.65); }
 .btn-danger svg { width: 14px; height: 14px; }
 
-/* ── Admin · missioni con uscita programmata ─────────────────────────────── */
+/* ── Admin · stato missione: archiviata (invisibile) vs bloccata (sfocata) ── */
+.mission-state {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 6px; margin-right: .35rem;
+  vertical-align: -4px;
+}
+.mission-state svg { width: 13px; height: 13px; }
+/* Fulmine ambra: archiviata (flash o manuale) — sparita del tutto dalla pagina */
+.mission-state-flash { color: var(--amber); background: rgba(232,134,30,.16); }
+/* Lucchetto blu: bloccata — visibile sfocata, solo la rarità, in attesa dell'orario */
+.mission-state-locked { color: var(--blue); background: rgba(91,141,238,.16); }
+
 .mission-sched {
   display: inline-flex; align-items: center; gap: .25rem; margin-left: .5rem;
   padding: .1rem .45rem; border-radius: 6px; white-space: nowrap;

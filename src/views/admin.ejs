@@ -178,7 +178,18 @@
     <% missions.forEach((m) => { %>
       <details class="admin-mission">
         <summary>
-          <span><% if (m.archived) { %><%- icon('archive') %> <% } %><%= m.title %>
+          <span>
+            <%# Due stati diversi, due simboli diversi: "archiviata" (flash o
+                manuale) sparisce del tutto dalla pagina pubblica; "bloccata"
+                invece si vede sfocata con solo la rarità, in attesa del suo
+                orario. Confonderli in admin fa perdere il conto di cosa è
+                davvero nascosto e cosa uscirà da solo. %>
+            <% if (m.archived) { %>
+              <span class="mission-state mission-state-flash" title="Archiviata: invisibile agli utenti"><%- icon('bolt') %></span>
+            <% } else if (m.locked) { %>
+              <span class="mission-state mission-state-locked" title="Bloccata: visibile solo sfocata, in attesa dell'orario"><%- icon('lock') %></span>
+            <% } %>
+            <%= m.title %>
             <% if (m.publish_at) { %><span class="mission-sched"><%- icon('alarm') %> esce il <%= m.publish_at %></span><% } %>
           </span>
           <span class="points-badge"><%= m.points %> pt</span>

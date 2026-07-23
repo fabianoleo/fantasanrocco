@@ -2519,7 +2519,12 @@ app.get('/admin/statistiche', auth.requireAdmin, (req, res) => {
 });
 
 app.get('/admin', auth.requireAdmin, async (req, res) => {
-  const missions = db.prepare('SELECT * FROM missions ORDER BY id DESC').all();
+  // "locked" qui = non archiviata ma con una finestra futura (active_from):
+  // sulla pagina pubblica è quella che esce sfocata, solo rarità visibile.
+  // Diverso da "archived" (flash/manuale: del tutto invisibile). Nel
+  // pannello i due stati hanno un'icona diversa, altrimenti si confondono.
+  const missions = db.prepare('SELECT * FROM missions ORDER BY id DESC').all()
+    .map((m) => ({ ...m, locked: !m.archived && missionState(m) === 'locked' }));
   const users = db.prepare('SELECT id, nickname, email, role, created_at FROM users ORDER BY role, nickname').all()
     .map((u) => ({ ...u, points: userPoints(u.id) }));
   const codesRaw = db.prepare(`SELECT c.*, u.nickname AS claimer
