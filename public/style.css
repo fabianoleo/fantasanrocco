@@ -2271,6 +2271,14 @@ body { overflow-x: clip; }
   display: flex; flex-wrap: wrap; gap: .5rem;
   justify-content: center;
 }
+.pg-free-note {
+  display: inline-flex; align-items: center; gap: .4em;
+  margin-top: 1.1rem;
+  font-family: var(--font-body);
+  font-size: .82rem; letter-spacing: .02em;
+  color: var(--text-3, #837c90);
+}
+.pg-free-note .ico { color: var(--gold); }
 
 /* ── Day section ─────────────────────────────────────────────── */
 .pg-day {

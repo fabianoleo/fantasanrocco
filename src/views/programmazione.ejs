@@ -11,8 +11,10 @@
       <span class="pg-badge pg-badge-live"><%- icon('guitar') %> Live Band</span>
       <span class="pg-badge pg-badge-dj"><%- icon('headphones') %> DJ Set</span>
       <span class="pg-badge pg-badge-big"><%- icon('flame') %> Grande Evento</span>
+      <span class="pg-badge pg-badge-big"><%- icon('candle') %> Rito Religioso</span>
       <span class="pg-badge pg-badge-fam"><%- icon('people') %> Famiglie</span>
     </div>
+    <p class="pg-free-note"><%- icon('ticket') %> Tutti gli eventi sono a ingresso gratuito.</p>
     <% if (typeof places !== 'undefined' && places && places.length) { %>
       <a href="#mappa" class="btn" style="margin-top:1.2rem"><%- icon('pin') %> I luoghi sulla mappa</a>
     <% } %>
@@ -384,7 +386,6 @@
       <div class="pg-card-body">
         <div class="pg-card-meta">
           <span class="pg-location"><%- icon('pin') %>Siano</span>
-          <span class="pg-free-badge"><%- icon('ticket') %> Ingresso gratuito</span>
         </div>
         <h2 data-map-place="siano-centro" class="pg-card-title">Luna Park</h2>
         <p class="pg-card-desc">Giostre e intrattenimento per bambini.</p>
