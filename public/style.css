@@ -3835,6 +3835,7 @@ textarea:focus-visible,
   text-align: center;
 }
 .foot-motto .ico { color: var(--gold); margin-left: 0.3em; vertical-align: -0.12em; }
+.foot-legal { text-transform: none; letter-spacing: 0.01em; font-family: var(--font-body); font-size: 0.72rem; opacity: 0.75; }
 
 /* Animazione di comparsa (blur-in) — attivata quando il footer entra in viewport */
 .foot-col {
