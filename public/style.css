@@ -4703,3 +4703,25 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
   font-size: .7rem; letter-spacing: .04em; color: var(--text-3);
 }
 @media (prefers-reduced-motion: reduce) { .lb.is-open { animation: none; } }
+
+/* ── Galleria · crediti fotografici (piè di pagina della pagina) ─────────── */
+.gl-credits {
+  padding: 3.5rem 1.5rem 4rem;
+  border-top: 1px solid rgba(212,160,26,.1);
+  background: radial-gradient(ellipse 60% 70% at 50% 0%, rgba(212,160,26,.05) 0%, transparent 65%);
+}
+.gl-credits-inner { max-width: 640px; margin: 0 auto; text-align: center; }
+.gl-credits-title {
+  font-family: var(--font-heading); font-size: 1.25rem; font-weight: 700;
+  color: var(--gold-2); letter-spacing: .04em; margin-bottom: .9rem;
+}
+.gl-credits-text { color: var(--text-2); font-size: .92rem; line-height: 1.65; }
+.gl-credits-thanks {
+  margin-top: 1.3rem; font-family: var(--font-heading); font-size: .82rem;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--text-3);
+}
+.gl-credits-list {
+  list-style: none; margin: .7rem 0 0; padding: 0;
+  display: flex; flex-direction: column; gap: .35rem;
+  font-size: .95rem; color: var(--text);
+}

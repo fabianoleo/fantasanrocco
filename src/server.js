@@ -692,7 +692,6 @@ const GALLERIA_PROCESSIONE = [
   { file: 'sanrocco-applausi.jpg',      caption: 'San Rocco ricoperto dagli applausi del suo popolo in uscita dalla processione' },
   { file: 'sanrocco-rientro-fuochi.jpg',caption: 'San Rocco pronto a rientrare in chiesa, acclamato dal suo popolo e onorato con fuochi d\'artificio' },
   { file: 'processione.jpg',            caption: 'San Rocco portato a spalla per le vie di Siano' },
-  { file: 'sanrocco-chiesa.webp',       caption: 'La statua di San Rocco adornata per la festa' },
 ];
 const GALLERIA_DEVOZIONE = [
   { file: 'sanrocco-popolo.jpg',        caption: 'San Rocco in chiesa: acclamato e immortalato dal suo popolo' },
