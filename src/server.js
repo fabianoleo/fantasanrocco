@@ -727,25 +727,25 @@ const GALLERIA_PALIO = [
   { file: 'palio-fuochista-3.webp', caption: 'La squadra dei fuochisti al lavoro nelle ore che precedono il Palio' },
   { file: 'palio-fuochista-sigaro.webp', caption: 'Un momento di pausa tra i fuochisti, sigaro in bocca, prima dello spettacolo' },
   { file: 'palio-preparativi-1.webp', caption: 'I preparativi del Palio dei Fuochi, tra tubi di lancio e bombe allineate' },
-  { file: 'palio-preparativi-2.webp', caption: 'Il lavoro meticoloso dei fuochisti prima dello spettacolo pirotecnico' },
   { file: 'palio-preparativi-3.webp', caption: 'Le bombe da tiro pronte, in attesa del momento dello spettacolo' },
   { file: 'palio-preparativi-4.webp', caption: 'I maestri fuochisti al lavoro, tra concentrazione e complicità' },
   { file: 'palio-preparativi-5.webp', caption: 'Un altro scorcio dei preparativi del Palio dei Fuochi di Siano' },
   { file: 'palio-tramonto-tubi.webp', caption: 'I tubi di lancio allineati al tramonto, mentre la squadra si concede una pausa' },
   { file: 'palio-preparativi-6.webp', caption: 'Gli ultimi controlli prima dell\'accensione dei fuochi' },
   { file: 'palio-preparativi-7.webp', caption: 'I fuochisti al lavoro, custodi di un\'arte tramandata da generazioni' },
-  { file: 'palio-campanile-notte.webp', caption: 'Il campanile illuminato d\'oro dai fuochi, con la folla che osserva col cuore in gola' },
   { file: 'palio-preparativi-8.webp', caption: 'Le mani dei fuochisti al lavoro tra le bombe da tiro' },
   { file: 'palio-preparativi-9.webp', caption: 'Un momento dei preparativi del Palio, poco prima dello spettacolo' },
   { file: 'palio-preparativi-10.webp', caption: 'La squadra dei fuochisti pronta a dare spettacolo per Siano' },
   { file: 'palio-griglia-tubi.webp', caption: 'La griglia di tubi di lancio vista dall\'alto: la geometria perfetta del Palio' },
-  { file: 'palio-preparativi-11.webp', caption: 'Gli ultimi minuti di preparazione prima dell\'accensione dei fuochi' },
-  { file: 'palio-folla-notte.webp', caption: 'Il campanile avvolto dai fuochi d\'artificio, la folla col telefono in alto a immortalare l\'istante' },
 ];
 const GALLERIA_LUOGHI = [
   { file: 'campanile.webp', caption: 'Il campanile di San Rocco, simbolo di Siano' },
   { file: 'piazza.webp',    caption: 'La Piazza San Rocco nel cuore di Siano' },
   { file: 'fuochi.webp',    caption: 'I fuochi d\'artificio illuminano il campanile nella notte della festa' },
+  { file: 'palio-campanile-notte.webp', caption: 'Il campanile illuminato d\'oro dai fuochi, con la folla che osserva col cuore in gola' },
+  { file: 'palio-folla-notte.webp', caption: 'Il campanile avvolto dai fuochi d\'artificio, la folla col telefono in alto a immortalare l\'istante' },
+  { file: 'palio-preparativi-2.webp', caption: 'Il campanile stagliato nel cielo mentre esplodono i fuochi del Palio' },
+  { file: 'palio-preparativi-11.webp', caption: 'Il campanile avvolto dai fuochi d\'artificio nella notte più attesa dell\'anno' },
 ];
 
 app.get('/galleria', (req, res) => {
