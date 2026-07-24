@@ -96,6 +96,19 @@
   canvas.addEventListener('pointerdown', onDown);
   window.addEventListener('pointerup', onUp);
   canvas.addEventListener('pointercancel', onUp);
+  // iOS/Android: niente menu "Copia/Salva" al long-press. Il menu nasce dal gesto
+  // touch nativo, che i pointer event NON sopprimono: servono i touch event
+  // non-passivi + blocco di contextmenu/selectstart. Il movimento resta invariato.
+  const noNative = (e) => { if (e.cancelable) e.preventDefault(); };
+  canvas.addEventListener('touchstart', noNative, { passive: false });
+  canvas.addEventListener('touchmove', noNative, { passive: false });
+  canvas.addEventListener('touchend', noNative, { passive: false });
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+  canvas.addEventListener('selectstart', (e) => e.preventDefault());
+  if (root) {
+    root.addEventListener('selectstart', (e) => e.preventDefault());
+    root.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
   if (playBtn) playBtn.addEventListener('click', (e) => { e.preventDefault(); start(); });
   window.addEventListener('keydown', (e) => {
     if (document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
