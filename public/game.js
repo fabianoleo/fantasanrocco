@@ -127,6 +127,13 @@
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
   const stopSelect = (e) => e.preventDefault();
   canvas.addEventListener('selectstart', stopSelect);
+  // iOS/Android: il menu "Copia/Salva" al long-press nasce dal gesto touch nativo,
+  // che i pointer event NON bloccano. Serve fermare i touch event non-passivi.
+  // (i pointer event per il movimento continuano a funzionare lo stesso)
+  const stopTouch = (e) => { if (e.cancelable) e.preventDefault(); };
+  canvas.addEventListener('touchstart', stopTouch, { passive: false });
+  canvas.addEventListener('touchmove', stopTouch, { passive: false });
+  canvas.addEventListener('touchend', stopTouch, { passive: false });
   const gmRoot = document.getElementById('gmRoot');
   if (gmRoot) {
     gmRoot.addEventListener('selectstart', stopSelect);
@@ -145,6 +152,7 @@
     btn.addEventListener('pointercancel', release);
     btn.addEventListener('pointerleave', release);
     btn.addEventListener('contextmenu', (e) => e.preventDefault());
+    btn.addEventListener('touchstart', (e) => { if (e.cancelable) e.preventDefault(); }, { passive: false });
   }
   holdButton(document.getElementById('gmLeft'), (v) => { keyL = v; });
   holdButton(document.getElementById('gmRight'), (v) => { keyR = v; });
