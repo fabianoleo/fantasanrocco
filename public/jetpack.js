@@ -110,6 +110,26 @@
     root.addEventListener('contextmenu', (e) => e.preventDefault());
   }
   if (playBtn) playBtn.addEventListener('click', (e) => { e.preventDefault(); start(); });
+
+  // Pulsante di spinta "SALI": alternativa al tocco sullo schermo
+  const thrustBtn = document.getElementById('jpThrust');
+  if (thrustBtn) {
+    const btnDown = (e) => {
+      if (e.cancelable) e.preventDefault();
+      thrustBtn.classList.add('is-on');
+      if (state === 'idle' || state === 'over') { start(); return; }
+      if (state === 'paused') return;
+      setThrust(true);
+      try { thrustBtn.setPointerCapture(e.pointerId); } catch (_) {}
+    };
+    const btnUp = (e) => { if (e && e.cancelable) e.preventDefault(); thrustBtn.classList.remove('is-on'); setThrust(false); };
+    thrustBtn.addEventListener('pointerdown', btnDown);
+    thrustBtn.addEventListener('pointerup', btnUp);
+    thrustBtn.addEventListener('pointercancel', btnUp);
+    thrustBtn.addEventListener('pointerleave', btnUp);
+    thrustBtn.addEventListener('touchstart', noNative, { passive: false });
+    thrustBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
   window.addEventListener('keydown', (e) => {
     if (document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
     if (e.code === 'KeyP' || e.code === 'Escape') {   // pausa / riprendi

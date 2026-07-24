@@ -707,7 +707,7 @@
 </div>
 
 <%# ── SAN ROCCO JETPACK (mini-gioco pixel, anteprima) ───────────────── %>
-<link rel="stylesheet" href="/jetpack.css?v=2">
+<link rel="stylesheet" href="/jetpack.css?v=3">
 <div class="adm-panel" id="p-jetpack" hidden>
   <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
 
@@ -744,7 +744,7 @@
           <p class="jp-kicker" id="jpKicker">Insert coin</p>
           <h3 class="jp-over-title" id="jpOverTitle">San Rocco Jetpack</h3>
           <p class="jp-over-desc" id="jpOverDesc">Vola con la fiammata, schiva i raggi di fuoco, raccogli le monete</p>
-          <p class="jp-hint" id="jpHint">Tieni premuto <kbd>SPAZIO</kbd> o tocca per salire</p>
+          <p class="jp-hint" id="jpHint">Tieni premuto <kbd>SPAZIO</kbd>, tocca lo schermo o il tasto <kbd>SALI</kbd> per volare</p>
           <button type="button" class="jp-play" id="jpPlay">Gioca</button>
         </div>
 
@@ -760,10 +760,19 @@
           </div>
         </div>
       </div>
+
+      <%# Controller: pulsante di spinta (oltre al tocco sullo schermo) %>
+      <div class="jp-pad" id="jpPad">
+        <button class="jp-thrust" id="jpThrust" type="button" aria-label="Sali / spinta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V6"/><path d="M6 12l6-6 6 6"/></svg>
+          <span class="jp-thrust-label">SALI</span>
+        </button>
+      </div>
+
       <p class="jp-note">Prototipo · i punteggi non incidono sulla classifica</p>
     </div>
   </section>
 </div>
 
 <script src="/admin.js?v=7" defer></script>
-<script src="/jetpack.js?v=3" defer></script>
+<script src="/jetpack.js?v=4" defer></script>
