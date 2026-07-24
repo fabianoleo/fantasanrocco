@@ -94,6 +94,44 @@
 }
 .jp-toast.jp-toast-show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
+/* ── Bottoni pausa / muta (in alto a destra sullo stage) ─────────── */
+.jp-pause-toggle, .jp-mute-toggle {
+  position: absolute; top: .5rem; z-index: 3;
+  width: 30px; height: 30px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 8px; cursor: pointer;
+  color: #f5c842;
+  background: rgba(212,160,26,.16);
+  border: 1px solid rgba(212,160,26,.3);
+  transition: background .15s ease, color .15s ease;
+}
+.jp-mute-toggle { right: .5rem; }
+.jp-pause-toggle { right: 2.6rem; display: none; }   /* mostrato solo in gioco */
+.jp-pause-toggle.is-on { display: inline-flex; }
+.jp-pause-toggle:hover, .jp-mute-toggle:hover { background: rgba(212,160,26,.28); }
+.jp-pause-toggle svg { width: 15px; height: 15px; }
+.jp-mute-toggle svg { width: 16px; height: 16px; }
+.jp-mute-toggle .jp-ic-off { display: none; }
+.jp-mute-toggle.is-muted { color: #c0554a; }
+.jp-mute-toggle.is-muted .jp-ic-on { display: none; }
+.jp-mute-toggle.is-muted .jp-ic-off { display: inline; }
+
+/* ── Bottoni dentro l'overlay di pausa ───────────────────────────── */
+.jp-pause-btns {
+  display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center;
+  margin-top: .6rem;
+}
+.jp-btn2 {
+  font-family: 'Press Start 2P', monospace; font-size: .6rem;
+  color: #f5c842; cursor: pointer;
+  background: rgba(212,160,26,.14);
+  border: 1px solid rgba(212,160,26,.35); border-radius: 999px;
+  padding: .6rem 1rem;
+  transition: background .15s ease, transform .08s ease;
+}
+.jp-btn2:hover { background: rgba(212,160,26,.26); }
+.jp-btn2:active { transform: translateY(2px); }
+
 /* ── Nota / crediti sotto il gioco ───────────────────────────────── */
 .jp-note {
   text-align: center; color: var(--text-3, #837c90);

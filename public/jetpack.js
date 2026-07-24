@@ -25,6 +25,12 @@
   const ovKicker = document.getElementById('jpKicker');
   const playBtn = document.getElementById('jpPlay');
   const toast = document.getElementById('jpToast');
+  const pauseBtn = document.getElementById('jpPauseBtn');
+  const muteBtn = document.getElementById('jpMuteBtn');
+  const pauseOverlay = document.getElementById('jpPause');
+  const resumeBtn = document.getElementById('jpResume');
+  const restartBtn = document.getElementById('jpRestart');
+  const quitBtn = document.getElementById('jpQuit');
 
   const ARCADE = "'Press Start 2P', monospace";
   if (document.fonts && document.fonts.load) document.fonts.load("8px 'Press Start 2P'").catch(() => {});
@@ -43,11 +49,46 @@
   const PX = 60;               // x fisso del santo
   const PW = 18, PH = 30;      // dimensioni sprite
 
+  // ── Colonna sonora: come «Corri San Rocco» — interrompe la radio e suona la canzone ──
+  let gameSong = null, radioWasOn = false, songMuted = false;
+  const ensureSong = () => {
+    if (gameSong) return gameSong;
+    try {
+      gameSong = new Audio('/audio/corri-san-rocco.mp3');
+      gameSong.loop = true; gameSong.preload = 'auto'; gameSong.volume = 0.65;
+      gameSong.muted = songMuted;
+    } catch (e) { gameSong = null; }
+    return gameSong;
+  };
+  const songPlay = () => {
+    const R = window.FSRRadio;
+    if (R && R.isPlaying && R.isPlaying()) { radioWasOn = true; R.pause(); }
+    const s = ensureSong();
+    if (s) { try { s.currentTime = 0; } catch (e) {} s.play().catch(() => {}); }
+  };
+  const songResume = () => { const s = ensureSong(); if (s) s.play().catch(() => {}); };
+  const songPause = () => { if (gameSong) gameSong.pause(); };
+  const songStop = () => {
+    if (gameSong) { gameSong.pause(); try { gameSong.currentTime = 0; } catch (e) {} }
+    if (radioWasOn && window.FSRRadio && window.FSRRadio.resume) window.FSRRadio.resume();
+    radioWasOn = false;
+  };
+  function applyMute() {
+    if (gameSong) gameSong.muted = songMuted;
+    if (muteBtn) {
+      muteBtn.classList.toggle('is-muted', songMuted);
+      muteBtn.setAttribute('aria-pressed', songMuted ? 'true' : 'false');
+      muteBtn.title = songMuted ? 'Riattiva audio' : 'Muta la canzone';
+    }
+  }
+  function setPauseBtn() { if (pauseBtn) pauseBtn.classList.toggle('is-on', state === 'run'); }
+
   // ── Input ───────────────────────────────────────────────────────
   const setThrust = (on) => { thrust = on; };
   const onDown = (e) => {
     if (e.cancelable) e.preventDefault();
     if (state === 'idle' || state === 'over') { start(); return; }
+    if (state === 'paused') return;              // in pausa il tocco non spinge
     setThrust(true);
   };
   const onUp = (e) => { if (e && e.cancelable) e.preventDefault(); setThrust(false); };
@@ -57,13 +98,28 @@
   canvas.addEventListener('pointercancel', onUp);
   if (playBtn) playBtn.addEventListener('click', (e) => { e.preventDefault(); start(); });
   window.addEventListener('keydown', (e) => {
+    if (document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    if (e.code === 'KeyP' || e.code === 'Escape') {   // pausa / riprendi
+      if (state === 'run') { e.preventDefault(); pause(); }
+      else if (state === 'paused') { e.preventDefault(); resume(); }
+      return;
+    }
     if (e.code === 'Space' || e.code === 'ArrowUp') {
-      if (document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
       e.preventDefault();
-      if (state === 'idle' || state === 'over') start(); else setThrust(true);
+      if (state === 'idle' || state === 'over') start();
+      else if (state === 'run') setThrust(true);
     }
   });
   window.addEventListener('keyup', (e) => { if (e.code === 'Space' || e.code === 'ArrowUp') setThrust(false); });
+
+  // Bottoni pausa / muta / overlay pausa
+  if (pauseBtn) pauseBtn.addEventListener('click', (e) => { e.preventDefault(); if (state === 'run') pause(); });
+  if (resumeBtn) resumeBtn.addEventListener('click', (e) => { e.preventDefault(); resume(); });
+  if (restartBtn) restartBtn.addEventListener('click', (e) => { e.preventDefault(); start(); });
+  if (quitBtn) quitBtn.addEventListener('click', (e) => { e.preventDefault(); quitToMenu(); });
+  if (muteBtn) muteBtn.addEventListener('click', (e) => { e.preventDefault(); songMuted = !songMuted; applyMute(); });
+  // Auto-pausa se la scheda passa in secondo piano
+  document.addEventListener('visibilitychange', () => { if (document.hidden && state === 'run') pause(); });
 
   // ── Disegno pixel ───────────────────────────────────────────────
   function r(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(x | 0, y | 0, w | 0, h | 0); }
@@ -209,10 +265,40 @@
     reset();
     state = 'run';
     overlay.classList.add('jp-hidden');
+    if (pauseOverlay) pauseOverlay.classList.add('jp-hidden');
+    setPauseBtn();
+    songPlay();
+  }
+
+  // ── Pausa ───────────────────────────────────────────────────────
+  function pause() {
+    if (state !== 'run') return;
+    state = 'paused'; thrust = false;
+    if (pauseOverlay) pauseOverlay.classList.remove('jp-hidden');
+    setPauseBtn();
+    songPause();
+  }
+  function resume() {
+    if (state !== 'paused') return;
+    state = 'run'; last = 0;                      // last=0 → dt=0 al primo frame (niente salti)
+    if (pauseOverlay) pauseOverlay.classList.add('jp-hidden');
+    setPauseBtn();
+    songResume();
+  }
+  function quitToMenu() {
+    if (overTimer) { clearTimeout(overTimer); overTimer = null; }
+    if (pauseOverlay) pauseOverlay.classList.add('jp-hidden');
+    reset();
+    state = 'idle';
+    setPauseBtn();
+    songStop();
+    showIdleOverlay();
   }
 
   function gameOver() {
     state = 'over';
+    setPauseBtn();
+    songStop();
     shake = 14;
     burst(PX + PW / 2, py + PH / 2, '#ff5a3c', 22);
     const total = Math.floor(score);
@@ -353,11 +439,17 @@
   }
 
   // ── Overlay iniziale ────────────────────────────────────────────
+  function showIdleOverlay() {
+    overlay.classList.remove('jp-hidden');
+    if (ovKicker) ovKicker.textContent = 'Insert coin';
+    ovTitle.textContent = 'San Rocco Jetpack';
+    ovDesc.innerHTML = 'Vola con la fiammata, schiva i raggi di fuoco, raccogli le monete';
+    ovHint.innerHTML = 'Tieni premuto <kbd>SPAZIO</kbd> o tocca per salire';
+    if (playBtn) playBtn.textContent = 'Gioca';
+  }
   reset();
-  if (ovKicker) ovKicker.textContent = 'Insert coin';
-  ovTitle.textContent = 'San Rocco Jetpack';
-  ovDesc.innerHTML = 'Vola con la fiammata, schiva i raggi di fuoco, raccogli le monete';
-  ovHint.innerHTML = 'Tieni premuto <kbd>SPAZIO</kbd> o tocca per salire';
-  if (playBtn) playBtn.textContent = 'Gioca';
+  setPauseBtn();
+  applyMute();
+  showIdleOverlay();
   requestAnimationFrame(frame);
 })();
