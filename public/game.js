@@ -34,7 +34,7 @@
   const PW = 18;
   // ── Stato ───────────────────────────────────────────────────────
   let state = 'idle';           // idle | run | over
-  let px, target, dist, bonus, score, inv, mult, items, popups, fx, spawnT, coinT, haloT, relicT, fwT, animT, last, shake, reported;
+  let px, target, dist, bonus, score, inv, mult, items, popups, fx, spawnT, coinT, haloT, relicT, fwT, animT, last, shake, reported, coinRain, coinRainT;
   let keyL = false, keyR = false, pointerX = null, overTimer = null, gameToken = null;
 
   // ── Colonna sonora: mentre giochi interrompe la radio e suona «Corri San Rocco» ──
@@ -68,6 +68,7 @@
     items = []; popups = []; fx = [];
     spawnT = 60; coinT = 120; haloT = 1500; relicT = 3200; fwT = 6800;
     animT = 0; shake = 0; reported = false; pointerX = null;
+    coinRain = 0; coinRainT = 0;
   }
   reset();
 
@@ -355,60 +356,117 @@
 
   // ── Fuochi d'artificio di sfondo (sempre attivi: razzo che sale + esplosione) ──
   const FW_COLORS = ['#f5c842', '#ff5a3c', '#5ad1ff', '#7bff9a', '#ff8ad1', '#c98bff', '#fff7d0'];
+  const FW_TYPES = ['peony', 'peony', 'peony', 'ring', 'chrys', 'double', 'heart'];  // peonia più frequente
   let bgFw = [];
   let bgFwT = 10;
-  function spawnBgFw() {
+  function fwColor() { return FW_COLORS[Math.random() * FW_COLORS.length | 0]; }
+  function spawnBgFw(opts) {
+    opts = opts || {};
+    const c1 = fwColor();
+    let c2 = fwColor(); if (c2 === c1) c2 = fwColor();          // secondo colore per esplosioni miste
     bgFw.push({
       rise: true,
-      x: 24 + Math.random() * (W - 48),
+      x: opts.x != null ? opts.x : 24 + Math.random() * (W - 48),
       y: GROUND - 4,
       vy: -(1.5 + Math.random() * 1.1),
-      ty: 16 + Math.random() * 78,           // quota dell'esplosione (cielo)
-      color: FW_COLORS[Math.random() * FW_COLORS.length | 0],
+      ty: opts.ty != null ? opts.ty : 16 + Math.random() * 70,   // quota dell'esplosione (cielo)
+      color: c1, color2: c2,
+      type: opts.type || FW_TYPES[Math.random() * FW_TYPES.length | 0],
+      trail: [],
     });
   }
-  function bgFwExplode(s) {
-    const n = 18 + (Math.random() * 12 | 0);
-    const spd = 0.8 + Math.random() * 0.9;
+  // Crea le particelle secondo la forma dell'esplosione
+  function makeParts(s, cx, cy) {
     const parts = [];
-    for (let a = 0; a < n; a++) {
-      const ang = (a / n) * Math.PI * 2;
-      const v = spd * (0.55 + Math.random() * 0.6);
-      parts.push({ x: s.x, y: s.y, vx: Math.cos(ang) * v, vy: Math.sin(ang) * v, t: 0, max: 30 + Math.random() * 20 });
+    const push = (ang, v, col, life) => {
+      parts.push({
+        x: cx, y: cy,
+        vx: Math.cos(ang) * v, vy: Math.sin(ang) * v,
+        t: 0, max: life || (34 + Math.random() * 22),
+        col: col, hist: [],
+      });
+    };
+    if (s.type === 'ring') {
+      const n = 40, spd = 1.15 + Math.random() * 0.35;
+      for (let a = 0; a < n; a++) push((a / n) * Math.PI * 2, spd, Math.random() < 0.5 ? s.color : s.color2);
+    } else if (s.type === 'chrys') {                             // cascata dorata a caduta
+      const n = 46;
+      for (let a = 0; a < n; a++) { const v = 0.6 + Math.random() * 1.1; push((a / n) * Math.PI * 2 + Math.random() * 0.2, v, Math.random() < 0.75 ? '#f5c842' : '#fff7d0', 44 + Math.random() * 26); }
+    } else if (s.type === 'double') {                            // corona interna + esplosione esterna
+      const n1 = 22, n2 = 34;
+      for (let a = 0; a < n1; a++) push((a / n1) * Math.PI * 2, 0.55 + Math.random() * 0.3, s.color);
+      for (let a = 0; a < n2; a++) push((a / n2) * Math.PI * 2, 1.25 + Math.random() * 0.35, s.color2);
+    } else if (s.type === 'heart') {                             // cuore per San Rocco
+      const n = 40, sc = 0.13 + Math.random() * 0.03;
+      for (let a = 0; a < n; a++) {
+        const t = (a / n) * Math.PI * 2;
+        const hx = 16 * Math.pow(Math.sin(t), 3);
+        const hy = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+        push(Math.atan2(hy, hx), Math.hypot(hx, hy) * sc, Math.random() < 0.5 ? '#ff5a3c' : '#ff8ad1');
+      }
+    } else {                                                     // peony (classica)
+      const n = 52 + (Math.random() * 16 | 0);
+      const spd = 0.9 + Math.random() * 0.7;
+      for (let a = 0; a < n; a++) {
+        const ang = (a / n) * Math.PI * 2 + Math.random() * 0.15;
+        const v = spd * (0.5 + Math.random() * 0.7);
+        push(ang, v, Math.random() < 0.85 ? s.color : s.color2);
+      }
     }
-    bgFw.push({ rise: false, color: s.color, cx: s.x, cy: s.y, parts, flash: 0 });
+    return parts;
+  }
+  function bgFwExplode(s) {
+    const chrys = s.type === 'chrys';
+    bgFw.push({ rise: false, type: s.type, color: s.color, color2: s.color2, cx: s.x, cy: s.y, parts: makeParts(s, s.x, s.y), flash: 0, grav: chrys ? 0.06 : 0.04, drag: chrys ? 0.99 : 0.982 });
   }
   function drawBgFw(dt) {
     bgFwT -= dt;
-    if (bgFwT <= 0) { spawnBgFw(); bgFwT = 16 + Math.random() * 40; }   // cadenza continua
+    if (bgFwT <= 0) { spawnBgFw(); bgFwT = 14 + Math.random() * 34; }   // cadenza continua
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';                          // bagliore additivo
     for (let i = bgFw.length - 1; i >= 0; i--) {
       const s = bgFw[i];
       if (s.rise) {
         s.y += s.vy * dt;
-        ctx.globalAlpha = 0.95; r(s.x, s.y, 1, 2, s.color);
-        ctx.globalAlpha = 0.4;  r(s.x, s.y + 2, 1, 2, s.color);
+        // scia scintillante del razzo che sale
+        s.trail.push({ x: s.x, y: s.y }); if (s.trail.length > 6) s.trail.shift();
+        for (let k = 0; k < s.trail.length; k++) { ctx.globalAlpha = (k / s.trail.length) * 0.5; r(s.trail[k].x, s.trail[k].y, 1, 2, '#ffd98a'); }
+        ctx.globalAlpha = 1; r(s.x, s.y, 1, 2, s.color);
         if (s.y <= s.ty) { bgFwExplode(s); bgFw.splice(i, 1); }
       } else {
         s.flash += dt;
-        if (s.flash < 5) { ctx.globalAlpha = (1 - s.flash / 5) * 0.85; disc(s.cx, s.cy, 3, '#fff7d0'); }
+        // lampo iniziale dell'esplosione
+        if (s.flash < 6) { ctx.globalAlpha = (1 - s.flash / 6) * 0.9; disc(s.cx, s.cy, 2 + s.flash * 0.7, '#fff7d0'); }
         let alive = false;
         for (const p of s.parts) {
           p.t += dt;
           if (p.t >= p.max) continue;
           alive = true;
+          // scia luminosa che svanisce
+          p.hist.push({ x: p.x, y: p.y }); if (p.hist.length > 4) p.hist.shift();
           p.x += p.vx * dt; p.y += p.vy * dt;
-          p.vy += 0.045 * dt;                 // gravità
-          p.vx *= 0.985; p.vy *= 0.985;
-          ctx.globalAlpha = Math.max(0, 1 - p.t / p.max);
-          r(p.x, p.y, 2, 2, s.color);
+          p.vy += s.grav * dt;                // gravità
+          p.vx *= s.drag; p.vy *= s.drag;
+          const fade = Math.max(0, 1 - p.t / p.max);
+          for (let k = 0; k < p.hist.length; k++) { ctx.globalAlpha = fade * (k / p.hist.length) * 0.4; r(p.hist[k].x, p.hist[k].y, 1, 1, p.col); }
+          // scintillio finale (twinkle): sfarfalla verso fine vita
+          const twinkle = p.t > p.max * 0.55 && (Math.random() < 0.4);
+          ctx.globalAlpha = fade;
+          r(p.x, p.y, 2, 2, twinkle ? '#fffdf0' : p.col);
         }
         if (!alive) bgFw.splice(i, 1);
       }
     }
     ctx.globalAlpha = 1;
     ctx.restore();
+  }
+  // Gran finale: ondata di lanci simultanei (momenti chiave)
+  function fwFinale(n) {
+    n = n || 5;
+    for (let k = 0; k < n; k++) {
+      const delay = k * (3 + Math.random() * 4);
+      setTimeout(() => spawnBgFw({ x: 20 + Math.random() * (W - 40), ty: 18 + Math.random() * 55, type: k === 0 ? 'heart' : undefined }), delay * 16);
+    }
   }
 
   // ── Spawn ───────────────────────────────────────────────────────
@@ -491,6 +549,15 @@
         if (!items.some((o) => o.kind === 'fw')) spawnFw();
         fwT = 6500 + Math.random() * 3800;
       }
+      // Pioggia di monete: bonus FUOCHI → cascata d'oro scaglionata dal cielo
+      if (coinRain > 0) {
+        coinRainT -= dt;
+        if (coinRainT <= 0) {
+          spawnCoin(10 + Math.random() * (W - 32));
+          coinRain--;
+          coinRainT = 5 + Math.random() * 6;   // ravvicinate ma non tutte insieme
+        }
+      }
 
       // caduta + interazioni
       const pbox = { x: px + 3, y: GROUND - 30, w: PW - 6, h: 28 };
@@ -513,7 +580,8 @@
         } else if (o.kind === 'fw') {           // LEGGENDARIO: spazza gli ostacoli + super bonus
           if (overlap(grab, o)) {
             bonus += 150 * x2; inv = Math.max(inv, 150);
-            popup(cx, o.y, '+' + (150 * x2), '#ff5a3c', 12); arcadeFlash('FUOCHI!');
+            popup(cx, o.y, '+' + (150 * x2), '#ff5a3c', 12); arcadeFlash('FUOCHI!'); fwFinale(7);
+            coinRain = 26; coinRainT = 0;      // pioggia di monete d'oro da raccogliere
             const cols = ['#ff5a3c', '#f5c842', '#5ad1ff', '#7bff9a', '#ff8ad1'];
             items.forEach((it, k) => { if (it.kind === 'hit') burst(it.x + it.w / 2, it.y + it.h / 2, cols[k % cols.length]); });
             shake = Math.max(shake, 5);
@@ -585,9 +653,11 @@
   function gameOver() {
     state = 'over'; shake = 7; inv = 0; setPauseBtn(); songStop();
     burst(px + PW / 2, GROUND - 14, '#e84e1b');
+    const isRecord = score > best && score > 0;
     if (score > best) best = score;
     elBest.textContent = 'record ' + best;
-    arcadeFlash('GAME OVER');
+    arcadeFlash(isRecord ? 'NUOVO RECORD!' : 'GAME OVER');
+    if (isRecord) fwFinale(9);            // gran finale per il nuovo record
     if (logged && !reported) { reported = true; report(score); }
     overTimer = setTimeout(() => showOverlay('over', score), 700);
   }
