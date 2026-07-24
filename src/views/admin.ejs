@@ -110,6 +110,15 @@
     </span>
   </a>
 
+  <button type="button" class="adm-tile" data-panel="jetpack">
+    <span class="adm-tile-ico"><%- icon('fireworks') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">San Rocco Jetpack</span>
+      <span class="adm-tile-desc">Nuovo mini-gioco pixel · anteprima</span>
+    </span>
+    <span class="adm-tile-badge">beta</span>
+  </button>
+
   <button type="button" class="adm-tile adm-tile-danger" data-panel="reset">
     <span class="adm-tile-ico"><%- icon('bolt') %></span>
     <span class="adm-tile-body">
@@ -697,4 +706,39 @@
   </section>
 </div>
 
+<%# ── SAN ROCCO JETPACK (mini-gioco pixel, anteprima) ───────────────── %>
+<link rel="stylesheet" href="/jetpack.css?v=1">
+<div class="adm-panel" id="p-jetpack" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
+
+  <section class="card">
+    <h2 class="staff-title"><%- icon('fireworks') %> San Rocco Jetpack <span class="tag tag-off">beta</span></h2>
+    <p class="muted small" style="margin-bottom:1rem">
+      Anteprima del nuovo mini-gioco in stile <em>Jetpack Joyride</em>, pixelato e a tema San Rocco.
+      Tieni premuto per volare con la fiammata dorata, schiva i raggi di fuoco e raccogli le monete.
+      Per ora è qui solo per test: dopo decidiamo dove posizionarlo.
+    </p>
+
+    <div class="jp-wrap" id="jpRoot">
+      <div class="jp-stage">
+        <div class="jp-hud">
+          <span id="jpScore">0 m</span>
+          <span class="jp-best" id="jpBest">record 0</span>
+        </div>
+        <canvas class="jp-canvas" id="jpCanvas" aria-label="San Rocco Jetpack"></canvas>
+        <div class="jp-toast" id="jpToast"></div>
+        <div class="jp-overlay" id="jpOverlay">
+          <p class="jp-kicker" id="jpKicker">Insert coin</p>
+          <h3 class="jp-over-title" id="jpOverTitle">San Rocco Jetpack</h3>
+          <p class="jp-over-desc" id="jpOverDesc">Vola con la fiammata, schiva i raggi di fuoco, raccogli le monete</p>
+          <p class="jp-hint" id="jpHint">Tieni premuto <kbd>SPAZIO</kbd> o tocca per salire</p>
+          <button type="button" class="jp-play" id="jpPlay">Gioca</button>
+        </div>
+      </div>
+      <p class="jp-note">Prototipo · i punteggi non incidono sulla classifica</p>
+    </div>
+  </section>
+</div>
+
 <script src="/admin.js?v=7" defer></script>
+<script src="/jetpack.js?v=1" defer></script>
