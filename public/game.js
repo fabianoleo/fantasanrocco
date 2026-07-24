@@ -34,7 +34,7 @@
   const PW = 18;
   // ── Stato ───────────────────────────────────────────────────────
   let state = 'idle';           // idle | run | over
-  let px, target, dist, bonus, score, inv, mult, items, popups, fx, spawnT, coinT, haloT, relicT, fwT, animT, last, shake, reported;
+  let px, target, dist, bonus, score, inv, mult, items, popups, fx, spawnT, coinT, haloT, relicT, fwT, animT, last, shake, reported, coinRain, coinRainT;
   let keyL = false, keyR = false, pointerX = null, overTimer = null, gameToken = null;
 
   // ── Colonna sonora: mentre giochi interrompe la radio e suona «Corri San Rocco» ──
@@ -68,6 +68,7 @@
     items = []; popups = []; fx = [];
     spawnT = 60; coinT = 120; haloT = 1500; relicT = 3200; fwT = 6800;
     animT = 0; shake = 0; reported = false; pointerX = null;
+    coinRain = 0; coinRainT = 0;
   }
   reset();
 
@@ -548,6 +549,15 @@
         if (!items.some((o) => o.kind === 'fw')) spawnFw();
         fwT = 6500 + Math.random() * 3800;
       }
+      // Pioggia di monete: bonus FUOCHI → cascata d'oro scaglionata dal cielo
+      if (coinRain > 0) {
+        coinRainT -= dt;
+        if (coinRainT <= 0) {
+          spawnCoin(10 + Math.random() * (W - 32));
+          coinRain--;
+          coinRainT = 5 + Math.random() * 6;   // ravvicinate ma non tutte insieme
+        }
+      }
 
       // caduta + interazioni
       const pbox = { x: px + 3, y: GROUND - 30, w: PW - 6, h: 28 };
@@ -571,6 +581,7 @@
           if (overlap(grab, o)) {
             bonus += 150 * x2; inv = Math.max(inv, 150);
             popup(cx, o.y, '+' + (150 * x2), '#ff5a3c', 12); arcadeFlash('FUOCHI!'); fwFinale(7);
+            coinRain = 26; coinRainT = 0;      // pioggia di monete d'oro da raccogliere
             const cols = ['#ff5a3c', '#f5c842', '#5ad1ff', '#7bff9a', '#ff8ad1'];
             items.forEach((it, k) => { if (it.kind === 'hit') burst(it.x + it.w / 2, it.y + it.h / 2, cols[k % cols.length]); });
             shake = Math.max(shake, 5);
