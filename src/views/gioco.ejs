@@ -1,6 +1,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
 <link rel="stylesheet" href="/game.css?v=11">
 <link rel="stylesheet" href="/casino.css?v=2">
+<link rel="stylesheet" href="/jetpack.css?v=3">
 
 <%# ── HERO ────────────────────────────────────────────────────────── %>
 <section class="gm-hero">
@@ -98,6 +99,66 @@
   </a>
 </section>
 
+<%# ── ALTRO GIOCO: San Rocco Jetpack ───────────────────────────────── %>
+<section class="gm-hero" style="margin-top:2.5rem">
+  <h1 class="gm-title">San Rocco Jetpack</h1>
+  <p class="gm-sub">
+    Vola con la <strong>fiammata dorata</strong>, schiva i raggi di fuoco e raccogli le monete.<br>
+    Tieni premuto per salire: più vai lontano, più punti fai.
+  </p>
+</section>
+
+<div class="jp-wrap" id="jpRoot">
+  <div class="jp-stage">
+    <div class="jp-hud">
+      <span id="jpScore">0 m</span>
+      <span class="jp-best" id="jpBest">record 0</span>
+    </div>
+    <canvas class="jp-canvas" id="jpCanvas" aria-label="San Rocco Jetpack"></canvas>
+
+    <%# Muta la canzone %>
+    <button class="jp-mute-toggle" id="jpMuteBtn" type="button" aria-label="Muta la canzone" aria-pressed="false" title="Muta la canzone">
+      <svg class="jp-ic-on" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a4 4 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18.5 6a7.5 7.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg class="jp-ic-off" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+
+    <%# Pausa (visibile solo in gioco) %>
+    <button class="jp-pause-toggle" id="jpPauseBtn" type="button" aria-label="Pausa" title="Pausa">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="0.5"/><rect x="14" y="5" width="4" height="14" rx="0.5"/></svg>
+    </button>
+
+    <div class="jp-toast" id="jpToast"></div>
+
+    <div class="jp-overlay" id="jpOverlay">
+      <p class="jp-kicker" id="jpKicker">Insert coin</p>
+      <h3 class="jp-over-title" id="jpOverTitle">San Rocco Jetpack</h3>
+      <p class="jp-over-desc" id="jpOverDesc">Vola con la fiammata, schiva i raggi di fuoco, raccogli le monete</p>
+      <p class="jp-hint" id="jpHint">Tieni premuto <kbd>SPAZIO</kbd>, tocca lo schermo o il tasto <kbd>SALI</kbd> per volare</p>
+      <button type="button" class="jp-play" id="jpPlay">Gioca</button>
+    </div>
+
+    <%# Overlay di pausa %>
+    <div class="jp-overlay jp-hidden" id="jpPause" aria-hidden="true">
+      <p class="jp-kicker">II</p>
+      <h3 class="jp-over-title">Pausa</h3>
+      <p class="jp-hint">Premi <kbd>P</kbd> o <kbd>Esc</kbd> per riprendere</p>
+      <div class="jp-pause-btns">
+        <button type="button" class="jp-play" id="jpResume">Riprendi</button>
+        <button type="button" class="jp-btn2" id="jpRestart">Ricomincia</button>
+        <button type="button" class="jp-btn2" id="jpQuit">Esci</button>
+      </div>
+    </div>
+  </div>
+
+  <%# Controller: pulsante di spinta (oltre al tocco sullo schermo) %>
+  <div class="jp-pad" id="jpPad">
+    <button class="jp-thrust" id="jpThrust" type="button" aria-label="Sali / spinta">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20V6"/><path d="M6 12l6-6 6 6"/></svg>
+      <span class="jp-thrust-label">SALI</span>
+    </button>
+  </div>
+</div>
+
 <%# ── LEGENDA BONUS (rarità) ───────────────────────────────────────── %>
 <section class="gm-bonus-legend" aria-label="Bonus del gioco">
   <div class="gm-bonus r-comune">
@@ -165,3 +226,4 @@
 </section>
 
 <script src="/game.js?v=13" defer></script>
+<script src="/jetpack.js?v=4" defer></script>
