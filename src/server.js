@@ -894,12 +894,15 @@ function ensureGameMissions() {
   const ins = db.prepare(`INSERT INTO missions (title, description, points, requires_photo, repeatable, archived, game_key)
                           VALUES (?, ?, ?, 0, 0, 0, ?)`);
   const upd = db.prepare('UPDATE missions SET title = ?, description = ?, points = ? WHERE game_key = ?');
-  for (const a of GAME_ACHIEVEMENTS) {
+  // Traguardi del runner + gradi del Jetpack: entrambi sono "missioni" con
+  // game_key, quindi restano fuori dalle missioni-foto. Inserimento diretto:
+  // nessuna notifica parte da qui (il broadcast "Nuova missione!" è solo
+  // nella creazione manuale da pannello admin, con la spunta apposita).
+  for (const a of GAME_ACHIEVEMENTS.concat(JP_RANKS)) {
     if (get.get(a.key)) upd.run(a.title, a.desc, a.points, a.key);
     else ins.run(a.title, a.desc, a.points, a.key);
   }
 }
-ensureGameMissions();
 
 // È un traguardo già conquistato dall'utente?
 function gameMissionId(key) {
@@ -1302,6 +1305,12 @@ app.get('/giochi', (req, res) => {
     triple: SLOT_TRIPLE,
     pair: SLOT_PAIR,
     balance: req.currentUser ? userPoints(req.currentUser.id) : 0,
+    // Missioni di carriera del Jetpack (3 attive) + grado raggiunto
+    jpMissions: jpMissionsFor(req.currentUser ? req.currentUser.id : null),
+    jpStars: req.currentUser ? (req.currentUser.jp_stars || 0) : 0,
+    jpBest: req.currentUser ? (req.currentUser.jp_best || 0) : 0,
+    jpRank: jpRankName(req.currentUser ? (req.currentUser.jp_stars || 0) : 0),
+    jpPerRank: JP_STARS_PER_RANK,
   });
 });
 // Vecchi indirizzi → la sezione unica (link esistenti e segnalibri restano validi)
@@ -1388,6 +1397,199 @@ app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, r
   })();
   const best = Math.max(score, prevBest);
   res.json({ ok: true, best, plays, awarded });
+});
+
+// =========================================================================
+//  «SAN ROCCO JETPACK» — missioni di carriera (restano fra le partite)
+// =========================================================================
+// Ogni utente ha 3 missioni attive. Quando ne completa una guadagna una
+// STELLA e quella casella viene rimpiazzata da una missione nuova. Ogni 3
+// stelle si sale di GRADO, e ogni grado vale punti in classifica: i punti
+// entrano con lo stesso meccanismo dei traguardi del runner (una prova già
+// approvata su una missione con game_key), quindi NON fanno partire nessuna
+// notifica push — checkLevelUp() qui non viene chiamato di proposito.
+const JP_MISSIONS = [
+  // "run" = da fare in una sola partita · "sum" = si accumula fra le partite
+  { key: 'jp-c40',   kind: 'run', metric: 'coins',      goal: 40,   text: 'Raccogli 40 monete in una partita' },
+  { key: 'jp-c80',   kind: 'run', metric: 'coins',      goal: 80,   text: 'Raccogli 80 monete in una partita' },
+  { key: 'jp-d400',  kind: 'run', metric: 'dist',       goal: 400,  text: 'Arriva a 400 m in una partita' },
+  { key: 'jp-d700',  kind: 'run', metric: 'dist',       goal: 700,  text: 'Arriva a 700 m in una partita' },
+  { key: 'jp-d1000', kind: 'run', metric: 'dist',       goal: 1000, text: 'Arriva a 1000 m in una partita' },
+  { key: 'jp-t2',    kind: 'run', metric: 'transforms', goal: 2,    text: 'Usa 2 mezzi in una partita' },
+  { key: 'jp-t3',    kind: 'run', metric: 'transforms', goal: 3,    text: 'Usa 3 mezzi in una partita' },
+  { key: 'jp-k12',   kind: 'run', metric: 'knocked',    goal: 12,   text: 'Travolgi 12 fedeli in una partita' },
+  { key: 'jp-k25',   kind: 'run', metric: 'knocked',    goal: 25,   text: 'Travolgi 25 fedeli in una partita' },
+  { key: 'jp-h2',    kind: 'run', metric: 'halos',      goal: 2,    text: "Prendi 2 aureole in una partita" },
+  { key: 'jp-sc300', kind: 'sum', metric: 'coins',      goal: 300,  text: 'Raccogli 300 monete in totale' },
+  { key: 'jp-sc800', kind: 'sum', metric: 'coins',      goal: 800,  text: 'Raccogli 800 monete in totale' },
+  { key: 'jp-sd3k',  kind: 'sum', metric: 'dist',       goal: 3000, text: 'Percorri 3.000 m in totale' },
+  { key: 'jp-sd8k',  kind: 'sum', metric: 'dist',       goal: 8000, text: 'Percorri 8.000 m in totale' },
+  { key: 'jp-st10',  kind: 'sum', metric: 'transforms', goal: 10,   text: 'Usa 10 mezzi in totale' },
+  { key: 'jp-sk60',  kind: 'sum', metric: 'knocked',    goal: 60,   text: 'Travolgi 60 fedeli in totale' },
+  { key: 'jp-sg15',  kind: 'sum', metric: 'games',      goal: 15,   text: 'Gioca 15 partite' },
+  { key: 'jp-sg40',  kind: 'sum', metric: 'games',      goal: 40,   text: 'Gioca 40 partite' },
+];
+const JP_BY_KEY = Object.fromEntries(JP_MISSIONS.map((m) => [m.key, m]));
+
+// Gradi: ogni 3 missioni completate. Ognuno vale punti in classifica.
+const JP_STARS_PER_RANK = 3;
+const JP_RANKS = [
+  { key: 'jpr-1', grade: 1, points: 20,  title: 'Jetpack · Aviatore',      desc: 'Completa 3 missioni di «San Rocco Jetpack».' },
+  { key: 'jpr-2', grade: 2, points: 35,  title: 'Jetpack · Pilota',        desc: 'Completa 6 missioni di «San Rocco Jetpack».' },
+  { key: 'jpr-3', grade: 3, points: 55,  title: 'Jetpack · Aviere scelto', desc: 'Completa 9 missioni di «San Rocco Jetpack».' },
+  { key: 'jpr-4', grade: 4, points: 80,  title: 'Jetpack · Asso del cielo',desc: 'Completa 12 missioni di «San Rocco Jetpack».' },
+  { key: 'jpr-5', grade: 5, points: 110, title: 'Jetpack · Angelo custode',desc: 'Completa 15 missioni di «San Rocco Jetpack».' },
+  { key: 'jpr-6', grade: 6, points: 150, title: 'Jetpack · Volo glorioso', desc: 'Completa 18 missioni di «San Rocco Jetpack».' },
+  { key: 'jpr-7', grade: 7, points: 200, title: 'Jetpack · Leggenda alata',desc: 'Completa 21 missioni di «San Rocco Jetpack».' },
+  { key: 'jpr-8', grade: 8, points: 260, title: 'Jetpack · Santo in cielo',desc: 'Completa 24 missioni di «San Rocco Jetpack».' },
+];
+// Ora che anche i gradi del Jetpack sono definiti, crea/aggiorna le missioni.
+ensureGameMissions();
+
+function jpRankName(stars) {
+  const g = Math.floor(stars / JP_STARS_PER_RANK);
+  if (g <= 0) return 'Recluta';
+  return (JP_RANKS[Math.min(g, JP_RANKS.length) - 1].title || '').replace('Jetpack · ', '');
+}
+
+// Le 3 missioni attive dell'utente, creandole se mancano (idempotente).
+function jpEnsureMissions(userId) {
+  let rows = db.prepare('SELECT slot, key, progress FROM jetpack_missions WHERE user_id = ? ORDER BY slot').all(userId);
+  if (rows.length >= 3) return rows.slice(0, 3);
+  const taken = new Set(rows.map((r) => r.key));
+  const ins = db.prepare('INSERT OR REPLACE INTO jetpack_missions (user_id, slot, key, progress) VALUES (?, ?, ?, 0)');
+  for (let s = 0; s < 3; s++) {
+    if (rows.some((r) => r.slot === s)) continue;
+    const pick = jpPickMission(taken);
+    if (!pick) break;
+    taken.add(pick.key);
+    ins.run(userId, s, pick.key);
+  }
+  rows = db.prepare('SELECT slot, key, progress FROM jetpack_missions WHERE user_id = ? ORDER BY slot').all(userId);
+  return rows.slice(0, 3);
+}
+// Pesca una missione non già attiva
+function jpPickMission(taken) {
+  const pool = JP_MISSIONS.filter((m) => !taken.has(m.key));
+  if (!pool.length) return JP_MISSIONS[Math.random() * JP_MISSIONS.length | 0];
+  return pool[Math.random() * pool.length | 0];
+}
+
+// Missioni attive in forma leggibile (per la pagina e per il gioco)
+function jpMissionsFor(userId) {
+  if (!userId) {
+    // Sloggati: mostriamo comunque tre esempi, senza avanzamento
+    return JP_MISSIONS.slice(0, 3).map((m) => ({ key: m.key, text: m.text, goal: m.goal, progress: 0, kind: m.kind }));
+  }
+  return jpEnsureMissions(userId).map((r) => {
+    const m = JP_BY_KEY[r.key] || JP_MISSIONS[0];
+    return { key: m.key, text: m.text, goal: m.goal, progress: Math.min(r.progress, m.goal), kind: m.kind };
+  });
+}
+
+// Applica i risultati di una partita: avanza le missioni, assegna stelle,
+// gradi e i relativi punti in classifica. Ritorna il riepilogo per il client.
+function jpApplyRun(userId, run) {
+  const done = [];
+  let stars = 0, awarded = [];
+  db.transaction(() => {
+    const rows = jpEnsureMissions(userId);
+    // `avoid` tiene fuori dal sorteggio sia le missioni ancora attive sia
+    // quelle appena completate: altrimenti la stessa missione facile
+    // ricomparirebbe subito, partita dopo partita.
+    const avoid = new Set(rows.map((r) => r.key));
+    const upd = db.prepare('UPDATE jetpack_missions SET progress = ? WHERE user_id = ? AND slot = ?');
+    const swap = db.prepare('UPDATE jetpack_missions SET key = ?, progress = 0 WHERE user_id = ? AND slot = ?');
+    for (const r of rows) {
+      const m = JP_BY_KEY[r.key];
+      if (!m) continue;
+      const v = m.metric === 'games' ? 1 : (run[m.metric] || 0);
+      // "run": conta il meglio di una singola partita · "sum": si accumula
+      const prog = m.kind === 'sum'
+        ? Math.min(m.goal, r.progress + v)
+        : Math.min(m.goal, Math.max(r.progress, v));
+      if (prog >= m.goal) {
+        done.push({ text: m.text });
+        const next = jpPickMission(avoid);   // m.key resta in `avoid`: non si ripesca
+        avoid.add(next.key);
+        swap.run(next.key, userId, r.slot);
+      } else if (prog !== r.progress) {
+        upd.run(prog, userId, r.slot);
+      }
+    }
+    if (done.length) {
+      db.prepare('UPDATE users SET jp_stars = jp_stars + ? WHERE id = ?').run(done.length, userId);
+    }
+    stars = (db.prepare('SELECT jp_stars FROM users WHERE id = ?').get(userId) || {}).jp_stars || 0;
+
+    // Gradi raggiunti → punti in classifica (prova già approvata, idempotente).
+    // Di proposito NON chiamiamo checkLevelUp(): niente notifiche push da qui.
+    const grade = Math.floor(stars / JP_STARS_PER_RANK);
+    for (const rk of JP_RANKS) {
+      if (rk.grade > grade) break;
+      const mid = gameMissionId(rk.key);
+      if (!mid) continue;
+      const has = db.prepare("SELECT 1 FROM submissions WHERE user_id = ? AND mission_id = ? AND status = 'approved'")
+        .get(userId, mid);
+      if (has) continue;
+      db.prepare(`INSERT INTO submissions (user_id, mission_id, status, note, review_note)
+                  VALUES (?, ?, 'approved', 'jetpack', 'auto')`).run(userId, mid);
+      awarded.push({ title: rk.title, points: rk.points });
+    }
+  })();
+  return { done, stars, grade: Math.floor(stars / JP_STARS_PER_RANK), rank: jpRankName(stars), awarded };
+}
+
+// Inizio partita jetpack → ticket col timestamp del server (come il runner)
+app.post('/jetpack/inizio', auth.requireLogin, gameLimiter, verifyCsrf, (req, res) => {
+  res.json({ ok: true, token: newGameSession(req.currentUser.id) });
+});
+
+// Fine partita: il client NON è fidato, ogni valore è limitato dal tempo
+// realmente trascorso secondo l'orologio del server.
+app.post('/jetpack/fine', auth.requireLogin, gameLimiter, verifyCsrf, (req, res) => {
+  const MIN_GAME_SEC = 8;
+  // Tetti calcolati sulla fisica reale del gioco, non "a occhio": sono il
+  // massimo che una partita onesta può produrre, così non si possono farmare
+  // punti di classifica dichiarando risultati gonfiati in partite lampo.
+  //  · dist:  velocità max 3.7 ×1.35 (razzo) ×0.35 ×60fps ≈ 105 m/s
+  //  · coins: un gruppo da 5-8 monete ogni ~75-140 unità di mondo ≈ 8/s
+  //  · transforms: servono 4-5 lettere distanziate ≈ una ogni 5 s al meglio
+  //  · knocked: un fedele ogni 130-320 unità di mondo ≈ 3/s
+  //  · halos:   un'aureola ogni 1000-1700 unità di mondo ≈ una ogni 6 s
+  const CAPS = {
+    dist:       { base: 30, perSec: 110 },
+    coins:      { base: 10, perSec: 8 },
+    transforms: { base: 1,  perSec: 1 / 5 },
+    knocked:    { base: 3,  perSec: 3 },
+    halos:      { base: 1,  perSec: 1 / 6 },
+  };
+  const token = req.body.token;
+  const sess = token ? gameSessions.get(token) : null;
+  const valid = !!(sess && sess.userId === req.currentUser.id);
+  let elapsed = 0;
+  if (valid) { elapsed = (Date.now() - sess.startMs) / 1000; gameSessions.delete(token); }
+
+  // Senza ticket valido la partita non conta: niente stelle né punti.
+  if (!valid || elapsed < MIN_GAME_SEC) {
+    return res.json({ ok: true, counted: false, done: [], awarded: [], stars: (req.currentUser.jp_stars || 0) });
+  }
+  const run = {};
+  for (const k in CAPS) {
+    const raw = Math.max(0, parseInt(req.body[k], 10) || 0);
+    run[k] = Math.floor(Math.min(raw, CAPS[k].base + elapsed * CAPS[k].perSec));
+  }
+  const prevBest = req.currentUser.jp_best || 0;
+  if (run.dist > prevBest) db.prepare('UPDATE users SET jp_best = ? WHERE id = ?').run(run.dist, req.currentUser.id);
+  db.prepare('UPDATE users SET jp_plays = jp_plays + 1 WHERE id = ?').run(req.currentUser.id);
+
+  const out = jpApplyRun(req.currentUser.id, run);
+  res.json({
+    ok: true, counted: true,
+    best: Math.max(run.dist, prevBest),
+    missions: jpMissionsFor(req.currentUser.id),
+    ...out,
+  });
 });
 
 // =========================================================================

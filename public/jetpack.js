@@ -44,8 +44,66 @@
   if (document.fonts && document.fonts.load) document.fonts.load("8px 'Press Start 2P'").catch(() => {});
 
   const BEST_KEY = 'fsr_jetpack_best';
-  let best = parseInt(localStorage.getItem(BEST_KEY), 10) || 0;
+  const logged = root.dataset.logged === '1';
+  const csrf = root.dataset.csrf || '';
+  // Da loggati il record è quello del server, altrimenti resta locale
+  let best = logged
+    ? (parseInt(root.dataset.best, 10) || 0)
+    : (parseInt(localStorage.getItem(BEST_KEY), 10) || 0);
   if (elBest) elBest.textContent = 'record ' + best;
+
+  // ── Missioni di carriera: ticket a inizio partita, resoconto alla fine ──
+  let runToken = null, reported = false;
+  function requestTicket() {
+    runToken = null;
+    if (!logged) return;
+    fetch('/jetpack/inizio', {
+      method: 'POST', headers: { 'X-CSRF-Token': csrf },
+      body: new URLSearchParams({ _csrf: csrf }),
+    }).then((r) => r.json()).then((d) => { if (d && d.ok) runToken = d.token; }).catch(() => {});
+  }
+  // Ridisegna le tre caselle con i dati freschi del server
+  function paintMissions(list) {
+    const grid = document.getElementById('jpMisGrid');
+    if (!grid || !list) return;
+    grid.innerHTML = list.map((m) => {
+      const pct = Math.round(m.progress / m.goal * 100);
+      return '<div class="jp-mis-card" data-key="' + m.key + '">'
+        + '<p class="jp-mis-text"></p>'
+        + '<div class="jp-mis-bar"><span style="width:' + pct + '%"></span></div>'
+        + '<p class="jp-mis-prog">' + m.progress + ' / ' + m.goal + '</p></div>';
+    }).join('');
+    // il testo va inserito come testo, mai come HTML
+    Array.from(grid.querySelectorAll('.jp-mis-card')).forEach((card, i) => {
+      const t = card.querySelector('.jp-mis-text');
+      if (t && list[i]) t.textContent = list[i].text;
+    });
+  }
+  function reportRun() {
+    if (!logged || reported) return;
+    reported = true;
+    fetch('/jetpack/fine', {
+      method: 'POST', headers: { 'X-CSRF-Token': csrf },
+      body: new URLSearchParams({
+        _csrf: csrf, token: runToken || '',
+        dist: String(Math.floor(dist)), coins: String(coins),
+        transforms: String(transforms), knocked: String(knocked), halos: String(halos),
+      }),
+    }).then((r) => r.json()).then((d) => {
+      if (!d || !d.ok) return;
+      if (typeof d.best === 'number' && d.best > best) {
+        best = d.best; if (elBest) elBest.textContent = 'record ' + best;
+      }
+      if (d.missions) paintMissions(d.missions);
+      const elStars = document.getElementById('jpStars');
+      const elRank = document.getElementById('jpRankName');
+      if (elStars && typeof d.stars === 'number') elStars.textContent = d.stars;
+      if (elRank && d.rank) elRank.textContent = d.rank;
+      lastReport = d;                       // mostrato nel pannello di fine partita
+      renderOverPanel();
+    }).catch(() => {});
+  }
+  let lastReport = null;
 
   // ── Stato ───────────────────────────────────────────────────────
   let state = 'idle';          // idle | run | paused | over
@@ -55,7 +113,6 @@
   // Trasformazioni + parole
   let mode, modeT, modeMax, word, wordMode, wordIdx, letterGap;
   let gravDir, jumps, onGround, transforms, knocked, halos;
-  let missions;
 
   // Fisica base — volo più dolce: spinta meno brusca e tetto di salita basso,
   // così il santo non "schizza" in alto ma sale in modo controllabile.
@@ -77,24 +134,9 @@
     { w: 'SANTO', mode: 'santo' },
   ];
 
-  // ── Missioni (3 per partita, stile Jetpack Joyride) ─────────────
-  const MISSION_POOL = [
-    { id: 'coin30',  text: 'Raccogli 30 monete',        done: () => coins >= 30 },
-    { id: 'coin60',  text: 'Raccogli 60 monete',        done: () => coins >= 60 },
-    { id: 'dist400', text: 'Arriva a 400 m',            done: () => dist >= 400 },
-    { id: 'dist700', text: 'Arriva a 700 m',            done: () => dist >= 700 },
-    { id: 'tr1',     text: 'Usa un mezzo',              done: () => transforms >= 1 },
-    { id: 'tr2',     text: 'Usa 2 mezzi',               done: () => transforms >= 2 },
-    { id: 'fed8',    text: 'Travolgi 8 fedeli',         done: () => knocked >= 8 },
-    { id: 'fed15',   text: 'Travolgi 15 fedeli',        done: () => knocked >= 15 },
-    { id: 'halo1',   text: "Prendi un'aureola",         done: () => halos >= 1 },
-  ];
-  function rollMissions() {
-    const pool = MISSION_POOL.slice();
-    const out = [];
-    while (out.length < 3 && pool.length) out.push(pool.splice(Math.random() * pool.length | 0, 1)[0]);
-    return out;
-  }
+  // Le missioni non sono più estratte a caso a ogni partita: ora sono le
+  // MISSIONI DI CARRIERA tenute dal server (3 attive, restano fra le partite,
+  // danno stelle, gradi e punti in classifica). Vedi reportRun()/paintMissions().
 
   // ── Colonna sonora: come «Corri San Rocco» — interrompe la radio e suona la canzone ──
   let gameSong = null, radioWasOn = false, songMuted = false;
@@ -541,7 +583,7 @@
     mode = null; modeT = 0; modeMax = 1;
     gravDir = 1; jumps = 0; onGround = false;
     transforms = 0; knocked = 0; halos = 0;
-    missions = rollMissions();
+    reported = false; lastReport = null;
     pickWord();
     if (elScore) elScore.textContent = '0 m';
   }
@@ -553,6 +595,7 @@
     overlay.classList.add('jp-hidden');
     if (pauseOverlay) pauseOverlay.classList.add('jp-hidden');
     setPauseBtn();
+    requestTicket();          // ticket col timestamp del server (anti-imbroglio)
     songPlay();
   }
 
@@ -589,19 +632,49 @@
     overFlash = 0;                     // conta i frame dalla morte: anima la scritta
     burst(PX + PW / 2, py + PH / 2, '#ff5a3c', 26);
     burst(PX + PW / 2, py + PH / 2, '#f5c842', 14);
-    const total = Math.floor(score);
-    if (total > best) { best = total; localStorage.setItem(BEST_KEY, String(best)); if (elBest) elBest.textContent = 'record ' + best; }
-    const doneList = missions.map((m) => (m.done() ? '✅ ' : '⬜ ') + m.text).join('<br>');
+    const total = Math.floor(dist);
+    if (total > best) {
+      best = total;
+      if (!logged) localStorage.setItem(BEST_KEY, String(best));   // da loggati il record sta sul server
+      if (elBest) elBest.textContent = 'record ' + best;
+    }
+    reportRun();                       // manda i risultati: avanza le missioni di carriera
     overTimer = setTimeout(() => {
       overlay.classList.remove('jp-hidden');
-      if (ovKicker) ovKicker.textContent = 'Game over';
-      ovTitle.textContent = 'Riprova?';
-      ovDesc.innerHTML = 'Distanza: <b>' + total + ' m</b> · Monete: <b>' + coins + '</b> · Mezzi: <b>' + transforms + '</b>'
-        + (total >= best ? ' · nuovo record!' : '')
-        + '<br><span class="jp-missions">' + doneList + '</span>';
-      ovHint.innerHTML = 'Tieni premuto <kbd>SPAZIO</kbd> o tocca per volare';
-      if (playBtn) playBtn.textContent = 'Riprova';
+      renderOverPanel();
     }, 1150);                          // il tempo di leggere «GAME OVER»
+  }
+
+  // Pannello di fine partita. Viene ridisegnato quando arriva la risposta del
+  // server, così le missioni completate compaiono appena sono confermate.
+  function renderOverPanel() {
+    if (state !== 'over') return;
+    const total = Math.floor(dist);
+    if (ovKicker) ovKicker.textContent = 'Game over';
+    ovTitle.textContent = 'Riprova?';
+    let html = 'Distanza: <b>' + total + ' m</b> · Monete: <b>' + coins + '</b> · Mezzi: <b>' + transforms + '</b>'
+      + (total >= best ? ' · nuovo record!' : '');
+    if (lastReport) {
+      const parts = [];
+      (lastReport.done || []).forEach((d) => { parts.push('🎯 Missione completata: ' + esc(d.text)); });
+      (lastReport.awarded || []).forEach((a) => { parts.push('⭐ ' + esc(a.title) + ' · +' + a.points + ' punti'); });
+      if (typeof lastReport.stars === 'number') {
+        parts.push('Stelle: <b>' + lastReport.stars + '</b>' + (lastReport.rank ? ' · ' + esc(lastReport.rank) : ''));
+      }
+      if (lastReport.counted === false) parts.push('Partita troppo breve: non conta per le missioni.');
+      if (parts.length) html += '<br><span class="jp-missions">' + parts.join('<br>') + '</span>';
+    } else if (!logged) {
+      html += '<br><span class="jp-missions">Accedi per far valere le missioni e guadagnare punti in classifica.</span>';
+    }
+    ovDesc.innerHTML = html;
+    ovHint.innerHTML = 'Tieni premuto <kbd>SPAZIO</kbd> o tocca per volare';
+    if (playBtn) playBtn.textContent = 'Riprova';
+  }
+  // Testo dal server: va sempre messo come testo, mai interpretato come HTML
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
   }
 
   function showToast(msg) {

@@ -195,6 +195,66 @@
   -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
 }
 
+/* ── Missioni di carriera ────────────────────────────────────────── */
+.jp-mis {
+  max-width: 760px; margin: 1.8rem auto 0; padding: 0 1rem;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+}
+.jp-mis-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 1rem; margin-bottom: .9rem; flex-wrap: wrap;
+}
+.jp-mis-kicker {
+  font-family: 'Press Start 2P', monospace; font-size: .55rem;
+  letter-spacing: 1px; color: #5ad1ff; text-transform: uppercase; margin-bottom: .45rem;
+}
+.jp-mis-title {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.2rem; color: var(--text-1, #f4efe6);
+}
+.jp-rank {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .4rem .7rem; border-radius: 999px;
+  border: 1px solid rgba(212,160,26,.4); background: rgba(212,160,26,.12);
+}
+.jp-rank-stars {
+  font-family: 'Press Start 2P', monospace; font-size: .7rem; color: #f5c842;
+}
+.jp-rank-stars::before { content: '★ '; }
+.jp-rank-name { font-size: .8rem; color: var(--text-2, #d9d2c2); }
+.jp-mis-grid {
+  display: grid; gap: .7rem;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+.jp-mis-card {
+  border: 1px solid rgba(255,255,255,.10);
+  border-left: 3px solid #5ad1ff;
+  border-radius: 12px; padding: .8rem .9rem;
+  background: rgba(255,255,255,.03);
+}
+.jp-mis-text {
+  font-size: .87rem; line-height: 1.45; color: var(--text-1, #f4efe6);
+  margin-bottom: .6rem;
+}
+.jp-mis-bar {
+  height: 7px; border-radius: 999px; overflow: hidden;
+  background: rgba(255,255,255,.09);
+}
+.jp-mis-bar span {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, #2b7fa8, #5ad1ff);
+  transition: width .5s ease;
+}
+.jp-mis-prog {
+  margin-top: .4rem; text-align: right;
+  font-family: 'Press Start 2P', monospace; font-size: .55rem; color: var(--text-3, #9a93a6);
+}
+.jp-mis-note {
+  margin-top: .9rem; font-size: .82rem; line-height: 1.6; color: var(--text-3, #9a93a6);
+}
+.jp-mis-note a { color: var(--gold, #d4a01a); }
+
 /* ── Legenda dei mezzi (parole da comporre) ──────────────────────── */
 .jp-legend { max-width: 760px; margin: 2rem auto 0; padding: 0 1rem; }
 .jp-legend-head { text-align: center; margin-bottom: 1.1rem; }

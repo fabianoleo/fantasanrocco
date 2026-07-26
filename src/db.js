@@ -256,7 +256,23 @@ CREATE TABLE IF NOT EXISTS prediction_votes (
   PRIMARY KEY (prediction_id, user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_pvotes_pred ON prediction_votes(prediction_id);
+
+-- Missioni di «San Rocco Jetpack»: 3 attive per utente, restano fra una
+-- partita e l'altra. Quando una si completa viene sostituita da una nuova e
+-- l'utente guadagna una stella; ogni 3 stelle sale di grado.
+CREATE TABLE IF NOT EXISTS jetpack_missions (
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  slot       INTEGER NOT NULL,               -- 0,1,2: quale delle tre caselle
+  key        TEXT    NOT NULL,               -- id della missione nel catalogo
+  progress   INTEGER NOT NULL DEFAULT 0,     -- avanzamento (per quelle cumulative)
+  created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY (user_id, slot)
+);
 `);
+// Statistiche di «San Rocco Jetpack» (record, partite, stelle e grado già premiato)
+try { db.exec('ALTER TABLE users ADD COLUMN jp_best INTEGER NOT NULL DEFAULT 0'); } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN jp_plays INTEGER NOT NULL DEFAULT 0'); } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN jp_stars INTEGER NOT NULL DEFAULT 0'); } catch {}
 // multi=1 → più risposte consentite (chi ne sceglie più d'una prende metà punti).
 // description → testo mostrato all'utente (se vuoto, la card usa quello di default).
 try { db.exec("ALTER TABLE predictions ADD COLUMN multi INTEGER NOT NULL DEFAULT 0"); } catch {}

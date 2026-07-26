@@ -1,5 +1,8 @@
 <%# ── Mini-gioco «San Rocco Jetpack» — usato da giochi.ejs ────────── %>
-<div class="jp-wrap" id="jpRoot">
+<div class="jp-wrap" id="jpRoot"
+     data-logged="<%= currentUser ? 1 : 0 %>"
+     data-csrf="<%= csrfToken %>"
+     data-best="<%= jpBest %>">
   <div class="jp-stage">
     <div class="jp-hud">
       <span id="jpScore">0 m</span>
@@ -49,6 +52,45 @@
     </button>
   </div>
 </div>
+
+<%# ── MISSIONI DI CARRIERA (restano fra le partite) ────────────────── %>
+<section class="jp-mis" id="jpMissions" aria-label="Missioni del Jetpack">
+  <div class="jp-mis-head">
+    <div>
+      <p class="jp-mis-kicker">Missioni di carriera</p>
+      <h3 class="jp-mis-title">Tre obiettivi alla volta</h3>
+    </div>
+    <div class="jp-rank" title="Ogni <%= jpPerRank %> missioni completate sali di grado">
+      <span class="jp-rank-stars" id="jpStars"><%= jpStars %></span>
+      <span class="jp-rank-name" id="jpRankName"><%= jpRank %></span>
+    </div>
+  </div>
+
+  <% if (!currentUser) { %>
+    <p class="jp-mis-note">
+      Queste sono le missioni del Jetpack: restano fra una partita e l'altra e ogni
+      <strong><%= jpPerRank %></strong> completate sali di grado, guadagnando <strong>punti in classifica</strong>.
+      Per tenerne traccia <a href="/login">accedi</a> o <a href="/registrati">registrati</a>.
+    </p>
+  <% } %>
+
+  <div class="jp-mis-grid" id="jpMisGrid">
+    <% jpMissions.forEach((m) => { %>
+      <div class="jp-mis-card" data-key="<%= m.key %>">
+        <p class="jp-mis-text"><%= m.text %></p>
+        <div class="jp-mis-bar"><span style="width: <%= Math.round(m.progress / m.goal * 100) %>%"></span></div>
+        <p class="jp-mis-prog"><%= m.progress %> / <%= m.goal %></p>
+      </div>
+    <% }) %>
+  </div>
+
+  <% if (currentUser) { %>
+    <p class="jp-mis-note">
+      Completandone una guadagni una stella e la casella viene sostituita da un nuovo obiettivo.
+      Ogni <strong><%= jpPerRank %></strong> stelle sali di grado e i punti entrano nella <a href="/classifica">classifica</a>.
+    </p>
+  <% } %>
+</section>
 
 <%# ── LEGENDA MEZZI: le parole da comporre ─────────────────────────── %>
 <section class="jp-legend" aria-label="Mezzi del Jetpack">
