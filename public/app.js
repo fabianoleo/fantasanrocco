@@ -211,12 +211,33 @@ document.addEventListener('click', (e) => {
 (function () {
   const tabs = document.querySelectorAll('.lb-tab');
   if (!tabs.length) return;
-  tabs.forEach((tab) => {
+  function showPanel(id) {
+    tabs.forEach((t) => t.classList.toggle('active', t.dataset.target === id));
+    document.querySelectorAll('.lb-panel').forEach((p) => {
+      p.classList.toggle('lb-panel-active', p.id === id);
+    });
+  }
+  tabs.forEach((tab) => tab.addEventListener('click', () => showPanel(tab.dataset.target)));
+  // Link interni che rimandano a un'altra tab (es. "classifica generale")
+  document.querySelectorAll('.lb-golink[data-target]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      showPanel(a.dataset.target);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+})();
+
+// ── Classifica: sotto-tab dei due mini-giochi ───────────────────────
+(function () {
+  const subtabs = document.querySelectorAll('.lb-subtab');
+  if (!subtabs.length) return;
+  subtabs.forEach((tab) => {
     tab.addEventListener('click', () => {
-      tabs.forEach((t) => t.classList.remove('active'));
+      subtabs.forEach((t) => t.classList.remove('active'));
       tab.classList.add('active');
-      document.querySelectorAll('.lb-panel').forEach((p) => {
-        p.classList.toggle('lb-panel-active', p.id === tab.dataset.target);
+      document.querySelectorAll('.lb-subpanel').forEach((p) => {
+        p.classList.toggle('lb-subpanel-active', p.id === tab.dataset.target);
       });
     });
   });

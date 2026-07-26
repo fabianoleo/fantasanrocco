@@ -70,37 +70,86 @@
 <% } %>
 </div>
 
-<%# ════════════════════ PANNELLO GIOCO ═══════════════════════════ %>
+<%# ════════════════════ PANNELLO GIOCO (2 giochi) ═════════════════ %>
 <div class="lb-panel" id="lbPanelGame">
-<% if (gameRows.length === 0) { %>
 
-  <div class="lb-empty">
-    <span class="lb-empty-icon"><%- icon('bolt') %></span>
-    <p>Nessun punteggio registrato.</p>
-    <p class="muted small">Sii il primo a correre con San Rocco e a entrare nella classifica del gioco.</p>
-    <a href="/giochi?g=runner" class="btn" style="margin-top:1.5rem"><%- icon('bolt') %> Vai al gioco</a>
-  </div>
-
-<% } else { %>
-
-  <div class="lb-list-wrap card">
-    <h2 class="lb-list-title">I migliori punteggi · «Corri San Rocco»</h2>
-    <ol class="lb-list lb-list-game">
-      <% gameRows.forEach((u, i) => { %>
-        <% const isMe = currentUserId && u.id === currentUserId; %>
-        <li class="lb-list-row <%= isMe ? 'lb-me' : '' %>">
-          <span class="lb-list-rank">
-            <% if (i < 3) { %><span class="lb-medal-inline <%= ['is-gold','is-silver','is-bronze'][i] %>"><%- icon('medal') %></span><% } else { %><%= i + 1 %><% } %>
-          </span>
-          <span class="lb-list-name"><%= u.nickname %><% if (isMe) { %> <span class="lb-you">tu</span><% } %></span>
-          <span class="lb-list-pts"><%= u.best %><small>record</small></span>
-        </li>
-      <% }) %>
-    </ol>
-  </div>
-  <p class="muted small" style="text-align:center;margin-top:1.2rem">
-    Il punteggio record si aggiorna ad ogni partita su <a href="/giochi?g=runner" style="color:var(--gold)">Corri San Rocco</a>.
+  <p class="muted small lb-game-intro">
+    Qui contano i <strong>record</strong> di ogni gioco, separati.
+    I punti della <a href="#" class="lb-golink" data-target="lbPanelGeneral">classifica generale</a>
+    non arrivano dal record, ma dai <strong>traguardi</strong>: le soglie di punteggio in
+    «Corri San Rocco» e i <strong>gradi</strong> del Jetpack (uno ogni 3 stelle).
   </p>
 
-<% } %>
+  <%# ── Sotto-tab: un gioco per volta ───────────────────────────── %>
+  <div class="lb-subtabs" role="tablist">
+    <button class="lb-subtab active" type="button" role="tab" data-target="lbGameRunner"><%- icon('bolt') %> Corri San Rocco</button>
+    <button class="lb-subtab" type="button" role="tab" data-target="lbGameJetpack"><%- icon('fireworks') %> San Rocco Jetpack</button>
+  </div>
+
+  <%# ── 1. CORRI SAN ROCCO ──────────────────────────────────────── %>
+  <div class="lb-subpanel lb-subpanel-active" id="lbGameRunner">
+  <% if (gameRows.length === 0) { %>
+    <div class="lb-empty">
+      <span class="lb-empty-icon"><%- icon('bolt') %></span>
+      <p>Nessun punteggio registrato.</p>
+      <p class="muted small">Sii il primo a correre con San Rocco e a entrare in classifica.</p>
+      <a href="/giochi?g=runner" class="btn" style="margin-top:1.5rem"><%- icon('bolt') %> Vai al gioco</a>
+    </div>
+  <% } else { %>
+    <div class="lb-list-wrap card">
+      <h2 class="lb-list-title">I migliori punteggi · «Corri San Rocco»</h2>
+      <ol class="lb-list lb-list-game">
+        <% gameRows.forEach((u, i) => { %>
+          <% const isMe = currentUserId && u.id === currentUserId; %>
+          <li class="lb-list-row <%= isMe ? 'lb-me' : '' %>">
+            <span class="lb-list-rank">
+              <% if (i < 3) { %><span class="lb-medal-inline <%= ['is-gold','is-silver','is-bronze'][i] %>"><%- icon('medal') %></span><% } else { %><%= i + 1 %><% } %>
+            </span>
+            <span class="lb-list-name"><%= u.nickname %><% if (isMe) { %> <span class="lb-you">tu</span><% } %></span>
+            <span class="lb-list-pts"><%= u.best %><small>punti</small></span>
+          </li>
+        <% }) %>
+      </ol>
+    </div>
+    <p class="muted small" style="text-align:center;margin-top:1.2rem">
+      Il record si aggiorna ad ogni partita su <a href="/giochi?g=runner" style="color:var(--gold)">Corri San Rocco</a>.
+    </p>
+  <% } %>
+  </div>
+
+  <%# ── 2. SAN ROCCO JETPACK ────────────────────────────────────── %>
+  <div class="lb-subpanel" id="lbGameJetpack">
+  <% if (jetpackRows.length === 0) { %>
+    <div class="lb-empty">
+      <span class="lb-empty-icon"><%- icon('fireworks') %></span>
+      <p>Nessun volo registrato.</p>
+      <p class="muted small">Sii il primo a volare con San Rocco e a entrare in classifica.</p>
+      <a href="/giochi?g=jetpack" class="btn" style="margin-top:1.5rem"><%- icon('fireworks') %> Vai al Jetpack</a>
+    </div>
+  <% } else { %>
+    <div class="lb-list-wrap card">
+      <h2 class="lb-list-title">Le distanze più lunghe · «San Rocco Jetpack»</h2>
+      <ol class="lb-list lb-list-game">
+        <% jetpackRows.forEach((u, i) => { %>
+          <% const isMe = currentUserId && u.id === currentUserId; %>
+          <li class="lb-list-row <%= isMe ? 'lb-me' : '' %>">
+            <span class="lb-list-rank">
+              <% if (i < 3) { %><span class="lb-medal-inline <%= ['is-gold','is-silver','is-bronze'][i] %>"><%- icon('medal') %></span><% } else { %><%= i + 1 %><% } %>
+            </span>
+            <span class="lb-list-name">
+              <%= u.nickname %><% if (isMe) { %> <span class="lb-you">tu</span><% } %>
+              <% if (u.stars) { %><span class="lb-stars">★ <%= u.stars %></span><% } %>
+            </span>
+            <span class="lb-list-pts"><%= u.best %><small>metri</small></span>
+          </li>
+        <% }) %>
+      </ol>
+    </div>
+    <p class="muted small" style="text-align:center;margin-top:1.2rem">
+      Il record si aggiorna ad ogni partita su <a href="/giochi?g=jetpack" style="color:var(--gold)">San Rocco Jetpack</a>.
+      Le ★ sono le missioni di carriera completate.
+    </p>
+  <% } %>
+  </div>
+
 </div>

@@ -3250,6 +3250,39 @@ textarea:focus-visible,
 .lb-panel { display: none; }
 .lb-panel.lb-panel-active { display: block; animation: fade-up .4s var(--ease) both; }
 
+/* ── Sotto-tab dei due mini-giochi ─────────────────────────────────── */
+.lb-game-intro {
+  max-width: 62ch; margin: -.6rem auto 1.4rem; text-align: center; line-height: 1.6;
+}
+.lb-golink { color: var(--gold); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.lb-subtabs {
+  display: flex; justify-content: center; gap: .5rem;
+  margin: 0 auto 1.6rem; flex-wrap: wrap;
+}
+.lb-subtab {
+  display: inline-flex; align-items: center; gap: .45rem;
+  font-family: var(--font-heading); font-weight: 600;
+  font-size: .76rem; letter-spacing: .05em;
+  color: var(--text-2); cursor: pointer;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 100px; padding: .45rem 1rem;
+  transition: color .25s var(--ease), border-color .25s var(--ease), background .25s var(--ease);
+}
+.lb-subtab .ico { width: 1em; height: 1em; }
+.lb-subtab:hover { color: var(--text); border-color: rgba(212,160,26,.35); }
+.lb-subtab.active {
+  color: var(--gold);
+  background: rgba(212,160,26,.12);
+  border-color: rgba(212,160,26,.45);
+}
+.lb-subpanel { display: none; }
+.lb-subpanel.lb-subpanel-active { display: block; animation: fade-up .35s var(--ease) both; }
+/* stelle di carriera accanto al nome nella classifica Jetpack */
+.lb-stars {
+  margin-left: .45rem; font-size: .74em; color: var(--gold);
+  white-space: nowrap; opacity: .9;
+}
+
 /* medaglia inline nel rank della classifica gioco */
 .lb-medal-inline { display: inline-flex; font-size: 1.5rem; line-height: 1; }
 .lb-medal-inline .ico { width: 1em; height: 1em; }

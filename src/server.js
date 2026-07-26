@@ -852,6 +852,17 @@ function gameLeaderboardRows() {
   `).all();
 }
 
+// Classifica di «San Rocco Jetpack»: per record di distanza (solo chi ha volato).
+// Le stelle servono solo da secondo criterio a parità di metri.
+function jetpackLeaderboardRows() {
+  return db.prepare(`
+    SELECT id, nickname, jp_best AS best, jp_stars AS stars
+    FROM users
+    WHERE role = 'user' AND jp_best > 0
+    ORDER BY jp_best DESC, jp_stars DESC, created_at ASC
+  `).all();
+}
+
 // =========================================================================
 //  MINI-GIOCO  «Corri San Rocco»  — traguardi che danno punti in automatico
 // =========================================================================
@@ -925,6 +936,7 @@ app.get('/classifica', (req, res) => {
     title: 'Classifica',
     rows: leaderboardRows(),
     gameRows: gameLeaderboardRows(),
+    jetpackRows: jetpackLeaderboardRows(),
     currentUserId: req.currentUser?.id ?? null,
   });
 });
