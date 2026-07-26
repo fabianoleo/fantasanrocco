@@ -7,7 +7,7 @@
    MEZZI (stile Jetpack Joyride): raccogli le LETTERE per comporre una
    parola; a parola completa San Rocco si TRASFORMA e cambiano comandi e
    fisica. Un colpo in trasformazione distrugge il mezzo, non ti uccide.
-     CANE  → Cane Fedele    : salti (anche in aria), schiacci i raggi
+     CANE  → Cane Fedele    : salto triplo, sfonda i raggi, fedeli x3
      FUOCO → Razzo di Fuoco : sfondi tutto, più veloce
      VINO  → Brocca di Vino : galleggi, rimbalzi, calamita monete
      SANTO → Santo in Gloria: inverti la gravità a ogni tocco
@@ -122,7 +122,7 @@
 
   // ── Mezzi / trasformazioni ──────────────────────────────────────
   const MODES = {
-    cane:  { name: 'CANE FEDELE',     dur: 560, col: '#c98a4b', hint: 'TOCCA PER SALTARE' },
+    cane:  { name: 'CANE FEDELE',     dur: 600, col: '#c98a4b', hint: 'SALTA E SFONDA TUTTO' },
     razzo: { name: 'RAZZO DI FUOCO',  dur: 470, col: '#ff5a3c', hint: 'SFONDI TUTTO!' },
     vino:  { name: 'BROCCA DI VINO',  dur: 560, col: '#d05a4a', hint: 'RIMBALZI E ATTIRI MONETE' },
     santo: { name: 'SANTO IN GLORIA', dur: 600, col: '#f5c842', hint: 'TOCCA PER INVERTIRE' },
@@ -652,7 +652,8 @@
     const total = Math.floor(dist);
     if (ovKicker) ovKicker.textContent = 'Game over';
     ovTitle.textContent = 'Riprova?';
-    let html = 'Distanza: <b>' + total + ' m</b> · Monete: <b>' + coins + '</b> · Mezzi: <b>' + transforms + '</b>'
+    let html = 'Distanza: <b>' + total + ' m</b> · Monete: <b>' + coins + '</b>'
+      + '<br>Fedeli travolti: <b>' + knocked + '</b> · Mezzi usati: <b>' + transforms + '</b>'
       + (total >= best ? ' · nuovo record!' : '');
     if (lastReport) {
       const parts = [];
@@ -758,10 +759,11 @@
     const d = dims();
     const top = CEIL + 1, bot = GROUND - d.h;
     if (mode === 'cane') {
-      // Cane Fedele: gravità piena, salto a pressione (uno a terra + uno in aria)
-      vy += 0.44 * dt;
-      if (pressEdge && jumps < 2) { vy = -4.3; jumps++; burst(PX + 10, py + d.h, '#c98a4b', 5); }
-      vy = Math.min(6.2, vy);
+      // Cane Fedele: niente volo, ma è il bulldozer di terra — salto triplo
+      // e alto, sfonda i raggi e travolge i fedeli a punti tripli.
+      vy += 0.42 * dt;
+      if (pressEdge && jumps < 3) { vy = -4.8; jumps++; burst(PX + 10, py + d.h, '#c98a4b', 6); }
+      vy = Math.min(6.4, vy);
     } else if (mode === 'santo') {
       // Santo in Gloria: ogni tocco inverte la gravità
       if (pressEdge) { gravDir *= -1; burst(PX + 9, py + 16, '#f5c842', 8); }
@@ -786,12 +788,31 @@
 
     // pavimento / soffitto
     onGround = false;
+    let slam = 0;                                // forza dell'atterraggio del cane
     if (mode === 'vino') {                       // la brocca rimbalza
       if (py < top) { py = top; vy = Math.abs(vy) * 0.62 + 0.3; }
       if (py > bot) { py = bot; vy = -Math.abs(vy) * 0.62 - 0.4; burst(PX + 10, py + d.h, '#7d2f28', 4); }
     } else {
       if (py < top) { py = top; vy = 0; if (mode === 'santo' || mode === 'cane') { onGround = true; jumps = 0; } }
-      if (py > bot) { py = bot; vy = 0; onGround = true; jumps = 0; }
+      if (py > bot) {
+        if (mode === 'cane' && vy > 2.2) slam = vy;   // zampata: onda d'urto a terra
+        py = bot; vy = 0; onGround = true; jumps = 0;
+      }
+    }
+    // Onda d'urto del cane: atterrando spazza i raggi lì attorno
+    if (slam) {
+      const cx = PX + d.w / 2, cy = GROUND;
+      shake = Math.max(shake, 5);
+      for (let k = 0; k < 10; k++) burst(cx + (Math.random() - 0.5) * 54, cy - 3, '#c98a4b', 1);
+      for (let i = zaps.length - 1; i >= 0; i--) {
+        const z = zaps[i];
+        const near = z.x < cx + 34 && z.x + z.w > cx - 34 && z.y + z.h > GROUND - 46;
+        if (!near) continue;
+        burst(z.x + z.w / 2, z.y + z.h / 2, '#f5c842', 10);
+        popup(z.x, z.y - 6, '+6', '#c98a4b');
+        score += 6;
+        zaps.splice(i, 1);
+      }
     }
 
     // fiammata: solo a piedi o col razzo
@@ -840,9 +861,16 @@
         burst(z.x + z.w / 2, z.y + z.h / 2, '#ff8a1e', 14); popup(z.x, z.y - 6, '+5', '#ff8a1e');
         score += 5; shake = Math.max(shake, 6); zaps.splice(i, 1); continue;
       }
-      if (mode === 'cane' && vy > 1.4) {                         // schiacciata del cane
-        burst(z.x + z.w / 2, z.y + z.h / 2, '#c98a4b', 12); popup(z.x, z.y - 6, 'SCHIACCIATO', '#c98a4b');
-        score += 4; vy = -3.2; jumps = 1; zaps.splice(i, 1); continue;
+      if (mode === 'cane') {
+        // Il cane sfonda i raggi in qualsiasi direzione (prima solo cadendoci
+        // sopra: era troppo poco per compensare la perdita del volo).
+        const stomp = vy > 1.4;
+        burst(z.x + z.w / 2, z.y + z.h / 2, '#c98a4b', stomp ? 14 : 10);
+        popup(z.x, z.y - 6, stomp ? 'ZAMPATA! +8' : '+5', '#c98a4b');
+        score += stomp ? 8 : 5;
+        shake = Math.max(shake, 4);
+        if (stomp) { vy = -3.4; jumps = 1; }      // rimbalzo dopo la schiacciata
+        zaps.splice(i, 1); continue;
       }
       if (inv > 0) continue;
       if (takeHit()) return;
@@ -875,8 +903,11 @@
       f.x -= (worldSpeed + (f.down ? 0 : 0.35)) * dt;
       if (f.x < -16) { fedeli.splice(i, 1); continue; }
       if (!f.down && hit(hb.x, hb.y, hb.w, hb.h, f)) {
-        f.down = true; knocked++; score += 2;
-        popup(f.x, f.y - 6, '+2', '#9ad1ff'); burst(f.x + 5, f.y + 8, '#9ad1ff', 6);
+        // Col cane la folla si travolge a punti tripli: è il suo mestiere
+        const pts = mode === 'cane' ? 6 : 2;
+        f.down = true; knocked++; score += pts;
+        popup(f.x, f.y - 6, '+' + pts, mode === 'cane' ? '#f5c842' : '#9ad1ff');
+        burst(f.x + 5, f.y + 8, mode === 'cane' ? '#c98a4b' : '#9ad1ff', mode === 'cane' ? 9 : 6);
       }
     }
 
