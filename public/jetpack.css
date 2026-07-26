@@ -149,6 +149,7 @@
   display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
   width: 100%; max-width: 340px; min-height: 62px;
   padding: .7rem 1.4rem;
+  touch-action: none;
   border: 1px solid var(--border-gold, rgba(212,160,26,.45));
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(212,160,26,.30), rgba(212,160,26,.14));
@@ -169,6 +170,29 @@
   transform: translateY(2px);
   background: linear-gradient(180deg, rgba(255,196,66,.55), rgba(212,160,26,.32));
   box-shadow: 0 2px 8px rgba(0,0,0,.4), 0 0 22px rgba(255,196,66,.45), inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+/* Su telefono il tasto SALI sale verso il gioco ed è più grande: il pollice
+   lo trova senza scendere sul testo sotto (dove il tap lungo aprirebbe il
+   menu «Copia»). Sotto al tasto resta una fascia morta non selezionabile. */
+@media (max-width: 720px) {
+  .jp-pad {
+    margin-top: .45rem;
+    padding-bottom: 1.6rem;          /* fascia di sicurezza sotto al tasto */
+  }
+  .jp-thrust {
+    max-width: none;                 /* pieno respiro in larghezza */
+    min-height: 82px;                /* bersaglio più alto e comodo */
+    font-size: .92rem;
+    border-radius: 16px;
+  }
+  .jp-thrust svg { width: 26px; height: 26px; }
+}
+
+/* La legenda sotto al gioco: leggibile, ma niente menu «Copia» al tap lungo */
+.jp-legend {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
 }
 
 /* ── Legenda dei mezzi (parole da comporre) ──────────────────────── */
