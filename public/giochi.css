@@ -1,0 +1,164 @@
+/* ===================================================================
+   FantaSanRocco — Sezione unica «Giochi e Slot»
+   Titolo di sezione + riga con 3 scelte (senza tratto orizzontale) e
+   sotto il gioco selezionato. Finché non si sceglie: invito animato.
+   Scoped .gx-*
+   =================================================================== */
+
+/* ── Titolo di sezione ───────────────────────────────────────────── */
+.gx-hero {
+  max-width: 760px; margin: 0 auto;
+  padding: 0 1rem; text-align: center;
+}
+.gx-title {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: clamp(1.9rem, 6vw, 2.9rem);
+  color: var(--text-1, #f4efe6);
+  line-height: 1.1; margin-bottom: .6rem;
+}
+.gx-sub {
+  color: var(--text-3, #9a93a6);
+  font-size: .95rem; line-height: 1.6;
+  max-width: 52ch; margin: 0 auto;
+}
+
+/* ── Riga delle 3 scelte ─────────────────────────────────────────── */
+/* Niente border-bottom / hr: le schede "galleggiano" sulla pagina. */
+.gx-switch {
+  max-width: 760px; margin: 1.5rem auto 0;
+  padding: 0 1rem;
+  display: grid; gap: .6rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+.gx-choice {
+  display: flex; align-items: center; gap: .6rem;
+  padding: .75rem .8rem;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+  color: var(--text-2, #d9d2c2);
+  cursor: pointer; text-align: left;
+  transition: background .16s ease, border-color .16s ease, transform .1s ease, box-shadow .16s ease;
+}
+.gx-choice:hover { background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.2); }
+.gx-choice:active { transform: translateY(1px); }
+.gx-choice-ic {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; flex: 0 0 36px;
+  border-radius: 10px;
+  background: rgba(0,0,0,.3);
+  color: var(--gold, #d4a01a);
+}
+.gx-choice-ic svg { width: 20px; height: 20px; }
+.gx-choice-txt { display: flex; flex-direction: column; min-width: 0; }
+.gx-choice-name {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: .95rem; color: var(--text-1, #f4efe6); line-height: 1.25;
+}
+.gx-choice-desc {
+  font-size: .74rem; color: var(--text-3, #9a93a6);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Scheda attiva: accento colorato per gioco */
+.gx-choice.is-on { background: rgba(212,160,26,.14); border-color: rgba(212,160,26,.5); }
+.gx-choice.is-on .gx-choice-ic { background: rgba(212,160,26,.22); }
+.gx-choice.c-jetpack.is-on { background: rgba(90,209,255,.12); border-color: rgba(90,209,255,.45); }
+.gx-choice.c-jetpack.is-on .gx-choice-ic { background: rgba(90,209,255,.2); color: #5ad1ff; }
+.gx-choice.c-slot.is-on { background: rgba(255,90,60,.12); border-color: rgba(255,90,60,.45); }
+.gx-choice.c-slot.is-on .gx-choice-ic { background: rgba(255,90,60,.2); color: #ff8a6a; }
+
+@media (max-width: 640px) {
+  .gx-switch { grid-template-columns: 1fr; gap: .5rem; }
+  .gx-choice-desc { white-space: normal; }
+}
+
+/* ── Area del gioco ──────────────────────────────────────────────── */
+.gx-stage { margin-top: 1.6rem; }
+.gx-panel[hidden] { display: none; }
+
+/* ── Invito animato (nessun gioco scelto) ────────────────────────── */
+.gx-empty {
+  max-width: 760px; margin: 0 auto; padding: 2.6rem 1rem 3rem;
+  text-align: center;
+}
+.gx-empty[hidden] { display: none; }
+.gx-empty-arrow {
+  color: var(--gold, #d4a01a);
+  animation: gx-bob 1.6s ease-in-out infinite;
+}
+.gx-empty-arrow svg { width: 30px; height: 30px; }
+@keyframes gx-bob {
+  0%, 100% { transform: translateY(4px); opacity: .55; }
+  50%      { transform: translateY(-4px); opacity: 1; }
+}
+/* Scritta con onda: ogni lettera si illumina a turno */
+.gx-empty-text {
+  margin-top: .9rem;
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(.85rem, 3.4vw, 1.25rem);
+  letter-spacing: 1px; line-height: 1.9;
+  color: rgba(212,160,26,.35);
+}
+.gx-empty-text span {
+  display: inline-block;
+  animation: gx-wave 2.1s ease-in-out infinite;
+}
+.gx-empty-text .gx-sp { width: .55em; animation: none; }
+.gx-empty-text span:nth-child(1)  { animation-delay: .00s }
+.gx-empty-text span:nth-child(2)  { animation-delay: .06s }
+.gx-empty-text span:nth-child(3)  { animation-delay: .12s }
+.gx-empty-text span:nth-child(4)  { animation-delay: .18s }
+.gx-empty-text span:nth-child(5)  { animation-delay: .24s }
+.gx-empty-text span:nth-child(6)  { animation-delay: .30s }
+.gx-empty-text span:nth-child(7)  { animation-delay: .36s }
+.gx-empty-text span:nth-child(8)  { animation-delay: .42s }
+.gx-empty-text span:nth-child(9)  { animation-delay: .48s }
+.gx-empty-text span:nth-child(11) { animation-delay: .58s }
+.gx-empty-text span:nth-child(12) { animation-delay: .64s }
+.gx-empty-text span:nth-child(14) { animation-delay: .74s }
+.gx-empty-text span:nth-child(15) { animation-delay: .80s }
+.gx-empty-text span:nth-child(16) { animation-delay: .86s }
+.gx-empty-text span:nth-child(17) { animation-delay: .92s }
+.gx-empty-text span:nth-child(18) { animation-delay: .98s }
+@keyframes gx-wave {
+  0%, 65%, 100% { color: rgba(212,160,26,.35); transform: translateY(0); text-shadow: none; }
+  25%           { color: #ffd76a; transform: translateY(-5px); text-shadow: 0 0 16px rgba(245,200,66,.75); }
+}
+.gx-empty-sub {
+  margin-top: .9rem;
+  color: var(--text-3, #9a93a6); font-size: .86rem; line-height: 1.6;
+}
+
+/* Chi preferisce meno movimento: niente onda, solo un respiro leggero */
+@media (prefers-reduced-motion: reduce) {
+  .gx-empty-arrow, .gx-empty-text span { animation: none; }
+  .gx-empty-text { color: rgba(212,160,26,.8); }
+}
+
+/* ── Slot: blocco "accedi per giocare" ───────────────────────────── */
+.gx-locked {
+  max-width: 520px; margin: 0 auto; padding: 2rem 1.4rem;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  background: rgba(255,255,255,.03);
+}
+.gx-locked-ic {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 52px; height: 52px; margin-bottom: .8rem;
+  border-radius: 14px;
+  background: rgba(212,160,26,.16); color: var(--gold, #d4a01a);
+}
+.gx-locked-ic svg { width: 26px; height: 26px; }
+.gx-locked h3 {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 1.25rem; color: var(--text-1, #f4efe6); margin-bottom: .5rem;
+}
+.gx-locked p { color: var(--text-3, #9a93a6); font-size: .9rem; line-height: 1.6; }
+.gx-locked-btns {
+  display: flex; gap: .6rem; justify-content: center; flex-wrap: wrap; margin-top: 1.1rem;
+}
+
+/* La slot fuori dalla sua pagina dedicata: saldo e mute in linea */
+.cz-balance-solo { margin: 0 auto 1rem; }
+.cz-mute-solo { position: static; display: block; margin: 0 auto 1rem; }

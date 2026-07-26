@@ -1283,16 +1283,29 @@ app.get('/termini', (req, res) => {
   });
 });
 
-// ── Mini-gioco «Corri San Rocco» ──────────────────────────────────────────
-app.get('/gioco', (req, res) => {
+// ── Sezione unica «Giochi e Slot» ─────────────────────────────────────────
+// Una sola pagina con la riga di scelta: runner, jetpack e slot. La slot gira
+// sui punti, quindi il suo pannello chiede l'accesso se non si è loggati;
+// il resto della sezione resta pubblico.
+app.get('/giochi', (req, res) => {
   const achievements = userGameAchievements(req.currentUser ? req.currentUser.id : null);
-  res.render('gioco', {
-    title: 'Corri San Rocco',
+  res.render('giochi', {
+    title: 'Giochi e Slot',
     achievements,
     best: req.currentUser ? (req.currentUser.game_best || 0) : 0,
     plays: req.currentUser ? (req.currentUser.game_plays || 0) : 0,
+    // dati della slot (le tabelle sono costanti: informative anche da sloggati)
+    symbols: SLOT_SYMBOLS.map((s) => s.key),
+    bets: SLOT_BETS,
+    betMin: SLOT_BET_MIN,
+    betMax: SLOT_BET_MAX,
+    triple: SLOT_TRIPLE,
+    pair: SLOT_PAIR,
+    balance: req.currentUser ? userPoints(req.currentUser.id) : 0,
   });
 });
+// Vecchi indirizzi → la sezione unica (link esistenti e segnalibri restano validi)
+app.get('/gioco', (req, res) => res.redirect(301, '/giochi?g=runner'));
 
 // ── Anti-cheat: sessioni di gioco lato server ───────────────────────────
 // Il client NON è fidato. All'inizio della partita il server rilascia un
@@ -1621,18 +1634,8 @@ function evalSlot(reels) {
   return { mult: 0, kind: 'niente', sym: null, jackpot: false };
 }
 
-app.get('/slot', auth.requireLogin, (req, res) => {
-  res.render('slot', {
-    title: 'Slot di San Rocco',
-    symbols: SLOT_SYMBOLS.map((s) => s.key),
-    bets: SLOT_BETS,
-    betMin: SLOT_BET_MIN,
-    betMax: SLOT_BET_MAX,
-    triple: SLOT_TRIPLE,
-    pair: SLOT_PAIR,
-    balance: userPoints(req.currentUser.id),
-  });
-});
+// La slot vive dentro la sezione unica «Giochi e Slot»
+app.get('/slot', (req, res) => res.redirect(301, '/giochi?g=slot'));
 
 app.post('/slot/gira', auth.requireLogin, slotLimiter, (req, res) => {
   // Puntata libera: qui NON ci si fida di nulla che arrivi dal browser.

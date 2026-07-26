@@ -1,0 +1,78 @@
+<%# «Press Start 2P» arriva già dal layout (fonts.bunny.net): la CSP blocca googleapis %>
+<link rel="stylesheet" href="/game.css?v=11">
+<link rel="stylesheet" href="/casino.css?v=4">
+<link rel="stylesheet" href="/jetpack.css?v=4">
+<link rel="stylesheet" href="/giochi.css?v=1">
+
+<%# ── TITOLO DI SEZIONE ────────────────────────────────────────────── %>
+<section class="gx-hero">
+  <h1 class="gx-title">Giochi e Slot</h1>
+  <p class="gx-sub">
+    Tre modi per giocare alla festa: schiva gli ostacoli, vola col jetpack
+    o punta i tuoi punti alla slot. Scegli qui sotto.
+  </p>
+</section>
+
+<%# ── RIGA DELLE 3 SCELTE (nessun tratto orizzontale) ──────────────── %>
+<div class="gx-switch" id="gxSwitch" role="tablist" aria-label="Scegli il gioco">
+  <button type="button" class="gx-choice c-runner" role="tab" aria-selected="false"
+          aria-controls="gxp-runner" id="gxt-runner" data-game="runner">
+    <span class="gx-choice-ic"><%- icon('bolt') %></span>
+    <span class="gx-choice-txt">
+      <span class="gx-choice-name">Corri San Rocco</span>
+      <span class="gx-choice-desc">Schiva e raccogli</span>
+    </span>
+  </button>
+  <button type="button" class="gx-choice c-jetpack" role="tab" aria-selected="false"
+          aria-controls="gxp-jetpack" id="gxt-jetpack" data-game="jetpack">
+    <span class="gx-choice-ic"><%- icon('fireworks') %></span>
+    <span class="gx-choice-txt">
+      <span class="gx-choice-name">San Rocco Jetpack</span>
+      <span class="gx-choice-desc">Vola e trasformati</span>
+    </span>
+  </button>
+  <button type="button" class="gx-choice c-slot" role="tab" aria-selected="false"
+          aria-controls="gxp-slot" id="gxt-slot" data-game="slot">
+    <span class="gx-choice-ic"><%- icon('ticket') %></span>
+    <span class="gx-choice-txt">
+      <span class="gx-choice-name">Slot</span>
+      <span class="gx-choice-desc">Punta i tuoi punti</span>
+    </span>
+  </button>
+</div>
+
+<%# ── AREA DEL GIOCO SELEZIONATO ───────────────────────────────────── %>
+<div class="gx-stage" id="gxStage">
+
+  <%# Stato iniziale: invito animato %>
+  <div class="gx-empty" id="gxEmpty">
+    <div class="gx-empty-arrow" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+    </div>
+    <p class="gx-empty-text" aria-live="polite">
+      <span>S</span><span>e</span><span>l</span><span>e</span><span>z</span><span>i</span><span>o</span><span>n</span><span>a</span>
+      <span class="gx-sp"></span>
+      <span>u</span><span>n</span>
+      <span class="gx-sp"></span>
+      <span>g</span><span>i</span><span>o</span><span>c</span><span>o</span>
+    </p>
+    <p class="gx-empty-sub">Scegli una delle tre modalità qui sopra per iniziare a giocare</p>
+  </div>
+
+  <section class="gx-panel" id="gxp-runner" role="tabpanel" aria-labelledby="gxt-runner"
+           data-scripts="/game.js?v=13" hidden>
+    <%- include('partials/game-runner') %>
+  </section>
+
+  <section class="gx-panel" id="gxp-jetpack" role="tabpanel" aria-labelledby="gxt-jetpack"
+           data-scripts="/jetpack.js?v=5" hidden>
+    <%- include('partials/game-jetpack') %>
+  </section>
+
+  <section class="gx-panel" id="gxp-slot" role="tabpanel" aria-labelledby="gxt-slot"
+           data-scripts="<%= currentUser ? '/slot-sound.js?v=1,/slot.js?v=5' : '' %>" hidden>
+    <%- include('partials/game-slot') %>
+  </section>
+</div>
+
+<script src="/giochi.js?v=1" defer></script>

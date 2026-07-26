@@ -41,7 +41,7 @@
   <%# Desktop nav → Mega-menu a tendina con anteprima immagini (hover) %>
   <%
     const mmItems = [
-      { href: '/gioco',          label: 'Gioco',          img: '/images/galleria/palio-fuochi.jpg' },
+      { href: '/giochi',         label: 'Giochi e Slot',  img: '/images/galleria/palio-fuochi.jpg' },
       { href: '/classifica',     label: 'Classifica',     img: '/images/galleria/sanrocco-applausi.jpg' },
       { href: '/programmazione', label: 'Programmazione', img: '/images/menu/programmazione.png' },
       { href: '/palio',          label: 'Palio dei Fuochi', img: '/images/galleria/palio-collage.jpg', active: path === '/palio' },
@@ -154,9 +154,8 @@
       <a href="/programmazione"  class="mm-link" data-delay="3">Programmazione</a>
       <a href="/palio"           class="mm-link" data-delay="4">Palio dei Fuochi</a>
       <a href="/galleria"        class="mm-link" data-delay="5">Galleria</a>
-      <a href="/gioco"           class="mm-link" data-delay="6">Gioco</a>
+      <a href="/giochi"          class="mm-link" data-delay="6">Giochi e Slot</a>
       <a href="/ruota"           class="mm-link" data-delay="7">Ruota della Fortuna</a>
-      <a href="/slot"            class="mm-link" data-delay="8">Slot</a>
       <a href="/storia"          class="mm-link" data-delay="9">Storia</a>
       <a href="/premio"          class="mm-link" data-delay="10">Premi</a>
       <% if (currentUser) { %>
@@ -200,7 +199,7 @@
     <span>Missioni</span>
   </a>
   <%# Pulsante centrale rialzato: cerchio dorato → Gioco %>
-  <a href="/gioco" class="bn-game <%= path === '/gioco' ? 'bn-active' : '' %>" aria-label="Gioco">
+  <a href="/giochi" class="bn-game <%= path === '/giochi' ? 'bn-active' : '' %>" aria-label="Giochi e Slot">
     <span class="bn-game-circle"><%- icon('gamepad') %></span>
     <span class="bn-game-label">Gioco</span>
   </a>
