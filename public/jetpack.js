@@ -51,7 +51,7 @@
   let state = 'idle';          // idle | run | paused | over
   let py, vy, dist, score, coins, speed, thrust, pressEdge, inv;
   let zaps, items, pops, sparks, missiles, fedeli;
-  let spawnZ, spawnC, spawnHalo, spawnM, spawnF, animT, last, shake, overTimer;
+  let spawnZ, spawnC, spawnHalo, spawnM, spawnF, animT, last, shake, overTimer, overFlash;
   // Trasformazioni + parole
   let mode, modeT, modeMax, word, wordMode, wordIdx, letterGap;
   let gravDir, jumps, onGround, transforms, knocked, halos;
@@ -537,7 +537,7 @@
     // primi metri tranquilli: nessun raggio subito (grazia iniziale)
     spawnZ = 150; spawnC = 60; spawnHalo = 700 + Math.random() * 500;
     spawnM = 900 + Math.random() * 500; spawnF = 120;
-    animT = 0; shake = 0;
+    animT = 0; shake = 0; overFlash = 0;
     mode = null; modeT = 0; modeMax = 1;
     gravDir = 1; jumps = 0; onGround = false;
     transforms = 0; knocked = 0; halos = 0;
@@ -585,8 +585,10 @@
     state = 'over';
     setPauseBtn();
     songStop();
-    shake = 14;
-    burst(PX + PW / 2, py + PH / 2, '#ff5a3c', 22);
+    shake = 18;
+    overFlash = 0;                     // conta i frame dalla morte: anima la scritta
+    burst(PX + PW / 2, py + PH / 2, '#ff5a3c', 26);
+    burst(PX + PW / 2, py + PH / 2, '#f5c842', 14);
     const total = Math.floor(score);
     if (total > best) { best = total; localStorage.setItem(BEST_KEY, String(best)); if (elBest) elBest.textContent = 'record ' + best; }
     const doneList = missions.map((m) => (m.done() ? '✅ ' : '⬜ ') + m.text).join('<br>');
@@ -599,7 +601,7 @@
         + '<br><span class="jp-missions">' + doneList + '</span>';
       ovHint.innerHTML = 'Tieni premuto <kbd>SPAZIO</kbd> o tocca per volare';
       if (playBtn) playBtn.textContent = 'Riprova';
-    }, 700);
+    }, 1150);                          // il tempo di leggere «GAME OVER»
   }
 
   function showToast(msg) {
@@ -656,6 +658,16 @@
     const dt = Math.min(2.5, (ts - (last || ts)) / 16.67); last = ts;
     animT++;
     if (state === 'run') update(dt);
+    else if (state === 'over') {
+      // fuori dal gioco `update` non gira: qui il tremolio si spegne da solo
+      // (prima restava acceso all'infinito) e la scritta GAME OVER si anima.
+      overFlash += dt;
+      if (shake > 0) shake -= dt;
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const s = sparks[i]; s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 0.12 * dt; s.life -= dt;
+        if (s.life <= 0) sparks.splice(i, 1);
+      }
+    }
     render();
     requestAnimationFrame(frame);
   }
@@ -890,6 +902,22 @@
 
     // messaggio iniziale
     if (state === 'idle') arcadeText(W / 2, 70, 'PREMI PER VOLARE', '#f5c842', 10, 0.9);
+
+    // ── GAME OVER: entra di colpo mentre lo schermo trema ─────────
+    if (state === 'over') {
+      const t = Math.min(1, overFlash / 9);          // 0→1: scatto d'ingresso
+      const size = 15 + 9 * (1 - t) + Math.sin(overFlash / 7) * 0.6;
+      // velo scuro per staccare la scritta dallo sfondo
+      ctx.save();
+      ctx.globalAlpha = 0.45 * t;
+      r(0, 0, W, H, '#12030a');
+      ctx.restore();
+      arcadeText(W / 2, H / 2 - 4, 'GAME OVER', '#ff5a3c', size, Math.min(1, overFlash / 4));
+      if (overFlash > 12) {
+        const blink = (Math.floor(overFlash / 12) % 2) ? 0.9 : 0.35;
+        arcadeText(W / 2, H / 2 + 18, Math.floor(score) + ' m', '#f5c842', 9, blink);
+      }
+    }
 
     ctx.restore();
   }
