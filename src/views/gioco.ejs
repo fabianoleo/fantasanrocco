@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap">
 <link rel="stylesheet" href="/game.css?v=11">
 <link rel="stylesheet" href="/casino.css?v=2">
-<link rel="stylesheet" href="/jetpack.css?v=3">
+<link rel="stylesheet" href="/jetpack.css?v=4">
 
 <%# ── HERO ────────────────────────────────────────────────────────── %>
 <section class="gm-hero">
@@ -103,8 +103,8 @@
 <section class="gm-hero" style="margin-top:2.5rem">
   <h1 class="gm-title">San Rocco Jetpack</h1>
   <p class="gm-sub">
-    Vola con la <strong>fiammata dorata</strong>, schiva i raggi di fuoco e raccogli le monete.<br>
-    Tieni premuto per salire: più vai lontano, più punti fai.
+    Vola con la <strong>fiammata dorata</strong>, schiva raggi di fuoco e missili, raccogli monete e travolgi i fedeli.<br>
+    Raccogli le <strong>lettere</strong> e componi una parola: San Rocco si trasforma e cambia tutto.
   </p>
 </section>
 
@@ -158,6 +158,41 @@
     </button>
   </div>
 </div>
+
+<%# ── LEGENDA MEZZI: le parole da comporre ─────────────────────────── %>
+<section class="jp-legend" aria-label="Mezzi del Jetpack">
+  <div class="jp-legend-head">
+    <p class="jp-legend-kicker">Raccogli le lettere</p>
+    <h3 class="jp-legend-title">Componi la parola e ti trasformi</h3>
+    <p class="jp-legend-note">
+      Durante la corsa compaiono <strong>gettoni con le lettere</strong>: completa la parola e San Rocco
+      cambia mezzo per qualche secondo, con comandi e fisica diversi.
+      Se vieni colpito mentre sei trasformato <strong>perdi il mezzo, non la partita</strong>.
+    </p>
+  </div>
+  <div class="jp-legend-grid">
+    <div class="jp-veh v-cane">
+      <span class="jp-veh-word">C·A·N·E</span>
+      <h4>Cane Fedele</h4>
+      <p>Cavalchi il cane: <strong>tocca per saltare</strong> (anche in aria) e schiaccia i raggi cadendoci sopra.</p>
+    </div>
+    <div class="jp-veh v-razzo">
+      <span class="jp-veh-word">F·U·O·C·O</span>
+      <h4>Razzo di Fuoco</h4>
+      <p>Diventi un razzo: <strong>sfondi raggi e missili</strong> e corri molto più veloce.</p>
+    </div>
+    <div class="jp-veh v-vino">
+      <span class="jp-veh-word">V·I·N·O</span>
+      <h4>Brocca di Vino</h4>
+      <p>Galleggi leggero, <strong>rimbalzi</strong> su cielo e terra e <strong>attiri le monete</strong> come una calamita.</p>
+    </div>
+    <div class="jp-veh v-santo">
+      <span class="jp-veh-word">S·A·N·T·O</span>
+      <h4>Santo in Gloria</h4>
+      <p>Niente spinta: ogni tocco <strong>inverte la gravità</strong>: cadi verso il cielo o verso terra.</p>
+    </div>
+  </div>
+</section>
 
 <%# ── LEGENDA BONUS (rarità) ───────────────────────────────────────── %>
 <section class="gm-bonus-legend" aria-label="Bonus del gioco">
@@ -226,4 +261,4 @@
 </section>
 
 <script src="/game.js?v=13" defer></script>
-<script src="/jetpack.js?v=4" defer></script>
+<script src="/jetpack.js?v=5" defer></script>
