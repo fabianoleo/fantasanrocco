@@ -172,17 +172,17 @@
   box-shadow: 0 2px 8px rgba(0,0,0,.4), 0 0 22px rgba(255,196,66,.45), inset 0 1px 0 rgba(255,255,255,.12);
 }
 
-/* Su telefono il tasto SALI sale verso il gioco ed è più grande: il pollice
-   lo trova senza scendere sul testo sotto (dove il tap lungo aprirebbe il
-   menu «Copia»). Sotto al tasto resta una fascia morta non selezionabile. */
+/* Su telefono il tasto SALI resta dov'era ma è molto più alto: si prende lo
+   spazio sotto di sé. Così il pollice lo trova anche tenendolo premuto in
+   basso, senza finire sul testo (dove il tap lungo aprirebbe «Copia»). */
 @media (max-width: 720px) {
   .jp-pad {
-    margin-top: .45rem;
-    padding-bottom: 1.6rem;          /* fascia di sicurezza sotto al tasto */
+    margin-top: .9rem;
+    padding-bottom: .7rem;           /* margine di sicurezza sotto al tasto */
   }
   .jp-thrust {
     max-width: none;                 /* pieno respiro in larghezza */
-    min-height: 82px;                /* bersaglio più alto e comodo */
+    min-height: 118px;               /* cresce verso il basso: bersaglio ampio */
     font-size: .92rem;
     border-radius: 16px;
   }
