@@ -1323,6 +1323,7 @@ app.get('/giochi', (req, res) => {
     jpBest: req.currentUser ? (req.currentUser.jp_best || 0) : 0,
     jpRank: jpRankName(req.currentUser ? (req.currentUser.jp_stars || 0) : 0),
     jpPerRank: JP_STARS_PER_RANK,
+    jpRanks: jpRankList(req.currentUser ? (req.currentUser.jp_stars || 0) : 0),
   });
 });
 // Vecchi indirizzi → la sezione unica (link esistenti e segnalibri restano validi)
@@ -1462,6 +1463,20 @@ function jpRankName(stars) {
   const g = Math.floor(stars / JP_STARS_PER_RANK);
   if (g <= 0) return 'Recluta';
   return (JP_RANKS[Math.min(g, JP_RANKS.length) - 1].title || '').replace('Jetpack · ', '');
+}
+
+// I gradi con le stelle che servono e lo stato raggiunto/da raggiungere, così
+// la pagina può mostrarli come i traguardi del runner: senza questo elenco non
+// si capisce QUANTI punti valga salire di grado.
+function jpRankList(stars) {
+  const have = stars || 0;
+  return JP_RANKS.map((r) => ({
+    grade: r.grade,
+    stars: r.grade * JP_STARS_PER_RANK,
+    points: r.points,
+    title: (r.title || '').replace('Jetpack · ', ''),
+    done: have >= r.grade * JP_STARS_PER_RANK,
+  }));
 }
 
 // Le 3 missioni attive dell'utente, creandole se mancano (idempotente).

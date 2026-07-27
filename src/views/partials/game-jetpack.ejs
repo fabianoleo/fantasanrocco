@@ -92,6 +92,44 @@
   <% } %>
 </section>
 
+<%# ── I GRADI: quanti punti vale ciascuno (come i traguardi del runner) ── %>
+<section class="gm-ach-section">
+  <div class="gm-ach-head">
+    <p class="gm-ach-kicker">Punti in classifica generale</p>
+    <h2 class="gm-ach-title">I gradi del Jetpack</h2>
+    <p class="gm-ach-note">
+      Il record in metri vale solo per la <a href="/classifica">classifica del gioco</a>.
+      In <strong>classifica generale</strong> entrano invece i punti dei gradi qui sotto:
+      ne sali uno ogni <strong><%= jpPerRank %></strong> stelle, e ogni stella è una missione di carriera completata.
+    </p>
+  </div>
+
+  <div class="gm-ach-grid">
+    <% jpRanks.forEach((r) => { %>
+      <div class="gm-ach <%= r.done ? 'is-done' : '' %>" data-title="<%= r.title %>" data-threshold="<%= r.stars %>">
+        <span class="gm-ach-badge"><%- r.done ? icon('check') : icon('trophy') %></span>
+        <div class="gm-ach-body">
+          <p class="gm-ach-name">Grado <%= r.grade %> · <%= r.title %></p>
+          <p class="gm-ach-desc">Completa <%= r.stars %> missioni di carriera.</p>
+        </div>
+        <span class="gm-ach-pts">+<%= r.points %><small>pt</small></span>
+      </div>
+    <% }) %>
+  </div>
+
+  <p class="gm-ach-note" style="text-align:center;margin-top:1rem">
+    In tutto i gradi valgono <strong><%= jpRanks.reduce((s, r) => s + r.points, 0) %> punti</strong>,
+    raggiungibili con <%= jpRanks[jpRanks.length - 1].stars %> missioni di carriera completate.
+  </p>
+
+  <% if (!currentUser) { %>
+    <p class="gm-login-note">
+      Puoi giocare liberamente, ma per <strong>guadagnare punti</strong> con i gradi devi
+      <a href="/registrati">registrarti</a> o <a href="/login">accedere</a>.
+    </p>
+  <% } %>
+</section>
+
 <%# ── LEGENDA MEZZI: le parole da comporre ─────────────────────────── %>
 <section class="jp-legend" aria-label="Mezzi del Jetpack">
   <div class="jp-legend-head">
