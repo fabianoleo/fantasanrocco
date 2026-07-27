@@ -60,7 +60,7 @@
       <p class="jp-mis-kicker">Missioni di carriera</p>
       <h3 class="jp-mis-title">Tre obiettivi alla volta</h3>
     </div>
-    <div class="jp-rank" title="Ogni <%= jpPerRank %> missioni completate sali di grado">
+    <div class="jp-rank" title="Ogni stella è una missione completata: i gradi arrivano a 3, 7, 12, 18, 26, 36, 48 e 62 stelle">
       <span class="jp-rank-stars" id="jpStars"><%= jpStars %></span>
       <span class="jp-rank-name" id="jpRankName"><%= jpRank %></span>
     </div>
@@ -68,8 +68,8 @@
 
   <% if (!currentUser) { %>
     <p class="jp-mis-note">
-      Queste sono le missioni del Jetpack: restano fra una partita e l'altra e ogni
-      <strong><%= jpPerRank %></strong> completate sali di grado, guadagnando <strong>punti in classifica</strong>.
+      Queste sono le missioni del Jetpack: restano fra una partita e l'altra e completandole
+      sali di <strong>grado</strong>, guadagnando <strong>punti in classifica</strong>.
       Per tenerne traccia <a href="/login">accedi</a> o <a href="/registrati">registrati</a>.
     </p>
   <% } %>
@@ -87,7 +87,9 @@
   <% if (currentUser) { %>
     <p class="jp-mis-note">
       Completandone una guadagni una stella e la casella viene sostituita da un nuovo obiettivo.
-      Ogni <strong><%= jpPerRank %></strong> stelle sali di grado e i punti entrano nella <a href="/classifica">classifica</a>.
+      Il primo grado arriva a <strong><%= jpPerRank %></strong> stelle, poi la scala si alza:
+      l'ultimo chiede <strong><%= jpRanks[jpRanks.length - 1].stars %></strong> missioni completate.
+      I punti dei gradi entrano nella <a href="/classifica">classifica</a>.
     </p>
   <% } %>
 </section>
@@ -100,7 +102,7 @@
     <p class="gm-ach-note">
       Il record in metri vale solo per la <a href="/classifica">classifica del gioco</a>.
       In <strong>classifica generale</strong> entrano invece i punti dei gradi qui sotto:
-      ne sali uno ogni <strong><%= jpPerRank %></strong> stelle, e ogni stella è una missione di carriera completata.
+      ogni stella è una missione di carriera completata, e le soglie salgono grado dopo grado.
     </p>
   </div>
 
