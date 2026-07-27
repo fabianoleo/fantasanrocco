@@ -872,31 +872,31 @@ function jetpackLeaderboardRows() {
 const GAME_ACHIEVEMENTS = [
   // ── Punteggio · base (accessibili a tutti) ───────────────────────
   { key: 'g-run',   metric: 'score', threshold: 1,     points: 8,   title: 'Prima corsa',                 desc: 'Completa la tua prima partita a «Corri San Rocco».' },
-  { key: 'g-50',    metric: 'score', threshold: 50,    points: 10,   title: 'In cammino',                  desc: 'Raggiungi 50 punti in una partita.' },
-  { key: 'g-120',   metric: 'score', threshold: 120,   points: 15,   title: 'Pellegrino instancabile',     desc: 'Raggiungi 120 punti in una partita.' },
-  { key: 'g-250',   metric: 'score', threshold: 250,   points: 20,   title: 'Col cane fino ai fuochi',      desc: 'Raggiungi 250 punti in una partita.' },
-  { key: 'g-400',   metric: 'score', threshold: 400,   points: 30,   title: 'Leggenda di Siano',           desc: 'Raggiungi 400 punti in una partita.' },
+  { key: 'g-50',    metric: 'score', threshold: 75,    points: 10,   title: 'In cammino',                  desc: 'Raggiungi 50 punti in una partita.' },
+  { key: 'g-120',   metric: 'score', threshold: 200,   points: 15,   title: 'Pellegrino instancabile',     desc: 'Raggiungi 120 punti in una partita.' },
+  { key: 'g-250',   metric: 'score', threshold: 400,   points: 20,   title: 'Col cane fino ai fuochi',      desc: 'Raggiungi 250 punti in una partita.' },
+  { key: 'g-400',   metric: 'score', threshold: 700,   points: 30,   title: 'Leggenda di Siano',           desc: 'Raggiungi 400 punti in una partita.' },
   // ── Punteggio · avanzati (per chi va lontano) ───────────────────
-  { key: 'g-600',   metric: 'score', threshold: 600,   points: 40,   title: 'Devoto tra i devoti',         desc: 'Raggiungi 600 punti in una partita.' },
-  { key: 'g-850',   metric: 'score', threshold: 850,   points: 50,  title: 'Cavaliere di San Rocco',      desc: 'Raggiungi 850 punti in una partita.' },
-  { key: 'g-1100',  metric: 'score', threshold: 1100,  points: 65,  title: 'Guardiano della processione', desc: 'Raggiungi 1100 punti in una partita.' },
-  { key: 'g-1500',  metric: 'score', threshold: 1500,  points: 80,  title: 'Il Santo corre ancora',       desc: 'Raggiungi 1500 punti in una partita.' },
-  { key: 'g-2000',  metric: 'score', threshold: 2000,  points: 105,  title: 'Immortale come San Rocco',    desc: 'Raggiungi 2000 punti in una partita.' },
+  { key: 'g-600',   metric: 'score', threshold: 1100,   points: 40,   title: 'Devoto tra i devoti',         desc: 'Raggiungi 600 punti in una partita.' },
+  { key: 'g-850',   metric: 'score', threshold: 1600,   points: 50,  title: 'Cavaliere di San Rocco',      desc: 'Raggiungi 850 punti in una partita.' },
+  { key: 'g-1100',  metric: 'score', threshold: 2200,  points: 65,  title: 'Guardiano della processione', desc: 'Raggiungi 1100 punti in una partita.' },
+  { key: 'g-1500',  metric: 'score', threshold: 3000,  points: 80,  title: 'Il Santo corre ancora',       desc: 'Raggiungi 1500 punti in una partita.' },
+  { key: 'g-2000',  metric: 'score', threshold: 4200,  points: 105,  title: 'Immortale come San Rocco',    desc: 'Raggiungi 2000 punti in una partita.' },
   // ── Punteggio · leggendari (fino a 15.000) ──────────────────────
-  { key: 'g-3000',  metric: 'score', threshold: 3000,  points: 140,  title: 'Maratoneta della festa',      desc: 'Raggiungi 3.000 punti in una partita.' },
-  { key: 'g-4500',  metric: 'score', threshold: 4500,  points: 175,  title: 'Veglia infinita',             desc: 'Raggiungi 4.500 punti in una partita.' },
-  { key: 'g-6000',  metric: 'score', threshold: 6000,  points: 225,  title: 'Patrono dei pellegrini',      desc: 'Raggiungi 6.000 punti in una partita.' },
-  { key: 'g-8000',  metric: 'score', threshold: 8000,  points: 280,  title: 'Miracolo di Siano',           desc: 'Raggiungi 8.000 punti in una partita.' },
-  { key: 'g-10000', metric: 'score', threshold: 10000, points: 355,  title: 'Santo tra i santi',           desc: 'Raggiungi 10.000 punti in una partita.' },
-  { key: 'g-12500', metric: 'score', threshold: 12500, points: 440,  title: 'Eterno camminatore',          desc: 'Raggiungi 12.500 punti in una partita.' },
-  { key: 'g-15000', metric: 'score', threshold: 15000, points: 575, title: 'Mito di San Rocco',           desc: 'Raggiungi 15.000 punti in una partita. Sei inarrestabile.' },
+  { key: 'g-3000',  metric: 'score', threshold: 5800,  points: 140,  title: 'Maratoneta della festa',      desc: 'Raggiungi 3.000 punti in una partita.' },
+  { key: 'g-4500',  metric: 'score', threshold: 7800,  points: 175,  title: 'Veglia infinita',             desc: 'Raggiungi 4.500 punti in una partita.' },
+  { key: 'g-6000',  metric: 'score', threshold: 10000,  points: 225,  title: 'Patrono dei pellegrini',      desc: 'Raggiungi 6.000 punti in una partita.' },
+  { key: 'g-8000',  metric: 'score', threshold: 13000,  points: 280,  title: 'Miracolo di Siano',           desc: 'Raggiungi 8.000 punti in una partita.' },
+  { key: 'g-10000', metric: 'score', threshold: 16500, points: 355,  title: 'Santo tra i santi',           desc: 'Raggiungi 10.000 punti in una partita.' },
+  { key: 'g-12500', metric: 'score', threshold: 20500, points: 440,  title: 'Eterno camminatore',          desc: 'Raggiungi 12.500 punti in una partita.' },
+  { key: 'g-15000', metric: 'score', threshold: 25000, points: 575, title: 'Mito di San Rocco',           desc: 'Raggiungi 15.000 punti in una partita. Sei inarrestabile.' },
   // ── Partite giocate (più giochi, più punti) ─────────────────────
-  { key: 'gp-3',    metric: 'plays', threshold: 3,     points: 8,   title: 'Ci ho preso gusto',           desc: 'Gioca 3 partite a «Corri San Rocco».' },
-  { key: 'gp-8',    metric: 'plays', threshold: 8,     points: 12,   title: 'Habitué del cortile',         desc: 'Gioca 8 partite.' },
-  { key: 'gp-20',   metric: 'plays', threshold: 20,    points: 22,   title: 'Cliente fisso',               desc: 'Gioca 20 partite.' },
-  { key: 'gp-40',   metric: 'plays', threshold: 40,    points: 34,   title: 'Veterano del distributore',   desc: 'Gioca 40 partite.' },
-  { key: 'gp-75',   metric: 'plays', threshold: 75,    points: 52,  title: 'Mai una pausa',               desc: 'Gioca 75 partite.' },
-  { key: 'gp-150',  metric: 'plays', threshold: 150,   points: 82,  title: 'Inchiodato allo schermo',     desc: 'Gioca 150 partite. Ma quanto giochi?' },
+  { key: 'gp-3',    metric: 'plays', threshold: 5,     points: 8,   title: 'Ci ho preso gusto',           desc: 'Gioca 3 partite a «Corri San Rocco».' },
+  { key: 'gp-8',    metric: 'plays', threshold: 15,     points: 12,   title: 'Habitué del cortile',         desc: 'Gioca 8 partite.' },
+  { key: 'gp-20',   metric: 'plays', threshold: 35,    points: 22,   title: 'Cliente fisso',               desc: 'Gioca 20 partite.' },
+  { key: 'gp-40',   metric: 'plays', threshold: 70,    points: 34,   title: 'Veterano del distributore',   desc: 'Gioca 40 partite.' },
+  { key: 'gp-75',   metric: 'plays', threshold: 130,    points: 52,  title: 'Mai una pausa',               desc: 'Gioca 75 partite.' },
+  { key: 'gp-150',  metric: 'plays', threshold: 250,   points: 82,  title: 'Inchiodato allo schermo',     desc: 'Gioca 150 partite. Ma quanto giochi?' },
 ];
 
 // Crea/aggiorna le missioni del gioco allo startup (idempotente).
@@ -1357,11 +1357,12 @@ app.post('/gioco/inizio', auth.requireLogin, gameLimiter, verifyCsrf, (req, res)
 // Report del punteggio di fine partita: aggiorna il record e assegna i
 // traguardi non ancora conquistati (solo loggati). Idempotente.
 app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, res) => {
-  const MAX_PLAUSIBLE_SCORE = 16000;  // cap assoluto (traguardo massimo 15.000)
+  const MAX_PLAUSIBLE_SCORE = 26000;  // cap assoluto (traguardo massimo 25.000)
   const MAX_DELTA_PER_GAME  = 3000;   // fallback senza ticket valido
   const MIN_GAME_SEC        = 3;      // durata minima perché la partita "conti"
   const BASE_ALLOWANCE      = 400;    // margine iniziale (bonus presi subito)
-  const MAX_SCORE_PER_SEC   = 120;    // ritmo massimo plausibile di punteggio
+  const MAX_SCORE_PER_SEC   = 420;    // ritmo massimo plausibile: il gioco fa 198 pt/s
+                                      // (396 con la reliquia x2), quindi 120 tagliava le partite oneste
 
   const rawScore = Math.max(0, Math.min(MAX_PLAUSIBLE_SCORE, parseInt(req.body.score, 10) || 0));
   const prevBest = req.currentUser.game_best || 0;
@@ -1445,24 +1446,34 @@ const JP_MISSIONS = [
 const JP_BY_KEY = Object.fromEntries(JP_MISSIONS.map((m) => [m.key, m]));
 
 // Gradi: ogni 3 missioni completate. Ognuno vale punti in classifica.
-const JP_STARS_PER_RANK = 3;
+// La carriera non sale più di grado ogni 3 missioni fisse: le soglie
+// crescono, così i primi gradi arrivano presto e gli ultimi sono un
+// traguardo vero (62 missioni in tutto, non più 24).
 const JP_RANKS = [
-  { key: 'jpr-1', grade: 1, points: 60,  title: 'Jetpack · Aviatore',      desc: 'Completa 3 missioni di «San Rocco Jetpack».' },
-  { key: 'jpr-2', grade: 2, points: 110,  title: 'Jetpack · Pilota',        desc: 'Completa 6 missioni di «San Rocco Jetpack».' },
-  { key: 'jpr-3', grade: 3, points: 175,  title: 'Jetpack · Aviere scelto', desc: 'Completa 9 missioni di «San Rocco Jetpack».' },
-  { key: 'jpr-4', grade: 4, points: 250,  title: 'Jetpack · Asso del cielo',desc: 'Completa 12 missioni di «San Rocco Jetpack».' },
-  { key: 'jpr-5', grade: 5, points: 345, title: 'Jetpack · Angelo custode',desc: 'Completa 15 missioni di «San Rocco Jetpack».' },
-  { key: 'jpr-6', grade: 6, points: 455, title: 'Jetpack · Volo glorioso', desc: 'Completa 18 missioni di «San Rocco Jetpack».' },
-  { key: 'jpr-7', grade: 7, points: 580, title: 'Jetpack · Leggenda alata',desc: 'Completa 21 missioni di «San Rocco Jetpack».' },
-  { key: 'jpr-8', grade: 8, points: 825, title: 'Jetpack · Santo in cielo',desc: 'Completa 24 missioni di «San Rocco Jetpack».' },
+  { key: 'jpr-1', grade: 1, stars: 3,  points: 40,  title: 'Jetpack · Aviatore',       desc: 'Completa 3 missioni di carriera su «San Rocco Jetpack».' },
+  { key: 'jpr-2', grade: 2, stars: 7,  points: 85,  title: 'Jetpack · Pilota',         desc: 'Completa 7 missioni di carriera su «San Rocco Jetpack».' },
+  { key: 'jpr-3', grade: 3, stars: 12, points: 145, title: 'Jetpack · Aviere scelto',  desc: 'Completa 12 missioni di carriera su «San Rocco Jetpack».' },
+  { key: 'jpr-4', grade: 4, stars: 18, points: 225, title: 'Jetpack · Asso del cielo', desc: 'Completa 18 missioni di carriera su «San Rocco Jetpack».' },
+  { key: 'jpr-5', grade: 5, stars: 26, points: 330, title: 'Jetpack · Angelo custode', desc: 'Completa 26 missioni di carriera su «San Rocco Jetpack».' },
+  { key: 'jpr-6', grade: 6, stars: 36, points: 470, title: 'Jetpack · Volo glorioso',  desc: 'Completa 36 missioni di carriera su «San Rocco Jetpack».' },
+  { key: 'jpr-7', grade: 7, stars: 48, points: 640, title: 'Jetpack · Leggenda alata', desc: 'Completa 48 missioni di carriera su «San Rocco Jetpack».' },
+  { key: 'jpr-8', grade: 8, stars: 62, points: 865, title: 'Jetpack · Santo in cielo', desc: 'Completa 62 missioni di carriera su «San Rocco Jetpack».' },
 ];
+// Stelle che servono per il primo grado: la pagina lo mostra come "prossimo passo"
+const JP_STARS_PER_RANK = JP_RANKS[0].stars;
+// Grado raggiunto con N stelle (0 = Recluta)
+function jpGradeOf(stars) {
+  let g = 0;
+  for (const r of JP_RANKS) { if ((stars || 0) >= r.stars) g = r.grade; else break; }
+  return g;
+}
 // Ora che anche i gradi del Jetpack sono definiti, crea/aggiorna le missioni.
 ensureGameMissions();
 
 function jpRankName(stars) {
-  const g = Math.floor(stars / JP_STARS_PER_RANK);
+  const g = jpGradeOf(stars);
   if (g <= 0) return 'Recluta';
-  return (JP_RANKS[Math.min(g, JP_RANKS.length) - 1].title || '').replace('Jetpack · ', '');
+  return (JP_RANKS[g - 1].title || '').replace('Jetpack · ', '');
 }
 
 // I gradi con le stelle che servono e lo stato raggiunto/da raggiungere, così
@@ -1472,10 +1483,10 @@ function jpRankList(stars) {
   const have = stars || 0;
   return JP_RANKS.map((r) => ({
     grade: r.grade,
-    stars: r.grade * JP_STARS_PER_RANK,
+    stars: r.stars,
     points: r.points,
     title: (r.title || '').replace('Jetpack · ', ''),
-    done: have >= r.grade * JP_STARS_PER_RANK,
+    done: have >= r.stars,
   }));
 }
 
@@ -1551,7 +1562,7 @@ function jpApplyRun(userId, run) {
 
     // Gradi raggiunti → punti in classifica (prova già approvata, idempotente).
     // Di proposito NON chiamiamo checkLevelUp(): niente notifiche push da qui.
-    const grade = Math.floor(stars / JP_STARS_PER_RANK);
+    const grade = jpGradeOf(stars);
     for (const rk of JP_RANKS) {
       if (rk.grade > grade) break;
       const mid = gameMissionId(rk.key);
@@ -1564,7 +1575,7 @@ function jpApplyRun(userId, run) {
       awarded.push({ title: rk.title, points: rk.points });
     }
   })();
-  return { done, stars, grade: Math.floor(stars / JP_STARS_PER_RANK), rank: jpRankName(stars), awarded };
+  return { done, stars, grade: jpGradeOf(stars), rank: jpRankName(stars), awarded };
 }
 
 // Inizio partita jetpack → ticket col timestamp del server (come il runner)
