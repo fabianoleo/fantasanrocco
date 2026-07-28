@@ -1,0 +1,2 @@
+I loghi PNG degli sponsor vanno qui.
+Poi vanno elencati in src/views/partials/sponsor.ejs, una riga per logo.

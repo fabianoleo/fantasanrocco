@@ -4772,3 +4772,127 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
   display: flex; flex-direction: column; gap: .35rem;
   font-size: .95rem; color: var(--text);
 }
+
+/* ===================================================================
+   MURO SPONSOR — nastro di loghi che scorre all'infinito
+   Sta incollato sopra il footer. Niente librerie: il loop è fatto
+   ripetendo l'elenco dei loghi (vedi partials/sponsor.ejs) e traslando
+   il nastro di -50%, cioè di un numero intero di ripetizioni.
+   =================================================================== */
+.spon {
+  /* ── Le quattro manopole da regolare ── */
+  --spon-h: 48px;       /* altezza di TUTTI i loghi (la larghezza si adatta) */
+  --spon-gap: 4rem;     /* distanza fra un logo e l'altro */
+  --spon-durata: 45s;   /* durata di un giro: più alto = più lento */
+  --spon-fade: 96px;    /* larghezza della dissolvenza ai due lati */
+
+  position: relative;
+  padding: 1.5rem 0 1.7rem;
+  border-top: 1px solid rgba(212, 160, 26, .12);
+  background: linear-gradient(180deg, rgba(9, 8, 18, 0) 0%, rgba(8, 7, 16, .45) 100%);
+}
+
+/* Su mobile il footer si stacca di 2.5rem da quello che ha sopra: qui i due
+   blocchi devono restare incollati, così sembrano un pezzo solo. La regola
+   scatta solo se la barra c'è davvero (elenco sponsor non vuoto). */
+.spon + .site-footer { margin-top: 0; }
+
+.spon-label {
+  margin: 0 0 1.15rem;
+  text-align: center;
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: .68rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--text-2, #9a8f78);
+  opacity: .85;
+}
+
+.spon-viewport {
+  overflow: hidden;
+  /* Dissolvenza ai bordi con la maschera e non con due gradienti sovrapposti:
+     la maschera non deve indovinare il colore di fondo, quindi continua a
+     funzionare sopra il gradiente del footer e su qualsiasi pagina. */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--spon-fade), #000 calc(100% - var(--spon-fade)), transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 var(--spon-fade), #000 calc(100% - var(--spon-fade)), transparent 100%);
+}
+
+.spon-track {
+  display: flex;
+  width: max-content;
+  animation: spon-scorri var(--spon-durata) linear infinite;
+}
+
+/* Da destra verso sinistra. Il -50% cade a metà nastro: siccome le copie
+   sono in numero pari e tutte identiche, il fotogramma finale è sovrapponibile
+   a quello iniziale e il salto non si vede. */
+@keyframes spon-scorri {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.spon-group {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.spon-item {
+  display: flex;
+  align-items: center;
+  /* Lo spazio sta su OGNI logo, ultimo compreso, invece che in un `gap`:
+     così il nastro è una fila di blocchi tutti uguali e il -50% cade esatto.
+     Con `gap` alla giunzione fra una copia e l'altra mancherebbe mezzo
+     spazio e lo scatto si vedrebbe a ogni giro. */
+  margin-right: var(--spon-gap);
+}
+
+.spon-logo {
+  display: block;
+  height: var(--spon-h);
+  width: auto;
+  /* ── Effetto grigio → colore: per averli SEMPRE a colori basta cancellare
+        le due righe qui sotto e la regola .spon-logo:hover più avanti. ── */
+  filter: grayscale(1);
+  opacity: .6;
+  transition: filter .35s var(--ease, ease), opacity .35s var(--ease, ease);
+}
+
+@media (hover: hover) {
+  .spon-logo:hover { filter: none; opacity: 1; }
+  /* Pausa quando il mouse è sulla barra, così si fa in tempo a leggere un logo */
+  .spon:hover .spon-track { animation-play-state: paused; }
+}
+
+/* Sul telefono il passaggio del mouse non esiste: lasciandoli grigi
+   resterebbero grigi per sempre, e la festa la si guarda dal telefono. */
+@media (hover: none) {
+  .spon-logo { filter: none; opacity: .9; }
+}
+
+@media (max-width: 768px) {
+  .spon {
+    --spon-h: 36px;
+    --spon-gap: 2.2rem;
+    --spon-fade: 44px;
+    padding: 1.2rem 0 1.3rem;
+  }
+  .spon-label { font-size: .62rem; letter-spacing: .18em; margin-bottom: .9rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Nastro fermo: mostro solo l'elenco vero (le copie servivano al loop) e
+     lo centro. Se i loghi non ci stanno si scorre a mano, invece di
+     perderne metà oltre il bordo. */
+  .spon-track {
+    animation: none;
+    width: 100%;
+    min-width: max-content;
+    justify-content: center;
+  }
+  .spon-group[aria-hidden] { display: none; }
+  .spon-item:last-child { margin-right: 0; }
+  .spon-viewport { overflow-x: auto; }
+}

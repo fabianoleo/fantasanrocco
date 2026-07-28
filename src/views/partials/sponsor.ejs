@@ -1,0 +1,52 @@
+<%
+  /* ─────────────────────────────────────────────────────────────────
+     ELENCO SPONSOR — una riga per logo, si aggiunge e si toglie qui.
+     Il PNG (sfondo trasparente) va messo in public/sponsor/ e richiamato
+     con il solo nome del file. `nome` è quello che leggono screen reader
+     e motori di ricerca, quindi scrivilo per esteso.
+     Con l'elenco vuoto la barra non viene disegnata affatto: meglio
+     niente che una striscia vuota o dei loghi rotti in produzione.
+     ───────────────────────────────────────────────────────────────── */
+  const sponsor = [
+    // { file: 'nome-sponsor.png', nome: 'Nome Sponsor' },
+    // { file: 'altro-sponsor.png', nome: 'Altro Sponsor' },
+  ];
+
+  /* Il nastro deve restare più largo dello schermo per tutto il giro:
+     con 4 o 5 loghi una sola copia non copre un monitor largo e a metà
+     ciclo si aprirebbe un buco. Ripetiamo l'elenco 4 volte e trasliamo
+     di -50%, cioè esattamente 2 copie: il numero DEVE restare pari,
+     altrimenti il punto di ricongiunzione non cade su una ripetizione
+     intera e lo stacco si vede. */
+  const RIPETIZIONI = 4;
+%>
+<% if (sponsor.length) { %>
+<section class="spon" aria-label="I nostri sponsor">
+  <p class="spon-label">I nostri sponsor</p>
+
+  <div class="spon-viewport">
+    <div class="spon-track">
+      <% for (let copia = 0; copia < RIPETIZIONI; copia++) { %>
+        <%# Solo la prima copia è "vera": le altre esistono per il loop e
+            vanno nascoste alla sintesi vocale, che altrimenti leggerebbe
+            l'elenco degli sponsor quattro volte di fila. %>
+        <ul class="spon-group"<% if (copia) { %> aria-hidden="true"<% } %>>
+          <% sponsor.forEach(function (s) { %>
+            <li class="spon-item">
+              <%# Niente loading="lazy": la larghezza del nastro è la somma delle
+                  larghezze reali dei loghi, e finché l'immagine non è caricata
+                  quella larghezza è zero. Con il lazy la barra resterebbe una
+                  fila di spazi vuoti fino a quando non ci si scorre sopra.
+                  Sono PNG da pochi kB, caricarli subito non costa niente. %>
+              <img class="spon-logo"
+                   src="/sponsor/<%= s.file %>"
+                   alt="<%= copia ? '' : s.nome %>"
+                   decoding="async">
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </div>
+  </div>
+</section>
+<% } %>
