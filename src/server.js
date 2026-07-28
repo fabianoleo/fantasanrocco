@@ -732,6 +732,7 @@ const SPONSOR_ATTIVITA = [
   { file: 'telefonia-eredi-leo.png', nome: 'Telefonia Eredi Leo' },
   { file: 'cycling-botta.png',       nome: 'Cycling Botta' },
   { file: 'vitello-paesano.png',     nome: 'Vitello Paesano' },
+  { file: 'target-communication.png', nome: 'Target Communication' },
 ];
 
 const SPONSOR_LOGHI = (() => {
