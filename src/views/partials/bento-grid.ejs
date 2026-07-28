@@ -9,10 +9,13 @@
             data-gallery="<%= sec %>"
             data-index="<%= i %>"
             data-url="/images/galleria/<%= img.file %>"
+            data-thumb="/images/galleria/thumb/<%= img.file.replace(/\.[^.]+$/, '.webp') %>"
             data-title="<%= img.caption %>"
             data-desc="<%= label %>"
             aria-label="Apri: <%= img.caption %>">
-      <img class="bento-img" src="/images/galleria/<%= img.file %>"
+      <%# La griglia carica la MINIATURA (~85 KB); l'originale a piena
+          risoluzione lo apre il lightbox tramite data-url qui sopra. %>
+      <img class="bento-img" src="/images/galleria/thumb/<%= img.file.replace(/\.[^.]+$/, '.webp') %>"
            alt="<%= img.caption %>" loading="lazy" decoding="async">
       <span class="bento-corner" aria-hidden="true"><%- icon('plus') %></span>
       <span class="bento-overlay"><span class="bento-cap"><%= img.caption %></span></span>

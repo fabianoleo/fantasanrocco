@@ -31,6 +31,8 @@
     const sec = el.dataset.gallery;
     (groups[sec] = groups[sec] || []).push({
       url: el.dataset.url,
+      // miniatura per la barra in basso: la foto piena serve solo a schermo intero
+      thumb: el.dataset.thumb || el.dataset.url,
       title: el.dataset.title,
       kicker: el.dataset.desc || '',
     });
@@ -77,7 +79,7 @@
       b.style.setProperty('--rot', (i % 2 === 0 ? -10 : 10) + 'deg');
       b.setAttribute('aria-label', it.title);
       const im = document.createElement('img');
-      im.src = it.url; im.alt = ''; im.loading = 'lazy';
+      im.src = it.thumb; im.alt = ''; im.loading = 'lazy';
       b.appendChild(im);
       b.addEventListener('click', (e) => { e.stopPropagation(); curIndex = i; render(); });
       dockRow.appendChild(b);

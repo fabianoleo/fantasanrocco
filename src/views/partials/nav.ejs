@@ -41,25 +41,25 @@
   <%# Desktop nav → Mega-menu a tendina con anteprima immagini (hover) %>
   <%
     const mmItems = [
-      { href: '/giochi',         label: 'Giochi e Slot',  img: '/images/galleria/palio-fuochi.jpg' },
-      { href: '/classifica',     label: 'Classifica',     img: '/images/galleria/sanrocco-applausi.jpg' },
+      { href: '/giochi',         label: 'Giochi e Slot',  img: '/images/galleria/thumb/palio-fuochi.webp' },
+      { href: '/classifica',     label: 'Classifica',     img: '/images/galleria/thumb/sanrocco-applausi.webp' },
       { href: '/programmazione', label: 'Programmazione', img: '/images/menu/programmazione.png' },
-      { href: '/palio',          label: 'Palio dei Fuochi', img: '/images/galleria/palio-collage.jpg', active: path === '/palio' },
-      { href: '/galleria',       label: 'Galleria',       img: '/images/galleria/fuochi.webp' },
-      { href: '/storia',         label: 'Storia',         img: '/images/galleria/processione-storica.jpg' },
-      { href: '/premio',         label: 'Premio',         img: '/images/galleria/sanrocco-oro.jpg' },
+      { href: '/palio',          label: 'Palio dei Fuochi', img: '/images/galleria/thumb/palio-collage.webp', active: path === '/palio' },
+      { href: '/galleria',       label: 'Galleria',       img: '/images/galleria/thumb/fuochi.webp' },
+      { href: '/storia',         label: 'Storia',         img: '/images/galleria/thumb/processione-storica.webp' },
+      { href: '/premio',         label: 'Premio',         img: '/images/galleria/thumb/sanrocco-oro.webp' },
     ];
     if (currentUser) {
-      mmItems.push({ href: '/missioni', label: 'Missioni', img: '/images/galleria/fuochisti-preparano.jpg', active: path.startsWith('/missioni') });
+      mmItems.push({ href: '/missioni', label: 'Missioni', img: '/images/galleria/thumb/fuochisti-preparano.webp', active: path.startsWith('/missioni') });
       mmItems.push({ href: '/profilo',  label: 'Profilo',  avatar: true });
       if (currentUser.role === 'moderator' || currentUser.role === 'admin')
-        mmItems.push({ href: '/moderazione', label: 'Modera', img: '/images/galleria/sanrocco-oro.jpg', staff: true });
+        mmItems.push({ href: '/moderazione', label: 'Modera', img: '/images/galleria/thumb/sanrocco-oro.webp', staff: true });
       if (currentUser.role === 'admin')
-        mmItems.push({ href: '/admin', label: 'Admin', img: '/images/galleria/sanrocco-oro.jpg', staff: true });
-      mmItems.push({ logout: true, label: 'Esci', img: '/images/galleria/sanrocco-rientro-fuochi.jpg' });
+        mmItems.push({ href: '/admin', label: 'Admin', img: '/images/galleria/thumb/sanrocco-oro.webp', staff: true });
+      mmItems.push({ logout: true, label: 'Esci', img: '/images/galleria/thumb/sanrocco-rientro-fuochi.webp' });
     } else {
-      mmItems.push({ href: '/registrati', label: 'Registrati', img: '/images/galleria/sanrocco-applausi.jpg' });
-      mmItems.push({ href: '/login',      label: 'Accedi',     img: '/images/galleria/piazza.webp' });
+      mmItems.push({ href: '/registrati', label: 'Registrati', img: '/images/galleria/thumb/sanrocco-applausi.webp' });
+      mmItems.push({ href: '/login',      label: 'Accedi',     img: '/images/galleria/thumb/piazza.webp' });
     }
     mmItems.forEach((it) => { if (it.active === undefined) it.active = (path === it.href); });
   %>
