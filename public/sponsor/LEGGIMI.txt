@@ -13,6 +13,7 @@ Metti qui i PNG con lo sfondo TRASPARENTE, usando esattamente questi nomi:
   cycling-botta.png        Cycling Botta
   vitello-paesano.png      Vitello Paesano
   target-communication.png Target Communication
+  lamberti.png             Studio Dentistico Michele Lamberti
 
 Non serve toccare il codice: la barra mostra solo i loghi il cui file
 esiste davvero, e ogni logo compare da solo appena lo copi qui (riavvia

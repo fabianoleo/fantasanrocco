@@ -733,6 +733,7 @@ const SPONSOR_ATTIVITA = [
   { file: 'cycling-botta.png',       nome: 'Cycling Botta' },
   { file: 'vitello-paesano.png',     nome: 'Vitello Paesano' },
   { file: 'target-communication.png', nome: 'Target Communication' },
+  { file: 'lamberti.png',            nome: 'Studio Dentistico Michele Lamberti' },
 ];
 
 const SPONSOR_LOGHI = (() => {
