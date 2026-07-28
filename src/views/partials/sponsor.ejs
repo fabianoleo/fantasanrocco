@@ -9,21 +9,26 @@
      ───────────────────────────────────────────────────────────────── */
   const sponsor = sponsorLoghi || [];
 
-  /* Il nastro deve restare più largo dello schermo per tutto il giro:
-     con 4 o 5 loghi una sola copia non copre un monitor largo e a metà
-     ciclo si aprirebbe un buco. Ripetiamo l'elenco 4 volte e trasliamo
-     di -50%, cioè esattamente 2 copie: il numero DEVE restare pari,
-     altrimenti il punto di ricongiunzione non cade su una ripetizione
-     intera e lo stacco si vede. */
-  const RIPETIZIONI = 4;
+  /* L'animazione trasla di -50%, cioè di METÀ nastro: perché il giro sia
+     continuo, quella metà deve restare più larga dello schermo per tutto il
+     ciclo, altrimenti alla fine si apre un buco sulla destra. Con pochi
+     loghi quattro ripetizioni non bastano — quattro copie di quattro loghi
+     fanno una metà da circa 900px, che su un monitor largo lascia scoperto
+     mezzo schermo. Quindi il numero di ripetizioni si adatta: si ripete
+     finché la metà del nastro non contiene abbastanza loghi da coprire
+     comodamente anche uno schermo grande. Deve restare PARI, altrimenti il
+     punto di ricongiunzione non cade su una ripetizione intera e lo stacco
+     si vede. */
+  const LOGHI_MINIMI_PER_META = 24;   // ~2700px: copre un monitor da 2560
+  const RIPETIZIONI = Math.max(4, 2 * Math.ceil(LOGHI_MINIMI_PER_META / sponsor.length));
 
-  /* La durata del giro NON può essere fissa: l'animazione trasla sempre di
-     metà nastro, quindi con il doppio dei loghi lo stesso tempo significa il
-     doppio della velocità. Tarata su 45s per 6 loghi, cioè 7,5s ciascuno,
-     tenendo costante il tempo per logo la barra scorre alla stessa andatura
-     che ce ne siano sei o quaranta. */
-  const SECONDI_PER_LOGO = 7.5;
-  const durata = (sponsor.length * SECONDI_PER_LOGO).toFixed(1);
+  /* La durata NON può essere fissa: il nastro percorre sempre la propria
+     metà, quindi se quella metà si allunga con lo stesso tempo la barra va
+     più veloce. Tenendo costante il tempo per singolo logo attraversato, la
+     velocità resta identica che gli sponsor siano quattro o quaranta.
+     3,75s a logo riproduce esattamente l'andatura originale. */
+  const SECONDI_PER_LOGO = 3.75;
+  const durata = ((RIPETIZIONI / 2) * sponsor.length * SECONDI_PER_LOGO).toFixed(1);
 %>
 <% if (sponsor.length) { %>
 <section class="spon" aria-label="I nostri sponsor" style="--spon-durata: <%= durata %>s">

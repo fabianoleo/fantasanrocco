@@ -1,48 +1,81 @@
 LOGHI DEGLI SPONSOR
 ===================
 
-Metti qui i PNG con lo sfondo TRASPARENTE, usando esattamente questi nomi:
+I file originali si lasciano cadere in loghi-png/ con il nome che hanno.
+Da li' si preparano con:
+
+    node src/prepara_loghi.js loghi-png/tuofile.png:nome-giusto.png
+
+Lo script toglie il fondo pieno, cancella le cornici che certi export si
+portano dietro e ritaglia il vuoto attorno (senza ritaglio un marchio con
+molto margine apparirebbe piu' piccolo degli altri, perche' nella barra
+sono tutti alti uguali). Il risultato va in questa cartella.
+
+LA BARRA E' SU FONDO SCURO: un marchio nero o marrone scuro non si vede.
+Serve la versione chiara, o quella per fondi scuri. E' il motivo per cui
+qui sotto alcuni risultano da rifare.
+
+STATO
+-----
+
+  OK  = gia' in linea
+  --  = manca il file
+  !!  = file ricevuto ma non utilizzabile, serve rifarlo
 
 L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
 
-  romalba.png              Romalba
-  nemo.png                 Nemo Restaurant Food & Wine
-  gym-hall.png             Gym Hall Muscle Zone
-  athena-fitness.png       Athena Fitness
-  fatima-leo.png           Fatima Leo Salon & Academy
-  day-by-day.png           Day by Day Multibrand Siano
-  medea.png                Centro Estetico Medea
-  telefonia-eredi-leo.png  Telefonia Eredi Leo
-  cycling-botta.png        Cycling Botta
-  vitello-paesano.png      Al Vitello Paesano
-  bar-frasci-2-0.png       Bar V. Frasci 2.0
-  de-santis.png            De Santis
-  bellini-events.png       Bellini Events
-  babba-house.png          Babba House
-  bar-vittoria.png         Bar Vittoria
-  kalu.png                 Kalu'
-  luigi-fotografo.png      Luigi Fotografo
-  pizzeria-zio-mauro.png   Pizzeria Zio Mauro
-  pizzeria-frasci.png      Pizzeria V. Frasci
-  lamberti.png             Studio Dentistico Michele Lamberti
-  chalet.png               Chalet
-  revolution.png           Revolution (Bar Kral)
-  zio-enrico.png           Zio Enrico
-  bar-sport.png            Bar Sport
-  barberia-frasci.png      Barberia Frasci
-  marcello-frasci.png      Marcello Frasci
-  franzis.png              Franzi's
-  pizzeria-walter.png      Pizzeria Walter
-  mauro-parrucchiere.png   Mauro Parrucchiere
-  bc-coffe.png             BC Coffe & More
-  parrucchiere-tony.png    Parrucchiere Tony
-  bar-ideal.png            Bar Ideal
-  gelateria-gerry.png      Gelateria Gerry
+  --  romalba.png              Romalba
+  OK  nemo.png                 Nemo Restaurant Food & Wine
+  OK  gym-hall.png             Gym Hall Muscle Zone
+  --  athena-fitness.png       Athena Fitness
+  --  fatima-leo.png           Fatima Leo Salon & Academy
+  --  day-by-day.png           Day by Day Multibrand Siano
+  --  medea.png                Centro Estetico Medea
+  OK  telefonia-eredi-leo.png  Telefonia Eredi Leo
+  --  cycling-botta.png        Cycling Botta
+  --  vitello-paesano.png      Al Vitello Paesano
+  --  bar-frasci-2-0.png       Bar V. Frasci 2.0
+  !!  de-santis.png            De Santis          marrone scuro, non si legge
+  OK  bellini-events.png       Bellini Events
+  --  babba-house.png          Babba House
+  !!  bar-vittoria.png         Bar Vittoria       nero pieno, non si legge
+  --  kalu.png                 Kalu'
+  --  luigi-fotografo.png      Luigi Fotografo
+  --  pizzeria-zio-mauro.png   Pizzeria Zio Mauro
+  !!  pizzeria-frasci.png      Pizzeria V. Frasci nero pieno, non si legge
+  --  lamberti.png             Studio Dentistico Michele Lamberti
+  --  chalet.png               Chalet
+  --  revolution.png           Revolution (Bar Kral)
+  --  zio-enrico.png           Zio Enrico
+  --  bar-sport.png            Bar Sport
+  --  barberia-frasci.png      Barberia Frasci
+  --  marcello-frasci.png      Marcello Frasci
+  --  franzis.png              Franzi's
+  --  pizzeria-walter.png      Pizzeria Walter
+  --  mauro-parrucchiere.png   Mauro Parrucchiere
+  --  bc-coffe.png             BC Coffe & More
+  --  parrucchiere-tony.png    Parrucchiere Tony
+  --  bar-ideal.png            Bar Ideal
+  --  gelateria-gerry.png      Gelateria Gerry
 
 Non sul foglio, arrivati dopo:
 
-  target-communication.png Target Communication
-  di-filippo.png           Di Filippo Fotografi
+  --  target-communication.png Target Communication
+  !!  di-filippo.png           Di Filippo Fotografi  export rotto: fondo
+                               grigio e un rettangolo bianco sulla destra
+
+DA RIFARE (4)
+-------------
+
+  de-santis     chiedere la versione chiara, o quella su fondo scuro
+  bar-vittoria  idem
+  v-frasci      idem (il file ricevuto si chiama v-frasci.png ed e' della
+                PIZZERIA, quindi va in pizzeria-frasci.png)
+  di-filippo    richiedere l'export: quello ricevuto ha il fondo grigio e
+                un rettangolo bianco incollato accanto al marchio
+
+COME FUNZIONA
+-------------
 
 Non serve toccare il codice: la barra mostra solo i loghi il cui file
 esiste davvero, e ogni logo compare da solo appena lo copi qui (riavvia
@@ -54,4 +87,4 @@ Per aggiungere un'attivita' non in elenco: aggiungi la riga in
 SPONSOR_ATTIVITA dentro src/server.js, poi copia qui il suo PNG.
 
 Loghi consigliati: altezza almeno 200 px, sfondo trasparente, marchio
-chiaro (la barra e' su fondo scuro).
+chiaro.
