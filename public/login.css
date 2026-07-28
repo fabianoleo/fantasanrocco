@@ -7,6 +7,7 @@
 .login-stage {
   position: relative;
   min-height: calc(100vh - 200px);
+  min-height: calc(100svh - 200px);   /* iOS: altezza reale, niente scroll di troppo */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -276,7 +277,7 @@
 
 /* ---------- Mobile -------------------------------------------------- */
 @media (max-width: 560px) {
-  .login-stage { min-height: calc(100vh - 150px); padding: 1.5rem 1rem; }
+  .login-stage { min-height: calc(100vh - 150px); min-height: calc(100svh - 150px); padding: 1.5rem 1rem; }
   .login-card-inner { padding: 1.8rem 1.4rem 1.5rem; border-radius: 20px; }
   .login-head h1 { font-size: 1.4rem; }
 }

@@ -124,7 +124,11 @@ body {
   font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
+  /* svh = altezza REALE con le barre del browser visibili. Con 100vh su iOS
+     la pagina è più alta dello schermo e resta uno scroll di troppo.
+     La riga 100vh resta prima come ripiego per i browser vecchi. */
   min-height: 100vh;
+  min-height: 100svh;
   display: flex; flex-direction: column;
   line-height: 1.62;
   -webkit-font-smoothing: antialiased;
