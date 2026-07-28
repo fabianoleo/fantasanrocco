@@ -892,33 +892,36 @@ function jetpackLeaderboardRows() {
 // punteggio nel gioco. Al raggiungimento il server inserisce una prova già
 // approvata → i punti entrano in classifica come le altre missioni.
 const GAME_ACHIEVEMENTS = [
+  // NB: le "key" restano quelle storiche (g-50, gp-3…) anche quando la soglia
+  // cambia: sono l'identificativo della missione nel database, rinominarle
+  // farebbe perdere i traguardi già conquistati dagli utenti.
   // ── Punteggio · base (accessibili a tutti) ───────────────────────
   { key: 'g-run',   metric: 'score', threshold: 1,     points: 8,   title: 'Prima corsa',                 desc: 'Completa la tua prima partita a «Corri San Rocco».' },
-  { key: 'g-50',    metric: 'score', threshold: 75,    points: 10,   title: 'In cammino',                  desc: 'Raggiungi 50 punti in una partita.' },
-  { key: 'g-120',   metric: 'score', threshold: 200,   points: 15,   title: 'Pellegrino instancabile',     desc: 'Raggiungi 120 punti in una partita.' },
-  { key: 'g-250',   metric: 'score', threshold: 400,   points: 20,   title: 'Col cane fino ai fuochi',      desc: 'Raggiungi 250 punti in una partita.' },
-  { key: 'g-400',   metric: 'score', threshold: 700,   points: 30,   title: 'Leggenda di Siano',           desc: 'Raggiungi 400 punti in una partita.' },
+  { key: 'g-50',    metric: 'score', threshold: 75,    points: 10,   title: 'In cammino',                  desc: 'Raggiungi 75 punti in una partita.' },
+  { key: 'g-120',   metric: 'score', threshold: 200,   points: 15,   title: 'Pellegrino instancabile',     desc: 'Raggiungi 200 punti in una partita.' },
+  { key: 'g-250',   metric: 'score', threshold: 400,   points: 20,   title: 'Col cane fino ai fuochi',      desc: 'Raggiungi 400 punti in una partita.' },
+  { key: 'g-400',   metric: 'score', threshold: 700,   points: 30,   title: 'Leggenda di Siano',           desc: 'Raggiungi 700 punti in una partita.' },
   // ── Punteggio · avanzati (per chi va lontano) ───────────────────
-  { key: 'g-600',   metric: 'score', threshold: 1100,   points: 40,   title: 'Devoto tra i devoti',         desc: 'Raggiungi 600 punti in una partita.' },
-  { key: 'g-850',   metric: 'score', threshold: 1600,   points: 50,  title: 'Cavaliere di San Rocco',      desc: 'Raggiungi 850 punti in una partita.' },
-  { key: 'g-1100',  metric: 'score', threshold: 2200,  points: 65,  title: 'Guardiano della processione', desc: 'Raggiungi 1100 punti in una partita.' },
-  { key: 'g-1500',  metric: 'score', threshold: 3000,  points: 80,  title: 'Il Santo corre ancora',       desc: 'Raggiungi 1500 punti in una partita.' },
-  { key: 'g-2000',  metric: 'score', threshold: 4200,  points: 105,  title: 'Immortale come San Rocco',    desc: 'Raggiungi 2000 punti in una partita.' },
+  { key: 'g-600',   metric: 'score', threshold: 1100,   points: 40,   title: 'Devoto tra i devoti',         desc: 'Raggiungi 1.100 punti in una partita.' },
+  { key: 'g-850',   metric: 'score', threshold: 1600,   points: 50,  title: 'Cavaliere di San Rocco',      desc: 'Raggiungi 1.600 punti in una partita.' },
+  { key: 'g-1100',  metric: 'score', threshold: 2200,  points: 65,  title: 'Guardiano della processione', desc: 'Raggiungi 2.200 punti in una partita.' },
+  { key: 'g-1500',  metric: 'score', threshold: 3000,  points: 80,  title: 'Il Santo corre ancora',       desc: 'Raggiungi 3.000 punti in una partita.' },
+  { key: 'g-2000',  metric: 'score', threshold: 4200,  points: 105,  title: 'Immortale come San Rocco',    desc: 'Raggiungi 4.200 punti in una partita.' },
   // ── Punteggio · leggendari (fino a 15.000) ──────────────────────
-  { key: 'g-3000',  metric: 'score', threshold: 5800,  points: 140,  title: 'Maratoneta della festa',      desc: 'Raggiungi 3.000 punti in una partita.' },
-  { key: 'g-4500',  metric: 'score', threshold: 7800,  points: 175,  title: 'Veglia infinita',             desc: 'Raggiungi 4.500 punti in una partita.' },
-  { key: 'g-6000',  metric: 'score', threshold: 10000,  points: 225,  title: 'Patrono dei pellegrini',      desc: 'Raggiungi 6.000 punti in una partita.' },
-  { key: 'g-8000',  metric: 'score', threshold: 13000,  points: 280,  title: 'Miracolo di Siano',           desc: 'Raggiungi 8.000 punti in una partita.' },
-  { key: 'g-10000', metric: 'score', threshold: 16500, points: 355,  title: 'Santo tra i santi',           desc: 'Raggiungi 10.000 punti in una partita.' },
-  { key: 'g-12500', metric: 'score', threshold: 20500, points: 440,  title: 'Eterno camminatore',          desc: 'Raggiungi 12.500 punti in una partita.' },
-  { key: 'g-15000', metric: 'score', threshold: 25000, points: 575, title: 'Mito di San Rocco',           desc: 'Raggiungi 15.000 punti in una partita. Sei inarrestabile.' },
+  { key: 'g-3000',  metric: 'score', threshold: 5800,  points: 140,  title: 'Maratoneta della festa',      desc: 'Raggiungi 5.800 punti in una partita.' },
+  { key: 'g-4500',  metric: 'score', threshold: 7800,  points: 175,  title: 'Veglia infinita',             desc: 'Raggiungi 7.800 punti in una partita.' },
+  { key: 'g-6000',  metric: 'score', threshold: 10000,  points: 225,  title: 'Patrono dei pellegrini',      desc: 'Raggiungi 10.000 punti in una partita.' },
+  { key: 'g-8000',  metric: 'score', threshold: 13000,  points: 280,  title: 'Miracolo di Siano',           desc: 'Raggiungi 13.000 punti in una partita.' },
+  { key: 'g-10000', metric: 'score', threshold: 16500, points: 355,  title: 'Santo tra i santi',           desc: 'Raggiungi 16.500 punti in una partita.' },
+  { key: 'g-12500', metric: 'score', threshold: 20500, points: 440,  title: 'Eterno camminatore',          desc: 'Raggiungi 20.500 punti in una partita.' },
+  { key: 'g-15000', metric: 'score', threshold: 25000, points: 575, title: 'Mito di San Rocco',           desc: 'Raggiungi 25.000 punti in una partita.' },
   // ── Partite giocate (più giochi, più punti) ─────────────────────
-  { key: 'gp-3',    metric: 'plays', threshold: 5,     points: 8,   title: 'Ci ho preso gusto',           desc: 'Gioca 3 partite a «Corri San Rocco».' },
-  { key: 'gp-8',    metric: 'plays', threshold: 15,     points: 12,   title: 'Habitué del cortile',         desc: 'Gioca 8 partite.' },
-  { key: 'gp-20',   metric: 'plays', threshold: 35,    points: 22,   title: 'Cliente fisso',               desc: 'Gioca 20 partite.' },
-  { key: 'gp-40',   metric: 'plays', threshold: 70,    points: 34,   title: 'Veterano del distributore',   desc: 'Gioca 40 partite.' },
-  { key: 'gp-75',   metric: 'plays', threshold: 130,    points: 52,  title: 'Mai una pausa',               desc: 'Gioca 75 partite.' },
-  { key: 'gp-150',  metric: 'plays', threshold: 250,   points: 82,  title: 'Inchiodato allo schermo',     desc: 'Gioca 150 partite. Ma quanto giochi?' },
+  { key: 'gp-3',    metric: 'plays', threshold: 5,     points: 8,   title: 'Ci ho preso gusto',           desc: 'Gioca 5 partite a «Corri San Rocco».' },
+  { key: 'gp-8',    metric: 'plays', threshold: 15,     points: 12,   title: 'Habitué del cortile',         desc: 'Gioca 15 partite.' },
+  { key: 'gp-20',   metric: 'plays', threshold: 35,    points: 22,   title: 'Cliente fisso',               desc: 'Gioca 35 partite.' },
+  { key: 'gp-40',   metric: 'plays', threshold: 70,    points: 34,   title: 'Veterano del distributore',   desc: 'Gioca 70 partite.' },
+  { key: 'gp-75',   metric: 'plays', threshold: 130,    points: 52,  title: 'Mai una pausa',               desc: 'Gioca 130 partite.' },
+  { key: 'gp-150',  metric: 'plays', threshold: 250,   points: 82,  title: 'Inchiodato allo schermo',     desc: 'Gioca 250 partite. Ma quanto giochi?' },
 ];
 
 // Crea/aggiorna le missioni del gioco allo startup (idempotente).
