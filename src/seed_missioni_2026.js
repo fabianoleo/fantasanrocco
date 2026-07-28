@@ -25,16 +25,22 @@ const DAY = {
   18: ['2026-08-18 00:00:00', '2026-08-18 23:59:59'],
 };
 
+// Finestra che copre più giorni, per le missioni che non stanno in uno solo.
+const DAL_AL = (da, a) => [`2026-08-${da} 00:00:00`, `2026-08-${a} 23:59:59`];
+
 // m(nome, descrizione, rarità, opzioni)
 // opzioni: { rep: ripetibile più volte al giorno, day: N sfida giornaliera,
 //            flash: true → creata NASCOSTA (la attivi tu quando parte il flash),
-//            photo: false → non richiede foto (es. parola segreta) }
+//            photo: false → non richiede foto (es. parola segreta),
+//            win: [da, a] finestra su misura invece del singolo giorno,
+//            giorni: '13,14,15,17' giorni ammessi dentro la finestra, per le
+//                    missioni valide a giorni alterni }
 function m(name, desc, rar, opt = {}) {
   return { name, desc, rar, ...opt };
 }
 
 const MISSIONS = [
-  // ── PAESE & TRADIZIONE (17) ──────────────────────────────────────
+  // ── PAESE & TRADIZIONE (16) ──────────────────────────────────────
   m('Primo Cittadino', 'Scatta una foto con il Sindaco di Siano.', 'rara', { sec: 'paese' }),
   m('Cantiere', 'Scatta una foto di un anziano che critica un lavoro pubblico.', 'non-comune', { sec: 'paese' }),
   m('Asso di Mazze', 'Scatta una foto di una partita a carte davanti alla Chiesa.', 'comune', { sec: 'paese' }),
@@ -48,7 +54,6 @@ const MISSIONS = [
   m('Il Pacco', 'Scatta una foto con il postino o corriere.', 'non-comune', { sec: 'paese' }),
   m("A' Machina Zozzosa", 'Scatta una foto ad un’auto impolverata sulla quale sia stata scritta la parola "FantaSanRocco".', 'rara', { sec: 'paese' }),
   m('A Per', 'Spostati con un mezzo alternativo e scatta una foto.', 'rara', { sec: 'paese' }),
-  m('Tap Tap', 'Scatta un selfie con Peppe Tap Tap.', 'non-comune', { sec: 'paese' }),
   m('Tradizione', 'Impara una tradizione da un anziano e documentalo con una foto.', 'rara', { sec: 'paese' }),
   m('Bollino', 'Scatta una foto con un adesivo del logo "Fanta San Rocco".', 'rara', { sec: 'paese' }),
   m('È sempre San Valentino da Romalba', 'Scatta una foto del mazzo di fiori comprato da Romalba per il/la tuo/a partner.', 'rara', { sec: 'paese' }),
@@ -125,11 +130,23 @@ const MISSIONS = [
   m('Prima Fila', 'Scatta una foto mentre prendi posto a Piazza Mercato.', 'non-comune', { day: 18 }),
   m('Tutti Pronti', 'Scatta una foto della spesa per i fuochi.', 'non-comune', { day: 18 }),
   m('Tutti in Cerchio', 'Flash! Prendetevi per mano e formate un cerchio. Ricorda di scattare la foto!', 'epica', { flash: true }),
+
+  // ── FLASH SENZA GIORNO FISSO ─────────────────────────────────────
+  // Peppe Tap Tap non si sa quando passa: la missione la sblocca lo staff
+  // quando lo vede in giro, non un orario deciso a tavolino.
+  m('Tap Tap', 'Flash! Scatta un selfie con Peppe Tap Tap.', 'non-comune', { flash: true }),
+
+  // ── MISSIONE A GIORNI ALTERNI ────────────────────────────────────
+  // Vale il 13, 14, 15 e 17, ma NON il 16: la finestra fa da recinto esterno
+  // e `giorni` ne ritaglia il buco.
+  m('Sticker Limited Edition',
+    'Fai una foto al drink con l’adesivo del FantaSanRocco (se sei riuscito a prenderlo).',
+    'non-comune', { win: DAL_AL(13, 17), giorni: '13,14,15,17' }),
 ];
 
 const insert = db.prepare(`INSERT INTO missions
-  (title, description, points, requires_photo, repeatable, active_from, active_to, archived, section)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+  (title, description, points, requires_photo, repeatable, active_from, active_to, archived, section, giorni_attivi)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
 
 const run = db.transaction(() => {
   const before = db.prepare('SELECT COUNT(*) AS c FROM missions').get().c;
@@ -137,7 +154,7 @@ const run = db.transaction(() => {
   for (const x of MISSIONS) {
     const title = `${EMOJI[x.rar]} ${x.name}`;
     const points = PTS[x.rar];
-    const win = x.day ? DAY[x.day] : [null, null];
+    const win = x.win || (x.day ? DAY[x.day] : [null, null]);
     insert.run(
       title,
       x.desc,
@@ -148,6 +165,7 @@ const run = db.transaction(() => {
       win[1],
       x.flash ? 1 : 0,
       x.sec || null,
+      x.giorni || null,
     );
   }
   return before;

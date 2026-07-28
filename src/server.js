@@ -607,12 +607,24 @@ function escapeHtml(s) {
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
+// Helper: oggi (ora italiana) è uno dei giorni elencati in `giorni_attivi`?
+// La colonna serve alle missioni che valgono a giorni alterni — 13, 14, 15 e
+// 17 ma non il 16 — che una sola coppia active_from/active_to non sa dire.
+// Senza elenco la risposta è sempre sì, ed è il caso di quasi tutte.
+function isGiornoAmmesso(m) {
+  if (!m.giorni_attivi) return true;
+  const giornoOggi = Number(todayStr().slice(8, 10));
+  return String(m.giorni_attivi)
+    .split(',')
+    .some((g) => Number(g.trim()) === giornoOggi);
+}
+
 // Helper: una missione è attiva adesso?
 function isMissionActiveNow(m) {
   const now = Date.now();
   if (m.active_from && now < romeStringToDate(m.active_from).getTime()) return false;
   if (m.active_to && now > romeStringToDate(m.active_to).getTime()) return false;
-  return true;
+  return isGiornoAmmesso(m);
 }
 
 // "Non attiva" ha due significati molto diversi: una sfida del 16 agosto vista
@@ -622,6 +634,9 @@ function missionState(m) {
   const now = Date.now();
   if (m.active_from && now < romeStringToDate(m.active_from).getTime()) return 'locked';
   if (m.active_to && now > romeStringToDate(m.active_to).getTime()) return 'expired';
+  // Giorno di pausa dentro la finestra (il 16, per una missione 13-15 e 17):
+  // è 'locked' e non 'expired', perché domani la missione torna disponibile.
+  if (!isGiornoAmmesso(m)) return 'locked';
   return 'active';
 }
 
@@ -631,6 +646,24 @@ const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno',
 function romeDayLabel(s) {
   const mm = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
   return mm ? `${Number(mm[3])} ${MESI[Number(mm[2]) - 1]}` : null;
+}
+
+// Quando si sblocca una missione bloccata? Di norma è la data di active_from,
+// ma per una missione a giorni alterni ferma in un giorno di pausa quella data
+// è già passata: lì bisogna dire il prossimo giorno buono dell'elenco.
+function missionUnlockLabel(m) {
+  const primaDellaFinestra =
+    m.active_from && Date.now() < romeStringToDate(m.active_from).getTime();
+  if (!primaDellaFinestra && m.giorni_attivi && !isGiornoAmmesso(m)) {
+    const oggi = Number(todayStr().slice(8, 10));
+    const prossimo = String(m.giorni_attivi)
+      .split(',')
+      .map((g) => Number(g.trim()))
+      .filter((g) => Number.isFinite(g) && g > oggi)
+      .sort((a, b) => a - b)[0];
+    return prossimo ? `${prossimo} ${MESI[Number(todayStr().slice(5, 7)) - 1]}` : null;
+  }
+  return romeDayLabel(m.active_from);
 }
 
 // Healthcheck: usato da Docker/monitoraggio esterno per sapere se il server
@@ -2210,7 +2243,7 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
       rarity: missionParts(m.title),
       locked,
       expired: state === 'expired',
-      unlockLabel: locked ? romeDayLabel(m.active_from) : null,
+      unlockLabel: locked ? missionUnlockLabel(m) : null,
       activeNow: state === 'active',
       hasPending:    statuses.includes('pending'),
       hasApproved:   statuses.includes('approved'),
@@ -2296,7 +2329,7 @@ app.get('/missioni/:id', auth.requireLogin, (req, res) => {
   // Missione non ancora sbloccata: niente dettaglio, altrimenti basterebbe
   // indovinare l'URL per leggere in anticipo le sfide dei giorni successivi.
   if (missionState(m) === 'locked') {
-    const when = romeDayLabel(m.active_from);
+    const when = missionUnlockLabel(m);
     flash(req, 'info', `Questa missione si sblocca${when ? ' il ' + when : ' più avanti'}. Per ora vedi solo la rarità!`);
     return res.redirect('/missioni');
   }

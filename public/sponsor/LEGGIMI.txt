@@ -7,13 +7,22 @@ Da li' si preparano con:
     node src/prepara_loghi.js loghi-png/tuofile.png:nome-giusto.png
 
 Lo script toglie il fondo pieno, cancella le cornici che certi export si
-portano dietro e ritaglia il vuoto attorno (senza ritaglio un marchio con
+portano dietro, ritaglia il vuoto attorno (senza ritaglio un marchio con
 molto margine apparirebbe piu' piccolo degli altri, perche' nella barra
-sono tutti alti uguali). Il risultato va in questa cartella.
+sono tutti alti uguali) e rimpicciolisce a 200px. Il risultato va in
+questa cartella.
 
 LA BARRA E' SU FONDO SCURO: un marchio nero o marrone scuro non si vede.
-Serve la versione chiara, o quella per fondi scuri. E' il motivo per cui
-qui sotto alcuni risultano da rifare.
+Se non esiste la versione chiara, si aggiunge --schiarisci prima del file:
+
+    node src/prepara_loghi.js --schiarisci loghi-png/tuofile.png:nome.png
+
+Ribalta la LUMINOSITA' lasciando stare tinta e saturazione, quindi il nero
+diventa bianco e il marrone diventa crema restando marrone. Un negativo
+normale invece sposterebbe anche la tinta, e un girasole giallo diventerebbe
+azzurro. Attenzione: un marchio costruito su un disco nero pieno diventa un
+disco BIANCO pieno, che nella barra pesa parecchio (e' il caso di Bar
+Vittoria). Se arriva la versione chiara originale, meglio quella.
 
 STATO
 -----
@@ -31,18 +40,18 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   --  fatima-leo.png           Fatima Leo Salon & Academy
   --  day-by-day.png           Day by Day Multibrand Siano
   --  medea.png                Centro Estetico Medea
-  OK  telefonia-eredi-leo.png  Telefonia Eredi Leo
+  --  telefonia-eredi-leo.png  Telefonia Eredi Leo  logo scartato, chiederne un altro
   --  cycling-botta.png        Cycling Botta
   --  vitello-paesano.png      Al Vitello Paesano
   --  bar-frasci-2-0.png       Bar V. Frasci 2.0
-  !!  de-santis.png            De Santis          marrone scuro, non si legge
+  OK  de-santis.png            De Santis  schiarito
   OK  bellini-events.png       Bellini Events
   --  babba-house.png          Babba House
-  !!  bar-vittoria.png         Bar Vittoria       nero pieno, non si legge
+  OK  bar-vittoria.png         Bar Vittoria  schiarito, viene un disco bianco
   --  kalu.png                 Kalu'
   --  luigi-fotografo.png      Luigi Fotografo
   --  pizzeria-zio-mauro.png   Pizzeria Zio Mauro
-  !!  pizzeria-frasci.png      Pizzeria V. Frasci nero pieno, non si legge
+  OK  pizzeria-frasci.png      Pizzeria V. Frasci  schiarito
   --  lamberti.png             Studio Dentistico Michele Lamberti
   --  chalet.png               Chalet
   --  revolution.png           Revolution (Bar Kral)
@@ -64,15 +73,16 @@ Non sul foglio, arrivati dopo:
   !!  di-filippo.png           Di Filippo Fotografi  export rotto: fondo
                                grigio e un rettangolo bianco sulla destra
 
-DA RIFARE (4)
--------------
+DA CHIEDERE ANCORA (2)
+----------------------
 
-  de-santis     chiedere la versione chiara, o quella su fondo scuro
-  bar-vittoria  idem
-  v-frasci      idem (il file ricevuto si chiama v-frasci.png ed e' della
-                PIZZERIA, quindi va in pizzeria-frasci.png)
-  di-filippo    richiedere l'export: quello ricevuto ha il fondo grigio e
-                un rettangolo bianco incollato accanto al marchio
+  di-filippo    l'export ricevuto e' rotto: fondo grigio e un rettangolo
+                bianco incollato accanto al marchio. Serve rifatto.
+  eredi-leo     il logo ricevuto e' stato scartato, ne serve un altro.
+
+Nota: il file v-frasci.png in loghi-png/ e' della PIZZERIA, per questo il
+risultato si chiama pizzeria-frasci.png. Il Bar V. Frasci 2.0 e' un'altra
+attivita' e il suo logo manca ancora.
 
 COME FUNZIONA
 -------------

@@ -7,7 +7,15 @@
 //   3. ritaglia il vuoto attorno: i loghi sono alti tutti uguali nella
 //      barra, quindi chi ha più margine nel file apparirebbe più piccolo
 //
-// Uso:  node src/_prepara_loghi.js sorgente.png:destinazione.png [...]
+// Uso:  node src/prepara_loghi.js sorgente.png:destinazione.png [...]
+//
+// Con --schiarisci prima di un file, quel logo viene anche schiarito: si
+// inverte la LUMINOSITÀ lasciando stare tinta e saturazione, quindi il nero
+// diventa bianco e il marrone diventa crema, ma restano marrone e crema
+// invece di virare al blu come farebbe un negativo. Serve per i marchi
+// disegnati per la carta bianca, che su fondo scuro sparirebbero.
+//
+//   node src/prepara_loghi.js --schiarisci loghi-png/x.png:x.png
 // ===================================================================
 const { Jimp } = require('jimp');
 
@@ -15,7 +23,39 @@ const TOLLERANZA = 42;   // scostamento ammesso dal colore di fondo
 const CORNICE = 3;       // spessore del bordo da cancellare prima di iniziare
 const ALTEZZA_MAX = 200; // nella barra sono alti 48px: 200 basta anche su retina
 
-async function prepara(sorgente, destinazione) {
+// rgb → hsl → rgb, con la sola L ribaltata. Passare per HSL invece di fare
+// 255-x su ogni canale è tutta la differenza: il negativo puro sposta anche
+// la tinta, e un girasole giallo diventerebbe azzurro.
+function schiarisciPixel(d, o) {
+  const r = d[o] / 255, g = d[o + 1] / 255, b = d[o + 2] / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+  const l = (mx + mn) / 2;
+  let hh = 0, s = 0;
+  if (mx !== mn) {
+    const c = mx - mn;
+    s = l > 0.5 ? c / (2 - mx - mn) : c / (mx + mn);
+    if (mx === r) hh = ((g - b) / c + (g < b ? 6 : 0));
+    else if (mx === g) hh = (b - r) / c + 2;
+    else hh = (r - g) / c + 4;
+    hh /= 6;
+  }
+  const l2 = 1 - l;
+  if (s === 0) { d[o] = d[o + 1] = d[o + 2] = Math.round(l2 * 255); return; }
+  const q = l2 < 0.5 ? l2 * (1 + s) : l2 + s - l2 * s;
+  const p = 2 * l2 - q;
+  const canale = (t) => {
+    if (t < 0) t += 1; if (t > 1) t -= 1;
+    if (t < 1 / 6) return p + (q - p) * 6 * t;
+    if (t < 1 / 2) return q;
+    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+    return p;
+  };
+  d[o] = Math.round(canale(hh + 1 / 3) * 255);
+  d[o + 1] = Math.round(canale(hh) * 255);
+  d[o + 2] = Math.round(canale(hh - 1 / 3) * 255);
+}
+
+async function prepara(sorgente, destinazione, schiarisci = false) {
   const img = await Jimp.read(sorgente);
   const { width: w, height: h, data } = img.bitmap;
   const idx = (x, y) => (y * w + x) * 4;
@@ -73,6 +113,13 @@ async function prepara(sorgente, destinazione) {
   if (x1 < 0) throw new Error(`${sorgente}: non è rimasto nulla dopo lo scontorno`);
   img.crop({ x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 });
 
+  // 3-bis. schiarimento, solo se richiesto. Va fatto DOPO lo scontorno: sui
+  // pixel di fondo non ha senso, e su quelli già trasparenti non si vedrebbe.
+  if (schiarisci) {
+    const dd = img.bitmap.data;
+    for (let o = 0; o < dd.length; o += 4) if (dd[o + 3] > 0) schiarisciPixel(dd, o);
+  }
+
   // 4. rimpicciolimento: nella barra i loghi sono alti 48px, e stanno su OGNI
   //    pagina senza lazy loading. Tenerli a 1500px vorrebbe dire spedire
   //    qualche megabyte a ogni visita per disegnarne quaranta.
@@ -87,9 +134,13 @@ async function prepara(sorgente, destinazione) {
 }
 
 (async () => {
+  // --schiarisci vale per il file che lo segue, non per tutti
+  let schiarisci = false;
   for (const arg of process.argv.slice(2)) {
+    if (arg === '--schiarisci') { schiarisci = true; continue; }
     const [da, a] = arg.split(':');
-    const r = await prepara(da, a);
-    console.log(`${a}  ${r.prima} → ${r.dopo}  (fondo: ${r.fondo})`);
+    const r = await prepara(da, a, schiarisci);
+    console.log(`${a}  ${r.prima} → ${r.dopo}  (fondo: ${r.fondo}${schiarisci ? ', schiarito' : ''})`);
+    schiarisci = false;
   }
 })();

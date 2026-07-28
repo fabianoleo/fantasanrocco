@@ -124,6 +124,13 @@ try { db.exec('CREATE INDEX IF NOT EXISTS idx_submissions_phash ON submissions(p
 // Si azzera appena pubblicata, così non riparte una seconda volta.
 try { db.exec('ALTER TABLE missions ADD COLUMN publish_at TEXT'); } catch {}
 
+// Giorni "a salti": active_from/active_to descrivono UN intervallo continuo, e
+// non bastano per una missione che vale il 13, 14, 15 e 17 ma non il 16. Qui si
+// elencano i giorni del mese ammessi ("13,14,15,17") DENTRO quell'intervallo:
+// la finestra resta il recinto esterno, questa colonna ne ritaglia i buchi.
+// NULL (il caso normale) = tutti i giorni dell'intervallo, come prima.
+try { db.exec('ALTER TABLE missions ADD COLUMN giorni_attivi TEXT'); } catch {}
+
 // Bonus-sezione già accreditati (un utente lo riceve una sola volta per sezione).
 db.exec(`
 CREATE TABLE IF NOT EXISTS section_bonuses (
