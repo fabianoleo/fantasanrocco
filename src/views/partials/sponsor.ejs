@@ -16,9 +16,17 @@
      altrimenti il punto di ricongiunzione non cade su una ripetizione
      intera e lo stacco si vede. */
   const RIPETIZIONI = 4;
+
+  /* La durata del giro NON può essere fissa: l'animazione trasla sempre di
+     metà nastro, quindi con il doppio dei loghi lo stesso tempo significa il
+     doppio della velocità. Tarata su 45s per 6 loghi, cioè 7,5s ciascuno,
+     tenendo costante il tempo per logo la barra scorre alla stessa andatura
+     che ce ne siano sei o quaranta. */
+  const SECONDI_PER_LOGO = 7.5;
+  const durata = (sponsor.length * SECONDI_PER_LOGO).toFixed(1);
 %>
 <% if (sponsor.length) { %>
-<section class="spon" aria-label="I nostri sponsor">
+<section class="spon" aria-label="I nostri sponsor" style="--spon-durata: <%= durata %>s">
   <p class="spon-label">I nostri sponsor</p>
 
   <div class="spon-viewport">

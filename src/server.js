@@ -722,7 +722,11 @@ const PREMIO_PER_POSIZIONE = Object.fromEntries(PREMI.map((p) => [p.pos, p]));
 // barra da solo, senza toccare il codice. Il controllo si fa una volta
 // all'avvio — la barra è in ogni pagina, non può costare un accesso al
 // disco a ogni richiesta.
+// L'ordine segue il foglio scritto a mano degli sponsor (prima colonna e poi
+// seconda), così l'elenco si ricontrolla riga per riga contro l'originale.
+// In fondo chi è arrivato dopo, e sul foglio non c'è.
 const SPONSOR_ATTIVITA = [
+  { file: 'romalba.png',             nome: 'Romalba' },
   { file: 'nemo.png',                nome: 'Nemo Restaurant Food & Wine' },
   { file: 'gym-hall.png',            nome: 'Gym Hall Muscle Zone' },
   { file: 'athena-fitness.png',      nome: 'Athena Fitness' },
@@ -731,9 +735,32 @@ const SPONSOR_ATTIVITA = [
   { file: 'medea.png',               nome: 'Centro Estetico Medea' },
   { file: 'telefonia-eredi-leo.png', nome: 'Telefonia Eredi Leo' },
   { file: 'cycling-botta.png',       nome: 'Cycling Botta' },
-  { file: 'vitello-paesano.png',     nome: 'Vitello Paesano' },
-  { file: 'target-communication.png', nome: 'Target Communication' },
+  { file: 'vitello-paesano.png',     nome: 'Al Vitello Paesano' },
+  { file: 'bar-frasci-2-0.png',      nome: 'Bar V. Frasci 2.0' },
+  { file: 'de-santis.png',           nome: 'De Santis' },
+  { file: 'bellini-events.png',      nome: 'Bellini Events' },
+  { file: 'babba-house.png',         nome: 'Babba House' },
+  { file: 'bar-vittoria.png',        nome: 'Bar Vittoria' },
+  { file: 'kalu.png',                nome: 'Kalù' },
+  { file: 'luigi-fotografo.png',     nome: 'Luigi Fotografo' },
+  { file: 'pizzeria-zio-mauro.png',  nome: 'Pizzeria Zio Mauro' },
+  { file: 'pizzeria-frasci.png',     nome: 'Pizzeria V. Frasci' },
   { file: 'lamberti.png',            nome: 'Studio Dentistico Michele Lamberti' },
+  { file: 'chalet.png',              nome: 'Chalet' },
+  { file: 'revolution.png',          nome: 'Revolution' },
+  { file: 'zio-enrico.png',          nome: 'Zio Enrico' },
+  { file: 'bar-sport.png',           nome: 'Bar Sport' },
+  { file: 'barberia-frasci.png',     nome: 'Barberia Frasci' },
+  { file: 'marcello-frasci.png',     nome: 'Marcello Frasci' },
+  { file: 'franzis.png',             nome: "Franzi's" },
+  { file: 'pizzeria-walter.png',     nome: 'Pizzeria Walter' },
+  { file: 'mauro-parrucchiere.png',  nome: 'Mauro Parrucchiere' },
+  { file: 'bc-coffe.png',            nome: 'BC Coffe & More' },
+  { file: 'parrucchiere-tony.png',   nome: 'Parrucchiere Tony' },
+  { file: 'bar-ideal.png',           nome: 'Bar Ideal' },
+  { file: 'gelateria-gerry.png',     nome: 'Gelateria Gerry' },
+  // ── Non sul foglio, arrivati dopo ──
+  { file: 'target-communication.png', nome: 'Target Communication' },
   { file: 'di-filippo.png',          nome: 'Di Filippo Fotografi' },
 ];
 

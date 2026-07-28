@@ -3,6 +3,9 @@ LOGHI DEGLI SPONSOR
 
 Metti qui i PNG con lo sfondo TRASPARENTE, usando esattamente questi nomi:
 
+L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
+
+  romalba.png              Romalba
   nemo.png                 Nemo Restaurant Food & Wine
   gym-hall.png             Gym Hall Muscle Zone
   athena-fitness.png       Athena Fitness
@@ -11,9 +14,34 @@ Metti qui i PNG con lo sfondo TRASPARENTE, usando esattamente questi nomi:
   medea.png                Centro Estetico Medea
   telefonia-eredi-leo.png  Telefonia Eredi Leo
   cycling-botta.png        Cycling Botta
-  vitello-paesano.png      Vitello Paesano
-  target-communication.png Target Communication
+  vitello-paesano.png      Al Vitello Paesano
+  bar-frasci-2-0.png       Bar V. Frasci 2.0
+  de-santis.png            De Santis
+  bellini-events.png       Bellini Events
+  babba-house.png          Babba House
+  bar-vittoria.png         Bar Vittoria
+  kalu.png                 Kalu'
+  luigi-fotografo.png      Luigi Fotografo
+  pizzeria-zio-mauro.png   Pizzeria Zio Mauro
+  pizzeria-frasci.png      Pizzeria V. Frasci
   lamberti.png             Studio Dentistico Michele Lamberti
+  chalet.png               Chalet
+  revolution.png           Revolution (Bar Kral)
+  zio-enrico.png           Zio Enrico
+  bar-sport.png            Bar Sport
+  barberia-frasci.png      Barberia Frasci
+  marcello-frasci.png      Marcello Frasci
+  franzis.png              Franzi's
+  pizzeria-walter.png      Pizzeria Walter
+  mauro-parrucchiere.png   Mauro Parrucchiere
+  bc-coffe.png             BC Coffe & More
+  parrucchiere-tony.png    Parrucchiere Tony
+  bar-ideal.png            Bar Ideal
+  gelateria-gerry.png      Gelateria Gerry
+
+Non sul foglio, arrivati dopo:
+
+  target-communication.png Target Communication
   di-filippo.png           Di Filippo Fotografi
 
 Non serve toccare il codice: la barra mostra solo i loghi il cui file
