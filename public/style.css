@@ -3908,23 +3908,14 @@ textarea:focus-visible,
   gap: 0.85rem;
 }
 .foot-comitato .foot-legal { margin: 0; max-width: 44ch; text-align: left; }
-/* Il marchio è verde scuro e oro su bianco: sul fondo del footer il verde
-   sparirebbe, quindi la placca chiara serve a leggerlo. Se un giorno arriva
-   una versione del logo pensata per fondi scuri, basta togliere background,
-   padding e border-radius e lasciare l'immagine nuda. */
-.foot-comitato-plate {
-  display: inline-flex;
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 0.55rem;
-  padding: 0.45rem 0.6rem;
-  line-height: 0;
-}
-.foot-comitato-plate img { height: 52px; width: auto; display: block; }
+/* Nessuno sfondo dietro allo stemma: il PNG è già ritagliato e l'oro della
+   corona regge benissimo il fondo scuro. */
+.foot-comitato-logo { height: 56px; width: auto; display: block; }
 
 @media (max-width: 620px) {
   .foot-comitato { flex-direction: column; gap: 0.6rem; }
   .foot-comitato .foot-legal { text-align: center; }
-  .foot-comitato-plate img { height: 44px; }
+  .foot-comitato-logo { height: 48px; }
 }
 
 /* Animazione di comparsa (blur-in) — attivata quando il footer entra in viewport */
