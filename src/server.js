@@ -734,6 +734,7 @@ const SPONSOR_ATTIVITA = [
   { file: 'vitello-paesano.png',     nome: 'Vitello Paesano' },
   { file: 'target-communication.png', nome: 'Target Communication' },
   { file: 'lamberti.png',            nome: 'Studio Dentistico Michele Lamberti' },
+  { file: 'di-filippo.png',          nome: 'Di Filippo Fotografi' },
 ];
 
 const SPONSOR_LOGHI = (() => {

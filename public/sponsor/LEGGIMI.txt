@@ -14,6 +14,7 @@ Metti qui i PNG con lo sfondo TRASPARENTE, usando esattamente questi nomi:
   vitello-paesano.png      Vitello Paesano
   target-communication.png Target Communication
   lamberti.png             Studio Dentistico Michele Lamberti
+  di-filippo.png           Di Filippo Fotografi
 
 Non serve toccare il codice: la barra mostra solo i loghi il cui file
 esiste davvero, e ogni logo compare da solo appena lo copi qui (riavvia
