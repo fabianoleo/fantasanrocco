@@ -4896,3 +4896,112 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
   .spon-item:last-child { margin-right: 0; }
   .spon-viewport { overflow-x: auto; }
 }
+
+/* ── Premi degli sponsor, dal 4º al 10º posto (pagina /premio) ───────────── */
+.pz-sponsor {
+  padding: 4rem 1.5rem 4.5rem;
+  border-top: 1px solid rgba(212,160,26,.1);
+  background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(212,160,26,.05) 0%, transparent 65%);
+}
+.pz-sponsor-inner { max-width: 1000px; margin: 0 auto; text-align: center; }
+.pz-sponsor-intro {
+  max-width: 560px; margin: .9rem auto 0;
+  color: var(--text-2); font-size: .95rem; line-height: 1.6;
+}
+
+.pz-sponsor-grid {
+  list-style: none; padding: 0;
+  margin: 2.4rem 0 0;
+  display: grid;
+  /* auto-fit: con 7 premi le colonne si riempiono da sole e l'ultima riga
+     non resta spaiata su schermi larghi */
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+}
+.pz-sp-card {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+  gap: .45rem;
+  padding: 2.1rem 1.1rem 1.4rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: var(--bg-card);
+  transition: border-color .25s var(--ease), transform .25s var(--ease);
+}
+.pz-sp-card:hover { border-color: var(--border-gold); transform: translateY(-3px); }
+
+/* La posizione è il dato che conta: sta in alto, staccata dalla card */
+.pz-sp-pos {
+  position: absolute; top: -.75rem; left: 50%; transform: translateX(-50%);
+  padding: .18rem .6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-gold);
+  background: var(--bg-1);
+  font-family: var(--font-heading); font-weight: 700;
+  font-size: .72rem; letter-spacing: .06em; color: var(--gold-2);
+  white-space: nowrap;
+}
+.pz-sp-icon { color: var(--gold); }
+.pz-sp-icon .ico { width: 26px; height: 26px; }
+.pz-sp-name {
+  margin: 0;
+  font-family: var(--font-heading); font-size: 1rem; font-weight: 600;
+  color: var(--text); line-height: 1.3;
+}
+.pz-sp-note { margin: 0; font-size: .78rem; color: var(--text-2); line-height: 1.45; }
+.pz-sp-by   { margin: 0; font-size: .8rem; color: var(--text-3); }
+.pz-sp-by strong { color: var(--text-2); font-weight: 600; }
+.pz-sp-value {
+  margin-top: .2rem;
+  padding: .12rem .5rem;
+  border-radius: 6px;
+  background: rgba(212,160,26,.1);
+  font-family: var(--font-heading); font-size: .72rem;
+  letter-spacing: .05em; color: var(--gold-2);
+}
+.pz-sponsor-foot {
+  margin: 2.2rem auto 0; max-width: 620px;
+  font-size: .82rem; color: var(--text-3); line-height: 1.6;
+}
+.pz-sponsor-foot a { color: var(--gold); }
+
+@media (max-width: 600px) {
+  .pz-sponsor { padding: 3rem 1rem 3.5rem; }
+  .pz-sponsor-grid { grid-template-columns: 1fr 1fr; gap: .7rem; }
+  .pz-sp-card { padding: 1.8rem .7rem 1.1rem; }
+  .pz-sp-name { font-size: .88rem; }
+  .pz-sp-note { font-size: .72rem; }
+}
+
+/* ── Etichetta del premio nella classifica ──────────────────────────────── */
+.lb-prize {
+  display: flex; align-items: center; gap: .3rem;
+  min-width: 0; max-width: 100%;
+  margin-top: .15rem;
+  font-size: .7rem; line-height: 1.3;
+  color: var(--text-3);
+  transition: color .2s var(--ease);
+}
+.lb-prize .ico { width: 13px; height: 13px; color: var(--gold); flex-shrink: 0; }
+a.lb-prize:hover { color: var(--gold-2); }
+/* Su una riga sola con i puntini: un premio dal nome lungo, andando a capo,
+   faceva crescere la riga fino al doppio delle altre e la lista diventava
+   un accordion di altezze diverse. */
+.lb-prize-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Nella lista il nome è una colonna: il premio va sotto, non di fianco.
+   `min-width: 0` è la riga che conta: senza, il flex item si rifiuta di
+   scendere sotto la larghezza del testo e l'etichetta esce dalla riga. */
+.lb-list-name { display: flex; flex-direction: column; min-width: 0; }
+
+.lb-prize-mistero {
+  margin: .35rem auto 0;
+  font-size: .62rem; letter-spacing: .04em;
+  color: var(--text-3); opacity: .8;
+}
+.lb-prize-mistero .ico { width: 11px; height: 11px; }
+
+@media (max-width: 600px) {
+  .lb-prize { font-size: .64rem; }
+  .lb-prize-mistero { font-size: .55rem; }
+}

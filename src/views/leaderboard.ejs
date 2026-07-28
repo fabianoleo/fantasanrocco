@@ -44,6 +44,8 @@
         <span class="lb-podium-pts"><%= u.points %></span>
         <span class="lb-podium-pts-label">punti</span>
         <span class="lb-podium-done"><%= u.done %> missioni</span>
+        <%# I premi del podio sono ancora segreti: qui si vede solo che ci sono. %>
+        <span class="lb-prize lb-prize-mistero"><%- icon('lock') %> Premio misterioso</span>
         <div class="lb-podium-bar lb-podium-bar-<%= ['gold','silver','bronze'][realIdx] %>"></div>
       </div>
     <% }) %>
@@ -56,9 +58,20 @@
     <ol class="lb-list" start="4">
       <% rest.forEach((u, i) => { %>
         <% const isMe = currentUserId && u.id === currentUserId; %>
+        <%# Il premio è legato alla POSIZIONE, non alla persona: la riga mostra
+            cosa si porta a casa chi chiude la festa in quel punto. %>
+        <% const premio = premioPerPosizione[i + 4]; %>
         <li class="lb-list-row <%= isMe ? 'lb-me' : '' %>">
           <span class="lb-list-rank"><%= i + 4 %></span>
-          <span class="lb-list-name"><%= u.nickname %><% if (isMe) { %> <span class="lb-you">tu</span><% } %></span>
+          <span class="lb-list-name">
+            <%= u.nickname %><% if (isMe) { %> <span class="lb-you">tu</span><% } %>
+            <% if (premio) { %>
+              <%# Qui va solo il nome del premio, su una riga sola: chi lo offre
+                  starebbe stretto su un telefono e sta gia' scritto in /premio.
+                  Resta nel title per chi passa il mouse. %>
+              <a class="lb-prize" href="/premio" title="<%= premio.nome %><%= premio.offerto ? ' — offerto da ' + premio.offerto : '' %>"><%- icon(premio.icona) %><span class="lb-prize-txt"><%= premio.nome %></span></a>
+            <% } %>
+          </span>
           <span class="lb-list-done"><%= u.done %> miss.</span>
           <span class="lb-list-pts"><%= u.points %><small>pt</small></span>
         </li>

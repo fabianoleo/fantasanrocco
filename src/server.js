@@ -659,6 +659,27 @@ const FOTO_PREMIO_SMARTBOX_DEST  = 'smartbox-destinazioni.webp';
 const FOTO_PREMIO_PS5   = 'switch-lite.avif';
 const FOTO_PREMIO_CAFFE = 'caffe.webp';
 
+// ── Premi degli sponsor, uno per posizione ────────────────────────────────
+// Sta qui e non dentro le view perché lo leggono in DUE posti: la pagina
+// /premio e la classifica. Tenendone una copia sola non può succedere che
+// la classifica prometta un premio e la pagina dei premi ne dica un altro.
+// Il podio (1º-3º) non è in questo elenco: quei premi restano segreti.
+// Per cambiare l'ordine basta spostare le righe e correggere `pos`.
+const PREMI_SPONSOR = [
+  { pos: 4,  nome: '6 mesi di prova gratuita', offerto: 'Gym Hall Muscle Zone',  valore: null,   icona: 'bolt' },
+  { pos: 5,  nome: 'Friggitrice ad aria',      offerto: null,                    valore: null,   icona: 'flame' },
+  { pos: 6,  nome: 'Cena per due',             offerto: 'Nemo',                  valore: '50 €', icona: 'glass' },
+  { pos: 7,  nome: '5 lezioni di personal training', offerto: 'Antonio Fiore',   valore: null,   icona: 'target',
+    nota: 'Con il personal trainer Claudio De Maio' },
+  { pos: 8,  nome: 'Cesto gastronomico',       offerto: 'Vitello Paesano',       valore: '30 €', icona: 'box' },
+  { pos: 9,  nome: 'Buono trattamento',        offerto: 'Fatime',                valore: null,   icona: 'sparkle' },
+  { pos: 10, nome: 'Buono spesa',              offerto: 'Day by Day',            valore: null,   icona: 'ticket' },
+];
+
+// Indicizzati per posizione: la classifica deve poter chiedere "che premio
+// c'è al 7º posto?" senza scorrere l'elenco a ogni riga.
+const PREMIO_PER_POSIZIONE = Object.fromEntries(PREMI_SPONSOR.map((p) => [p.pos, p]));
+
 app.get('/premio', (req, res) => {
   res.render('prize', {
     title: 'I Premi',
@@ -666,6 +687,7 @@ app.get('/premio', (req, res) => {
     smartboxDest:  FOTO_PREMIO_SMARTBOX_DEST,
     photoPs5:      FOTO_PREMIO_PS5,
     photoCaffe:    FOTO_PREMIO_CAFFE,
+    premiSponsor:  PREMI_SPONSOR,
   });
 });
 
@@ -963,6 +985,7 @@ app.get('/classifica', (req, res) => {
     gameRows: gameLeaderboardRows(),
     jetpackRows: jetpackLeaderboardRows(),
     currentUserId: req.currentUser?.id ?? null,
+    premioPerPosizione: PREMIO_PER_POSIZIONE,
   });
 });
 
