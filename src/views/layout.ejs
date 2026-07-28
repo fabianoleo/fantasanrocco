@@ -24,7 +24,7 @@
       per un anno, quindi finché questo numero non cambia chi è già passato
       di qui continua a vedere il foglio di stile vecchio. Si alza di uno a
       ogni modifica di style.css. %>
-  <link rel="stylesheet" href="/style.css?v=104">
+  <link rel="stylesheet" href="/style.css?v=105">
   <link rel="stylesheet" href="/radio.css?v=3">
 
   <%# ── PWA (installabile + offline + notifiche) ── %>
@@ -134,7 +134,16 @@
 
           <div class="foot-bottom">
             <p>© <%= new Date().getFullYear() %> FantaSanRocco · Festa di San Rocco · Siano (SA) · <a href="/privacy">Privacy</a> · <a href="/termini">Termini</a></p>
-            <p class="foot-legal">L'utilizzo del nome e dell'immagine di San Rocco è stato autorizzato dal Comitato Festa.</p>
+            <div class="foot-comitato">
+              <% if (logoComitato) { %>
+                <%# Lo stemma sta su una placca chiara: il marchio è verde e oro
+                    su bianco, e il verde scuro sul fondo del footer sparirebbe. %>
+                <span class="foot-comitato-plate">
+                  <img src="<%= logoComitato %>" alt="Comitato Festa Patronale di San Rocco — Siano" loading="lazy" decoding="async">
+                </span>
+              <% } %>
+              <p class="foot-legal">L'utilizzo del nome e dell'immagine di San Rocco è stato autorizzato dal Comitato Festa.</p>
+            </div>
             <p class="foot-motto">ad maiora <%- icon('fireworks') %></p>
           </div>
         </div>

@@ -776,6 +776,14 @@ const SPONSOR_LOGHI = (() => {
 })();
 app.locals.sponsorLoghi = SPONSOR_LOGHI;
 
+// Stemma del Comitato Festa accanto alla riga legale del footer. Stessa
+// regola dei loghi sponsor: se il file non c'è la riga resta di solo testo,
+// invece di mostrare l'icona di immagine rotta in fondo a ogni pagina.
+app.locals.logoComitato =
+  fs.existsSync(path.join(__dirname, '..', 'public', 'images', 'comitato-festa.png'))
+    ? '/images/comitato-festa.png'
+    : null;
+
 app.get('/premio', (req, res) => {
   res.render('prize', {
     title: 'I Premi',
