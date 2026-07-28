@@ -842,6 +842,28 @@ function checkLevelUp(userId) {
   } catch (e) { console.error('[LIVELLO]', e.message); }
 }
 
+// Avvisa l'utente quando sblocca una o più soglie in un mini-gioco.
+// Una sola notifica per partita anche se ne scatta più d'una insieme: una
+// bella corsa può sbloccare dieci traguardi in colpo solo e dieci notifiche
+// di fila sarebbero spam. Best-effort: se la push fallisce, la partita resta
+// comunque valida e i punti sono già stati assegnati.
+function notifyGameAwards(userId, gioco, awarded, url) {
+  if (!userId || !Array.isArray(awarded) || !awarded.length) return;
+  const punti = awarded.reduce((t, a) => t + (a.points || 0), 0);
+  const n = awarded.length;
+  const title = n === 1 ? '🏆 Traguardo sbloccato!' : `🏆 ${n} traguardi sbloccati!`;
+  // Su telefono la notifica viene troncata: oltre i tre, si elencano i primi
+  // due e si riassume il resto invece di stampare una lista chilometrica.
+  const nomi = n <= 3
+    ? awarded.map((a) => a.title).join(' · ')
+    : `${awarded[0].title} · ${awarded[1].title} e altri ${n - 2}`;
+  pushToUser(userId, {
+    title,
+    body: `${gioco}: ${nomi} — +${punti} punti in classifica`,
+    url: url || '/giochi',
+  }).catch((e) => console.error('[PUSH] traguardo', e.message));
+}
+
 // Classifica del mini-gioco: per punteggio record (solo chi ha giocato)
 function gameLeaderboardRows() {
   return db.prepare(`
@@ -1410,6 +1432,7 @@ app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, r
     }
   })();
   const best = Math.max(score, prevBest);
+  notifyGameAwards(req.currentUser.id, 'Corri San Rocco', awarded, '/giochi?g=runner');
   res.json({ ok: true, best, plays, awarded });
 });
 
@@ -1622,6 +1645,13 @@ app.post('/jetpack/fine', auth.requireLogin, gameLimiter, verifyCsrf, (req, res)
   db.prepare('UPDATE users SET jp_plays = jp_plays + 1 WHERE id = ?').run(req.currentUser.id);
 
   const out = jpApplyRun(req.currentUser.id, run);
+  // i gradi si chiamano "Jetpack · Aviatore": nel testo il gioco è già citato,
+  // quindi si toglie il prefisso per non ripeterlo due volte
+  notifyGameAwards(
+    req.currentUser.id, 'San Rocco Jetpack',
+    out.awarded.map((a) => ({ ...a, title: String(a.title || '').replace('Jetpack · ', '') })),
+    '/giochi?g=jetpack',
+  );
   res.json({
     ok: true, counted: true,
     best: Math.max(run.dist, prevBest),
