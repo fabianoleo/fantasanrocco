@@ -34,7 +34,7 @@ function m(name, desc, rar, opt = {}) {
 }
 
 const MISSIONS = [
-  // ── PAESE & TRADIZIONE (16) ──────────────────────────────────────
+  // ── PAESE & TRADIZIONE (17) ──────────────────────────────────────
   m('Primo Cittadino', 'Scatta una foto con il Sindaco di Siano.', 'rara', { sec: 'paese' }),
   m('Cantiere', 'Scatta una foto di un anziano che critica un lavoro pubblico.', 'non-comune', { sec: 'paese' }),
   m('Asso di Mazze', 'Scatta una foto di una partita a carte davanti alla Chiesa.', 'comune', { sec: 'paese' }),
@@ -51,8 +51,9 @@ const MISSIONS = [
   m('Tap Tap', 'Scatta un selfie con Peppe Tap Tap.', 'non-comune', { sec: 'paese' }),
   m('Tradizione', 'Impara una tradizione da un anziano e documentalo con una foto.', 'rara', { sec: 'paese' }),
   m('Bollino', 'Scatta una foto con un adesivo del logo "Fanta San Rocco".', 'rara', { sec: 'paese' }),
+  m('È sempre San Valentino da Romalba', 'Scatta una foto del mazzo di fiori comprato da Romalba per il/la tuo/a partner.', 'rara', { sec: 'paese' }),
 
-  // ── FOOD & DRINK (7) ─────────────────────────────────────────────
+  // ── FOOD & DRINK (8) ─────────────────────────────────────────────
   m('Leccucci', 'Scatta una foto con il sacchetto di caramelle comprato alle bancarelle.', 'comune', { sec: 'food' }),
   m("A' Braciol e' Capr", 'Scatta una foto del piatto tipico sianese.', 'comune', { sec: 'food' }),
   m("O' Vin ca Percoc e Nu…", 'Scatta una foto del famoso "vino con la percoca".', 'comune', { sec: 'food' }),
@@ -60,6 +61,7 @@ const MISSIONS = [
   m("O' Mast", 'Scatta una foto mentre bevi con il proprietario di un bar.', 'rara', { sec: 'food' }),
   m("Ngopp o' Pont", 'Scatta una foto con il paninaro di "ngopp o’ pont".', 'rara', { sec: 'food' }),
   m('Fila Infinita', 'Scatta una foto mentre sei in una lunga fila al bar.', 'non-comune', { sec: 'food' }),
+  m('Vittoria', 'Scatta una foto della colazione o dell’aperitivo al bar Vittoria.', 'non-comune', { sec: 'food' }),
 
   // ── SOCIAL & PARTY (15) ──────────────────────────────────────────
   m('Rocco', 'Scatta una foto con una persona di nome Rocco.', 'non-comune', { rep: true, sec: 'social' }),
@@ -94,6 +96,7 @@ const MISSIONS = [
   m('Arlecchino Rosso', 'Indossa un capo/accessorio rosso e scatta una foto.', 'non-comune', { day: 14 }),
   m('Fanta SanRocco', 'Seleziona dalla galleria la foto del telo "Fanta SanRocco"… sempre se l’hai fatta!', 'leggendaria', { day: 14 }),
   m('Selfie XXL', 'Flash! Fai entrare almeno 15 persone nello stesso selfie.', 'epica', { flash: true }),
+  m('Flash Mob', 'Flash! Scatta una foto mentre partecipi al flash mob.', 'rara', { flash: true }),
 
   // ── SFIDE GIORNALIERE — 15 AGOSTO ────────────────────────────────
   m('Napoliitudine', 'Scatta una foto con un membro della band "Napoliitudine".', 'epica', { day: 15 }),

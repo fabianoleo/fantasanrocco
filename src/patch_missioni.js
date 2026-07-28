@@ -23,9 +23,14 @@ const PATCHES = [
 ];
 
 // Missioni da aggiungere se non ci sono ancora (confronto sul nome, senza emoji)
+// `flash: true` → nasce nascosta (archived), la sblocca lo staff al momento;
+// le flash non stanno in nessuna sezione, come nel seed.
 const NUOVE = [
   { name: 'Cecchino', desc: 'Scatta una foto con il pupazzo vinto sparando alle lattine.', rar: 'non-comune', sec: 'social' },
   { name: "Nu Gir Ngopp a Giostr", desc: 'Scatta una foto mentre fai un giro su una giostra presente alla festa.', rar: 'comune', sec: 'social' },
+  { name: 'Vittoria', desc: 'Scatta una foto della colazione o dell’aperitivo al bar Vittoria.', rar: 'non-comune', sec: 'food' },
+  { name: 'È sempre San Valentino da Romalba', desc: 'Scatta una foto del mazzo di fiori comprato da Romalba per il/la tuo/a partner.', rar: 'rara', sec: 'paese' },
+  { name: 'Flash Mob', desc: 'Flash! Scatta una foto mentre partecipi al flash mob.', rar: 'rara', flash: true },
 ];
 
 let added = 0;
@@ -34,8 +39,10 @@ for (const n of NUOVE) {
   if (esiste) { console.log(`= c'è già: ${n.name} (#${esiste.id})`); continue; }
   const info = db.prepare(`INSERT INTO missions
     (title, description, points, requires_photo, repeatable, archived, section)
-    VALUES (?, ?, ?, 1, 0, 0, ?)`).run(`${EMOJI[n.rar]} ${n.name}`, n.desc, PTS[n.rar], n.sec);
-  console.log(`＋ #${info.lastInsertRowid} "${EMOJI[n.rar]} ${n.name}" · ${PTS[n.rar]}pt · sezione ${n.sec}`);
+    VALUES (?, ?, ?, 1, 0, ?, ?)`)
+    .run(`${EMOJI[n.rar]} ${n.name}`, n.desc, PTS[n.rar], n.flash ? 1 : 0, n.sec || null);
+  const dove = n.flash ? 'FLASH (nascosta)' : `sezione ${n.sec}`;
+  console.log(`＋ #${info.lastInsertRowid} "${EMOJI[n.rar]} ${n.name}" · ${PTS[n.rar]}pt · ${dove}`);
   added++;
 }
 

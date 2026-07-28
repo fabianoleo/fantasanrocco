@@ -4,7 +4,6 @@ LOGHI DEGLI SPONSOR
 Metti qui i PNG con lo sfondo TRASPARENTE, usando esattamente questi nomi:
 
   nemo.png                 Nemo Restaurant Food & Wine
-  the-spa.png              The Spa - San Severino Park Hotel & Spa
   gym-hall.png             Gym Hall Muscle Zone
   athena-fitness.png       Athena Fitness
   fatima-leo.png           Fatima Leo Salon & Academy

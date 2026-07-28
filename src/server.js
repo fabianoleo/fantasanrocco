@@ -677,8 +677,9 @@ const PREMI = [
         + 'Il secondo posto si festeggia seduti, con chi vuoi tu.',
   },
   {
-    pos: 3, nome: 'Percorso Spa', offerto: 'The Spa — San Severino Park Hotel & Spa',
-    valore: '60–80 €', icona: 'sparkle',
+    // Niente `offerto`: il percorso si fa da The Spa, ma non è la struttura
+    // a metterlo in palio, quindi la scheda non deve dire "offerto da".
+    pos: 3, nome: 'Percorso Spa', valore: '60–80 €', icona: 'sparkle',
     tagline: 'Relax in pausa, tre ore per rimettersi in sesto',
     desc: 'Il Percorso Spa di The Spa, al San Severino Park Hotel & Spa: tre ore per rimettersi '
         + 'da una settimana passata a rincorrere missioni, fuochi e classifica. '
@@ -723,7 +724,6 @@ const PREMIO_PER_POSIZIONE = Object.fromEntries(PREMI.map((p) => [p.pos, p]));
 // disco a ogni richiesta.
 const SPONSOR_ATTIVITA = [
   { file: 'nemo.png',                nome: 'Nemo Restaurant Food & Wine' },
-  { file: 'the-spa.png',             nome: 'The Spa — San Severino Park Hotel & Spa' },
   { file: 'gym-hall.png',            nome: 'Gym Hall Muscle Zone' },
   { file: 'athena-fitness.png',      nome: 'Athena Fitness' },
   { file: 'fatima-leo.png',          nome: 'Fatima Leo Salon & Academy' },
