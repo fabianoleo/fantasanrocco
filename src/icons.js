@@ -40,6 +40,9 @@ const PATHS = {
   car:
     '<path d="M5 16v-3l1.6-4.2A2 2 0 0 1 8.5 7.5h7a2 2 0 0 1 1.9 1.3L19 13v3" />' +
     '<path d="M4 13h16" /><circle cx="7.5" cy="16.5" r="1.5" /><circle cx="16.5" cy="16.5" r="1.5" />',
+  bike:
+    '<circle cx="5.5" cy="17.5" r="3.5" /><circle cx="18.5" cy="17.5" r="3.5" />' +
+    '<circle cx="15" cy="5" r="1" /><path d="M12 17.5V14l-3-3 4-3 2 3h2" />',
   people:
     '<circle cx="9" cy="8" r="2.6" /><path d="M4 19a5 5 0 0 1 10 0" />' +
     '<path d="M15.5 6.2a2.6 2.6 0 0 1 0 5" /><path d="M16 14.4A5 5 0 0 1 20 19" />',

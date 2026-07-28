@@ -1,22 +1,13 @@
 <%
   /* ─────────────────────────────────────────────────────────────────
-     ELENCO SPONSOR — una riga per logo, si aggiunge e si toglie qui.
-     Il PNG (sfondo trasparente) va messo in public/sponsor/ e richiamato
-     con il solo nome del file. `nome` è quello che leggono screen reader
-     e motori di ricerca, quindi scrivilo per esteso.
-     Con l'elenco vuoto la barra non viene disegnata affatto: meglio
-     niente che una striscia vuota o dei loghi rotti in produzione.
+     ELENCO SPONSOR — sta in server.js (SPONSOR_ATTIVITA), perché lì si
+     può controllare quali PNG sono già in public/sponsor/ e mostrare solo
+     quelli: un logo annunciato ma senza file sarebbe un'immagine rotta in
+     produzione. Per aggiungere un'attività: una riga lì, il PNG a sfondo
+     trasparente qui in public/sponsor/, e basta.
+     Con l'elenco vuoto la barra non viene disegnata affatto.
      ───────────────────────────────────────────────────────────────── */
-  const sponsor = [
-    // SEGNAPOSTO: per ora gira il logo FantaSanRocco ripetuto, in attesa dei
-    // loghi veri. Quando arrivano si sostituiscono queste righe una per una.
-    { file: 'fantasanrocco.png', nome: 'FantaSanRocco' },
-    { file: 'fantasanrocco.png', nome: 'FantaSanRocco' },
-    { file: 'fantasanrocco.png', nome: 'FantaSanRocco' },
-    { file: 'fantasanrocco.png', nome: 'FantaSanRocco' },
-    { file: 'fantasanrocco.png', nome: 'FantaSanRocco' },
-    { file: 'fantasanrocco.png', nome: 'FantaSanRocco' },
-  ];
+  const sponsor = sponsorLoghi || [];
 
   /* Il nastro deve restare più largo dello schermo per tutto il giro:
      con 4 o 5 loghi una sola copia non copre un monitor largo e a metà

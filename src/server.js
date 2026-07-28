@@ -669,26 +669,42 @@ const PREMI = [
     foto: ['smartbox-cover.webp', 'smartbox-destinazioni.webp'],
   },
   {
-    pos: 2, nome: 'Cena da Nemo', offerto: 'Nemo', valore: '50 + 50 €', icona: 'glass',
+    pos: 2, nome: 'Cena da Nemo', offerto: 'Nemo Restaurant Food & Wine',
+    valore: '50 + 50 €', icona: 'glass',
     tagline: 'Cento euro da spendere a tavola',
-    desc: 'Due buoni da cinquanta euro per mangiare da Nemo. '
+    desc: 'Due buoni da cinquanta euro per il Nemo Restaurant Food & Wine di Salerno: '
+        + 'cucina contemporanea di mare, pesce fresco e crudi, pasta fatta a mano e carni alla brace. '
         + 'Il secondo posto si festeggia seduti, con chi vuoi tu.',
   },
   {
-    pos: 3, nome: 'Ingresso SPA', valore: '60–80 €', icona: 'sparkle',
-    tagline: 'Il riposo dopo cinque giorni di missioni',
-    desc: 'Una giornata di SPA per rimettersi da una settimana passata a rincorrere '
-        + 'missioni, fuochi e classifica.',
+    pos: 3, nome: 'Percorso Spa', offerto: 'The Spa — San Severino Park Hotel & Spa',
+    valore: '60–80 €', icona: 'sparkle',
+    tagline: 'Relax in pausa, tre ore per rimettersi in sesto',
+    desc: 'Il Percorso Spa di The Spa, al San Severino Park Hotel & Spa: tre ore per rimettersi '
+        + 'da una settimana passata a rincorrere missioni, fuochi e classifica. '
+        + 'Valido dal lunedì al giovedì feriali, esclusi i prefestivi.',
+    // Le tappe del percorso: sul podio diventano una griglia di etichette.
+    incluso: [
+      'Sauna', 'Biosauna', 'Bagno turco', 'Cabina della neve',
+      'Docce emozionali', 'Cascata del ghiaccio',
+      'Piscina con docce cervicali e idromassaggio',
+      'Piscina di deprivazione sensoriale', 'Percorso Kneipp',
+      'Stanza del silenzio con parete di sale',
+      'Salotto relax con angolo tisaneria',
+      'Kit con accappatoio, telo e infradito',
+    ],
   },
   { pos: 4,  nome: '6 mesi di prove gratuite', offerto: 'Gym Hall Muscle Zone', icona: 'bolt' },
-  { pos: 5,  nome: '5 lezioni di personal training', offerto: 'Antonio Fiore', icona: 'target',
+  { pos: 5,  nome: '5 lezioni di personal training', offerto: 'Athena Fitness', icona: 'target',
     nota: 'Con il personal trainer Claudio De Maio' },
-  { pos: 6,  nome: 'Trattamento', offerto: 'Fatima',    valore: '50 €',    icona: 'candle' },
-  { pos: 7,  nome: 'Buono spesa', offerto: 'Day by Day', valore: '50 €',   icona: 'ticket' },
-  { pos: 8,  nome: '5 lampade',   offerto: 'Rosetta',    valore: '50 €',   icona: 'sun' },
-  { pos: 9,  nome: 'Friggitrice ad aria',    valore: '40–50 €', icona: 'flame' },
+  { pos: 6,  nome: 'Trattamento', offerto: 'Fatima Leo Salon & Academy', valore: '50 €', icona: 'candle' },
+  { pos: 7,  nome: 'Buono spesa', offerto: 'Day by Day Multibrand Siano', valore: '50 €', icona: 'ticket' },
+  { pos: 8,  nome: '5 lampade',   offerto: 'Centro Estetico Medea', valore: '50 €', icona: 'sun' },
+  { pos: 9,  nome: 'Friggitrice ad aria', offerto: 'Telefonia Eredi Leo', valore: '40–50 €', icona: 'flame' },
   { pos: 10, nome: 'Macchinetta del caffè',  icona: 'coffee', foto: ['caffe.webp'] },
-  { pos: 11, nome: 'Cesto gastronomico', offerto: 'Vitello Paesano', valore: '30 €', icona: 'box' },
+  { pos: 11, nome: 'Buono acquisto', offerto: 'Cycling Botta', valore: '30 €', icona: 'bike',
+    nota: 'Vendita e riparazione bici a Siano dal 1923' },
+  { pos: 12, nome: 'Cesto gastronomico', offerto: 'Vitello Paesano', valore: '30 €', icona: 'box' },
 ];
 
 const PREMI_PODIO = PREMI.filter((p) => p.pos <= 3);
@@ -697,6 +713,38 @@ const PREMI_LISTA = PREMI.filter((p) => p.pos > 3);
 // Indicizzati per posizione: la classifica deve poter chiedere "che premio
 // c'è al 7º posto?" senza scorrere l'elenco a ogni riga.
 const PREMIO_PER_POSIZIONE = Object.fromEntries(PREMI.map((p) => [p.pos, p]));
+
+// ── Muro sponsor: le attività che mettono i premi ─────────────────────────
+// Le attività sono queste, i loghi arrivano alla spicciolata. Invece di
+// tenere l'elenco a metà, lo teniamo intero e mostriamo solo le voci il cui
+// PNG è già in public/sponsor/: appena il file arriva il logo entra nella
+// barra da solo, senza toccare il codice. Il controllo si fa una volta
+// all'avvio — la barra è in ogni pagina, non può costare un accesso al
+// disco a ogni richiesta.
+const SPONSOR_ATTIVITA = [
+  { file: 'nemo.png',                nome: 'Nemo Restaurant Food & Wine' },
+  { file: 'the-spa.png',             nome: 'The Spa — San Severino Park Hotel & Spa' },
+  { file: 'gym-hall.png',            nome: 'Gym Hall Muscle Zone' },
+  { file: 'athena-fitness.png',      nome: 'Athena Fitness' },
+  { file: 'fatima-leo.png',          nome: 'Fatima Leo Salon & Academy' },
+  { file: 'day-by-day.png',          nome: 'Day by Day Multibrand Siano' },
+  { file: 'medea.png',               nome: 'Centro Estetico Medea' },
+  { file: 'telefonia-eredi-leo.png', nome: 'Telefonia Eredi Leo' },
+  { file: 'cycling-botta.png',       nome: 'Cycling Botta' },
+  { file: 'vitello-paesano.png',     nome: 'Vitello Paesano' },
+];
+
+const SPONSOR_LOGHI = (() => {
+  const dir = path.join(__dirname, '..', 'public', 'sponsor');
+  const presenti = SPONSOR_ATTIVITA.filter((s) => fs.existsSync(path.join(dir, s.file)));
+  // Finché non arriva nessun logo vero la barra gira col segnaposto, come
+  // faceva prima: meglio il marchio della festa che una striscia vuota.
+  if (!presenti.length) {
+    return Array.from({ length: 6 }, () => ({ file: 'fantasanrocco.png', nome: 'FantaSanRocco' }));
+  }
+  return presenti;
+})();
+app.locals.sponsorLoghi = SPONSOR_LOGHI;
 
 app.get('/premio', (req, res) => {
   res.render('prize', {

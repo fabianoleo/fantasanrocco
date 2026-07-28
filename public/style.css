@@ -2646,6 +2646,21 @@ body { overflow-x: clip; }
   color: var(--text-2); line-height: 1.8; font-size: .94rem;
   margin-bottom: 1.4rem;
 }
+/* Cosa comprende il premio (Percorso Spa): etichette a capo libero.
+   In colonna sarebbero dodici righe che allontanano il resto della
+   scheda; così stanno in tre o quattro righe e si leggono a colpo d'occhio. */
+.pz-incluso {
+  list-style: none; padding: 0; margin: 0 0 1.4rem;
+  display: flex; flex-wrap: wrap; gap: .4rem;
+}
+.pz-incluso li {
+  font-size: .78rem; color: var(--text-2);
+  padding: .3rem .65rem; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.03);
+}
+.pz-bronze .pz-incluso li { border-color: rgba(205,127,50,.22); }
+
 .pz-details {
   list-style: none; padding: 0; margin: 0;
   display: flex; flex-direction: column; gap: 0;
@@ -4897,7 +4912,7 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
   .spon-viewport { overflow-x: auto; }
 }
 
-/* ── Premi degli sponsor, dal 4º al 10º posto (pagina /premio) ───────────── */
+/* ── Premi degli sponsor, dal 4º posto in giù (pagina /premio) ───────────── */
 .pz-sponsor {
   padding: 4rem 1.5rem 4.5rem;
   border-top: 1px solid rgba(212,160,26,.1);

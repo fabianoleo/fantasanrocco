@@ -1,2 +1,27 @@
-I loghi PNG degli sponsor vanno qui.
-Poi vanno elencati in src/views/partials/sponsor.ejs, una riga per logo.
+LOGHI DEGLI SPONSOR
+===================
+
+Metti qui i PNG con lo sfondo TRASPARENTE, usando esattamente questi nomi:
+
+  nemo.png                 Nemo Restaurant Food & Wine
+  the-spa.png              The Spa - San Severino Park Hotel & Spa
+  gym-hall.png             Gym Hall Muscle Zone
+  athena-fitness.png       Athena Fitness
+  fatima-leo.png           Fatima Leo Salon & Academy
+  day-by-day.png           Day by Day Multibrand Siano
+  medea.png                Centro Estetico Medea
+  telefonia-eredi-leo.png  Telefonia Eredi Leo
+  cycling-botta.png        Cycling Botta
+  vitello-paesano.png      Vitello Paesano
+
+Non serve toccare il codice: la barra mostra solo i loghi il cui file
+esiste davvero, e ogni logo compare da solo appena lo copi qui (riavvia
+il server, il controllo si fa all'avvio).
+
+Finche' non c'e' nessun logo vero gira il segnaposto fantasanrocco.png.
+
+Per aggiungere un'attivita' non in elenco: aggiungi la riga in
+SPONSOR_ATTIVITA dentro src/server.js, poi copia qui il suo PNG.
+
+Loghi consigliati: altezza almeno 200 px, sfondo trasparente, marchio
+chiaro (la barra e' su fondo scuro).
