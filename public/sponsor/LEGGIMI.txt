@@ -27,51 +27,51 @@ Vittoria). Se arriva la versione chiara originale, meglio quella.
 STATO
 -----
 
-  OK  = gia' in linea
-  --  = manca il file
-  !!  = file ricevuto ma non utilizzabile, serve rifarlo
+  ✅ = gia' in linea
+  ⬜ = manca il file
+  ❌ = file ricevuto ma non utilizzabile, serve rifarlo
 
 L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
 
-  --  romalba.png              Romalba
-  OK  nemo.png                 Nemo Restaurant Food & Wine
-  OK  gym-hall.png             Gym Hall Muscle Zone
-  --  athena-fitness.png       Athena Fitness
-  --  fatima-leo.png           Fatima Leo Salon & Academy
-  --  day-by-day.png           Day by Day Multibrand Siano
-  --  medea.png                Centro Estetico Medea
-  --  telefonia-eredi-leo.png  Telefonia Eredi Leo  logo scartato, chiederne un altro
-  --  cycling-botta.png        Cycling Botta
-  --  vitello-paesano.png      Al Vitello Paesano
-  --  bar-frasci-2-0.png       Bar V. Frasci 2.0
-  OK  de-santis.png            De Santis  schiarito
-  OK  bellini-events.png       Bellini Events
-  --  babba-house.png          Babba House
-  OK  bar-vittoria.png         Bar Vittoria  schiarito, viene un disco bianco
-  --  kalu.png                 Kalu'
-  --  luigi-fotografo.png      Luigi Fotografo
-  --  pizzeria-zio-mauro.png   Pizzeria Zio Mauro
-  OK  pizzeria-frasci.png      Pizzeria V. Frasci  schiarito
-  --  lamberti.png             Studio Dentistico Michele Lamberti
-  --  chalet.png               Chalet
-  --  revolution.png           Revolution (Bar Kral)
-  --  zio-enrico.png           Zio Enrico
-  --  bar-sport.png            Bar Sport
-  --  barberia-frasci.png      Barberia Frasci
-  --  marcello-frasci.png      Marcello Frasci
-  --  franzis.png              Franzi's
-  --  pizzeria-walter.png      Pizzeria Walter
-  --  mauro-parrucchiere.png   Mauro Parrucchiere
-  --  bc-coffe.png             BC Coffe & More
-  --  parrucchiere-tony.png    Parrucchiere Tony
-  --  bar-ideal.png            Bar Ideal
-  --  gelateria-gerry.png      Gelateria Gerry
+  ⬜ romalba.png              Romalba
+  ✅ nemo.png                 Nemo Restaurant Food & Wine
+  ✅ gym-hall.png             Gym Hall Muscle Zone
+  ⬜ athena-fitness.png       Athena Fitness
+  ⬜ fatima-leo.png           Fatima Leo Salon & Academy
+  ⬜ day-by-day.png           Day by Day Multibrand Siano
+  ⬜ medea.png                Centro Estetico Medea
+  ⬜ telefonia-eredi-leo.png  Telefonia Eredi Leo  logo scartato, chiederne un altro
+  ⬜ cycling-botta.png        Cycling Botta
+  ⬜ vitello-paesano.png      Al Vitello Paesano
+  ⬜ bar-frasci-2-0.png       Bar V. Frasci 2.0
+  ✅ de-santis.png            De Santis  schiarito
+  ✅ bellini-events.png       Bellini Events
+  ⬜ babba-house.png          Babba House
+  ✅ bar-vittoria.png         Bar Vittoria  schiarito, viene un disco bianco
+  ⬜ kalu.png                 Kalu'
+  ⬜ luigi-fotografo.png      Luigi Fotografo
+  ⬜ pizzeria-zio-mauro.png   Pizzeria Zio Mauro
+  ✅ pizzeria-frasci.png      Pizzeria V. Frasci  schiarito
+  ⬜ lamberti.png             Studio Dentistico Michele Lamberti
+  ⬜ chalet.png               Chalet
+  ⬜ revolution.png           Revolution (Bar Kral)
+  ⬜ zio-enrico.png           Zio Enrico
+  ⬜ bar-sport.png            Bar Sport
+  ⬜ barberia-frasci.png      Barberia Frasci
+  ⬜ marcello-frasci.png      Marcello Frasci
+  ⬜ franzis.png              Franzi's
+  ⬜ pizzeria-walter.png      Pizzeria Walter
+  ⬜ mauro-parrucchiere.png   Mauro Parrucchiere
+  ⬜ bc-coffe.png             BC Coffe & More
+  ⬜ parrucchiere-tony.png    Parrucchiere Tony
+  ⬜ bar-ideal.png            Bar Ideal
+  ⬜ gelateria-gerry.png      Gelateria Gerry
 
 Non sul foglio, arrivati dopo:
 
-  --  target-communication.png Target Communication
-  !!  di-filippo.png           Di Filippo Fotografi  export rotto: fondo
-                               grigio e un rettangolo bianco sulla destra
+  ⬜ target-communication.png Target Communication
+  ❌ di-filippo.png           Di Filippo Fotografi  export rotto: fondo
+                              grigio e un rettangolo bianco sulla destra
 
 DA CHIEDERE ANCORA (2)
 ----------------------
