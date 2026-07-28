@@ -1925,6 +1925,28 @@ function checkAndAwardSections(userId) {
   return awarded;
 }
 
+// Accredita i bonus-sezione appena maturati E avvisa l'utente. Unico punto di
+// verità per entrambe le cose: prima la notifica esisteva solo nel percorso
+// della moderazione, quindi chi completava "Paese & Tradizione" votando il
+// pronostico del Palio si vedeva accreditare i punti senza ricevere nulla.
+// Ritorna le sezioni premiate, così chi chiama può mostrare anche il banner.
+function awardSectionsAndNotify(userId, req) {
+  const awarded = [];
+  try {
+    for (const s of checkAndAwardSections(userId)) {
+      awarded.push(s);
+      if (req) audit(req, 'sezione.bonus', `${s.label} → +${SECTION_BONUS}pt a user#${userId}`);
+      else auditSystem('sezione.bonus', `${s.label} → +${SECTION_BONUS}pt a user#${userId}`);
+      pushToUser(userId, {
+        title: '🏅 Set di missioni completato!',
+        body: `Hai finito "${s.label}": +${SECTION_BONUS} punti bonus!`,
+        url: '/missioni',
+      }).catch((e) => console.error('[PUSH] bonus sezione', e.message));
+    }
+  } catch (e) { console.error('[SEZIONI] bonus', e.message); }
+  return awarded;
+}
+
 // ── Streak giornaliero (7 giorni, bonus crescente, poi riparte) ─────────
 const STREAK_BONUS = [5, 10, 15, 25, 40, 60, 100];   // giorno 1..7
 function streakStatus(user) {
@@ -2292,8 +2314,7 @@ app.post('/missioni/pronostico', auth.requireLogin, verifyCsrf, (req, res) => {
   flash(req, 'success', `Pronostico salvato: ${PALIO_FUOCHISTI[choice].name}. In bocca al lupo! 🎆`);
   // Il voto è l'ultima tappa di "Paese & Tradizione" per molti: qui può
   // scattare il bonus di sezione, che altrimenti si controlla solo in moderazione.
-  for (const s of checkAndAwardSections(req.currentUser.id)) {
-    audit(req, 'sezione.bonus', `${s.label} → +${SECTION_BONUS}pt a user#${req.currentUser.id}`);
+  for (const s of awardSectionsAndNotify(req.currentUser.id, req)) {
     flash(req, 'success', `🏅 Sezione "${s.label}" completata: +${SECTION_BONUS} punti bonus!`);
   }
   checkLevelUp(req.currentUser.id);
@@ -2855,16 +2876,7 @@ app.post('/moderazione/:id/:azione', auth.requireStaff, (req, res) => {
         }).catch((e) => console.error('[PUSH] approvazione', e.message));
 
         // Questa approvazione può aver completato una sezione → bonus una tantum
-        try {
-          for (const s of checkAndAwardSections(sub.user_id)) {
-            audit(req, 'sezione.bonus', `${s.label} → +${SECTION_BONUS}pt a user#${sub.user_id}`);
-            pushToUser(sub.user_id, {
-              title: '🏅 Sezione completata!',
-              body: `Hai finito "${s.label}": +${SECTION_BONUS} punti bonus!`,
-              url: '/missioni',
-            }).catch((e) => console.error('[PUSH] bonus sezione', e.message));
-          }
-        } catch (e) { console.error('[SEZIONI] bonus', e.message); }
+        awardSectionsAndNotify(sub.user_id, req);
         checkLevelUp(sub.user_id);
       }
     } else {
