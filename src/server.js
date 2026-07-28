@@ -652,42 +652,58 @@ app.get('/', (req, res) => {
   res.render('home', { title: 'FantaSanRocco', topThree });
 });
 
-// Foto premi — metti i file in public/images/galleria/ e imposta il nome qui.
-// Lascia null finché non hai la foto: comparirà un placeholder.
-const FOTO_PREMIO_SMARTBOX_COVER = 'smartbox-cover.webp';
-const FOTO_PREMIO_SMARTBOX_DEST  = 'smartbox-destinazioni.webp';
-const FOTO_PREMIO_PS5   = 'switch-lite.avif';
-const FOTO_PREMIO_CAFFE = 'caffe.webp';
-
-// ── Premi degli sponsor, uno per posizione ────────────────────────────────
-// Sta qui e non dentro le view perché lo leggono in DUE posti: la pagina
-// /premio e la classifica. Tenendone una copia sola non può succedere che
-// la classifica prometta un premio e la pagina dei premi ne dica un altro.
-// Il podio (1º-3º) non è in questo elenco: quei premi restano segreti.
+// ── I PREMI, uno per posizione ────────────────────────────────────────────
+// Unico elenco: lo leggono la pagina /premio e la classifica. Tenendone una
+// copia sola non può succedere che la classifica prometta un premio e la
+// pagina dei premi ne dica un altro.
 // Per cambiare l'ordine basta spostare le righe e correggere `pos`.
-const PREMI_SPONSOR = [
-  { pos: 4,  nome: '6 mesi di prova gratuita', offerto: 'Gym Hall Muscle Zone',  valore: null,   icona: 'bolt' },
-  { pos: 5,  nome: 'Friggitrice ad aria',      offerto: null,                    valore: null,   icona: 'flame' },
-  { pos: 6,  nome: 'Cena per due',             offerto: 'Nemo',                  valore: '50 €', icona: 'glass' },
-  { pos: 7,  nome: '5 lezioni di personal training', offerto: 'Antonio Fiore',   valore: null,   icona: 'target',
+//
+// I primi tre hanno la scheda grande (tagline + descrizione + foto), gli
+// altri una card piccola. `foto` sono i file in public/images/premi/.
+const PREMI = [
+  {
+    pos: 1, nome: 'Box viaggi', valore: '250 €', icona: 'globe',
+    tagline: 'Il premio più grande della festa',
+    desc: 'Un cofanetto viaggi da 250 euro. La destinazione e il momento li scegli tu: '
+        + 'chi chiude la festa in cima alla classifica parte.',
+    foto: ['smartbox-cover.webp', 'smartbox-destinazioni.webp'],
+  },
+  {
+    pos: 2, nome: 'Cena da Nemo', offerto: 'Nemo', valore: '50 + 50 €', icona: 'glass',
+    tagline: 'Cento euro da spendere a tavola',
+    desc: 'Due buoni da cinquanta euro per mangiare da Nemo. '
+        + 'Il secondo posto si festeggia seduti, con chi vuoi tu.',
+  },
+  {
+    pos: 3, nome: 'Ingresso SPA', valore: '60–80 €', icona: 'sparkle',
+    tagline: 'Il riposo dopo cinque giorni di missioni',
+    desc: 'Una giornata di SPA per rimettersi da una settimana passata a rincorrere '
+        + 'missioni, fuochi e classifica.',
+  },
+  { pos: 4,  nome: '6 mesi di prove gratuite', offerto: 'Gym Hall Muscle Zone', icona: 'bolt' },
+  { pos: 5,  nome: '5 lezioni di personal training', offerto: 'Antonio Fiore', icona: 'target',
     nota: 'Con il personal trainer Claudio De Maio' },
-  { pos: 8,  nome: 'Cesto gastronomico',       offerto: 'Vitello Paesano',       valore: '30 €', icona: 'box' },
-  { pos: 9,  nome: 'Buono trattamento',        offerto: 'Fatime',                valore: null,   icona: 'sparkle' },
-  { pos: 10, nome: 'Buono spesa',              offerto: 'Day by Day',            valore: null,   icona: 'ticket' },
+  { pos: 6,  nome: 'Trattamento', offerto: 'Fatima',    valore: '50 €',    icona: 'candle' },
+  { pos: 7,  nome: 'Buono spesa', offerto: 'Day by Day', valore: '50 €',   icona: 'ticket' },
+  { pos: 8,  nome: '5 lampade',   offerto: 'Rosetta',    valore: '50 €',   icona: 'sun' },
+  { pos: 9,  nome: 'Friggitrice ad aria',    valore: '40–50 €', icona: 'flame' },
+  { pos: 10, nome: 'Macchinetta del caffè',  icona: 'coffee', foto: ['caffe.webp'] },
+  { pos: 11, nome: 'Cesto gastronomico', offerto: 'Vitello Paesano', valore: '30 €', icona: 'box' },
 ];
+
+const PREMI_PODIO = PREMI.filter((p) => p.pos <= 3);
+const PREMI_LISTA = PREMI.filter((p) => p.pos > 3);
 
 // Indicizzati per posizione: la classifica deve poter chiedere "che premio
 // c'è al 7º posto?" senza scorrere l'elenco a ogni riga.
-const PREMIO_PER_POSIZIONE = Object.fromEntries(PREMI_SPONSOR.map((p) => [p.pos, p]));
+const PREMIO_PER_POSIZIONE = Object.fromEntries(PREMI.map((p) => [p.pos, p]));
 
 app.get('/premio', (req, res) => {
   res.render('prize', {
     title: 'I Premi',
-    smartboxCover: FOTO_PREMIO_SMARTBOX_COVER,
-    smartboxDest:  FOTO_PREMIO_SMARTBOX_DEST,
-    photoPs5:      FOTO_PREMIO_PS5,
-    photoCaffe:    FOTO_PREMIO_CAFFE,
-    premiSponsor:  PREMI_SPONSOR,
+    premiPodio: PREMI_PODIO,
+    premiLista: PREMI_LISTA,
+    totalePremi: PREMI.length,
   });
 });
 

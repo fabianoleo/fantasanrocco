@@ -44,8 +44,10 @@
         <span class="lb-podium-pts"><%= u.points %></span>
         <span class="lb-podium-pts-label">punti</span>
         <span class="lb-podium-done"><%= u.done %> missioni</span>
-        <%# I premi del podio sono ancora segreti: qui si vede solo che ci sono. %>
-        <span class="lb-prize lb-prize-mistero"><%- icon('lock') %> Premio misterioso</span>
+        <% const premioPodio = premioPerPosizione[realIdx + 1]; %>
+        <% if (premioPodio) { %>
+          <a class="lb-prize lb-prize-podio" href="/premio" title="<%= premioPodio.nome %><%= premioPodio.valore ? ' — ' + premioPodio.valore : '' %>"><%- icon(premioPodio.icona) %><span class="lb-prize-txt"><%= premioPodio.nome %></span></a>
+        <% } %>
         <div class="lb-podium-bar lb-podium-bar-<%= ['gold','silver','bronze'][realIdx] %>"></div>
       </div>
     <% }) %>

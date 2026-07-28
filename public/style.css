@@ -4943,6 +4943,14 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
 }
 .pz-sp-icon { color: var(--gold); }
 .pz-sp-icon .ico { width: 26px; height: 26px; }
+/* Se il premio ha una foto va al posto dell'icona, ma nello stesso ingombro:
+   altrimenti una card sola diventa più alta e la griglia si sfalsa. */
+.pz-sp-foto {
+  width: 54px; height: 54px;
+  border-radius: 10px; overflow: hidden;
+  border: 1px solid var(--border-gold);
+}
+.pz-sp-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pz-sp-name {
   margin: 0;
   font-family: var(--font-heading); font-size: 1rem; font-weight: 600;
@@ -4994,14 +5002,16 @@ a.lb-prize:hover { color: var(--gold-2); }
    scendere sotto la larghezza del testo e l'etichetta esce dalla riga. */
 .lb-list-name { display: flex; flex-direction: column; min-width: 0; }
 
-.lb-prize-mistero {
-  margin: .35rem auto 0;
-  font-size: .62rem; letter-spacing: .04em;
-  color: var(--text-3); opacity: .8;
+/* Sul podio la card è stretta e centrata: il premio ci sta solo se rimpicciolito */
+.lb-prize-podio {
+  max-width: 100%;
+  margin: .3rem auto 0;
+  justify-content: center;
+  font-size: .62rem; letter-spacing: .02em;
 }
-.lb-prize-mistero .ico { width: 11px; height: 11px; }
+.lb-prize-podio .ico { width: 11px; height: 11px; }
 
 @media (max-width: 600px) {
   .lb-prize { font-size: .64rem; }
-  .lb-prize-mistero { font-size: .55rem; }
+  .lb-prize-podio { font-size: .55rem; }
 }

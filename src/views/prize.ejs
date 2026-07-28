@@ -3,188 +3,88 @@
   <div class="pz-hero-inner">
     <p class="pz-hero-kicker">Festa di San Rocco 2026 &nbsp;·&nbsp; Siano</p>
     <h1 class="pz-title">I Premi<br>in Palio</h1>
-    <p class="pz-subtitle">Quest'anno si vince fino al <strong>decimo posto</strong>: i premi degli sponsor sono qui sotto, uno per ogni posizione.<br>Quelli del podio restano <strong>ancora un mistero</strong>: verranno svelati presto.</p>
+    <p class="pz-subtitle">Quest'anno si vince fino all'<strong>undicesimo posto</strong>.<br>Ogni posizione in classifica ha il suo premio, messo dalle attività di Siano.</p>
     <div class="pz-hero-pill">
-      <span><%= 3 + premiSponsor.length %></span> premi &nbsp;&middot;&nbsp; <span>3</span> ancora segreti &nbsp;&middot;&nbsp; <span>agosto&nbsp;2026</span>
+      <span><%= totalePremi %></span> premi &nbsp;&middot;&nbsp; <span>250&nbsp;€</span> il primo &nbsp;&middot;&nbsp; <span>agosto&nbsp;2026</span>
     </div>
   </div>
 </div>
 
-<% /* ═══════════════════════════════════════════════════════════════════
-   PREMI UFFICIALI — NASCOSTI PER ORA (restano segreti fino allo svelamento).
-   Il blocco qui sotto è disattivato con `if (false)`: NON viene mostrato,
-   ma è conservato integralmente. Per rivelare di nuovo i premi basta
-   cambiare `if (false)` in `if (true)` (e rimuovere le sezioni "mistero").
-   ═══════════════════════════════════════════════════════════════════ */ %>
-<% if (false) { %>
-<%# ── PRIMO POSTO ─────────────────────────────────────────────── %>
-<div class="pz-section pz-gold lp-full">
-  <div class="pz-rank-ghost">I</div>
-  <div class="pz-section-inner">
-    <div class="pz-section-info">
-      <div class="pz-rank-label">
-        <span class="pz-medal"><%- icon('medal') %></span>
-        <span>Primo Posto</span>
-      </div>
-      <div class="pz-divider"></div>
-      <h2 class="pz-prize-name">Smartbox<br>3 giorni da sogno</h2>
-      <p class="pz-prize-tagline">In Europa, per 2 persone, quando vuoi tu</p>
-      <p class="pz-prize-desc">Un cofanetto regalo con centinaia di strutture in tutta Europa. Scegli la destinazione, scegli il momento. Tre giorni indimenticabili per due persone.</p>
-      <ul class="pz-details">
-        <li><%- icon('gift') %> Cofanetto Smartbox originale</li>
-        <li><%- icon('globe') %> Valido in tutta Europa</li>
-        <li><%- icon('people') %> Per 2 persone</li>
-        <li><%- icon('hotel') %> 3 giorni / 2 notti</li>
-      </ul>
-    </div>
-    <div class="pz-photos-area">
-      <% if (smartboxCover && smartboxDest) { %>
-        <div class="pz-photos-duo">
-          <div class="pz-photo pz-photo-border-gold">
-            <img src="/images/premi/<%= smartboxCover %>" alt="Smartbox copertina">
-          </div>
-          <div class="pz-photo pz-photo-border-gold">
-            <img src="/images/premi/<%= smartboxDest %>" alt="Destinazioni Europa">
-          </div>
-        </div>
-      <% } else if (smartboxCover) { %>
-        <div class="pz-photo pz-photo-single pz-photo-border-gold">
-          <img src="/images/premi/<%= smartboxCover %>" alt="Smartbox">
-        </div>
-      <% } else { %>
-        <div class="pz-photo-placeholder">
-          <span class="pz-ph-icon"><%- icon('gift') %></span>
-          <span>Foto in arrivo</span>
-        </div>
-      <% } %>
-    </div>
-  </div>
-</div>
-
-<%# ── SECONDO POSTO ───────────────────────────────────────────── %>
-<div class="pz-section pz-silver lp-full">
-  <div class="pz-rank-ghost">II</div>
-  <div class="pz-section-inner">
-    <div class="pz-section-info">
-      <div class="pz-rank-label">
-        <span class="pz-medal"><%- icon('medal') %></span>
-        <span>Secondo Posto</span>
-      </div>
-      <div class="pz-divider"></div>
-      <h2 class="pz-prize-name">Nintendo<br>Switch Lite</h2>
-      <p class="pz-prize-tagline">La console portatile, ovunque tu voglia</p>
-      <p class="pz-prize-desc">Leggera, compatta, perfetta per giocare dovunque. Centinaia di titoli disponibili: dal party game all'avventura, la Switch Lite è gaming puro.</p>
-      <ul class="pz-details">
-        <li><%- icon('gamepad') %> Nintendo Switch Lite</li>
-        <li><%- icon('box') %> Versione portatile e leggera</li>
-        <li><%- icon('target') %> Centinaia di giochi disponibili</li>
-      </ul>
-    </div>
-    <div class="pz-photos-area">
-      <% if (photoPs5) { %>
-        <div class="pz-photo pz-photo-single pz-photo-border-silver">
-          <img src="/images/premi/<%= photoPs5 %>" alt="Nintendo Switch Lite">
-        </div>
-      <% } else { %>
-        <div class="pz-photo-placeholder">
-          <span class="pz-ph-icon"><%- icon('gamepad') %></span>
-          <span>Foto in arrivo</span>
-        </div>
-      <% } %>
-    </div>
-  </div>
-</div>
-
-<%# ── TERZO POSTO ─────────────────────────────────────────────── %>
-<div class="pz-section pz-bronze lp-full">
-  <div class="pz-rank-ghost">III</div>
-  <div class="pz-section-inner">
-    <div class="pz-section-info">
-      <div class="pz-rank-label">
-        <span class="pz-medal"><%- icon('medal') %></span>
-        <span>Terzo Posto</span>
-      </div>
-      <div class="pz-divider"></div>
-      <h2 class="pz-prize-name">Macchina<br>del Caffè</h2>
-      <p class="pz-prize-tagline">Perché le grandi imprese meritano un gran caffè</p>
-      <p class="pz-prize-desc">Dopo tante missioni completate, il caffè perfetto è il tuo premio. Una macchina di qualità per iniziare ogni mattina alla grande.</p>
-      <ul class="pz-details">
-        <li><%- icon('coffee') %> Macchina espresso automatica</li>
-        <li><%- icon('bean') %> Cialde omaggio incluse</li>
-        <li><%- icon('sparkle') %> Design da cucina di qualità</li>
-      </ul>
-    </div>
-    <div class="pz-photos-area">
-      <% if (photoCaffe) { %>
-        <div class="pz-photo pz-photo-single pz-photo-border-bronze">
-          <img src="/images/premi/<%= photoCaffe %>" alt="Macchinetta del caffè">
-        </div>
-      <% } else { %>
-        <div class="pz-photo-placeholder">
-          <span class="pz-ph-icon"><%- icon('coffee') %></span>
-          <span>Foto in arrivo</span>
-        </div>
-      <% } %>
-    </div>
-  </div>
-</div>
-
-<% } /* fine premi ufficiali nascosti */ %>
-
-<%# ══ PREMI MISTERIOSI (mostrati al posto di quelli ufficiali) ══════════ %>
+<%# ── PODIO: i primi tre, scheda grande ────────────────────────────────────
+    Podio e lista sotto arrivano entrambi da PREMI in server.js, lo stesso
+    elenco che alimenta la classifica: le due pagine non possono sfasarsi. %>
 <%
-  const mysteryRanks = [
-    { cls: 'pz-gold',   ghost: 'I',   label: 'Primo Posto' },
-    { cls: 'pz-silver', ghost: 'II',  label: 'Secondo Posto' },
-    { cls: 'pz-bronze', ghost: 'III', label: 'Terzo Posto' },
+  const stiliPodio = [
+    { cls: 'pz-gold',   ghost: 'I',   label: 'Primo Posto',   bordo: 'pz-photo-border-gold' },
+    { cls: 'pz-silver', ghost: 'II',  label: 'Secondo Posto', bordo: 'pz-photo-border-silver' },
+    { cls: 'pz-bronze', ghost: 'III', label: 'Terzo Posto',   bordo: 'pz-photo-border-bronze' },
   ];
-  mysteryRanks.forEach((rk) => { %>
-  <div class="pz-section <%= rk.cls %> lp-full">
-    <div class="pz-rank-ghost">?</div>
+  premiPodio.forEach(function (p, i) {
+    const st = stiliPodio[i];
+    const foto = p.foto || [];
+%>
+  <div class="pz-section <%= st.cls %> lp-full">
+    <div class="pz-rank-ghost"><%= st.ghost %></div>
     <div class="pz-section-inner">
       <div class="pz-section-info">
         <div class="pz-rank-label">
           <span class="pz-medal"><%- icon('medal') %></span>
-          <span><%= rk.label %></span>
+          <span><%= st.label %></span>
         </div>
         <div class="pz-divider"></div>
-        <h2 class="pz-prize-name">Premio<br>Misterioso</h2>
-        <p class="pz-prize-tagline">Ancora top secret &nbsp;·&nbsp; svelato presto</p>
-        <p class="pz-prize-desc">Il premio per il <%= rk.label.toLowerCase() %> è ancora un segreto. Sarà rivelato prima della festa: continua a giocare e scala la classifica, chi arriva in cima non resterà deluso.</p>
+        <h2 class="pz-prize-name"><%= p.nome %></h2>
+        <p class="pz-prize-tagline"><%= p.tagline %></p>
+        <p class="pz-prize-desc"><%= p.desc %></p>
         <ul class="pz-details">
-          <li><%- icon('lock') %> Premio ancora segreto</li>
-          <li><%- icon('sparkle') %> Verrà svelato a breve</li>
-          <li><%- icon('trophy') %> Riservato ai primi in classifica</li>
+          <li><%- icon(p.icona) %> <%= p.nome %></li>
+          <% if (p.valore) { %><li><%- icon('gift') %> Valore <%= p.valore %></li><% } %>
+          <% if (p.offerto) { %><li><%- icon('pin') %> Offerto da <%= p.offerto %></li><% } %>
+          <li><%- icon('trophy') %> Va a chi chiude al <%= st.label.toLowerCase() %></li>
         </ul>
       </div>
       <div class="pz-photos-area">
-        <div class="pz-photo-placeholder pz-photo-mystery">
-          <span class="pz-ph-icon"><%- icon('gift') %></span>
-          <span>?</span>
-          <span class="pz-ph-note">Sarà svelato presto</span>
-        </div>
+        <% if (foto.length >= 2) { %>
+          <div class="pz-photos-duo">
+            <% foto.slice(0, 2).forEach(function (f) { %>
+              <div class="pz-photo <%= st.bordo %>">
+                <img src="/images/premi/<%= f %>" alt="<%= p.nome %>" loading="lazy">
+              </div>
+            <% }) %>
+          </div>
+        <% } else if (foto.length === 1) { %>
+          <div class="pz-photo pz-photo-single <%= st.bordo %>">
+            <img src="/images/premi/<%= foto[0] %>" alt="<%= p.nome %>" loading="lazy">
+          </div>
+        <% } else { %>
+          <div class="pz-photo-placeholder">
+            <span class="pz-ph-icon"><%- icon(p.icona) %></span>
+            <span>Foto in arrivo</span>
+          </div>
+        <% } %>
       </div>
     </div>
   </div>
 <% }) %>
 
-<%# ══ PREMI DEGLI SPONSOR (dal 4º al 10º posto) ═══════════════════════════
-    L'elenco arriva da PREMI_SPONSOR in server.js: è lo stesso che alimenta
-    la classifica, così le due pagine non possono promettere cose diverse. %>
+<%# ══ DAL QUARTO IN GIÙ ═══════════════════════════════════════════════════ %>
 <div class="pz-sponsor lp-full">
   <div class="pz-sponsor-inner">
-    <p class="pz-how-kicker">Offerti dagli sponsor della festa</p>
-    <h2 class="pz-how-title">Dal 4º al 10º posto</h2>
+    <p class="pz-how-kicker">Offerti dalle attività di Siano</p>
+    <h2 class="pz-how-title">Dal 4º all'<%= premiLista[premiLista.length - 1].pos %>º posto</h2>
     <p class="pz-sponsor-intro">
-      Il podio non è l'unico posto dove si vince. Ogni posizione fino alla decima
-      ha il suo premio, messo a disposizione dalle attività di Siano.
+      Il podio non è l'unico posto dove si vince: si porta a casa qualcosa
+      anche arrivando undicesimi.
     </p>
 
     <ol class="pz-sponsor-grid">
-      <% premiSponsor.forEach(function (p) { %>
+      <% premiLista.forEach(function (p) { %>
         <li class="pz-sp-card">
           <span class="pz-sp-pos"><%= p.pos %>º</span>
-          <span class="pz-sp-icon"><%- icon(p.icona) %></span>
+          <% if (p.foto && p.foto.length) { %>
+            <span class="pz-sp-foto"><img src="/images/premi/<%= p.foto[0] %>" alt="<%= p.nome %>" loading="lazy"></span>
+          <% } else { %>
+            <span class="pz-sp-icon"><%- icon(p.icona) %></span>
+          <% } %>
           <h3 class="pz-sp-name"><%= p.nome %></h3>
           <% if (p.nota) { %><p class="pz-sp-note"><%= p.nota %></p><% } %>
           <% if (p.offerto) { %><p class="pz-sp-by">da <strong><%= p.offerto %></strong></p><% } %>
@@ -231,7 +131,7 @@
         <span class="pz-step-num">04</span>
         <div>
           <p class="pz-step-title">Vinci il premio</p>
-          <p class="pz-step-desc">I primi tre in classifica a fine festa si aggiudicano i premi. Chi ne ha di più, vince.</p>
+          <p class="pz-step-desc">I primi <%= totalePremi %> in classifica a fine festa si aggiudicano i premi. Chi ne ha di più, vince.</p>
         </div>
       </div>
     </div>
