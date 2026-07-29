@@ -258,8 +258,23 @@
     if (mode === 'santo') return { w: 18, h: 32 };
     return { w: PW, h: PH };
   }
-  // Hitbox generosa (più piccola dello sprite): perdonare è meglio che frustrare
-  function hitbox() {
+  // Due riquadri e non uno solo: prima lo stesso rettangolo decideva sia i
+  // colpi presi sia le monete raccolte, quindi stringere il perdono sui raggi
+  // avrebbe reso più difficili anche le monete — cioè metà della severità se
+  // ne andava in un peggioramento che nessuno aveva chiesto.
+  //
+  // Danno: mezzo pixel di perdono in meno per lato, cioè un pixel in più per
+  // asse (8×17 invece di 7×16 sullo sprite base, su un campo da 320×200).
+  // Mezzo e non uno intero perché il riquadro di partenza è piccolo: un pixel
+  // per lato gonfiava l'area del 45%, e da "un po' più severo" si passava a
+  // un altro gioco. Le posizioni sono già numeri con la virgola, quindi il
+  // mezzo pixel non ha bisogno di nulla di speciale.
+  function hitboxDanno() {
+    const d = dims();
+    return { x: PX + 4.5, y: py + 6.5, w: d.w - 10, h: d.h - 13 };
+  }
+  // Raccolta e fedeli travolti: generosa come prima, perdonare è meglio che frustrare
+  function hitboxRaccolta() {
     const d = dims();
     return { x: PX + 5, y: py + 7, w: d.w - 11, h: d.h - 14 };
   }
@@ -856,14 +871,15 @@
       if (letterGap <= 0) { spawnLetter(); letterGap = 190 + Math.random() * 150; }
     }
 
-    const hb = hitbox();
+    const hb = hitboxRaccolta();
+    const hbD = hitboxDanno();
 
     // ── Raggi ────────────────────────────────────────────────────
     for (let i = zaps.length - 1; i >= 0; i--) {
       const z = zaps[i];
       z.x -= worldSpeed * dt;
       if (z.x + z.w < -6) { zaps.splice(i, 1); continue; }
-      if (!hit(hb.x, hb.y, hb.w, hb.h, z)) continue;
+      if (!hit(hbD.x, hbD.y, hbD.w, hbD.h, z)) continue;
       if (mode === 'razzo') {                                    // il razzo sfonda
         burst(z.x + z.w / 2, z.y + z.h / 2, '#ff8a1e', 14); popup(z.x, z.y - 6, '+5', '#ff8a1e');
         score += 5; shake = Math.max(shake, 6); zaps.splice(i, 1); continue;
@@ -894,7 +910,7 @@
       }
       m.x -= m.vx * dt;
       if (m.x < -20) { missiles.splice(i, 1); continue; }
-      if (!hit(hb.x, hb.y, hb.w, hb.h, { x: m.x - 5, y: m.y - 5, w: 20, h: 10 })) continue;
+      if (!hit(hbD.x, hbD.y, hbD.w, hbD.h, { x: m.x - 5, y: m.y - 5, w: 20, h: 10 })) continue;
       if (mode === 'razzo') {
         burst(m.x, m.y, '#ff8a1e', 18); popup(m.x, m.y - 8, '+8', '#ff8a1e');
         score += 8; shake = Math.max(shake, 7); missiles.splice(i, 1); continue;

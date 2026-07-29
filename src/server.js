@@ -702,11 +702,12 @@ const PREMI = [
     foto: ['smartbox-cover.webp', 'smartbox-destinazioni.webp'],
   },
   {
-    pos: 2, nome: 'Cena da Nemo', offerto: 'Nemo Restaurant Food & Wine',
-    valore: '50 + 50 €', icona: 'glass',
+    // Niente `offerto`, come per il Percorso Spa: la cena si fa da Nemo, ma
+    // non è il ristorante a metterla in palio.
+    pos: 2, nome: 'Cena da Nemo', valore: '100 €', icona: 'glass',
     tagline: 'Cento euro da spendere a tavola',
-    desc: 'Due buoni da cinquanta euro per il Nemo Restaurant Food & Wine di Salerno: '
-        + 'cucina contemporanea di mare, pesce fresco e crudi, pasta fatta a mano e carni alla brace. '
+    desc: 'Un buono da cento euro per il Nemo Restaurant Food & Wine di Salerno: '
+        + 'cucina contemporanea di mare, pesce fresco e crudi, pasta fatta a mano. '
         + 'Il secondo posto si festeggia seduti, con chi vuoi tu.',
   },
   {
