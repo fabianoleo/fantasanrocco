@@ -1626,6 +1626,12 @@ const JP_MISSIONS = [
   { key: 'jp-sk60',  kind: 'sum', metric: 'knocked',    goal: 60,   text: 'Travolgi 60 fedeli in totale' },
   { key: 'jp-sg15',  kind: 'sum', metric: 'games',      goal: 15,   text: 'Gioca 15 partite' },
   { key: 'jp-sg40',  kind: 'sum', metric: 'games',      goal: 40,   text: 'Gioca 40 partite' },
+  // Punti della raccolta (monete, fedeli, raggi sfondati): premiano chi gioca
+  // "sporco" andando a prendere le cose, non solo chi corre dritto e lontano.
+  { key: 'jp-p300',  kind: 'run', metric: 'points',     goal: 300,   text: 'Fai 300 punti in una partita' },
+  { key: 'jp-p700',  kind: 'run', metric: 'points',     goal: 700,   text: 'Fai 700 punti in una partita' },
+  { key: 'jp-sp4k',  kind: 'sum', metric: 'points',     goal: 4000,  text: 'Accumula 4.000 punti in totale' },
+  { key: 'jp-sp12k', kind: 'sum', metric: 'points',     goal: 12000, text: 'Accumula 12.000 punti in totale' },
 ];
 const JP_BY_KEY = Object.fromEntries(JP_MISSIONS.map((m) => [m.key, m]));
 
@@ -1779,8 +1785,12 @@ app.post('/jetpack/fine', auth.requireLogin, gameLimiter, verifyCsrf, (req, res)
   //  · transforms: servono 4-5 lettere distanziate ≈ una ogni 5 s al meglio
   //  · knocked: un fedele ogni 130-320 unità di mondo ≈ 3/s
   //  · halos:   un'aureola ogni 1000-1700 unità di mondo ≈ una ogni 6 s
+  //  · points: la raccolta rende al massimo ~93 pt/s (55 dalle monete, 30 dai
+  //    raggi sfondati con la zampata, 8 dai fedeli col cane): 120 lascia
+  //    margine per missili e lettere senza aprire la porta ai punteggi finti
   const CAPS = {
     dist:       { base: 30, perSec: 110 },
+    points:     { base: 80, perSec: 120 },
     coins:      { base: 10, perSec: 8 },
     transforms: { base: 1,  perSec: 1 / 5 },
     knocked:    { base: 3,  perSec: 3 },

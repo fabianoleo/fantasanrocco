@@ -25,6 +25,7 @@
   canvas.width = W; canvas.height = H;
 
   const elScore = document.getElementById('jpScore');
+  const elPoints = document.getElementById('jpPoints');
   const elBest = document.getElementById('jpBest');
   const overlay = document.getElementById('jpOverlay');
   const ovTitle = document.getElementById('jpOverTitle');
@@ -86,7 +87,7 @@
       method: 'POST', headers: { 'X-CSRF-Token': csrf },
       body: new URLSearchParams({
         _csrf: csrf, token: runToken || '',
-        dist: String(Math.floor(dist)), coins: String(coins),
+        dist: String(Math.floor(dist)), points: String(Math.floor(score)), coins: String(coins),
         transforms: String(transforms), knocked: String(knocked), halos: String(halos),
       }),
     }).then((r) => r.json()).then((d) => {
@@ -586,6 +587,7 @@
     reported = false; lastReport = null;
     pickWord();
     if (elScore) elScore.textContent = '0 m';
+    if (elPoints) elPoints.textContent = '0 pt';
   }
 
   function start() {
@@ -652,8 +654,9 @@
     const total = Math.floor(dist);
     if (ovKicker) ovKicker.textContent = 'Game over';
     ovTitle.textContent = 'Riprova?';
-    let html = 'Distanza: <b>' + total + ' m</b> · Monete: <b>' + coins + '</b>'
-      + '<br>Fedeli travolti: <b>' + knocked + '</b> · Mezzi usati: <b>' + transforms + '</b>'
+    let html = 'Distanza: <b>' + total + ' m</b> · Punti: <b>' + Math.floor(score) + '</b>'
+      + '<br>Monete: <b>' + coins + '</b> · Fedeli travolti: <b>' + knocked + '</b>'
+      + ' · Mezzi usati: <b>' + transforms + '</b>'
       + (total >= best ? ' · nuovo record!' : '');
     if (lastReport) {
       const parts = [];
@@ -752,8 +755,12 @@
     const worldSpeed = speed * (mode === 'razzo' ? 1.35 : 1);   // il razzo corre di più
     bgX += worldSpeed * dt;
     dist += worldSpeed * dt * 0.35;
-    score = dist;
+    // I METRI e i PUNTI sono due cose diverse: i metri li fa la corsa, i punti
+    // la raccolta (monete, fedeli, raggi sfondati…). Prima qui c'era
+    // `score = dist`, che a ogni fotogramma cancellava i punti appena presi:
+    // i "+3" che volavano sullo schermo non finivano da nessuna parte.
     if (elScore) elScore.textContent = Math.floor(dist) + ' m';
+    if (elPoints) elPoints.textContent = Math.floor(score) + ' pt';
 
     // ── Fisica: dipende dal mezzo ────────────────────────────────
     const d = dims();
@@ -1019,7 +1026,7 @@
       arcadeText(W / 2, H / 2 - 4, 'GAME OVER', '#ff5a3c', size, Math.min(1, overFlash / 4));
       if (overFlash > 12) {
         const blink = (Math.floor(overFlash / 12) % 2) ? 0.9 : 0.35;
-        arcadeText(W / 2, H / 2 + 18, Math.floor(score) + ' m', '#f5c842', 9, blink);
+        arcadeText(W / 2, H / 2 + 18, Math.floor(dist) + ' m · ' + Math.floor(score) + ' pt', '#f5c842', 8, blink);
       }
     }
 

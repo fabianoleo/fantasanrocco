@@ -40,6 +40,9 @@
   pointer-events: none; z-index: 3;
 }
 .jp-hud .jp-best { color: #d9d2c2; }
+/* Punti della raccolta: azzurri come i gettoni-lettera, per distinguerli
+   a colpo d'occhio dai metri percorsi (che restano dorati). */
+.jp-hud .jp-pts { color: #5ad1ff; }
 
 /* ── Overlay start / game over ───────────────────────────────────── */
 .jp-overlay {
@@ -200,6 +203,19 @@
   -webkit-touch-callout: none;
   -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
 }
+
+/* ── Spiegazione dei due contatori (metri e punti) ───────────────── */
+.jp-punteggio {
+  max-width: 760px; margin: 1.2rem auto 0; padding: .85rem 1.1rem;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 12px;
+  background: rgba(255,255,255,.03);
+  font-size: .84rem; line-height: 1.65; color: var(--text-3, #9a93a6);
+}
+.jp-punteggio b { color: var(--text-1, #f4efe6); }
+.jp-punteggio .jp-c-m { color: #f5c842; }   /* metri: oro come nell'HUD */
+.jp-punteggio .jp-c-p { color: #5ad1ff; }   /* punti: azzurro come nell'HUD */
+@media (min-width: 761px) { .jp-punteggio { margin-inline: 1rem; } }
 
 /* ── Missioni di carriera ────────────────────────────────────────── */
 .jp-mis {

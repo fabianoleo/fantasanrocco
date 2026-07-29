@@ -6,6 +6,8 @@
   <div class="jp-stage">
     <div class="jp-hud">
       <span id="jpScore">0 m</span>
+      <%# Punti della raccolta: monete, fedeli, raggi sfondati… %>
+      <span class="jp-pts" id="jpPoints">0 pt</span>
       <span class="jp-best" id="jpBest">record 0</span>
     </div>
     <canvas class="jp-canvas" id="jpCanvas" aria-label="San Rocco Jetpack"></canvas>
@@ -52,6 +54,15 @@
     </button>
   </div>
 </div>
+
+<%# ── I DUE CONTATORI: metri e punti ───────────────────────────────── %>
+<p class="jp-punteggio">
+  In alto ci sono <strong>due contatori</strong>: i <strong class="jp-c-m">metri</strong> li fa la corsa,
+  i <strong class="jp-c-p">punti</strong> la raccolta —
+  moneta <b>+3</b>, fedele travolto <b>+2</b> (<b>+6</b> col cane), lettera <b>+2</b>,
+  raggio sfondato <b>+5</b> (<b>+8</b> con la zampata), missile distrutto <b>+8</b>.
+  Entrambi contano per le missioni di carriera qui sotto.
+</p>
 
 <%# ── MISSIONI DI CARRIERA (restano fra le partite) ────────────────── %>
 <section class="jp-mis" id="jpMissions" aria-label="Missioni del Jetpack">
