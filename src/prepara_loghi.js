@@ -16,12 +16,26 @@
 // disegnati per la carta bianca, che su fondo scuro sparirebbero.
 //
 //   node src/prepara_loghi.js --schiarisci loghi-png/x.png:x.png
+//
+// Con --schiarisci-scuri, invece, si schiariscono SOLO i neri e i grigi e i
+// colori del marchio restano quelli. Serve ai loghi a due facce: un simbolo
+// già acceso più una scritta nera sotto. Schiarendo tutto si salverebbe la
+// scritta ma si spegnerebbe il simbolo.
+//
+//   node src/prepara_loghi.js --schiarisci-scuri loghi-png/x.png:x.png
 // ===================================================================
 const { Jimp } = require('jimp');
 
 const TOLLERANZA = 42;   // scostamento ammesso dal colore di fondo
 const CORNICE = 3;       // spessore del bordo da cancellare prima di iniziare
 const ALTEZZA_MAX = 200; // nella barra sono alti 48px: 200 basta anche su retina
+
+// Soglie di --schiarisci-scuri: sotto entrambe il pixel è "nero da stampa"
+// e va schiarito, sopra è un colore del marchio e si lascia stare. I numeri
+// vengono dal logo Athena, dove la scritta nera e il fulmine giallo si
+// dividono in due gruppi netti (33% scuro-slavato, 61% chiaro-saturo).
+const SATURAZIONE_MAX = 0.35;
+const LUMINOSITA_MAX = 0.5;
 
 // rgb → hsl → rgb, con la sola L ribaltata. Passare per HSL invece di fare
 // 255-x su ogni canale è tutta la differenza: il negativo puro sposta anche
@@ -53,6 +67,21 @@ function schiarisciPixel(d, o) {
   d[o] = Math.round(canale(hh + 1 / 3) * 255);
   d[o + 1] = Math.round(canale(hh) * 255);
   d[o + 2] = Math.round(canale(hh - 1 / 3) * 255);
+}
+
+// Vero solo per i neri e i grigi da stampa. Serve ai marchi a due facce, tipo
+// Athena: fulmine giallo che sul fondo scuro si vede benissimo, e sotto la
+// scritta nera che sparisce. Schiarire tutto salverebbe la scritta ma
+// spegnerebbe il giallo in un oliva, quindi si tocca solo la parte slavata.
+function eScuroSlavato(d, o) {
+  const r = d[o] / 255, g = d[o + 1] / 255, b = d[o + 2] / 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+  const l = (mx + mn) / 2;
+  if (l >= LUMINOSITA_MAX) return false;
+  if (mx === mn) return true;                      // grigio puro
+  const c = mx - mn;
+  const s = l > 0.5 ? c / (2 - mx - mn) : c / (mx + mn);
+  return s < SATURAZIONE_MAX;
 }
 
 async function prepara(sorgente, destinazione, schiarisci = false) {
@@ -115,9 +144,14 @@ async function prepara(sorgente, destinazione, schiarisci = false) {
 
   // 3-bis. schiarimento, solo se richiesto. Va fatto DOPO lo scontorno: sui
   // pixel di fondo non ha senso, e su quelli già trasparenti non si vedrebbe.
+  let toccati = 0;
   if (schiarisci) {
     const dd = img.bitmap.data;
-    for (let o = 0; o < dd.length; o += 4) if (dd[o + 3] > 0) schiarisciPixel(dd, o);
+    for (let o = 0; o < dd.length; o += 4) {
+      if (dd[o + 3] === 0) continue;
+      if (schiarisci === 'scuri' && !eScuroSlavato(dd, o)) continue;
+      schiarisciPixel(dd, o); toccati++;
+    }
   }
 
   // 4. rimpicciolimento: nella barra i loghi sono alti 48px, e stanno su OGNI
@@ -130,17 +164,21 @@ async function prepara(sorgente, destinazione, schiarisci = false) {
     prima: `${w}x${h}`,
     dopo: `${img.bitmap.width}x${img.bitmap.height}`,
     fondo: fondo ? `rgb(${fondo})` : 'già trasparente',
+    toccati,
   };
 }
 
 (async () => {
-  // --schiarisci vale per il file che lo segue, non per tutti
+  // Le opzioni valgono per il file che le segue, non per tutti
   let schiarisci = false;
   for (const arg of process.argv.slice(2)) {
-    if (arg === '--schiarisci') { schiarisci = true; continue; }
+    if (arg === '--schiarisci') { schiarisci = 'tutto'; continue; }
+    if (arg === '--schiarisci-scuri') { schiarisci = 'scuri'; continue; }
     const [da, a] = arg.split(':');
     const r = await prepara(da, a, schiarisci);
-    console.log(`${a}  ${r.prima} → ${r.dopo}  (fondo: ${r.fondo}${schiarisci ? ', schiarito' : ''})`);
+    const nota = schiarisci === 'tutto' ? ', schiarito'
+               : schiarisci === 'scuri' ? `, schiariti ${r.toccati} pixel scuri` : '';
+    console.log(`${a}  ${r.prima} → ${r.dopo}  (fondo: ${r.fondo}${nota})`);
     schiarisci = false;
   }
 })();
