@@ -52,7 +52,7 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ⬜ luigi-fotografo.png      Luigi Fotografo
   ✅ pizzeria-zio-mauro.png   Pizzeria Zio Mauro
   ✅ pizzeria-frasci.png      Pizzeria V. Frasci  schiarito
-  ⬜ lamberti.png             Studio Dentistico Michele Lamberti
+  ✅ lamberti.png             Studio Dentistico Michele Lamberti
   ⬜ chalet.png               Chalet
   ⬜ revolution.png           Revolution (Bar Kral)
   ⬜ zio-enrico.png           Zio Enrico
