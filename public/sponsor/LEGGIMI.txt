@@ -41,7 +41,7 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ⬜ day-by-day.png           Day by Day Multibrand Siano
   ⬜ medea.png                Centro Estetico Medea
   ⬜ telefonia-eredi-leo.png  Telefonia Eredi Leo  logo scartato, chiederne un altro
-  ⬜ cycling-botta.png        Cycling Botta
+  ✅ cycling-botta.png        Cycling Botta
   ⬜ vitello-paesano.png      Al Vitello Paesano
   ⬜ bar-frasci-2-0.png       Bar V. Frasci 2.0
   ✅ de-santis.png            De Santis  schiarito
@@ -50,7 +50,7 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ✅ bar-vittoria.png         Bar Vittoria  schiarito, viene un disco bianco
   ⬜ kalu.png                 Kalu'
   ⬜ luigi-fotografo.png      Luigi Fotografo
-  ⬜ pizzeria-zio-mauro.png   Pizzeria Zio Mauro
+  ✅ pizzeria-zio-mauro.png   Pizzeria Zio Mauro
   ✅ pizzeria-frasci.png      Pizzeria V. Frasci  schiarito
   ⬜ lamberti.png             Studio Dentistico Michele Lamberti
   ⬜ chalet.png               Chalet
