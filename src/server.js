@@ -1628,10 +1628,10 @@ const JP_MISSIONS = [
   { key: 'jp-sg40',  kind: 'sum', metric: 'games',      goal: 40,   text: 'Gioca 40 partite' },
   // Punti della raccolta (monete, fedeli, raggi sfondati): premiano chi gioca
   // "sporco" andando a prendere le cose, non solo chi corre dritto e lontano.
-  { key: 'jp-p300',  kind: 'run', metric: 'points',     goal: 300,   text: 'Fai 300 punti in una partita' },
-  { key: 'jp-p700',  kind: 'run', metric: 'points',     goal: 700,   text: 'Fai 700 punti in una partita' },
-  { key: 'jp-sp4k',  kind: 'sum', metric: 'points',     goal: 4000,  text: 'Accumula 4.000 punti in totale' },
-  { key: 'jp-sp12k', kind: 'sum', metric: 'points',     goal: 12000, text: 'Accumula 12.000 punti in totale' },
+  { key: 'jp-p300',  kind: 'run', metric: 'points',     goal: 450,   text: 'Fai 450 punti in una partita' },
+  { key: 'jp-p700',  kind: 'run', metric: 'points',     goal: 1100,  text: 'Fai 1.100 punti in una partita' },
+  { key: 'jp-sp4k',  kind: 'sum', metric: 'points',     goal: 6000,  text: 'Accumula 6.000 punti in totale' },
+  { key: 'jp-sp12k', kind: 'sum', metric: 'points',     goal: 18000, text: 'Accumula 18.000 punti in totale' },
 ];
 const JP_BY_KEY = Object.fromEntries(JP_MISSIONS.map((m) => [m.key, m]));
 
