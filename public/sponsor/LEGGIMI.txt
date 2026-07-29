@@ -62,7 +62,7 @@ STATO
   ⬜ = manca il file
   ❌ = file ricevuto ma non utilizzabile, serve rifarlo
 
-A oggi sono in linea 12 loghi su 35.
+A oggi sono in linea 13 loghi su 35.
 
 L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
 
@@ -70,7 +70,7 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ✅ nemo.png                 Nemo Restaurant Food & Wine
   ✅ gym-hall.png             Gym Hall Muscle Zone
   ✅ athena-fitness.png       Athena Fitness  schiarito solo nei neri
-  ⬜ fatima-leo.png           Fatima Leo Salon & Academy
+  ✅ fatima-leo.png           Fatima Leo Salon & Academy  schiarito
   ⬜ day-by-day.png           Day by Day Multibrand Siano
   ⬜ medea.png                Centro Estetico Medea
   ⬜ telefonia-eredi-leo.png  Telefonia Eredi Leo  logo scartato, chiederne un altro
@@ -117,11 +117,11 @@ Nota: il file v-frasci.png in loghi-png/ e' della PIZZERIA, per questo il
 risultato si chiama pizzeria-frasci.png. Il Bar V. Frasci 2.0 e' un'altra
 attivita' e il suo logo manca ancora.
 
-Nota: in loghi-png/ restano solo gli originali dei sei loghi arrivati per
+Nota: in loghi-png/ restano solo gli originali dei sette loghi arrivati per
 ultimi (cycling-botta, pizzeria-zio-mauro, lamberti, kalu, athena-fitness,
-franzis). Gli altri originali sono stati rimossi: le versioni pronte in
-questa cartella bastano per la barra, ma se un logo va rifatto va richiesto
-di nuovo il file di partenza.
+franzis, fatima-leo). Gli altri originali sono stati rimossi: le versioni
+pronte in questa cartella bastano per la barra, ma se un logo va rifatto va
+richiesto di nuovo il file di partenza.
 
 Nota: il logo di Franzy's e' scritto con la Y, non con la I. Il nome del
 file resta franzis.png perche' e' gia' referenziato in SPONSOR_ATTIVITA e
