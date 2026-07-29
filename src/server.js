@@ -1776,7 +1776,12 @@ app.post('/jetpack/inizio', auth.requireLogin, gameLimiter, verifyCsrf, (req, re
 // Fine partita: il client NON è fidato, ogni valore è limitato dal tempo
 // realmente trascorso secondo l'orologio del server.
 app.post('/jetpack/fine', auth.requireLogin, gameLimiter, verifyCsrf, (req, res) => {
-  const MIN_GAME_SEC = 8;
+  // Soglia bassa di proposito: serve solo a scartare i "ticket lampo" chiusi
+  // all'istante. Prima era 8 secondi e buttava via partite vere — chi moriva
+  // presto dopo aver travolto due fedeli non vedeva contare nulla. A tenere
+  // onesti i numeri ci pensano i tetti qui sotto, che crescono col tempo:
+  // una corsa di 4 secondi vale al massimo 4 secondi di raccolta.
+  const MIN_GAME_SEC = 3;
   // Tetti calcolati sulla fisica reale del gioco, non "a occhio": sono il
   // massimo che una partita onesta può produrre, così non si possono farmare
   // punti di classifica dichiarando risultati gonfiati in partite lampo.
@@ -1788,13 +1793,20 @@ app.post('/jetpack/fine', auth.requireLogin, gameLimiter, verifyCsrf, (req, res)
   //  · points: la raccolta rende al massimo ~93 pt/s (55 dalle monete, 30 dai
   //    raggi sfondati con la zampata, 8 dai fedeli col cane): 120 lascia
   //    margine per missili e lettere senza aprire la porta ai punteggi finti
+  // Niente bonus fisso per partita: il credito è ESATTAMENTE proporzionale ai
+  // secondi giocati. È la regola più onesta e insieme la più solida — con un
+  // bonus fisso, spezzare il gioco in tante corse brevi renderebbe più di una
+  // lunga; così invece dieci corse da tre secondi valgono quanto una da
+  // trenta, e chi muore presto viene comunque pagato per quello che ha fatto.
+  // I valori al secondo tengono un margine sul massimo reale del gioco, così
+  // un giocatore bravo non viene mai tagliato.
   const CAPS = {
-    dist:       { base: 30, perSec: 110 },
-    points:     { base: 80, perSec: 120 },
-    coins:      { base: 10, perSec: 8 },
-    transforms: { base: 1,  perSec: 1 / 5 },
-    knocked:    { base: 3,  perSec: 3 },
-    halos:      { base: 1,  perSec: 1 / 6 },
+    dist:       { base: 0, perSec: 115 },     // max reale ~105 m/s
+    points:     { base: 0, perSec: 115 },     // max reale ~93 pt/s
+    coins:      { base: 0, perSec: 10 },      // gruppi da 5-8 monete
+    transforms: { base: 0, perSec: 1 / 4 },   // una ogni ~5 s nel caso migliore
+    knocked:    { base: 0, perSec: 2 },       // max reale ~1,3 fedeli/s
+    halos:      { base: 0, perSec: 1 / 5 },   // una ogni ~6 s
   };
   const token = req.body.token;
   const sess = token ? gameSessions.get(token) : null;
