@@ -782,7 +782,9 @@ const SPONSOR_ATTIVITA = [
   { file: 'lamberti.png',            nome: 'Studio Dentistico Michele Lamberti' },
   { file: 'chalet.png',              nome: 'Chalet' },
   { file: 'revolution.png',          nome: 'Revolution' },
-  { file: 'zio-enrico.png',          nome: 'Zio Enrico' },
+  // Sul foglio era segnata come "Zio Enrico", ma l'insegna e il logo dicono
+  // Zanzibar: vale il marchio, perché è il nome che finisce nell'alt.
+  { file: 'zio-enrico.png',          nome: 'Zanzibar Lounge Bar' },
   { file: 'bar-sport.png',           nome: 'Bar Sport' },
   { file: 'barberia-frasci.png',     nome: 'Barberia Frasci' },
   { file: 'marcello-frasci.png',     nome: 'Marcello Frasci' },

@@ -62,7 +62,7 @@ STATO
   ⬜ = manca il file
   ❌ = file ricevuto ma non utilizzabile, serve rifarlo
 
-A oggi sono in linea 13 loghi su 35.
+A oggi sono in linea 15 loghi su 35.
 
 L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
 
@@ -75,7 +75,7 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ⬜ medea.png                Centro Estetico Medea
   ⬜ telefonia-eredi-leo.png  Telefonia Eredi Leo  logo scartato, chiederne un altro
   ✅ cycling-botta.png        Cycling Botta
-  ⬜ vitello-paesano.png      Al Vitello Paesano
+  ✅ vitello-paesano.png      Al Vitello Paesano  gia' chiaro, nessuno schiarimento
   ⬜ bar-frasci-2-0.png       Bar V. Frasci 2.0
   ✅ de-santis.png            De Santis  schiarito
   ✅ bellini-events.png       Bellini Events
@@ -88,7 +88,7 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ✅ lamberti.png             Studio Dentistico Michele Lamberti  schiarito
   ⬜ chalet.png               Chalet
   ⬜ revolution.png           Revolution (Bar Kral)
-  ⬜ zio-enrico.png           Zio Enrico
+  ✅ zio-enrico.png           Zanzibar Lounge Bar  schiarito
   ⬜ bar-sport.png            Bar Sport
   ⬜ barberia-frasci.png      Barberia Frasci
   ⬜ marcello-frasci.png      Marcello Frasci
@@ -117,11 +117,16 @@ Nota: il file v-frasci.png in loghi-png/ e' della PIZZERIA, per questo il
 risultato si chiama pizzeria-frasci.png. Il Bar V. Frasci 2.0 e' un'altra
 attivita' e il suo logo manca ancora.
 
-Nota: in loghi-png/ restano solo gli originali dei sette loghi arrivati per
+Nota: in loghi-png/ restano solo gli originali dei nove loghi arrivati per
 ultimi (cycling-botta, pizzeria-zio-mauro, lamberti, kalu, athena-fitness,
-franzis, fatima-leo). Gli altri originali sono stati rimossi: le versioni
-pronte in questa cartella bastano per la barra, ma se un logo va rifatto va
-richiesto di nuovo il file di partenza.
+franzis, fatima-leo, zio-enrico, vitello-paesano). Gli altri originali sono
+stati rimossi: le versioni pronte in questa cartella bastano per la barra,
+ma se un logo va rifatto va richiesto di nuovo il file di partenza.
+
+Nota: sul foglio l'attivita' era segnata come "Zio Enrico", ma l'insegna e
+il logo dicono Zanzibar Lounge Bar: in SPONSOR_ATTIVITA vale il marchio,
+perche' e' il nome che finisce nell'alt dell'immagine. Il nome del FILE
+resta zio-enrico.png, che e' solo una chiave interna.
 
 Nota: il logo di Franzy's e' scritto con la Y, non con la I. Il nome del
 file resta franzis.png perche' e' gia' referenziato in SPONSOR_ATTIVITA e
