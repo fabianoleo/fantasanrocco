@@ -50,9 +50,9 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ✅ bar-vittoria.png         Bar Vittoria  schiarito, viene un disco bianco
   ⬜ kalu.png                 Kalu'
   ⬜ luigi-fotografo.png      Luigi Fotografo
-  ✅ pizzeria-zio-mauro.png   Pizzeria Zio Mauro
+  ✅ pizzeria-zio-mauro.png   Pizzeria Zio Mauro  schiarito
   ✅ pizzeria-frasci.png      Pizzeria V. Frasci  schiarito
-  ✅ lamberti.png             Studio Dentistico Michele Lamberti
+  ✅ lamberti.png             Studio Dentistico Michele Lamberti  schiarito
   ⬜ chalet.png               Chalet
   ⬜ revolution.png           Revolution (Bar Kral)
   ⬜ zio-enrico.png           Zio Enrico
@@ -83,6 +83,11 @@ DA CHIEDERE ANCORA (2)
 Nota: il file v-frasci.png in loghi-png/ e' della PIZZERIA, per questo il
 risultato si chiama pizzeria-frasci.png. Il Bar V. Frasci 2.0 e' un'altra
 attivita' e il suo logo manca ancora.
+
+Nota: in loghi-png/ restano solo gli originali dei tre loghi arrivati per
+ultimi (cycling-botta, pizzeria-zio-mauro, lamberti). Gli altri originali
+sono stati rimossi: le versioni pronte in questa cartella bastano per la
+barra, ma se un logo va rifatto va richiesto di nuovo il file di partenza.
 
 COME FUNZIONA
 -------------
