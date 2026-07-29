@@ -786,7 +786,7 @@ const SPONSOR_ATTIVITA = [
   { file: 'bar-sport.png',           nome: 'Bar Sport' },
   { file: 'barberia-frasci.png',     nome: 'Barberia Frasci' },
   { file: 'marcello-frasci.png',     nome: 'Marcello Frasci' },
-  { file: 'franzis.png',             nome: "Franzi's" },
+  { file: 'franzis.png',             nome: "Franzy's" },
   { file: 'pizzeria-walter.png',     nome: 'Pizzeria Walter' },
   { file: 'mauro-parrucchiere.png',  nome: 'Mauro Parrucchiere' },
   { file: 'bc-coffe.png',            nome: 'BC Coffe & More' },
@@ -1579,6 +1579,11 @@ app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, r
     }
     if (countsAsPlay) {
       db.prepare('UPDATE users SET game_plays = ? WHERE id = ?').run(plays, req.currentUser.id);
+      // Riga di storico per le statistiche. Solo le partite che CONTANO: così
+      // i tempi medi non vengono falsati dalle chiusure lampo e dai tentativi
+      // senza ticket, che infatti non toccano nemmeno i traguardi.
+      db.prepare(`INSERT INTO game_runs (user_id, game, score, seconds) VALUES (?, 'runner', ?, ?)`)
+        .run(req.currentUser.id, score, Math.round(elapsedSec * 10) / 10);
     }
     for (const a of GAME_ACHIEVEMENTS) {
       const value = a.metric === 'plays' ? plays : score;
@@ -1827,6 +1832,10 @@ app.post('/jetpack/fine', auth.requireLogin, gameLimiter, verifyCsrf, (req, res)
   const prevBest = req.currentUser.jp_best || 0;
   if (run.dist > prevBest) db.prepare('UPDATE users SET jp_best = ? WHERE id = ?').run(run.dist, req.currentUser.id);
   db.prepare('UPDATE users SET jp_plays = jp_plays + 1 WHERE id = ?').run(req.currentUser.id);
+  // Storico per le statistiche: qui `score` sono METRI, non punti — il jetpack
+  // si misura in distanza. Vedi la nota su game_runs in db.js.
+  db.prepare(`INSERT INTO game_runs (user_id, game, score, seconds) VALUES (?, 'jetpack', ?, ?)`)
+    .run(req.currentUser.id, run.dist, Math.round(elapsed * 10) / 10);
 
   const out = jpApplyRun(req.currentUser.id, run);
   // i gradi si chiamano "Jetpack · Aviatore": nel testo il gioco è già citato,
@@ -2969,12 +2978,16 @@ app.get('/admin/statistiche', auth.requireAdmin, (req, res) => {
   const since = days ? new Date(Date.now() - days * 86400000).toISOString().slice(0, 19).replace('T', ' ') : null;
   const F = since ? ' AND created_at >= @since' : '';
   const P = { since };
-  const one = (sql) => (db.prepare(sql).get(P) || {}).n || 0;
+  const one = (sql, p) => { try { return (db.prepare(sql).get(p || P) || {}).n || 0; } catch { return 0; } };
+  // Le query di dettaglio non devono poter far cadere l'intera pagina: se una
+  // tabella non c'è ancora (installazione fresca) la sua sezione resta vuota.
+  const many = (sql, p) => { try { return db.prepare(sql).all(p || P); } catch { return []; } };
+  const pct = (a, b) => (b > 0 ? Math.round((a / b) * 1000) / 10 : 0);
 
-  // KPI
+  // ══ 1. COLPO D'OCCHIO ═══════════════════════════════════════════════════
   const kpi = {
     newUsers:    one(`SELECT COUNT(*) n FROM users WHERE 1=1${F}`),
-    totalUsers:  db.prepare('SELECT COUNT(*) n FROM users').get().n,
+    totalUsers:  one('SELECT COUNT(*) n FROM users'),
     subs:        one(`SELECT COUNT(*) n FROM submissions WHERE 1=1${F}`),
     approved:    one(`SELECT COUNT(*) n FROM submissions WHERE status='approved'${F}`),
     pending:     one(`SELECT COUNT(*) n FROM submissions WHERE status='pending'${F}`),
@@ -2983,40 +2996,215 @@ app.get('/admin/statistiche', auth.requireAdmin, (req, res) => {
     votes:       one(`SELECT COUNT(*) n FROM prediction_votes WHERE 1=1${F}`)
                  + one(`SELECT COUNT(*) n FROM palio_predictions WHERE 1=1${F}`),
   };
-  // Utenti attivi nel periodo (hanno inviato una prova o una storia)
-  kpi.activeUsers = db.prepare(`SELECT COUNT(*) n FROM (
+  kpi.activeUsers = one(`SELECT COUNT(*) n FROM (
       SELECT user_id FROM submissions WHERE 1=1${F}
-      UNION SELECT user_id FROM stories WHERE 1=1${F})`).get(P).n;
-  // Punti distribuiti da prove approvate nel periodo (approx: reviewed_at nel range)
+      UNION SELECT user_id FROM stories WHERE 1=1${F})`);
   const RF = since ? ' AND s.reviewed_at >= @since' : '';
   kpi.missionPoints = (db.prepare(`SELECT COALESCE(SUM(m.points),0) n FROM submissions s
       JOIN missions m ON m.id = s.mission_id WHERE s.status='approved'${RF}`).get(P) || {}).n || 0;
+  // Quota di iscritti che ha mandato almeno una prova: dice quanti si sono
+  // registrati e poi sono spariti, che il totale iscritti da solo nasconde.
+  kpi.everPlayed = one(`SELECT COUNT(DISTINCT user_id) n FROM submissions`);
+  kpi.tassoAttivazione = pct(kpi.everPlayed, kpi.totalUsers);
 
-  // Serie giornaliera (prove al giorno) — per il grafico. Bucket per data UTC.
+  // ══ 2. ANDAMENTO NEL TEMPO ══════════════════════════════════════════════
   const nDays = days || 30;                       // "tutto" → mostra ultimi 30 gg
-  const map = {};
-  for (const r of db.prepare(`SELECT date(created_at) d, COUNT(*) c FROM submissions
-      WHERE created_at >= datetime('now', ?) GROUP BY d`).all(`-${nDays} days`)) map[r.d] = r.c;
-  const usersMap = {};
-  for (const r of db.prepare(`SELECT date(created_at) d, COUNT(*) c FROM users
-      WHERE created_at >= datetime('now', ?) GROUP BY d`).all(`-${nDays} days`)) usersMap[r.d] = r.c;
+  const serie = (sql) => {
+    const m = {};
+    for (const r of many(sql, [`-${nDays} days`])) m[r.d] = r.c;
+    return m;
+  };
+  const mSubs  = serie(`SELECT date(created_at) d, COUNT(*) c FROM submissions WHERE created_at >= datetime('now', ?) GROUP BY d`);
+  const mUsers = serie(`SELECT date(created_at) d, COUNT(*) c FROM users       WHERE created_at >= datetime('now', ?) GROUP BY d`);
+  const mRuns  = serie(`SELECT date(created_at) d, COUNT(*) c FROM game_runs   WHERE created_at >= datetime('now', ?) GROUP BY d`);
   const series = [];
   for (let i = nDays - 1; i >= 0; i--) {
     const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
-    series.push({ date: d, label: d.slice(8) + '/' + d.slice(5, 7), subs: map[d] || 0, users: usersMap[d] || 0 });
+    series.push({
+      date: d, label: d.slice(8) + '/' + d.slice(5, 7),
+      subs: mSubs[d] || 0, users: mUsers[d] || 0, runs: mRuns[d] || 0,
+    });
   }
-  // Top missioni per completamenti approvati nel periodo
-  const topMissions = db.prepare(`SELECT m.title, COUNT(*) c FROM submissions s
-      JOIN missions m ON m.id = s.mission_id
-      WHERE s.status='approved'${since ? ' AND s.created_at >= @since' : ''}
-      GROUP BY s.mission_id ORDER BY c DESC LIMIT 8`).all(P);
-  // Top utenti più attivi (n. prove inviate) nel periodo — solo nickname (già pubblico)
-  const topUsers = db.prepare(`SELECT u.nickname, COUNT(*) c FROM submissions s
-      JOIN users u ON u.id = s.user_id
-      WHERE 1=1${since ? ' AND s.created_at >= @since' : ''}
-      GROUP BY s.user_id ORDER BY c DESC LIMIT 8`).all(P);
+  // Ore del giorno in cui si gioca (UTC+2 = ora italiana d'estate, la festa è
+  // ad agosto): serve a capire quando ha senso mandare le notifiche push.
+  const oreRaw = many(`SELECT CAST(strftime('%H', datetime(created_at, '+2 hours')) AS INTEGER) h, COUNT(*) c
+      FROM submissions WHERE 1=1${F} GROUP BY h`);
+  const oreMap = Object.fromEntries(oreRaw.map((r) => [r.h, r.c]));
+  const orario = Array.from({ length: 24 }, (_, h) => ({ h, c: oreMap[h] || 0 }));
 
-  res.render('statistiche', { title: 'Statistiche', ranges: RANGES, range, kpi, series, topMissions, topUsers });
+  // ══ 3. MISSIONI ═════════════════════════════════════════════════════════
+  const SF = since ? ' AND s.created_at >= @since' : '';
+  const topMissions = many(`SELECT m.title, COUNT(*) c FROM submissions s
+      JOIN missions m ON m.id = s.mission_id
+      WHERE s.status='approved' AND m.game_key IS NULL${SF}
+      GROUP BY s.mission_id ORDER BY c DESC LIMIT 10`);
+  // Missioni foto MAI completate: sono quelle da spingere o da riscrivere
+  const missioniMorte = many(`SELECT m.title, m.points FROM missions m
+      WHERE m.game_key IS NULL AND m.archived = 0
+        AND NOT EXISTS (SELECT 1 FROM submissions s WHERE s.mission_id = m.id AND s.status='approved')
+      ORDER BY m.points DESC, m.title LIMIT 12`);
+  const perRarita = many(`SELECT m.points p, COUNT(*) c FROM submissions s
+      JOIN missions m ON m.id = s.mission_id
+      WHERE s.status='approved' AND m.game_key IS NULL${SF}
+      GROUP BY m.points ORDER BY m.points`);
+  const perSezione = many(`SELECT COALESCE(m.section,'—') sez, COUNT(*) c,
+             COUNT(DISTINCT s.user_id) u
+      FROM submissions s JOIN missions m ON m.id = s.mission_id
+      WHERE s.status='approved' AND m.game_key IS NULL${SF}
+      GROUP BY m.section ORDER BY c DESC`);
+  const missioniTot = one('SELECT COUNT(*) n FROM missions WHERE game_key IS NULL AND archived = 0');
+  const missioniViste = one(`SELECT COUNT(DISTINCT s.mission_id) n FROM submissions s
+      JOIN missions m ON m.id = s.mission_id WHERE s.status='approved' AND m.game_key IS NULL`);
+
+  // ══ 4. MODERAZIONE ══════════════════════════════════════════════════════
+  // Tempo di risposta = reviewed_at - created_at, in minuti. La mediana dice
+  // più della media: una prova dimenticata per due giorni sposta la media e
+  // fa sembrare lento un lavoro che di solito è immediato.
+  const attese = many(`SELECT (julianday(reviewed_at) - julianday(created_at)) * 1440 AS min
+      FROM submissions WHERE reviewed_at IS NOT NULL AND status <> 'pending'${F}
+      ORDER BY min`).map((r) => r.min).filter((v) => v >= 0);
+  const mediana = (a) => (a.length ? (a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2) : 0);
+  const moderazione = {
+    decise:     attese.length,
+    mediaMin:   attese.length ? Math.round(attese.reduce((x, y) => x + y, 0) / attese.length) : 0,
+    medianaMin: Math.round(mediana(attese)),
+    peggioreMin: attese.length ? Math.round(attese[attese.length - 1]) : 0,
+    tassoOk:    pct(kpi.approved, kpi.approved + kpi.rejected),
+    arretrato:  one("SELECT COUNT(*) n FROM submissions WHERE status='pending'"),
+    piuVecchia: (db.prepare(`SELECT CAST((julianday('now') - julianday(created_at)) * 24 AS INTEGER) n
+                             FROM submissions WHERE status='pending' ORDER BY created_at LIMIT 1`).get() || {}).n || 0,
+  };
+  const moderatori = many(`SELECT u.nickname,
+        COUNT(*) c,
+        SUM(CASE WHEN s.status='approved' THEN 1 ELSE 0 END) ok,
+        SUM(CASE WHEN s.status='rejected' THEN 1 ELSE 0 END) ko
+      FROM submissions s JOIN users u ON u.id = s.reviewed_by
+      WHERE s.reviewed_by IS NOT NULL${since ? ' AND s.reviewed_at >= @since' : ''}
+      GROUP BY s.reviewed_by ORDER BY c DESC LIMIT 10`);
+  const motiviRifiuto = many(`SELECT COALESCE(NULLIF(TRIM(review_note),''),'(senza motivo)') nota, COUNT(*) c
+      FROM submissions WHERE status='rejected'${F} GROUP BY nota ORDER BY c DESC LIMIT 8`);
+
+  // ══ 5. GIOCHI ═══════════════════════════════════════════════════════════
+  // Da qui in giù i dati arrivano da game_runs, che si riempie solo dalle
+  // partite giocate DOPO l'introduzione della tabella: prima le durate non
+  // venivano salvate da nessuna parte. `dallo` dice da quando si misura.
+  const GIOCHI = [
+    { key: 'runner',  nome: 'Corri San Rocco',  unita: 'punti', link: '/giochi?g=runner' },
+    { key: 'jetpack', nome: 'San Rocco Jetpack', unita: 'metri', link: '/giochi?g=jetpack' },
+  ];
+  const giochi = GIOCHI.map((g) => {
+    const p = { since, g: g.key };
+    const GF = since ? ' AND created_at >= @since' : '';
+    const durate = many(`SELECT seconds s FROM game_runs WHERE game = @g${GF} ORDER BY s`, p).map((r) => r.s);
+    const r = db.prepare(`SELECT COUNT(*) partite, COUNT(DISTINCT user_id) giocatori,
+             COALESCE(SUM(seconds),0) totSec, COALESCE(AVG(seconds),0) mediaSec,
+             COALESCE(MAX(seconds),0) maxSec, COALESCE(AVG(score),0) mediaScore,
+             COALESCE(MAX(score),0) maxScore
+        FROM game_runs WHERE game = @g${GF}`).get(p) || {};
+    // Istogramma delle durate: dice se si fanno tante partite lampo o poche
+    // lunghe, cosa che media e record da soli non raccontano.
+    const FASCE = [
+      { label: '0-10 s', min: 0, max: 10 },
+      { label: '10-30 s', min: 10, max: 30 },
+      { label: '30-60 s', min: 30, max: 60 },
+      { label: '1-2 min', min: 60, max: 120 },
+      { label: '2-5 min', min: 120, max: 300 },
+      { label: 'oltre 5 min', min: 300, max: Infinity },
+    ].map((f) => ({ label: f.label, c: durate.filter((s) => s >= f.min && s < f.max).length }));
+    return {
+      ...g,
+      partite: r.partite || 0,
+      giocatori: r.giocatori || 0,
+      totSec: Math.round(r.totSec || 0),
+      mediaSec: Math.round(r.mediaSec || 0),
+      medianaSec: Math.round(mediana(durate)),
+      maxSec: Math.round(r.maxSec || 0),
+      mediaScore: Math.round(r.mediaScore || 0),
+      maxScore: Math.round(r.maxScore || 0),
+      fasce: FASCE,
+      top: many(`SELECT u.nickname, COUNT(*) partite, ROUND(SUM(gr.seconds)) sec
+          FROM game_runs gr JOIN users u ON u.id = gr.user_id
+          WHERE gr.game = @g${since ? ' AND gr.created_at >= @since' : ''}
+          GROUP BY gr.user_id ORDER BY sec DESC LIMIT 8`, p),
+    };
+  });
+  const giochiDallo = (db.prepare('SELECT MIN(created_at) d FROM game_runs').get() || {}).d || null;
+  // I contatori storici in users restano l'unica fonte per il "prima": non
+  // hanno durate, ma dicono quante partite in totale sono state giocate.
+  const contatoriStorici = db.prepare(`SELECT
+        COALESCE(SUM(game_plays),0) runnerPartite, COALESCE(MAX(game_best),0) runnerRecord,
+        COALESCE(SUM(jp_plays),0)   jetpackPartite, COALESCE(MAX(jp_best),0)  jetpackRecord,
+        COALESCE(SUM(jp_stars),0)   stelle,
+        COUNT(CASE WHEN game_plays > 0 THEN 1 END) runnerGiocatori,
+        COUNT(CASE WHEN jp_plays  > 0 THEN 1 END) jetpackGiocatori
+      FROM users`).get() || {};
+
+  // ══ 6. PUNTI E LIVELLI ══════════════════════════════════════════════════
+  const classifica = leaderboardRows();
+  const distLivelli = LEVELS.map((l) => ({ lv: l.lv, title: l.title, at: l.at, c: 0 }));
+  for (const u of classifica) {
+    let idx = 0;
+    for (let i = 0; i < LEVELS.length; i++) if (u.points >= LEVELS[i].at) idx = i;
+    distLivelli[idx].c++;
+  }
+  const puntiTot = classifica.reduce((a, u) => a + u.points, 0);
+  const punti = {
+    totale: puntiTot,
+    media: classifica.length ? Math.round(puntiTot / classifica.length) : 0,
+    mediana: Math.round(mediana(classifica.map((u) => u.points).sort((a, b) => a - b))),
+    daMissioni: one(`SELECT COALESCE(SUM(m.points),0) n FROM submissions s
+        JOIN missions m ON m.id = s.mission_id WHERE s.status='approved' AND m.game_key IS NULL`),
+    daGiochi: one(`SELECT COALESCE(SUM(m.points),0) n FROM submissions s
+        JOIN missions m ON m.id = s.mission_id WHERE s.status='approved' AND m.game_key IS NOT NULL`),
+    // points_adjust è un unico numero che accumula ruota, slot, striscia,
+    // codici e correzioni admin: non è scomponibile, e va detto.
+    adjust: one("SELECT COALESCE(SUM(points_adjust),0) n FROM users WHERE role='user'"),
+    aZero: classifica.filter((u) => u.points <= 0).length,
+  };
+
+  // ══ 7. UTENTI ═══════════════════════════════════════════════════════════
+  const utenti = {
+    totali:    kpi.totalUsers,
+    admin:     one("SELECT COUNT(*) n FROM users WHERE role <> 'user'"),
+    conAvatar: one('SELECT COUNT(*) n FROM users WHERE avatar_path IS NOT NULL'),
+    con2fa:    one('SELECT COUNT(*) n FROM users WHERE totp_enabled = 1'),
+    conEmail:  one("SELECT COUNT(*) n FROM users WHERE email IS NOT NULL AND email <> ''"),
+    push:      one('SELECT COUNT(DISTINCT user_id) n FROM push_subscriptions'),
+    privacy:   one('SELECT COUNT(*) n FROM users WHERE privacy_accepted_at IS NOT NULL'),
+    strisceVive: one("SELECT COUNT(*) n FROM users WHERE streak_day > 0 AND streak_last_day >= date('now','-1 day')"),
+    strisciaMax: one('SELECT COALESCE(MAX(streak_day),0) n FROM users'),
+    bonusSezione: one('SELECT COUNT(*) n FROM section_bonuses'),
+    codiciUsati: one('SELECT COUNT(*) n FROM reward_codes WHERE claimed_by IS NOT NULL'),
+    codiciTot:   one('SELECT COUNT(*) n FROM reward_codes'),
+  };
+  const topUsers = many(`SELECT u.nickname, COUNT(*) c FROM submissions s
+      JOIN users u ON u.id = s.user_id
+      WHERE 1=1${SF} GROUP BY s.user_id ORDER BY c DESC LIMIT 10`);
+
+  // ══ 8. COINVOLGIMENTO ═══════════════════════════════════════════════════
+  const coinvolgimento = {
+    pronostici:   one('SELECT COUNT(*) n FROM predictions'),
+    votiPronost:  one(`SELECT COUNT(*) n FROM prediction_votes WHERE 1=1${F}`),
+    votantiPron:  one(`SELECT COUNT(DISTINCT user_id) n FROM prediction_votes WHERE 1=1${F}`),
+    votiPalio:    one(`SELECT COUNT(*) n FROM palio_predictions WHERE 1=1${F}`),
+    storie:       one(`SELECT COUNT(*) n FROM stories WHERE 1=1${F}`),
+    storieVive:   one("SELECT COUNT(*) n FROM stories WHERE expires_at > datetime('now') AND hidden = 0"),
+    vistePerStoria: 0,
+    segnalazioni: one('SELECT COUNT(*) n FROM story_reports'),
+  };
+  const nStorie = one('SELECT COUNT(*) n FROM stories');
+  coinvolgimento.vistePerStoria = nStorie
+    ? Math.round((one('SELECT COUNT(*) n FROM story_views') / nStorie) * 10) / 10 : 0;
+
+  res.render('statistiche', {
+    title: 'Statistiche', ranges: RANGES, range,
+    kpi, series, orario, topMissions, topUsers,
+    missioniMorte, perRarita, perSezione, missioniTot, missioniViste,
+    moderazione, moderatori, motiviRifiuto,
+    giochi, giochiDallo, contatoriStorici,
+    distLivelli, punti, utenti, coinvolgimento,
+    SECTIONS,
+  });
 });
 
 app.get('/admin', auth.requireAdmin, async (req, res) => {

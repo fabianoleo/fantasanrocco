@@ -24,6 +24,37 @@ azzurro. Attenzione: un marchio costruito su un disco nero pieno diventa un
 disco BIANCO pieno, che nella barra pesa parecchio (e' il caso di Bar
 Vittoria). Se arriva la versione chiara originale, meglio quella.
 
+MARCHI A DUE FACCE: --schiarisci-scuri
+--------------------------------------
+
+Certi loghi hanno un simbolo gia' acceso e una scritta nera sotto: sul fondo
+scuro il simbolo si vede benissimo, la scritta sparisce. Con --schiarisci si
+salva la scritta ma si spegne il simbolo, quindi non va bene ne' con ne'
+senza. Per questi c'e':
+
+    node src/prepara_loghi.js --schiarisci-scuri loghi-png/tuofile.png:nome.png
+
+Tocca solo i neri e i grigi (poco saturi e scuri) e lascia stare i colori
+del marchio. E' il caso di Athena Fitness: fulmine giallo intatto, scritta
+"ATHENA ARTE" da nera a bianca.
+
+QUALE DELLE TRE STRADE
+----------------------
+
+Non si indovina a occhio, si guarda com'e' fatto lo scuro del logo:
+
+  scuro e SATURO (bordeaux, blu notte)   -> --schiarisci
+        e' colore del marchio, ma sul nero non si legge lo stesso.
+        Caso Kalu': il 62% dei suoi pixel e' bordeaux.
+
+  scuro e SLAVATO (nero, grigio)         -> --schiarisci-scuri
+        e' inchiostro da stampa, si puo' schiarire senza toccare il resto.
+        Caso Athena: 33% nero slavato, 61% giallo saturo, due gruppi netti.
+
+  gia' chiaro                            -> niente opzione
+        Caso Franzy's: e' gia' bianco su fondo trasparente, e schiarirlo lo
+        rovinerebbe (il testo bianco diventa nero e sparisce).
+
 STATO
 -----
 
@@ -31,12 +62,14 @@ STATO
   ⬜ = manca il file
   ❌ = file ricevuto ma non utilizzabile, serve rifarlo
 
+A oggi sono in linea 12 loghi su 35.
+
 L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
 
   ⬜ romalba.png              Romalba
   ✅ nemo.png                 Nemo Restaurant Food & Wine
   ✅ gym-hall.png             Gym Hall Muscle Zone
-  ⬜ athena-fitness.png       Athena Fitness
+  ✅ athena-fitness.png       Athena Fitness  schiarito solo nei neri
   ⬜ fatima-leo.png           Fatima Leo Salon & Academy
   ⬜ day-by-day.png           Day by Day Multibrand Siano
   ⬜ medea.png                Centro Estetico Medea
@@ -48,7 +81,7 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ✅ bellini-events.png       Bellini Events
   ⬜ babba-house.png          Babba House
   ✅ bar-vittoria.png         Bar Vittoria  schiarito, viene un disco bianco
-  ⬜ kalu.png                 Kalu'
+  ✅ kalu.png                 Kalu'  schiarito
   ⬜ luigi-fotografo.png      Luigi Fotografo
   ✅ pizzeria-zio-mauro.png   Pizzeria Zio Mauro  schiarito
   ✅ pizzeria-frasci.png      Pizzeria V. Frasci  schiarito
@@ -59,7 +92,7 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ⬜ bar-sport.png            Bar Sport
   ⬜ barberia-frasci.png      Barberia Frasci
   ⬜ marcello-frasci.png      Marcello Frasci
-  ⬜ franzis.png              Franzi's
+  ✅ franzis.png              Franzy's  gia' chiaro, nessuno schiarimento
   ⬜ pizzeria-walter.png      Pizzeria Walter
   ⬜ mauro-parrucchiere.png   Mauro Parrucchiere
   ⬜ bc-coffe.png             BC Coffe & More
@@ -84,10 +117,16 @@ Nota: il file v-frasci.png in loghi-png/ e' della PIZZERIA, per questo il
 risultato si chiama pizzeria-frasci.png. Il Bar V. Frasci 2.0 e' un'altra
 attivita' e il suo logo manca ancora.
 
-Nota: in loghi-png/ restano solo gli originali dei tre loghi arrivati per
-ultimi (cycling-botta, pizzeria-zio-mauro, lamberti). Gli altri originali
-sono stati rimossi: le versioni pronte in questa cartella bastano per la
-barra, ma se un logo va rifatto va richiesto di nuovo il file di partenza.
+Nota: in loghi-png/ restano solo gli originali dei sei loghi arrivati per
+ultimi (cycling-botta, pizzeria-zio-mauro, lamberti, kalu, athena-fitness,
+franzis). Gli altri originali sono stati rimossi: le versioni pronte in
+questa cartella bastano per la barra, ma se un logo va rifatto va richiesto
+di nuovo il file di partenza.
+
+Nota: il logo di Franzy's e' scritto con la Y, non con la I. Il nome del
+file resta franzis.png perche' e' gia' referenziato in SPONSOR_ATTIVITA e
+rinominarlo non aggiungerebbe niente; e' il nome mostrato che conta, ed e'
+quello che finisce nell'alt dell'immagine.
 
 COME FUNZIONA
 -------------

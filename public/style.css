@@ -5057,3 +5057,124 @@ a.lb-prize:hover { color: var(--gold-2); }
   .lb-prize { font-size: .64rem; }
   .lb-prize-podio { font-size: .55rem; }
 }
+
+/* ── Statistiche admin: sezioni, tabelle e istogrammi ────────────────────
+   La pagina e' lunga di proposito (otto sezioni), quindi tutto qui sotto
+   serve a farla LEGGERE: indice ancorato, titoli che separano i blocchi,
+   tabelle compatte. Prefisso .st-* come il resto della pagina. */
+
+/* Indice: senza, otto sezioni si scorrono a vuoto */
+.st-nav {
+  display: flex; flex-wrap: wrap; gap: .4rem;
+  margin: 0 0 1.8rem;
+  padding: .7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  background: rgba(255,255,255,.02);
+}
+.st-nav a {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .35rem .7rem;
+  border-radius: 999px;
+  font-size: .76rem; color: var(--text-2);
+  transition: color .2s var(--ease), background .2s var(--ease);
+}
+.st-nav a:hover { color: var(--gold-2); background: rgba(212,160,26,.1); }
+.st-nav a svg { width: 14px; height: 14px; }
+
+/* Titolo di sezione: la riga d'oro sopra fa da separatore fra i blocchi */
+.st-h2 {
+  display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+  margin: 2.6rem 0 1rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid rgba(212,160,26,.16);
+  font-family: var(--font-heading); font-size: 1.15rem; font-weight: 700;
+  color: var(--gold-2); letter-spacing: .03em;
+  scroll-margin-top: 1rem;          /* l'ancora non incolla il titolo al bordo */
+}
+.st-h2 svg { width: 20px; height: 20px; }
+.st-h2 small { font-size: .72rem; font-weight: 400; color: var(--text-3); text-transform: none; letter-spacing: 0; }
+.st-h4 {
+  margin: .2rem 0 .6rem;
+  font-family: var(--font-heading); font-size: .8rem; font-weight: 600;
+  color: var(--text-2); text-transform: uppercase; letter-spacing: .07em;
+}
+
+/* Card KPI: la variante -sm serve dentro una sezione, dove i numeri sono
+   di contorno e non devono gridare quanto quelli del colpo d'occhio */
+.st-kpis-sm { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: .6rem; }
+.st-kpis-sm .st-kpi-val { font-size: 1.25rem; }
+.st-kpi-nota { font-size: .66rem; color: var(--text-3); line-height: 1.3; }
+
+.st-bar-game { fill: var(--blue); }
+
+/* Istogramma delle ore: 24 colonnine, una per ora */
+.st-ore { display: flex; align-items: flex-end; gap: 2px; height: 90px; margin: .8rem 0 .4rem; }
+.st-ora { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; }
+.st-ora-bar {
+  width: 100%; border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, var(--gold-2), var(--gold));
+  min-height: 2px;
+}
+.st-ora-lab { font-size: .58rem; color: var(--text-3); margin-top: .25rem; height: .8em; }
+
+/* Elenco chiave-valore: piu' compatto di una tabella per liste di nomi */
+.st-lista { list-style: none; margin: .5rem 0 0; padding: 0; }
+.st-lista li {
+  display: flex; justify-content: space-between; align-items: baseline; gap: .8rem;
+  padding: .4rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.045);
+  font-size: .82rem; color: var(--text-2);
+}
+.st-lista li:last-child { border-bottom: none; }
+.st-lista-val { color: var(--gold-2); font-weight: 700; white-space: nowrap; }
+
+/* Tabelle: righe basse, niente cornici, si legge la colonna dei numeri */
+.st-tab { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.st-tab th {
+  text-align: left; padding: .4rem .5rem .5rem 0;
+  border-bottom: 1px solid rgba(212,160,26,.18);
+  font-family: var(--font-heading); font-size: .68rem; font-weight: 600;
+  color: var(--gold-2); text-transform: uppercase; letter-spacing: .07em;
+}
+.st-tab td {
+  padding: .45rem .5rem .45rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.045);
+  color: var(--text-2);
+}
+.st-tab tr:last-child td { border-bottom: none; }
+.st-tab td strong { color: var(--gold-2); }
+.st-tab .st-ok { color: #4ade80; }
+.st-tab .st-no { color: var(--fire); }
+.st-tab .st-pct { color: var(--text-3); text-align: right; white-space: nowrap; }
+
+.st-gioco { margin-bottom: 1rem; }
+
+/* Riquadro di avviso: usato quando una sezione non ha ancora dati e va
+   spiegato perche', invece di mostrare zeri senza contesto */
+.st-avviso {
+  border-color: rgba(212,160,26,.3);
+  background: rgba(212,160,26,.05);
+}
+.st-avviso p { margin: 0 0 .4rem; }
+.st-avviso p:last-child { margin-bottom: 0; }
+
+/* Pallino col numero di livello davanti al nome */
+.st-lv {
+  display: inline-block; min-width: 1.35em; padding: 0 .25em;
+  border-radius: 4px; margin-right: .35em;
+  background: rgba(212,160,26,.15);
+  font-family: var(--font-heading); font-size: .7rem; font-weight: 700;
+  color: var(--gold-2); text-align: center;
+}
+
+.st-rank-val small { color: var(--text-3); font-weight: 400; font-size: .92em; }
+
+@media (max-width: 760px) {
+  .st-cols { grid-template-columns: 1fr; }
+  .st-h2 { margin-top: 2rem; font-size: 1.02rem; }
+  .st-nav { gap: .3rem; padding: .5rem; }
+  .st-nav a { font-size: .7rem; padding: .3rem .55rem; }
+  .st-kpis { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); }
+  .st-ore { height: 70px; }
+}

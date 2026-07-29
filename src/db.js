@@ -291,4 +291,25 @@ try { db.exec("ALTER TABLE prediction_votes ADD COLUMN choices TEXT"); } catch {
 try { db.exec("ALTER TABLE predictions ADD COLUMN closes_at TEXT"); } catch {}
 try { db.exec("ALTER TABLE predictions ADD COLUMN reminder_sent INTEGER NOT NULL DEFAULT 0"); } catch {}
 
+// Una riga per partita chiusa e valida dei due mini-giochi.
+// Serve alle statistiche: users tiene solo i CONTATORI (game_plays, jp_plays)
+// e il record, quindi non si poteva sapere né quanto si gioca né com'è fatta
+// una partita tipica. La durata il server la calcola già a fine partita per
+// l'anti-cheat, dal ticket col proprio timestamp, e finora la buttava via.
+// Ci finiscono solo le partite col ticket valido e sopra la soglia minima:
+// le stesse che contano per i traguardi. Storico precedente non ce n'è.
+db.exec(`
+CREATE TABLE IF NOT EXISTS game_runs (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL,
+  game       TEXT    NOT NULL,               -- 'runner' | 'jetpack'
+  score      INTEGER NOT NULL DEFAULT 0,     -- punti per il runner, METRI per il jetpack
+  seconds    REAL    NOT NULL DEFAULT 0,
+  created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_game_runs_quando ON game_runs(created_at);
+CREATE INDEX IF NOT EXISTS idx_game_runs_gioco  ON game_runs(game, created_at);
+CREATE INDEX IF NOT EXISTS idx_game_runs_utente ON game_runs(user_id);
+`);
+
 module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR };

@@ -1,7 +1,7 @@
 <a href="/admin" class="adm-back" style="text-decoration:none"><%- icon('arrow-left') %> Torna al pannello</a>
 
 <h1 class="staff-title"><%- icon('chart') %> Statistiche</h1>
-<p class="muted small">Dati aggregati e anonimi sull'attività dei giocatori. Nessun dato personale sensibile.</p>
+<p class="muted small">Dati aggregati sull'attività dei giocatori. Nessun dato personale sensibile.</p>
 
 <%# ── Filtro periodo ─────────────────────────────────────────────── %>
 <div class="st-range">
@@ -10,96 +10,142 @@
   <% }) %>
 </div>
 
-<%# ── KPI ─────────────────────────────────────────────────────────── %>
+<%
+  // ── Formattatori condivisi ──────────────────────────────────────────
+  // Un tempo in secondi non si legge: 9420 non dice niente, "2h 37m" sì.
+  function durata(sec) {
+    sec = Math.round(sec || 0);
+    if (sec < 60) return sec + ' s';
+    const m = Math.floor(sec / 60), s = sec % 60;
+    if (m < 60) return m + 'm ' + (s ? s + 's' : '').trim();
+    const h = Math.floor(m / 60);
+    return h + 'h ' + (m % 60) + 'm';
+  }
+  function attesa(min) {
+    if (!min) return '—';
+    if (min < 60) return min + ' min';
+    if (min < 1440) return Math.round(min / 60 * 10) / 10 + ' ore';
+    return Math.round(min / 1440 * 10) / 10 + ' giorni';
+  }
+  const num = (v) => (v || 0).toLocaleString('it-IT');
+  const quota = (a, b) => (b > 0 ? Math.round(a / b * 100) : 0);
+
+  const SEZIONI_PAGINA = [
+    { id: 'colpo',      ico: 'bolt',    label: "Colpo d'occhio" },
+    { id: 'andamento',  ico: 'chart',   label: 'Andamento' },
+    { id: 'missioni',   ico: 'list',    label: 'Missioni' },
+    { id: 'moderazione',ico: 'check',   label: 'Moderazione' },
+    { id: 'giochi',     ico: 'gamepad', label: 'Giochi' },
+    { id: 'punti',      ico: 'trophy',  label: 'Punti e livelli' },
+    { id: 'utenti',     ico: 'people',  label: 'Utenti' },
+    { id: 'community',  ico: 'sparkle', label: 'Community' },
+  ];
+%>
+
+<%# ── Indice: la pagina è lunga, senza salti si scorre a vuoto ────── %>
+<nav class="st-nav" aria-label="Sezioni della pagina">
+  <% SEZIONI_PAGINA.forEach((s) => { %>
+    <a href="#<%= s.id %>"><%- icon(s.ico) %> <%= s.label %></a>
+  <% }) %>
+</nav>
+
+<%# ═══════════════ 1. COLPO D'OCCHIO ═══════════════ %>
+<h2 class="st-h2" id="colpo"><%- icon('bolt') %> Colpo d'occhio <small>nel periodo scelto</small></h2>
+
 <div class="st-kpis">
-  <% function kpiCard(ico, val, label, cls) { %>
-    <div class="st-kpi <%= cls || '' %>">
+  <% function kpiCard(ico, val, label, nota) { %>
+    <div class="st-kpi">
       <span class="st-kpi-ico"><%- icon(ico) %></span>
       <span class="st-kpi-val"><%= val %></span>
       <span class="st-kpi-label"><%= label %></span>
+      <% if (nota) { %><span class="st-kpi-nota"><%= nota %></span><% } %>
     </div>
   <% } %>
-  <% kpiCard('people', kpi.newUsers, 'Nuovi iscritti') %>
-  <% kpiCard('camera', kpi.subs, 'Prove inviate') %>
-  <% kpiCard('check', kpi.approved, 'Prove approvate') %>
-  <% kpiCard('hourglass', kpi.pending, 'In attesa') %>
-  <% kpiCard('bolt', kpi.activeUsers, 'Utenti attivi') %>
-  <% kpiCard('trophy', kpi.missionPoints, 'Punti da missioni') %>
-  <% kpiCard('sparkle', kpi.stories, 'Storie pubblicate') %>
-  <% kpiCard('target', kpi.votes, 'Voti pronostici') %>
+  <% kpiCard('people', num(kpi.newUsers), 'Nuovi iscritti', num(kpi.totalUsers) + ' in tutto') %>
+  <% kpiCard('bolt', num(kpi.activeUsers), 'Utenti attivi', kpi.tassoAttivazione + '% ha mai giocato') %>
+  <% kpiCard('camera', num(kpi.subs), 'Prove inviate') %>
+  <% kpiCard('check', num(kpi.approved), 'Prove approvate', moderazione.tassoOk + '% di sì') %>
+  <% kpiCard('hourglass', num(kpi.pending), 'In attesa', moderazione.arretrato + ' arretrate in tutto') %>
+  <% kpiCard('trophy', num(kpi.missionPoints), 'Punti assegnati') %>
+  <% kpiCard('gamepad', num(giochi.reduce((a, g) => a + g.partite, 0)), 'Partite giocate',
+       durata(giochi.reduce((a, g) => a + g.totSec, 0)) + ' di gioco') %>
+  <% kpiCard('sparkle', num(kpi.stories + kpi.votes), 'Storie e voti') %>
 </div>
 
-<%# ── Grafico: prove inviate per giorno ──────────────────────────── %>
+<%# ═══════════════ 2. ANDAMENTO ═══════════════ %>
+<h2 class="st-h2" id="andamento"><%- icon('chart') %> Andamento <small>ultimi <%= series.length %> giorni</small></h2>
+
 <%
-  const maxSubs = Math.max(1, ...series.map((s) => s.subs));
-  const maxReg  = Math.max(1, ...series.map((s) => s.users));
-  const CW = 680, CH = 200, PADB = 26, PADL = 4;
+  const CW = 680, CH = 190, PADB = 26, PADL = 4;
   const n = series.length;
   const bw = (CW - PADL) / n;
 %>
-<section class="card st-chart-card">
-  <h2 class="staff-title"><%- icon('camera') %> Prove inviate per giorno</h2>
-  <div class="st-chart">
-    <svg viewBox="0 0 <%= CW %> <%= CH %>" preserveAspectRatio="none" role="img" aria-label="Prove per giorno">
-      <% series.forEach((s, i) => {
-           const h = Math.round((CH - PADB) * s.subs / maxSubs);
-           const x = PADL + i * bw; %>
-        <rect class="st-bar" x="<%= (x + bw*0.15).toFixed(1) %>" y="<%= (CH - PADB - h).toFixed(1) %>"
-              width="<%= (bw*0.7).toFixed(1) %>" height="<%= Math.max(0,h) %>" rx="2">
-          <title><%= s.label %>: <%= s.subs %> prove</title>
-        </rect>
-        <% if (n <= 15 || i % Math.ceil(n/10) === 0) { %>
-          <text class="st-axis" x="<%= (x + bw/2).toFixed(1) %>" y="<%= CH - 8 %>" text-anchor="middle"><%= s.label %></text>
-        <% } %>
-      <% }) %>
-    </svg>
-  </div>
-  <p class="muted small">Massimo giornaliero: <strong><%= maxSubs %></strong> prove.</p>
-</section>
+<% function grafico(titolo, ico, campo, cls, unita) { %>
+  <%
+    const maxV = Math.max(1, ...series.map((s) => s[campo]));
+    const tot = series.reduce((a, s) => a + s[campo], 0);
+  %>
+  <section class="card st-chart-card">
+    <h3 class="staff-title"><%- icon(ico) %> <%= titolo %></h3>
+    <div class="st-chart">
+      <svg viewBox="0 0 <%= CW %> <%= CH %>" preserveAspectRatio="none" role="img" aria-label="<%= titolo %>">
+        <% series.forEach((s, i) => {
+             const h = Math.round((CH - PADB) * s[campo] / maxV);
+             const x = PADL + i * bw; %>
+          <rect class="st-bar <%= cls %>" x="<%= (x + bw*0.15).toFixed(1) %>" y="<%= (CH - PADB - h).toFixed(1) %>"
+                width="<%= (bw*0.7).toFixed(1) %>" height="<%= Math.max(0,h) %>" rx="2">
+            <title><%= s.label %>: <%= s[campo] %> <%= unita %></title>
+          </rect>
+          <% if (n <= 15 || i % Math.ceil(n/10) === 0) { %>
+            <text class="st-axis" x="<%= (x + bw/2).toFixed(1) %>" y="<%= CH - 8 %>" text-anchor="middle"><%= s.label %></text>
+          <% } %>
+        <% }) %>
+      </svg>
+    </div>
+    <p class="muted small">Totale <strong><%= num(tot) %></strong> <%= unita %> · picco giornaliero <strong><%= num(maxV) %></strong>.</p>
+  </section>
+<% } %>
 
-<%# ── Grafico: iscrizioni per giorno ─────────────────────────────── %>
-<section class="card st-chart-card">
-  <h2 class="staff-title"><%- icon('people') %> Nuovi iscritti per giorno</h2>
-  <div class="st-chart">
-    <svg viewBox="0 0 <%= CW %> <%= CH %>" preserveAspectRatio="none" role="img" aria-label="Iscritti per giorno">
-      <% series.forEach((s, i) => {
-           const h = Math.round((CH - PADB) * s.users / maxReg);
-           const x = PADL + i * bw; %>
-        <rect class="st-bar st-bar-alt" x="<%= (x + bw*0.15).toFixed(1) %>" y="<%= (CH - PADB - h).toFixed(1) %>"
-              width="<%= (bw*0.7).toFixed(1) %>" height="<%= Math.max(0,h) %>" rx="2">
-          <title><%= s.label %>: <%= s.users %> iscritti</title>
-        </rect>
-        <% if (n <= 15 || i % Math.ceil(n/10) === 0) { %>
-          <text class="st-axis" x="<%= (x + bw/2).toFixed(1) %>" y="<%= CH - 8 %>" text-anchor="middle"><%= s.label %></text>
-        <% } %>
-      <% }) %>
-    </svg>
-  </div>
-</section>
+<div class="st-cols">
+  <% grafico('Prove inviate per giorno', 'camera', 'subs', '', 'prove') %>
+  <% grafico('Nuovi iscritti per giorno', 'people', 'users', 'st-bar-alt', 'iscritti') %>
+</div>
+<% grafico('Partite giocate per giorno', 'gamepad', 'runs', 'st-bar-game', 'partite') %>
 
-<%# ── Prove per stato ────────────────────────────────────────────── %>
+<%# A che ora si gioca — serve per scegliere quando mandare le push %>
 <%
-  const totSt = kpi.approved + kpi.pending + kpi.rejected || 1;
-  const pct = (v) => Math.round(v / totSt * 100);
+  const maxOra = Math.max(1, ...orario.map((o) => o.c));
+  const totOra = orario.reduce((a, o) => a + o.c, 0);
+  const oraTop = orario.reduce((a, o) => (o.c > a.c ? o : a), orario[0]);
 %>
 <section class="card">
-  <h2 class="staff-title"><%- icon('list') %> Esito delle prove (nel periodo)</h2>
-  <div class="st-statusbar">
-    <span class="st-seg st-seg-ok" style="width:<%= pct(kpi.approved) %>%" title="Approvate: <%= kpi.approved %>"></span>
-    <span class="st-seg st-seg-wait" style="width:<%= pct(kpi.pending) %>%" title="In attesa: <%= kpi.pending %>"></span>
-    <span class="st-seg st-seg-no" style="width:<%= pct(kpi.rejected) %>%" title="Rifiutate: <%= kpi.rejected %>"></span>
-  </div>
-  <div class="st-legend">
-    <span><i class="st-dot st-dot-ok"></i> Approvate <strong><%= kpi.approved %></strong></span>
-    <span><i class="st-dot st-dot-wait"></i> In attesa <strong><%= kpi.pending %></strong></span>
-    <span><i class="st-dot st-dot-no"></i> Rifiutate <strong><%= kpi.rejected %></strong></span>
-  </div>
+  <h3 class="staff-title"><%- icon('clock') %> A che ora si gioca</h3>
+  <p class="muted small">Prove inviate per ora del giorno (ora italiana). Serve a scegliere quando mandare le notifiche.</p>
+  <% if (totOra) { %>
+    <div class="st-ore">
+      <% orario.forEach((o) => { %>
+        <span class="st-ora" title="Ore <%= o.h %>:00 — <%= o.c %> prove">
+          <span class="st-ora-bar" style="height:<%= Math.max(2, Math.round(o.c / maxOra * 100)) %>%"></span>
+          <span class="st-ora-lab"><%= o.h % 6 === 0 ? o.h : '' %></span>
+        </span>
+      <% }) %>
+    </div>
+    <p class="muted small">Ora di punta: <strong><%= oraTop.h %>:00</strong> con <%= oraTop.c %> prove.</p>
+  <% } else { %><p class="muted small">Nessuna prova nel periodo.</p><% } %>
 </section>
 
-<%# ── Top missioni + Top utenti ──────────────────────────────────── %>
+<%# ═══════════════ 3. MISSIONI ═══════════════ %>
+<h2 class="st-h2" id="missioni"><%- icon('list') %> Missioni</h2>
+
+<div class="st-kpis st-kpis-sm">
+  <% kpiCard('list', num(missioniTot), 'Missioni foto attive') %>
+  <% kpiCard('check', num(missioniViste), 'Almeno una volta completate', quota(missioniViste, missioniTot) + '% del totale') %>
+  <% kpiCard('x', num(missioniTot - missioniViste), 'Mai completate da nessuno') %>
+</div>
+
 <div class="st-cols">
   <section class="card">
-    <h2 class="staff-title"><%- icon('list') %> Missioni più completate</h2>
+    <h3 class="staff-title"><%- icon('trophy') %> Le più completate</h3>
     <% if (topMissions.length) { const mx = Math.max(1, ...topMissions.map(t=>t.c)); %>
       <% topMissions.forEach((t) => { %>
         <div class="st-rankrow">
@@ -112,15 +158,298 @@
   </section>
 
   <section class="card">
-    <h2 class="staff-title"><%- icon('people') %> Giocatori più attivi</h2>
-    <% if (topUsers.length) { const mx = Math.max(1, ...topUsers.map(t=>t.c)); %>
-      <% topUsers.forEach((t) => { %>
-        <div class="st-rankrow">
-          <span class="st-rank-name"><%= t.nickname %></span>
-          <span class="st-rank-bar"><span style="width:<%= Math.round(t.c/mx*100) %>%"></span></span>
-          <span class="st-rank-val"><%= t.c %></span>
-        </div>
-      <% }) %>
-    <% } else { %><p class="muted small">Nessuna attività nel periodo.</p><% } %>
+    <h3 class="staff-title"><%- icon('warning') %> Mai completate da nessuno</h3>
+    <p class="muted small">Da spingere, o da riscrivere se nessuno le capisce.</p>
+    <% if (missioniMorte.length) { %>
+      <ul class="st-lista">
+        <% missioniMorte.forEach((m) => { %>
+          <li><span><%= m.title %></span><span class="st-lista-val"><%= m.points %> pt</span></li>
+        <% }) %>
+      </ul>
+    <% } else { %><p class="muted small">Nessuna: sono state completate tutte almeno una volta.</p><% } %>
   </section>
 </div>
+
+<div class="st-cols">
+  <section class="card">
+    <h3 class="staff-title"><%- icon('sparkle') %> Per rarità</h3>
+    <% if (perRarita.length) { const mx = Math.max(1, ...perRarita.map(r=>r.c)); %>
+      <% perRarita.forEach((r) => { %>
+        <div class="st-rankrow">
+          <span class="st-rank-name"><%= r.p %> punti</span>
+          <span class="st-rank-bar"><span style="width:<%= Math.round(r.c/mx*100) %>%"></span></span>
+          <span class="st-rank-val"><%= r.c %></span>
+        </div>
+      <% }) %>
+    <% } else { %><p class="muted small">Nessun dato nel periodo.</p><% } %>
+  </section>
+
+  <section class="card">
+    <h3 class="staff-title"><%- icon('grid') %> Per sezione</h3>
+    <% if (perSezione.length) { const mx = Math.max(1, ...perSezione.map(r=>r.c));
+         const nomi = Object.fromEntries(SECTIONS.map((s) => [s.key, s.label])); %>
+      <% perSezione.forEach((r) => { %>
+        <div class="st-rankrow">
+          <span class="st-rank-name"><%= nomi[r.sez] || r.sez %></span>
+          <span class="st-rank-bar"><span style="width:<%= Math.round(r.c/mx*100) %>%"></span></span>
+          <span class="st-rank-val"><%= r.c %><small> · <%= r.u %> pers.</small></span>
+        </div>
+      <% }) %>
+    <% } else { %><p class="muted small">Nessun dato nel periodo.</p><% } %>
+  </section>
+</div>
+
+<%# ═══════════════ 4. MODERAZIONE ═══════════════ %>
+<h2 class="st-h2" id="moderazione"><%- icon('check') %> Moderazione</h2>
+
+<div class="st-kpis st-kpis-sm">
+  <% kpiCard('check', moderazione.decise, 'Prove decise nel periodo') %>
+  <% kpiCard('clock', attesa(moderazione.medianaMin), 'Attesa tipica', 'mediana') %>
+  <% kpiCard('alarm', attesa(moderazione.mediaMin), 'Attesa media', 'la trascina chi resta indietro') %>
+  <% kpiCard('hourglass', moderazione.arretrato, 'Ancora da decidere',
+       moderazione.piuVecchia ? 'la più vecchia da ' + moderazione.piuVecchia + ' ore' : null) %>
+</div>
+
+<%
+  const totSt = kpi.approved + kpi.pending + kpi.rejected || 1;
+  const pctSt = (v) => Math.round(v / totSt * 100);
+%>
+<section class="card">
+  <h3 class="staff-title"><%- icon('list') %> Esito delle prove</h3>
+  <div class="st-statusbar">
+    <span class="st-seg st-seg-ok" style="width:<%= pctSt(kpi.approved) %>%" title="Approvate: <%= kpi.approved %>"></span>
+    <span class="st-seg st-seg-wait" style="width:<%= pctSt(kpi.pending) %>%" title="In attesa: <%= kpi.pending %>"></span>
+    <span class="st-seg st-seg-no" style="width:<%= pctSt(kpi.rejected) %>%" title="Rifiutate: <%= kpi.rejected %>"></span>
+  </div>
+  <div class="st-legend">
+    <span><i class="st-dot st-dot-ok"></i> Approvate <strong><%= kpi.approved %></strong></span>
+    <span><i class="st-dot st-dot-wait"></i> In attesa <strong><%= kpi.pending %></strong></span>
+    <span><i class="st-dot st-dot-no"></i> Rifiutate <strong><%= kpi.rejected %></strong></span>
+  </div>
+</section>
+
+<div class="st-cols">
+  <section class="card">
+    <h3 class="staff-title"><%- icon('people') %> Chi modera</h3>
+    <% if (moderatori.length) { %>
+      <table class="st-tab">
+        <thead><tr><th>Staff</th><th>Decise</th><th>Sì</th><th>No</th></tr></thead>
+        <tbody>
+          <% moderatori.forEach((m) => { %>
+            <tr><td><%= m.nickname %></td><td><strong><%= m.c %></strong></td>
+                <td class="st-ok"><%= m.ok %></td><td class="st-no"><%= m.ko %></td></tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } else { %><p class="muted small">Nessuna prova moderata nel periodo.</p><% } %>
+  </section>
+
+  <section class="card">
+    <h3 class="staff-title"><%- icon('x') %> Perché vengono rifiutate</h3>
+    <% if (motiviRifiuto.length) { %>
+      <ul class="st-lista">
+        <% motiviRifiuto.forEach((m) => { %>
+          <li><span><%= m.nota %></span><span class="st-lista-val"><%= m.c %></span></li>
+        <% }) %>
+      </ul>
+    <% } else { %><p class="muted small">Nessun rifiuto nel periodo.</p><% } %>
+  </section>
+</div>
+
+<%# ═══════════════ 5. GIOCHI ═══════════════ %>
+<h2 class="st-h2" id="giochi"><%- icon('gamepad') %> Giochi</h2>
+
+<% if (!giochiDallo) { %>
+  <section class="card st-avviso">
+    <p><strong>I tempi di gioco si misurano da adesso.</strong></p>
+    <p class="muted small">
+      Le durate delle partite non venivano salvate da nessuna parte: il server le
+      calcolava a fine partita per l'anti-cheat e le buttava via. Da questa versione
+      ogni partita valida lascia una riga, quindi questa sezione si riempie man mano
+      che si gioca. Le partite giocate <em>prima</em> non sono recuperabili: di quelle
+      restano solo i contatori totali, qui sotto.
+    </p>
+  </section>
+<% } else { %>
+  <p class="muted small">Durate misurate a partire dal <%= giochiDallo.slice(8,10) %>/<%= giochiDallo.slice(5,7) %>/<%= giochiDallo.slice(0,4) %>.</p>
+<% } %>
+
+<% giochi.forEach((g) => { %>
+  <section class="card st-gioco">
+    <h3 class="staff-title"><%- icon('bolt') %> <%= g.nome %></h3>
+    <div class="st-kpis st-kpis-sm">
+      <% kpiCard('play', num(g.partite), 'Partite') %>
+      <% kpiCard('people', num(g.giocatori), 'Giocatori diversi') %>
+      <% kpiCard('clock', durata(g.totSec), 'Tempo totale') %>
+      <% kpiCard('hourglass', durata(g.medianaSec), 'Partita tipica', 'mediana') %>
+      <% kpiCard('alarm', durata(g.mediaSec), 'Durata media') %>
+      <% kpiCard('trophy', durata(g.maxSec), 'Partita più lunga') %>
+      <% kpiCard('target', num(g.mediaScore), 'Media ' + g.unita) %>
+      <% kpiCard('medal', num(g.maxScore), 'Miglior ' + g.unita + ' nel periodo') %>
+    </div>
+
+    <div class="st-cols">
+      <div>
+        <h4 class="st-h4">Quanto durano le partite</h4>
+        <% const mxF = Math.max(1, ...g.fasce.map((f) => f.c)); %>
+        <% if (g.partite) { %>
+          <% g.fasce.forEach((f) => { %>
+            <div class="st-rankrow">
+              <span class="st-rank-name"><%= f.label %></span>
+              <span class="st-rank-bar"><span style="width:<%= Math.round(f.c/mxF*100) %>%"></span></span>
+              <span class="st-rank-val"><%= f.c %></span>
+            </div>
+          <% }) %>
+        <% } else { %><p class="muted small">Ancora nessuna partita registrata.</p><% } %>
+      </div>
+      <div>
+        <h4 class="st-h4">Chi ci passa più tempo</h4>
+        <% if (g.top.length) { const mxT = Math.max(1, ...g.top.map((t) => t.sec)); %>
+          <% g.top.forEach((t) => { %>
+            <div class="st-rankrow">
+              <span class="st-rank-name"><%= t.nickname %></span>
+              <span class="st-rank-bar"><span style="width:<%= Math.round(t.sec/mxT*100) %>%"></span></span>
+              <span class="st-rank-val"><%= durata(t.sec) %><small> · <%= t.partite %>p</small></span>
+            </div>
+          <% }) %>
+        <% } else { %><p class="muted small">Ancora nessuna partita registrata.</p><% } %>
+      </div>
+    </div>
+    <p class="muted small"><a href="<%= g.link %>">Apri il gioco &rarr;</a></p>
+  </section>
+<% }) %>
+
+<section class="card">
+  <h3 class="staff-title"><%- icon('archive') %> Contatori storici</h3>
+  <p class="muted small">Da <code>users</code>, comprendono anche le partite giocate prima che si registrassero le durate.</p>
+  <table class="st-tab">
+    <thead><tr><th>Gioco</th><th>Partite</th><th>Giocatori</th><th>Record</th></tr></thead>
+    <tbody>
+      <tr><td>Corri San Rocco</td><td><%= num(contatoriStorici.runnerPartite) %></td>
+          <td><%= num(contatoriStorici.runnerGiocatori) %></td><td><%= num(contatoriStorici.runnerRecord) %> punti</td></tr>
+      <tr><td>San Rocco Jetpack</td><td><%= num(contatoriStorici.jetpackPartite) %></td>
+          <td><%= num(contatoriStorici.jetpackGiocatori) %></td><td><%= num(contatoriStorici.jetpackRecord) %> metri</td></tr>
+    </tbody>
+  </table>
+  <p class="muted small">Stelle del Jetpack guadagnate in tutto: <strong><%= num(contatoriStorici.stelle) %></strong>.</p>
+</section>
+
+<%# ═══════════════ 6. PUNTI E LIVELLI ═══════════════ %>
+<h2 class="st-h2" id="punti"><%- icon('trophy') %> Punti e livelli</h2>
+
+<div class="st-kpis st-kpis-sm">
+  <% kpiCard('trophy', num(punti.totale), 'Punti in classifica') %>
+  <% kpiCard('chart', num(punti.mediana), 'Punteggio tipico', 'mediana') %>
+  <% kpiCard('bolt', num(punti.media), 'Punteggio medio') %>
+  <% kpiCard('x', punti.aZero, 'Fermi a zero punti') %>
+</div>
+
+<section class="card">
+  <h3 class="staff-title"><%- icon('list') %> Da dove arrivano i punti</h3>
+  <%
+    const fonti = [
+      { label: 'Missioni foto', v: punti.daMissioni },
+      { label: 'Traguardi dei giochi', v: punti.daGiochi },
+      { label: 'Ruota, slot, striscia, codici e correzioni', v: punti.adjust },
+    ];
+    const mxFonti = Math.max(1, ...fonti.map((f) => Math.abs(f.v)));
+  %>
+  <% fonti.forEach((f) => { %>
+    <div class="st-rankrow">
+      <span class="st-rank-name"><%= f.label %></span>
+      <span class="st-rank-bar"><span style="width:<%= Math.round(Math.abs(f.v)/mxFonti*100) %>%"></span></span>
+      <span class="st-rank-val"><%= num(f.v) %></span>
+    </div>
+  <% }) %>
+  <p class="muted small">
+    L'ultima riga è <code>points_adjust</code>, un unico numero che accumula ruota, slot,
+    striscia giornaliera, codici premio, bonus sezione e correzioni admin. <strong>Non è
+    scomponibile</strong>: per sapere quanto arriva da ciascuna cosa servirebbe una tabella
+    dei movimenti, che oggi non c'è.
+  </p>
+</section>
+
+<section class="card">
+  <h3 class="staff-title"><%- icon('medal') %> Come sono distribuiti i livelli</h3>
+  <% const mxLv = Math.max(1, ...distLivelli.map((l) => l.c)); %>
+  <% distLivelli.slice().reverse().forEach((l) => { %>
+    <div class="st-rankrow">
+      <span class="st-rank-name"><span class="st-lv"><%= l.lv %></span> <%= l.title %></span>
+      <span class="st-rank-bar"><span style="width:<%= Math.round(l.c/mxLv*100) %>%"></span></span>
+      <span class="st-rank-val"><%= l.c %><small> · da <%= num(l.at) %> pt</small></span>
+    </div>
+  <% }) %>
+</section>
+
+<%# ═══════════════ 7. UTENTI ═══════════════ %>
+<h2 class="st-h2" id="utenti"><%- icon('people') %> Utenti</h2>
+
+<div class="st-cols">
+  <section class="card">
+    <h3 class="staff-title"><%- icon('gear') %> Com'è fatta la base iscritti</h3>
+    <%
+      const righeU = [
+        ['Iscritti in tutto', utenti.totali, null],
+        ['Di cui staff', utenti.admin, null],
+        ['Ha inviato almeno una prova', kpi.everPlayed, quota(kpi.everPlayed, utenti.totali)],
+        ['Con avatar', utenti.conAvatar, quota(utenti.conAvatar, utenti.totali)],
+        ['Con email', utenti.conEmail, quota(utenti.conEmail, utenti.totali)],
+        ['Con notifiche push attive', utenti.push, quota(utenti.push, utenti.totali)],
+        ['Con 2FA', utenti.con2fa, quota(utenti.con2fa, utenti.totali)],
+        ['Privacy accettata', utenti.privacy, quota(utenti.privacy, utenti.totali)],
+      ];
+    %>
+    <table class="st-tab">
+      <tbody>
+        <% righeU.forEach((r) => { %>
+          <tr><td><%= r[0] %></td><td><strong><%= num(r[1]) %></strong></td>
+              <td class="st-pct"><%= r[2] === null ? '' : r[2] + '%' %></td></tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <h3 class="staff-title"><%- icon('flame') %> Abitudini</h3>
+    <table class="st-tab">
+      <tbody>
+        <tr><td>Strisce giornaliere ancora vive</td><td><strong><%= num(utenti.strisceVive) %></strong></td></tr>
+        <tr><td>Striscia più lunga raggiunta</td><td><strong><%= num(utenti.strisciaMax) %></strong> giorni</td></tr>
+        <tr><td>Bonus sezione completati</td><td><strong><%= num(utenti.bonusSezione) %></strong></td></tr>
+        <tr><td>Codici premio riscattati</td><td><strong><%= num(utenti.codiciUsati) %></strong> su <%= num(utenti.codiciTot) %></td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<section class="card">
+  <h3 class="staff-title"><%- icon('camera') %> Chi manda più prove</h3>
+  <% if (topUsers.length) { const mx = Math.max(1, ...topUsers.map(t=>t.c)); %>
+    <% topUsers.forEach((t) => { %>
+      <div class="st-rankrow">
+        <span class="st-rank-name"><%= t.nickname %></span>
+        <span class="st-rank-bar"><span style="width:<%= Math.round(t.c/mx*100) %>%"></span></span>
+        <span class="st-rank-val"><%= t.c %></span>
+      </div>
+    <% }) %>
+  <% } else { %><p class="muted small">Nessuna attività nel periodo.</p><% } %>
+</section>
+
+<%# ═══════════════ 8. COMMUNITY ═══════════════ %>
+<h2 class="st-h2" id="community"><%- icon('sparkle') %> Community</h2>
+
+<div class="st-kpis st-kpis-sm">
+  <% kpiCard('target', num(coinvolgimento.votiPronost), 'Voti ai pronostici',
+       coinvolgimento.votantiPron + ' persone diverse') %>
+  <% kpiCard('fireworks', num(coinvolgimento.votiPalio), 'Pronostici sul Palio') %>
+  <% kpiCard('camera', num(coinvolgimento.storie), 'Storie pubblicate',
+       coinvolgimento.storieVive + ' ancora visibili') %>
+  <% kpiCard('bell', coinvolgimento.vistePerStoria, 'Visualizzazioni per storia', 'in media') %>
+</div>
+
+<% if (coinvolgimento.segnalazioni) { %>
+  <section class="card st-avviso">
+    <p><strong><%= coinvolgimento.segnalazioni %></strong> segnalazioni su storie da controllare.</p>
+    <p class="muted small"><a href="/admin/moderazione">Vai alla moderazione &rarr;</a></p>
+  </section>
+<% } %>
