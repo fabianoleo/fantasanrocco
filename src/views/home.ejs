@@ -277,20 +277,27 @@
   <div class="lp-section-inner">
     <p class="lp-kicker" data-reveal="fade-in">Non solo missioni</p>
     <h2 class="lp-headline" data-reveal="fade-up">Gioca, vinci punti,<br>scala la classifica.</h2>
-    <div class="lp-prizes-grid">
+    <%# Quattro schede: la griglia va a due per riga (vedi .lp-games-grid) %>
+    <div class="lp-prizes-grid lp-games-grid">
       <a href="/giochi?g=runner" class="lp-prize-card lp-game-card" data-reveal="slide-up" data-delay="0">
         <span class="lp-prize-icon lp-game-icon"><%- icon('bolt') %></span>
         <h3>Corri San Rocco</h3>
         <p>Il mini-gioco arcade pixelato: schiva torce e bombe, raccogli monete e bonus rari — aureola, reliquia ×2 e i leggendari fuochi. Traguardi fino a 25.000 punti che entrano in classifica.</p>
         <span class="lp-game-tag">Mini-gioco</span>
       </a>
-      <a href="/ruota" class="lp-prize-card lp-game-card" data-reveal="slide-up" data-delay="1">
+      <a href="/giochi?g=jetpack" class="lp-prize-card lp-game-card" data-reveal="slide-up" data-delay="1">
+        <span class="lp-prize-icon lp-game-icon"><%- icon('fireworks') %></span>
+        <h3>San Rocco Jetpack</h3>
+        <p>Vola con la fiammata dorata schivando raggi e missili. Raccogli le lettere e componi una parola per trasformarti: cane, razzo, brocca di vino o santo in gloria. Missioni di carriera e gradi che danno punti in classifica.</p>
+        <span class="lp-game-tag">Mini-gioco</span>
+      </a>
+      <a href="/ruota" class="lp-prize-card lp-game-card" data-reveal="slide-up" data-delay="2">
         <span class="lp-prize-icon lp-game-icon"><%- icon('wheel') %></span>
         <h3>Ruota della Fortuna</h3>
         <p>Un giro gratis ogni giorno: vinci punti per la classifica, con la possibilità del jackpot. La trovi anche dall'icona ruota nella barra in alto.</p>
         <span class="lp-game-tag">Gratis · ogni giorno</span>
       </a>
-      <a href="/giochi?g=slot" class="lp-prize-card lp-game-card" data-reveal="slide-up" data-delay="2">
+      <a href="/giochi?g=slot" class="lp-prize-card lp-game-card" data-reveal="slide-up" data-delay="3">
         <span class="lp-prize-icon lp-game-icon"><%- icon('ticket') %></span>
         <h3>Slot di San Rocco</h3>
         <p>Punta i tuoi punti sui rulli: ciliegie, percoca, brocca di vino, braciola di capra, fuochi e San Rocco per il jackpot. Funziona con gli stessi punti della gara.</p>

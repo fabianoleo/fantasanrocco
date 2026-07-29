@@ -1043,6 +1043,11 @@ body { overflow-x: clip; }
   gap: 1.1rem;
   margin-bottom: 2.5rem;
 }
+/* I giochi sono quattro: in 860px starebbero troppo stretti su una riga sola,
+   quindi vanno a due per riga. Doppia classe per non toccare le griglie dei
+   premi, che restano a tre. Sotto i 700px ci pensa la regola generale a
+   metterle in colonna. */
+.lp-prizes-grid.lp-games-grid { grid-template-columns: repeat(2, 1fr); }
 .lp-prize-card {
   background: var(--bg-card);
   border: 1px solid rgba(212,160,26,.1);
@@ -1182,6 +1187,7 @@ body { overflow-x: clip; }
 /* ── Responsive LP ────────────────────────────────────────────── */
 @media (max-width: 700px) {
   .lp-prizes-grid { grid-template-columns: 1fr; max-width: 380px; margin-inline: auto; }
+  .lp-prizes-grid.lp-games-grid { grid-template-columns: 1fr; }   /* anche i giochi in colonna */
 }
 @media (max-width: 520px) {
   .lp-numbers-inner { gap: 2rem; }
@@ -1436,7 +1442,8 @@ body { overflow-x: clip; }
   /* Mission grid single column */
   .mission-grid { grid-template-columns: 1fr !important; }
 
-  .lp-prizes-grid {
+  .lp-prizes-grid,
+  .lp-prizes-grid.lp-games-grid {
     grid-template-columns: 1fr;
     max-width: 340px; margin-inline: auto;
   }
