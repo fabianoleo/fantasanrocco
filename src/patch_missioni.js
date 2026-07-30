@@ -42,6 +42,13 @@ const PATCHES = [
   // sapeva quando montassero: se un lancio precedente l'ha già creata così,
   // questa riga le rimette il solo 18.
   { find: 'Tutto Pronto per il Palio', da: GIORNO(18)[0], a: GIORNO(18)[1] },
+  // Le foto CON una persona che nella processione ha un ruolo: in quel
+  // momento stanno lavorando, fermarli per una foto è fuori luogo. Le
+  // missioni che si fanno APPOSTA durante la processione (Il Portatore, In
+  // Cammino, Momento Solenne) restano ovviamente come sono.
+  { find: 'Primo Cittadino', description: 'Scatta una foto con il Sindaco di Siano. Non durante la processione.' },
+  { find: 'Benedizione', description: 'Scatta una foto con il parroco. Non durante la processione.' },
+  { find: 'Musica Maestro', description: 'Scatta un selfie con la banda musicale. Non durante la processione, mentre stanno suonando.' },
 ];
 
 // Missioni da eliminare del tutto (non archiviare: archived=1 vuol dire

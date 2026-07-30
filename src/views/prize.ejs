@@ -3,7 +3,7 @@
   <div class="pz-hero-inner">
     <p class="pz-hero-kicker">Festa di San Rocco 2026 &nbsp;·&nbsp; Siano</p>
     <h1 class="pz-title">I Premi<br>in Palio</h1>
-    <p class="pz-subtitle">Quest'anno si vince fino al <strong>dodicesimo posto</strong>.<br>Ogni posizione in classifica ha il suo premio, messo dalle attività di Siano.</p>
+    <p class="pz-subtitle">Quest'anno si vince fino al <strong><%= ultimaPosizione %>º posto</strong> in classifica,<br>più un premio per chi comanda ciascuno dei due mini-giochi.</p>
     <div class="pz-hero-pill">
       <span><%= totalePremi %></span> premi &nbsp;&middot;&nbsp; <span>250&nbsp;€</span> il primo &nbsp;&middot;&nbsp; <span>agosto&nbsp;2026</span>
     </div>
@@ -87,7 +87,7 @@
     <h2 class="pz-how-title">Dal 4º <%= ultimaPos === 8 || ultimaPos === 11 ? "all'" : 'al ' %><%= ultimaPos %>º posto</h2>
     <p class="pz-sponsor-intro">
       Il podio non è l'unico posto dove si vince: si porta a casa qualcosa
-      anche arrivando dodicesimi.
+      anche arrivando <%= ultimaPos %>º.
     </p>
 
     <ol class="pz-sponsor-grid">
@@ -110,6 +110,41 @@
     <p class="pz-sponsor-foot">
       Ogni premio è già assegnato alla sua posizione: quello che vedi al 4º posto va a chi chiude quarto in classifica.
       Lo trovi indicato anche accanto al tuo nome nella <a href="/classifica">classifica</a>.
+    </p>
+  </div>
+</div>
+
+<%# ══ PREMI DEI DUE MINI-GIOCHI ═══════════════════════════════════════════
+    Questi non si vincono a punti ma a record: hanno `gioco` invece di `pos`,
+    e vanno a chi guida la classifica del proprio gioco. È una gara separata
+    da quella generale, e la pagina deve dirlo chiaramente. %>
+<div class="pz-sponsor lp-full">
+  <div class="pz-sponsor-inner">
+    <p class="pz-how-kicker">Una gara a parte</p>
+    <h2 class="pz-how-title">I due mini-giochi</h2>
+    <p class="pz-sponsor-intro">
+      Chi comanda la classifica di ciascun gioco si porta a casa il suo premio.
+      Qui non contano i punti della classifica generale, ma il <strong>record</strong>:
+      il punteggio più alto in «Corri San Rocco» e la distanza più lunga in «San Rocco Jetpack».
+    </p>
+
+    <ol class="pz-sponsor-grid pz-grid-giochi">
+      <% premiGiochi.forEach(function (p) { %>
+        <li class="pz-sp-card">
+          <span class="pz-sp-pos pz-sp-pos-gioco"><%= nomiGiochi[p.gioco] %></span>
+          <span class="pz-sp-icon"><%- icon(p.icona) %></span>
+          <h3 class="pz-sp-name"><%= p.nome %></h3>
+          <% if (p.nota) { %><p class="pz-sp-note"><%= p.nota %></p><% } %>
+          <% if (p.offerto) { %><p class="pz-sp-by">da <strong><%= p.offerto %></strong></p><% } %>
+          <% if (p.valore) { %><span class="pz-sp-value"><%= p.valore %></span><% } %>
+        </li>
+      <% }) %>
+    </ol>
+
+    <p class="pz-sponsor-foot">
+      I record si vedono nella <a href="/classifica">classifica</a>, nella scheda «Gioco».
+      Attenzione: i <strong>punti</strong> che i giochi danno alla classifica generale
+      arrivano dai traguardi, non dal record — sono due cose diverse.
     </p>
   </div>
 </div>

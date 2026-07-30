@@ -52,7 +52,7 @@
         <%- icon('trophy') %>
         <span class="btn-stack">
           <span class="btn-sub">In palio</span>
-          <span class="btn-main">Premi misteriosi</span>
+          <span class="btn-main"><%= totalePremi %> premi</span>
         </span>
       </a>
     </div>
@@ -174,11 +174,11 @@
 <section class="lp-numbers lp-full">
   <div class="lp-numbers-inner">
     <div class="lp-num-item" data-reveal="fade-up" data-delay="0">
-      <span class="lp-num-val">105</span>
+      <span class="lp-num-val"><%= nMissioni %></span>
       <span class="lp-num-label">missioni</span>
     </div>
     <div class="lp-num-item" data-reveal="fade-up" data-delay="1">
-      <span class="lp-num-val">3</span>
+      <span class="lp-num-val"><%= totalePremi %></span>
       <span class="lp-num-label">premi in palio</span>
     </div>
     <div class="lp-num-item" data-reveal="fade-up" data-delay="2">
@@ -192,45 +192,22 @@
 <section class="lp-prizes lp-full">
   <div class="lp-section-inner">
     <p class="lp-kicker" data-reveal="fade-in">In palio</p>
-    <h2 class="lp-headline" data-reveal="fade-up">I premi? Un mistero.<br>Ancora per poco.</h2>
-    <% /* ── PREMI UFFICIALI — nascosti per ora, salvati per riattivarli dopo (if false) ── */ %>
-    <% if (false) { %>
+    <h2 class="lp-headline" data-reveal="fade-up"><%= totalePremi %> premi.<br>Non solo per il podio.</h2>
+    <%# Le tre card arrivano da PREMI in server.js, lo stesso elenco che
+        alimenta /premio e la classifica: erano scritte a mano e sono rimaste
+        "misteriose" per settimane dopo che i premi erano già stati svelati
+        altrove. Collegate alla fonte, non può più succedere. %>
     <div class="lp-prizes-grid">
-      <div class="lp-prize-card lp-prize-gold" data-reveal="slide-up" data-delay="0">
-        <span class="lp-prize-icon"><%- icon('medal') %></span>
-        <h3>Smartbox Europa</h3>
-        <p>3 giorni da sogno in Europa per 2 persone. Scegli tu dove andare.</p>
-      </div>
-      <div class="lp-prize-card lp-prize-silver" data-reveal="slide-up" data-delay="1">
-        <span class="lp-prize-icon"><%- icon('medal') %></span>
-        <h3>Nintendo Switch Lite</h3>
-        <p>Console portatile Nintendo per il secondo classificato.</p>
-      </div>
-      <div class="lp-prize-card lp-prize-bronze" data-reveal="slide-up" data-delay="2">
-        <span class="lp-prize-icon"><%- icon('medal') %></span>
-        <h3>Macchinetta del caffè</h3>
-        <p>Perché il caffè campano non si discute.</p>
-      </div>
+      <% const metallo = ['gold', 'silver', 'bronze']; %>
+      <% premiPodio.forEach(function (p, i) { %>
+        <div class="lp-prize-card lp-prize-<%= metallo[i] %>" data-reveal="slide-up" data-delay="<%= i %>">
+          <span class="lp-prize-icon"><%- icon('medal') %></span>
+          <h3><%= p.nome %><% if (p.valore) { %> <span class="lp-prize-val"><%= p.valore %></span><% } %></h3>
+          <p><%= p.tagline %></p>
+        </div>
+      <% }) %>
     </div>
-    <% } %>
-    <div class="lp-prizes-grid">
-      <div class="lp-prize-card lp-prize-gold mm-mystery" data-reveal="slide-up" data-delay="0">
-        <span class="lp-prize-icon"><%- icon('lock') %></span>
-        <h3>Primo premio</h3>
-        <p>Ancora segreto. Sarà svelato prima della festa.</p>
-      </div>
-      <div class="lp-prize-card lp-prize-silver mm-mystery" data-reveal="slide-up" data-delay="1">
-        <span class="lp-prize-icon"><%- icon('lock') %></span>
-        <h3>Secondo premio</h3>
-        <p>Top secret. Continua a giocare per scoprirlo.</p>
-      </div>
-      <div class="lp-prize-card lp-prize-bronze mm-mystery" data-reveal="slide-up" data-delay="2">
-        <span class="lp-prize-icon"><%- icon('lock') %></span>
-        <h3>Terzo premio</h3>
-        <p>Un mistero… per ora.</p>
-      </div>
-    </div>
-    <a href="/premio" class="lp-more-link" data-reveal="fade-in">Come si vince →</a>
+    <a href="/premio" class="lp-more-link" data-reveal="fade-in">Tutti i <%= totalePremi %> premi →</a>
   </div>
 </section>
 

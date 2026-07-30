@@ -682,7 +682,20 @@ app.get('/health', (req, res) => {
 // =========================================================================
 app.get('/', (req, res) => {
   const topThree = leaderboardRows().slice(0, 3);
-  res.render('home', { title: 'FantaSanRocco', topThree });
+  // I numeri della striscia si contano, non si scrivono a mano: erano fermi a
+  // "105 missioni" e "3 premi" mentre le missioni erano diventate 114 e i
+  // premi 12. Il conto delle missioni sta nel database perché lo staff può
+  // aggiungerne dal pannello, quindi una costante sarebbe sbagliata il giorno
+  // dopo. PREMI e PREMI_PODIO sono dichiarati più in basso: qui va bene lo
+  // stesso, perché questo codice gira a ogni richiesta, non al caricamento.
+  const nMissioni = db.prepare('SELECT COUNT(*) c FROM missions').get().c;
+  res.render('home', {
+    title: 'FantaSanRocco',
+    topThree,
+    nMissioni,
+    premiPodio: PREMI_PODIO,
+    totalePremi: PREMI.length,
+  });
 });
 
 // ── I PREMI, uno per posizione ────────────────────────────────────────────
@@ -740,20 +753,37 @@ const PREMI = [
   { pos: 8,  nome: '3 lampade',   offerto: 'Centro Estetico Medea', icona: 'sun' },
   { pos: 9,  nome: 'Friggitrice ad aria', offerto: 'Telefonia Eredi Leo', valore: '40–50 €', icona: 'flame' },
   { pos: 10, nome: 'Macchinetta del caffè',  icona: 'coffee', foto: ['caffe.webp'] },
-  { pos: 11, nome: 'Buono acquisto', offerto: 'Cycling Botta', valore: '30 €', icona: 'bike',
+  // ── Gli ultimi due non si vincono in classifica generale ────────────────
+  // Vanno a chi comanda le classifiche dei due mini-giochi. Hanno `gioco` al
+  // posto di `pos`: è la differenza che tiene separate le due gare, perché
+  // i record dei giochi sono una classifica a parte e non danno punti diretti.
+  { gioco: 'runner', nome: 'Buono acquisto', offerto: 'Cycling Botta', valore: '30 €', icona: 'bike',
     nota: 'Vendita e riparazione bici a Siano dal 1923' },
-  // "Buono macelleria" e non "Buono" liscio: in classifica accanto al nickname
-  // si vede solo il nome del premio, e ci sono già un "Buono spesa" e un
-  // "Buono acquisto" — un terzo "Buono" non direbbe nulla.
-  { pos: 12, nome: 'Buono macelleria', offerto: 'Vitello Paesano', valore: '30 €', icona: 'ticket' },
+  // "Buono macelleria" e non "Buono" liscio: accanto al nickname si vede solo
+  // il nome del premio, e ci sono già un "Buono spesa" e un "Buono acquisto" —
+  // un terzo "Buono" non direbbe nulla.
+  { gioco: 'jetpack', nome: 'Buono macelleria', offerto: 'Vitello Paesano', valore: '30 €', icona: 'ticket' },
 ];
 
-const PREMI_PODIO = PREMI.filter((p) => p.pos <= 3);
-const PREMI_LISTA = PREMI.filter((p) => p.pos > 3);
+// Come si chiamano i due giochi, per le etichette. La chiave è la stessa che
+// usa game_runs, così non ci sono due vocabolari per la stessa cosa.
+const NOMI_GIOCHI = { runner: 'Corri San Rocco', jetpack: 'San Rocco Jetpack' };
+
+const PREMI_PODIO = PREMI.filter((p) => p.pos && p.pos <= 3);
+const PREMI_LISTA = PREMI.filter((p) => p.pos && p.pos > 3);
+const PREMI_GIOCHI = PREMI.filter((p) => p.gioco);
+// Fin dove arriva la classifica generale a premiare: si ricava dall'elenco,
+// così aggiungendo un premio non resta una soglia scritta a mano da qualche
+// altra parte che dice un numero diverso.
+const ULTIMA_POSIZIONE_PREMIATA = Math.max(...PREMI.filter((p) => p.pos).map((p) => p.pos));
 
 // Indicizzati per posizione: la classifica deve poter chiedere "che premio
 // c'è al 7º posto?" senza scorrere l'elenco a ogni riga.
-const PREMIO_PER_POSIZIONE = Object.fromEntries(PREMI.map((p) => [p.pos, p]));
+// Solo i premi legati a una posizione: quelli dei giochi non hanno un `pos`,
+// e senza il filtro finirebbero tutti sotto la chiave `undefined`.
+const PREMIO_PER_POSIZIONE = Object.fromEntries(PREMI.filter((p) => p.pos).map((p) => [p.pos, p]));
+// Indicizzati per gioco, per le due sotto-classifiche dei mini-giochi.
+const PREMIO_PER_GIOCO = Object.fromEntries(PREMI_GIOCHI.map((p) => [p.gioco, p]));
 
 // ── Muro sponsor: le attività che mettono i premi ─────────────────────────
 // Le attività sono queste, i loghi arrivano alla spicciolata. Invece di
@@ -832,7 +862,10 @@ app.get('/premio', (req, res) => {
     title: 'I Premi',
     premiPodio: PREMI_PODIO,
     premiLista: PREMI_LISTA,
+    premiGiochi: PREMI_GIOCHI,
+    nomiGiochi: NOMI_GIOCHI,
     totalePremi: PREMI.length,
+    ultimaPosizione: ULTIMA_POSIZIONE_PREMIATA,
   });
 });
 
@@ -1131,6 +1164,7 @@ app.get('/classifica', (req, res) => {
     jetpackRows: jetpackLeaderboardRows(),
     currentUserId: req.currentUser?.id ?? null,
     premioPerPosizione: PREMIO_PER_POSIZIONE,
+    premioPerGioco: PREMIO_PER_GIOCO,
   });
 });
 

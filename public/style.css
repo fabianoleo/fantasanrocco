@@ -1074,6 +1074,17 @@ body { overflow-x: clip; }
   margin-bottom: .55rem; color: var(--text);
 }
 .lp-prize-card p { font-size: .83rem; color: var(--text-2); line-height: 1.58; }
+/* Il valore sta sulla stessa riga del nome ma non deve rubargli la scena:
+   piu' piccolo, oro, e senza andare a capo su nomi lunghi. */
+.lp-prize-val {
+  display: inline-block;
+  margin-left: .35em;
+  padding: .1em .45em;
+  border-radius: 5px;
+  background: rgba(212,160,26,.12);
+  font-size: .78em; letter-spacing: .03em; color: var(--gold-2);
+  white-space: nowrap;
+}
 
 .lp-more-link {
   font-family: var(--font-heading);
@@ -4076,7 +4087,6 @@ textarea:focus-visible,
 .pz-photo-mystery { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .2rem; }
 .pz-photo-mystery > span:nth-child(2) { font-size: 3.2rem; font-weight: 800; line-height: 1; color: var(--gold, #f5c842); }
 .pz-photo-mystery .pz-ph-note { font-size: .82rem; opacity: .8; letter-spacing: .03em; }
-.mm-mystery h3 { letter-spacing: .02em; }
 
 /* (Hint "continua a scorrere": stile spostato in cinematic.css, scoped .cine) */
 
@@ -5178,3 +5188,12 @@ a.lb-prize:hover { color: var(--gold-2); }
   .st-kpis { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); }
   .st-ore { height: 70px; }
 }
+
+/* Etichetta del gioco al posto del numero di posizione, sulle due card dei
+   premi dei mini-giochi: lì non c'è un "11º", c'è "Corri San Rocco". */
+.pz-sp-pos-gioco {
+  font-size: .62rem; letter-spacing: .04em;
+  padding-left: .7rem; padding-right: .7rem;
+}
+/* Due sole card: senza questo si allargherebbero a tutta riga su desktop */
+.pz-grid-giochi { max-width: 520px; margin-left: auto; margin-right: auto; }

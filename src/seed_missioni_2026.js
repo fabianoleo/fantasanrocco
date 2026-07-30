@@ -41,7 +41,12 @@ function m(name, desc, rar, opt = {}) {
 
 const MISSIONS = [
   // ── PAESE & TRADIZIONE (16) ──────────────────────────────────────
-  m('Primo Cittadino', 'Scatta una foto con il Sindaco di Siano.', 'rara', { sec: 'paese' }),
+  // Le foto CON una persona che nella processione ha un ruolo (sindaco,
+  // parroco, banda) portano la stessa avvertenza: in quel momento stanno
+  // lavorando, e fermarli per un selfie e' fuori luogo. Le missioni che
+  // invece si fanno APPOSTA durante la processione (Il Portatore, In
+  // Cammino, Momento Solenne) non la hanno, ovviamente.
+  m('Primo Cittadino', 'Scatta una foto con il Sindaco di Siano. Non durante la processione.', 'rara', { sec: 'paese' }),
   m('Cantiere', 'Scatta una foto di un anziano che critica un lavoro pubblico.', 'non-comune', { sec: 'paese' }),
   m('Asso di Mazze', 'Scatta una foto di una partita a carte davanti alla Chiesa.', 'comune', { sec: 'paese' }),
   m('Fuori Orario', 'Scatta una foto davanti a un bar dopo la chiusura.', 'comune', { sec: 'paese' }),
@@ -91,10 +96,10 @@ const MISSIONS = [
   m('Dirigenza', 'Scatta una foto con un dirigente di una delle squadre di calcio del paese.', 'non-comune', { sec: 'sport' }),
   m('Man of the Match', 'Scatta una foto con un calciatore di una delle squadre del paese.', 'non-comune', { rep: true, sec: 'sport' }),
   m('Meet the Team', 'Scatta una foto con uno dei membri del team "Fanta San Rocco".', 'rara', { rep: true, sec: 'sport' }),
-  m('Benedizione', 'Scatta una foto con il parroco.', 'rara', { sec: 'sport' }),
+  m('Benedizione', 'Scatta una foto con il parroco. Non durante la processione.', 'rara', { sec: 'sport' }),
   m('Nu Lumin a San Rocc', 'Accendi un lumino in chiesa lasciando un’offerta e scatta una foto.', 'non-comune', { sec: 'sport' }),
   m("Cuore d'Oro", 'Compi un gesto di beneficenza per il Malawi e documentalo con una foto.', 'leggendaria', { sec: 'sport' }),
-  m('Musica Maestro', 'Scatta un selfie con la banda musicale.', 'rara', { sec: 'sport' }),
+  m('Musica Maestro', 'Scatta un selfie con la banda musicale. Non durante la processione, mentre stanno suonando.', 'rara', { sec: 'sport' }),
 
   // ── SFIDE GIORNALIERE — 14 AGOSTO ────────────────────────────────
   m('Mazzariello', 'Scatta una foto con Mazzariello.', 'rara', { day: 14 }),

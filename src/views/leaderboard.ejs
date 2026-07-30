@@ -120,7 +120,14 @@
             <span class="lb-list-rank">
               <% if (i < 3) { %><span class="lb-medal-inline <%= ['is-gold','is-silver','is-bronze'][i] %>"><%- icon('medal') %></span><% } else { %><%= i + 1 %><% } %>
             </span>
-            <span class="lb-list-name"><%= u.nickname %><% if (isMe) { %> <span class="lb-you">tu</span><% } %></span>
+            <span class="lb-list-name">
+              <%= u.nickname %><% if (isMe) { %> <span class="lb-you">tu</span><% } %>
+              <%# Il premio del gioco va a chi comanda QUESTA classifica, non a
+                  chi ha più punti in quella generale: si mostra solo in cima. %>
+              <% if (i === 0 && premioPerGioco.runner) { %>
+                <a class="lb-prize" href="/premio" title="<%= premioPerGioco.runner.nome %> — a chi vince Corri San Rocco"><%- icon(premioPerGioco.runner.icona) %><span class="lb-prize-txt"><%= premioPerGioco.runner.nome %></span></a>
+              <% } %>
+            </span>
             <span class="lb-list-pts"><%= u.best %><small>punti</small></span>
           </li>
         <% }) %>
@@ -154,6 +161,9 @@
             <span class="lb-list-name">
               <%= u.nickname %><% if (isMe) { %> <span class="lb-you">tu</span><% } %>
               <% if (u.stars) { %><span class="lb-stars">★ <%= u.stars %></span><% } %>
+              <% if (i === 0 && premioPerGioco.jetpack) { %>
+                <a class="lb-prize" href="/premio" title="<%= premioPerGioco.jetpack.nome %> — a chi vince San Rocco Jetpack"><%- icon(premioPerGioco.jetpack.icona) %><span class="lb-prize-txt"><%= premioPerGioco.jetpack.nome %></span></a>
+              <% } %>
             </span>
             <span class="lb-list-pts"><%= u.best %><small>metri</small></span>
           </li>
