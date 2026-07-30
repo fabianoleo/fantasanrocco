@@ -2973,6 +2973,102 @@ app.get('/r/:code', (req, res) => {
 });
 
 // ── Statistiche (admin): aggregati anonimi, filtrabili per periodo ─────────
+// =========================================================================
+//  Export CSV dei metadati delle prove
+//  ------------------------------------------------------------------------
+//  La foto arriva su disco COM'È: multer la scrive senza ricodificarla e jimp
+//  la apre solo in lettura per l'impronta. Quindi l'EXIF che il telefono ha
+//  messo dentro è ancora lì, e da lì si legge quando è stato fatto lo scatto.
+//  Attenzione però: quasi nessuna foto ce l'ha. Basta che passi da WhatsApp,
+//  che sia uno screenshot o che la galleria la ripulisca, e i metadati non
+//  esistono più prima ancora di arrivare a noi. La colonna `data_scatto`
+//  resterà vuota nella maggior parte delle righe: non è un bug dell'export.
+// =========================================================================
+const exifParser = require('exif-parser');
+
+// L'EXIF sta all'inizio del file (segmento APP1): leggere i primi 128kB basta
+// e evita di caricare in memoria una foto da 8 megapixel per ogni riga.
+const EXIF_BYTES = 128 * 1024;
+
+function leggiExif(fileAssoluto) {
+  let fd;
+  try {
+    fd = fs.openSync(fileAssoluto, 'r');
+    const buf = Buffer.alloc(EXIF_BYTES);
+    const letti = fs.readSync(fd, buf, 0, EXIF_BYTES, 0);
+    const t = exifParser.create(buf.subarray(0, letti)).parse().tags || {};
+    // DateTimeOriginal è lo scatto vero; gli altri due sono ripieghi (una
+    // copia o un salvataggio li riscrive, quindi valgono meno).
+    const scatto = t.DateTimeOriginal || t.CreateDate || t.ModifyDate || null;
+    return {
+      scatto: scatto ? new Date(scatto * 1000) : null,
+      esatta: !!t.DateTimeOriginal,
+      dispositivo: [t.Make, t.Model].filter(Boolean).join(' ').trim() || '',
+      gps: t.GPSLatitude !== undefined && t.GPSLongitude !== undefined,
+    };
+  } catch (e) {
+    return { scatto: null, esatta: false, dispositivo: '', gps: false };
+  } finally {
+    if (fd !== undefined) try { fs.closeSync(fd); } catch {}
+  }
+}
+
+// Una cella CSV: le virgolette si raddoppiano, e si quota sempre così nessun
+// nickname con la virgola o il punto e virgola può spostare le colonne.
+const csvCella = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+app.get('/admin/prove.csv', auth.requireAdmin, (req, res) => {
+  const righe = db.prepare(`
+    SELECT s.id, s.created_at, s.status, s.photo_path, s.note, s.phash,
+           s.reviewed_at, u.nickname, m.title AS missione, m.points
+    FROM submissions s
+    LEFT JOIN users u   ON u.id = s.user_id
+    LEFT JOIN missions m ON m.id = s.mission_id
+    ORDER BY s.id
+  `).all();
+
+  const intestazioni = ['id', 'inviata_il', 'stato', 'utente', 'missione', 'punti',
+    'data_scatto', 'scatto_esatto', 'ore_fra_scatto_e_invio', 'scattata_prima_della_festa',
+    'dispositivo', 'gps', 'file', 'impronta', 'moderata_il', 'nota'];
+  // Il BOM serve a Excel: senza, apre il CSV in latin-1 e le accentate si
+  // rompono. Gli altri fogli di calcolo lo ignorano.
+  const out = ['﻿' + intestazioni.join(';')];
+
+  const INIZIO_FESTA = new Date('2026-08-14T00:00:00+02:00');
+  for (const r of righe) {
+    const nome = path.basename(r.photo_path || '');
+    const ex = nome ? leggiExif(path.join(UPLOADS_DIR, nome)) : { scatto: null, esatta: false, dispositivo: '', gps: false };
+    const inviata = r.created_at ? new Date(r.created_at.replace(' ', 'T') + 'Z') : null;
+    // Quanto tempo passa fra lo scatto e l'invio: se sono giorni, la foto è
+    // stata ripescata dalla galleria invece che fatta sul momento.
+    const ore = (ex.scatto && inviata)
+      ? Math.round(((inviata - ex.scatto) / 3600000) * 10) / 10 : '';
+    out.push([
+      r.id,
+      r.created_at || '',
+      r.status || '',
+      r.nickname || '(utente eliminato)',
+      r.missione || '(missione eliminata)',
+      r.points ?? '',
+      ex.scatto ? ex.scatto.toISOString().slice(0, 19).replace('T', ' ') : '',
+      ex.scatto ? (ex.esatta ? 'sì' : 'approssimata') : '',
+      ore,
+      ex.scatto ? (ex.scatto < INIZIO_FESTA ? 'sì' : 'no') : '',
+      ex.dispositivo,
+      ex.scatto || ex.dispositivo ? (ex.gps ? 'sì' : 'no') : '',
+      nome,
+      r.phash || '',
+      r.reviewed_at || '',
+      (r.note || '').replace(/[\r\n]+/g, ' '),
+    ].map(csvCella).join(';'));
+  }
+
+  const oggi = new Date().toISOString().slice(0, 10);
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="prove-fantasanrocco-${oggi}.csv"`);
+  res.send(out.join('\r\n'));
+});
+
 app.get('/admin/statistiche', auth.requireAdmin, (req, res) => {
   const RANGES = [
     { key: '1', label: 'Ieri', days: 1 },
