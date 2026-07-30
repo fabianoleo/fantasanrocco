@@ -62,7 +62,7 @@ STATO
   ⬜ = manca il file
   ❌ = file ricevuto ma non utilizzabile, serve rifarlo
 
-A oggi sono in linea 15 loghi su 35.
+A oggi sono in linea 16 loghi su 36.
 
 L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
 
@@ -99,10 +99,11 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ⬜ parrucchiere-tony.png    Parrucchiere Tony
   ⬜ bar-ideal.png            Bar Ideal
   ⬜ gelateria-gerry.png      Gelateria Gerry
+  ⬜ tabacchino.png           Tabacchino della Chiesa
 
 Non sul foglio, arrivati dopo:
 
-  ⬜ target-communication.png Target Communication
+  ✅ target-communication.png Target Communication  schiarito solo nei neri
   ❌ di-filippo.png           Di Filippo Fotografi  export rotto: fondo
                               grigio e un rettangolo bianco sulla destra
 
@@ -117,11 +118,12 @@ Nota: il file v-frasci.png in loghi-png/ e' della PIZZERIA, per questo il
 risultato si chiama pizzeria-frasci.png. Il Bar V. Frasci 2.0 e' un'altra
 attivita' e il suo logo manca ancora.
 
-Nota: in loghi-png/ restano solo gli originali dei nove loghi arrivati per
+Nota: in loghi-png/ restano solo gli originali dei dieci loghi arrivati per
 ultimi (cycling-botta, pizzeria-zio-mauro, lamberti, kalu, athena-fitness,
-franzis, fatima-leo, zio-enrico, vitello-paesano). Gli altri originali sono
-stati rimossi: le versioni pronte in questa cartella bastano per la barra,
-ma se un logo va rifatto va richiesto di nuovo il file di partenza.
+franzis, fatima-leo, zio-enrico, vitello-paesano, target-communication).
+Gli altri originali sono stati rimossi: le versioni pronte in questa
+cartella bastano per la barra, ma se un logo va rifatto va richiesto di
+nuovo il file di partenza.
 
 Nota: sul foglio l'attivita' era segnata come "Zio Enrico", ma l'insegna e
 il logo dicono Zanzibar Lounge Bar: in SPONSOR_ATTIVITA vale il marchio,

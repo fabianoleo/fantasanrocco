@@ -734,7 +734,10 @@ const PREMI = [
     nota: 'Con il personal trainer Claudio De Maio' },
   { pos: 6,  nome: 'Trattamento', offerto: 'Fatima Leo Salon & Academy', valore: '50 €', icona: 'candle' },
   { pos: 7,  nome: 'Buono spesa', offerto: 'Day by Day Multibrand Siano', valore: '50 €', icona: 'ticket' },
-  { pos: 8,  nome: '5 lampade',   offerto: 'Centro Estetico Medea', valore: '50 €', icona: 'sun' },
+  // Senza `valore`: erano cinque lampade da 50 €, ora sono tre e quanto valgano
+  // non l'ha detto nessuno. Meglio non scrivere niente che scrivere una cifra
+  // sbagliata su un premio vero. La scheda regge: il valore è facoltativo.
+  { pos: 8,  nome: '3 lampade',   offerto: 'Centro Estetico Medea', icona: 'sun' },
   { pos: 9,  nome: 'Friggitrice ad aria', offerto: 'Telefonia Eredi Leo', valore: '40–50 €', icona: 'flame' },
   { pos: 10, nome: 'Macchinetta del caffè',  icona: 'coffee', foto: ['caffe.webp'] },
   { pos: 11, nome: 'Buono acquisto', offerto: 'Cycling Botta', valore: '30 €', icona: 'bike',
@@ -798,6 +801,7 @@ const SPONSOR_ATTIVITA = [
   { file: 'parrucchiere-tony.png',   nome: 'Parrucchiere Tony' },
   { file: 'bar-ideal.png',           nome: 'Bar Ideal' },
   { file: 'gelateria-gerry.png',     nome: 'Gelateria Gerry' },
+  { file: 'tabacchino.png',          nome: 'Tabacchino della Chiesa' },
   // ── Non sul foglio, arrivati dopo ──
   { file: 'target-communication.png', nome: 'Target Communication' },
   { file: 'di-filippo.png',          nome: 'Di Filippo Fotografi' },
