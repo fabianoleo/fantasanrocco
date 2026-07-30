@@ -57,6 +57,9 @@ const PATCHES = [
 // classifica in corso. In quel caso la si nasconde e lo script lo dice.
 const RIMOZIONI = [
   { find: "A' Ciort", perche: 'la lotteria di San Rocco non si fa più' },
+  // Attenzione a non confonderla con "Sticker Limited Edition", che è
+  // l'adesivo sul drink e resta: questa era il bollino col logo.
+  { find: 'Bollino', perche: 'missione tolta dall\'elenco' },
 ];
 
 // Missioni da aggiungere se non ci sono ancora (confronto sul nome, senza emoji)
@@ -173,13 +176,19 @@ for (const p of PATCHES) {
 }
 let removed = 0, nascoste = 0;
 for (const r of RIMOZIONI) {
-  const rows = db.prepare('SELECT id, title FROM missions WHERE title LIKE ?').all(`%${r.find}%`);
+  const rows = db.prepare('SELECT id, title, archived, section FROM missions WHERE title LIKE ?').all(`%${r.find}%`);
   if (!rows.length) { console.log(`= già rimossa: ${r.find}`); continue; }
   for (const row of rows) {
     const prove = db.prepare('SELECT COUNT(*) c FROM submissions WHERE mission_id = ?').get(row.id).c;
     if (prove > 0) {
       // Cancellarla si porterebbe dietro le prove per effetto della cascata, e
       // chi l'aveva completata vedrebbe il punteggio scendere a festa in corso.
+      // Se è già nascosta non si conta come modifica, altrimenti ogni rilancio
+      // segnalerebbe un lavoro che non ha fatto.
+      if (row.archived === 1 && row.section === null) {
+        console.log(`= già nascosta: ${row.title} (${prove} prove, non si cancella)`);
+        continue;
+      }
       db.prepare('UPDATE missions SET archived = 1, section = NULL WHERE id = ?').run(row.id);
       console.log(`⚠️  #${row.id} "${row.title}" ha ${prove} prove: NON cancellata, solo nascosta (${r.perche})`);
       nascoste++;

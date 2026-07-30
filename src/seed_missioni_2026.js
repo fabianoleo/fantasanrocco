@@ -40,7 +40,7 @@ function m(name, desc, rar, opt = {}) {
 }
 
 const MISSIONS = [
-  // ── PAESE & TRADIZIONE (16) ──────────────────────────────────────
+  // ── PAESE & TRADIZIONE (15) ──────────────────────────────────────
   // Le foto CON una persona che nella processione ha un ruolo (sindaco,
   // parroco, banda) portano la stessa avvertenza: in quel momento stanno
   // lavorando, e fermarli per un selfie e' fuori luogo. Le missioni che
@@ -60,7 +60,6 @@ const MISSIONS = [
   m("A' Machina Zozzosa", 'Scatta una foto ad un’auto impolverata sulla quale sia stata scritta la parola "FantaSanRocco".', 'rara', { sec: 'paese' }),
   m('A Per', 'Spostati con un mezzo alternativo e scatta una foto.', 'rara', { sec: 'paese' }),
   m('Tradizione', 'Impara una tradizione da un anziano e documentalo con una foto.', 'rara', { sec: 'paese' }),
-  m('Bollino', 'Scatta una foto con un adesivo del logo "Fanta San Rocco".', 'rara', { sec: 'paese' }),
   m('È sempre San Valentino da Romalba', 'Scatta una foto del mazzo di fiori comprato da Romalba per il/la tuo/a partner.', 'rara', { sec: 'paese' }),
 
   // ── FOOD & DRINK (8) ─────────────────────────────────────────────
