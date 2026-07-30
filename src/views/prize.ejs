@@ -51,6 +51,16 @@
           <% if (p.offerto) { %><li><%- icon('pin') %> Offerto da <%= p.offerto %></li><% } %>
           <li><%- icon('trophy') %> Va a chi chiude al <%= st.label.toLowerCase() %></li>
         </ul>
+        <%# Il marchio dell'attività, quando il PNG c'è (server.js riempie
+            `logoSrc` solo in quel caso). La riga sopra dice che rapporto ha
+            con il premio: «Offerto da» sarebbe falso per la cena, che si
+            mangia da Nemo ma non è il ristorante a metterla in palio. %>
+        <% if (p.logoSrc) { %>
+          <div class="pz-brand">
+            <span class="pz-brand-kicker"><%= p.logoNota || 'Offerto da' %></span>
+            <img class="pz-brand-logo" src="<%= p.logoSrc %>" alt="<%= p.logoNome %>" loading="lazy">
+          </div>
+        <% } %>
       </div>
       <div class="pz-photos-area">
         <% if (foto.length >= 2) { %>
@@ -94,7 +104,13 @@
       <% premiLista.forEach(function (p) { %>
         <li class="pz-sp-card">
           <span class="pz-sp-pos"><%= p.pos %>º</span>
-          <% if (p.foto && p.foto.length) { %>
+          <%# Ordine: prima il marchio dell'attività, poi la foto del premio,
+              poi l'icona. Il logo dice più delle altre due — è chi ci mette
+              il premio — e sta nello stesso ingombro, così le card della
+              griglia restano alte uguali qualunque delle tre si mostri. %>
+          <% if (p.logoSrc) { %>
+            <span class="pz-sp-logo"><img src="<%= p.logoSrc %>" alt="<%= p.logoNome %>" loading="lazy"></span>
+          <% } else if (p.foto && p.foto.length) { %>
             <span class="pz-sp-foto"><img src="/images/premi/<%= p.foto[0] %>" alt="<%= p.nome %>" loading="lazy"></span>
           <% } else { %>
             <span class="pz-sp-icon"><%- icon(p.icona) %></span>
@@ -132,7 +148,11 @@
       <% premiGiochi.forEach(function (p) { %>
         <li class="pz-sp-card">
           <span class="pz-sp-pos pz-sp-pos-gioco"><%= nomiGiochi[p.gioco] %></span>
-          <span class="pz-sp-icon"><%- icon(p.icona) %></span>
+          <% if (p.logoSrc) { %>
+            <span class="pz-sp-logo"><img src="<%= p.logoSrc %>" alt="<%= p.logoNome %>" loading="lazy"></span>
+          <% } else { %>
+            <span class="pz-sp-icon"><%- icon(p.icona) %></span>
+          <% } %>
           <h3 class="pz-sp-name"><%= p.nome %></h3>
           <% if (p.nota) { %><p class="pz-sp-note"><%= p.nota %></p><% } %>
           <% if (p.offerto) { %><p class="pz-sp-by">da <strong><%= p.offerto %></strong></p><% } %>

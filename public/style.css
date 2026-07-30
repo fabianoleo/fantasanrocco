@@ -2691,6 +2691,24 @@ body { overflow-x: clip; }
 }
 .pz-details li:last-child { border-bottom: none; }
 
+/* Il marchio dell'attività in fondo alla scheda del podio. Riga a sé, sotto
+   un filo di separazione: è un'informazione di firma, non una delle voci
+   dell'elenco qui sopra. Il logo è già chiaro per il fondo scuro. */
+.pz-brand {
+  display: flex; align-items: center; gap: 1rem;
+  margin-top: 1.4rem; padding-top: 1.2rem;
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+.pz-brand-kicker {
+  flex: none;
+  font-size: .7rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-3);
+}
+.pz-brand-logo {
+  height: 42px; max-width: 175px;
+  object-fit: contain; display: block;
+}
+
 /* Photos */
 .pz-photos-area { display: flex; flex-direction: column; gap: .7rem; }
 .pz-photos-duo { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
@@ -5003,6 +5021,19 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
   border: 1px solid var(--border-gold);
 }
 .pz-sp-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Il marchio dell'attività sta nello stesso ingombro dell'icona e della foto:
+   54px di altezza, così tre card che mostrano tre cose diverse restano
+   allineate fra loro. I PNG sono già preparati chiari per il fondo scuro
+   (public/sponsor/LEGGIMI.txt), quindi qui non serve nessun filtro.
+   `contain` e non `cover`: un marchio ritagliato non è più quel marchio. */
+.pz-sp-logo {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 54px;
+}
+.pz-sp-logo img {
+  max-width: 85%; max-height: 100%;
+  object-fit: contain; display: block;
+}
 .pz-sp-name {
   margin: 0;
   font-family: var(--font-heading); font-size: 1rem; font-weight: 600;

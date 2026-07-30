@@ -706,6 +706,18 @@ app.get('/', (req, res) => {
 //
 // I primi tre hanno la scheda grande (tagline + descrizione + foto), gli
 // altri una card piccola. `foto` sono i file in public/images/premi/.
+//
+// `logo` è il file del marchio in public/sponsor/, lo stesso che gira nella
+// barra sponsor. Si indica a mano e non si ricava da `offerto` per due
+// motivi: i due nomi non coincidono sempre (sul foglio sponsor l'attività è
+// "Al Vitello Paesano", nel premio "Vitello Paesano"), e ci sono marchi che
+// vanno mostrati senza che l'attività offra il premio — il buono del 2º
+// posto si spende da Nemo, ma non è il ristorante a metterlo in palio, e
+// infatti quella scheda non ha `offerto`. Per questo il marchio porta con sé
+// `logoNome` (il nome per l'alt) e, sul podio, `logoNota` (la riga che dice
+// che rapporto c'è fra l'attività e il premio).
+// I file che non ci sono ancora restano indicati lo stesso: il logo compare
+// da solo il giorno che il PNG arriva, senza rimettere mano a questo elenco.
 const PREMI = [
   {
     pos: 1, nome: 'Box viaggi', valore: '250 €', icona: 'globe',
@@ -722,6 +734,8 @@ const PREMI = [
     desc: 'Un buono da cento euro per il Nemo Restaurant Food & Wine di Salerno: '
         + 'cucina contemporanea di mare, pesce fresco e crudi, pasta fatta a mano. '
         + 'Il secondo posto si festeggia seduti, con chi vuoi tu.',
+    logo: 'nemo.png', logoNome: 'Nemo Restaurant Food & Wine',
+    logoNota: 'Il buono si spende da',
   },
   {
     // Niente `offerto`: il percorso si fa da The Spa, ma non è la struttura
@@ -742,28 +756,47 @@ const PREMI = [
       'Kit con accappatoio, telo e infradito',
     ],
   },
-  { pos: 4,  nome: '6 mesi di prove gratuite', offerto: 'Gym Hall Muscle Zone', icona: 'bolt' },
+  { pos: 4,  nome: '6 mesi di prove gratuite', offerto: 'Gym Hall Muscle Zone', icona: 'bolt',
+    logo: 'gym-hall.png' },
   { pos: 5,  nome: '5 lezioni di personal training', offerto: 'Athena Fitness', icona: 'target',
-    nota: 'Con il personal trainer Claudio De Maio' },
-  { pos: 6,  nome: 'Trattamento', offerto: 'Fatima Leo Salon & Academy', valore: '50 €', icona: 'candle' },
-  { pos: 7,  nome: 'Buono spesa', offerto: 'Day by Day Multibrand Siano', valore: '50 €', icona: 'ticket' },
+    nota: 'Con il personal trainer Claudio De Maio',
+    logo: 'athena-fitness.png' },
+  { pos: 6,  nome: 'Trattamento', offerto: 'Fatima Leo Salon & Academy', valore: '50 €', icona: 'candle',
+    logo: 'fatima-leo.png' },
+  { pos: 7,  nome: 'Buono spesa', offerto: 'Day by Day Multibrand Siano', valore: '50 €', icona: 'ticket',
+    logo: 'day-by-day.png' },
   // Senza `valore`: erano cinque lampade da 50 €, ora sono tre e quanto valgano
   // non l'ha detto nessuno. Meglio non scrivere niente che scrivere una cifra
   // sbagliata su un premio vero. La scheda regge: il valore è facoltativo.
-  { pos: 8,  nome: '3 lampade',   offerto: 'Centro Estetico Medea', icona: 'sun' },
-  { pos: 9,  nome: 'Friggitrice ad aria', offerto: 'Telefonia Eredi Leo', valore: '40–50 €', icona: 'flame' },
+  { pos: 8,  nome: '3 lampade',   offerto: 'Centro Estetico Medea', icona: 'sun',
+    logo: 'medea.png' },
+  { pos: 9,  nome: 'Friggitrice ad aria', offerto: 'Telefonia Eredi Leo', valore: '40–50 €', icona: 'flame',
+    logo: 'telefonia-eredi-leo.png' },
   { pos: 10, nome: 'Macchinetta del caffè',  icona: 'coffee', foto: ['caffe.webp'] },
   // ── Gli ultimi due non si vincono in classifica generale ────────────────
   // Vanno a chi comanda le classifiche dei due mini-giochi. Hanno `gioco` al
   // posto di `pos`: è la differenza che tiene separate le due gare, perché
   // i record dei giochi sono una classifica a parte e non danno punti diretti.
   { gioco: 'runner', nome: 'Buono acquisto', offerto: 'Cycling Botta', valore: '30 €', icona: 'bike',
-    nota: 'Vendita e riparazione bici a Siano dal 1923' },
+    nota: 'Vendita e riparazione bici a Siano dal 1923',
+    logo: 'cycling-botta.png' },
   // "Buono macelleria" e non "Buono" liscio: accanto al nickname si vede solo
   // il nome del premio, e ci sono già un "Buono spesa" e un "Buono acquisto" —
   // un terzo "Buono" non direbbe nulla.
-  { gioco: 'jetpack', nome: 'Buono macelleria', offerto: 'Vitello Paesano', valore: '30 €', icona: 'ticket' },
+  { gioco: 'jetpack', nome: 'Buono macelleria', offerto: 'Vitello Paesano', valore: '30 €', icona: 'ticket',
+    logo: 'vitello-paesano.png', logoNome: 'Al Vitello Paesano' },
 ];
+
+// Il marchio si mostra solo se il PNG c'è davvero, come per la barra sponsor:
+// un logo annunciato ma non ancora arrivato diventerebbe un'immagine rotta
+// sulla pagina dei premi. Il controllo si fa una volta sola all'avvio, e
+// scrive `logoSrc` sul premio — la pagina si limita a leggerlo.
+for (const p of PREMI) {
+  if (p.logo && fs.existsSync(path.join(__dirname, '..', 'public', 'sponsor', p.logo))) {
+    p.logoSrc = `/sponsor/${p.logo}`;
+    p.logoNome = p.logoNome || p.offerto || p.nome;
+  }
+}
 
 // Come si chiamano i due giochi, per le etichette. La chiave è la stessa che
 // usa game_runs, così non ci sono due vocabolari per la stessa cosa.
