@@ -90,14 +90,15 @@ const MISSIONS = [
   m('Ultras', 'Scatta una foto indossando la maglia di una squadra di calcio del paese.', 'non-comune', { sec: 'sport' }),
   m('Dirigenza', 'Scatta una foto con un dirigente di una delle squadre di calcio del paese.', 'non-comune', { sec: 'sport' }),
   m('Man of the Match', 'Scatta una foto con un calciatore di una delle squadre del paese.', 'non-comune', { rep: true, sec: 'sport' }),
-  m('Meet the Team', 'Scatta una foto con uno dei membri del team "Fanta San Rocco".', 'rara', { sec: 'sport' }),
+  m('Meet the Team', 'Scatta una foto con uno dei membri del team "Fanta San Rocco".', 'rara', { rep: true, sec: 'sport' }),
   m('Benedizione', 'Scatta una foto con il parroco.', 'rara', { sec: 'sport' }),
-  m("A' Ciort", 'Acquista un biglietto della lotteria di San Rocco e documentalo con una foto.', 'epica', { sec: 'sport' }),
+  m('Nu Lumin a San Rocc', 'Accendi un lumino in chiesa lasciando un’offerta e scatta una foto.', 'non-comune', { sec: 'sport' }),
   m("Cuore d'Oro", 'Compi un gesto di beneficenza per il Malawi e documentalo con una foto.', 'leggendaria', { sec: 'sport' }),
   m('Musica Maestro', 'Scatta un selfie con la banda musicale.', 'rara', { sec: 'sport' }),
 
   // ── SFIDE GIORNALIERE — 14 AGOSTO ────────────────────────────────
   m('Mazzariello', 'Scatta una foto con Mazzariello.', 'rara', { day: 14 }),
+  m('Groove Motion', 'Scatta una foto con un membro della Groove Motion Live Band.', 'rara', { day: 14 }),
   m('Arlecchino Rosso', 'Indossa un capo/accessorio rosso e scatta una foto.', 'non-comune', { day: 14 }),
   m('Fanta SanRocco', 'Seleziona dalla galleria la foto del telo "Fanta SanRocco"… sempre se l’hai fatta!', 'leggendaria', { day: 14 }),
   m('Selfie XXL', 'Flash! Fai entrare almeno 15 persone nello stesso selfie.', 'epica', { flash: true }),
@@ -112,6 +113,7 @@ const MISSIONS = [
   m('Arlecchino Verde', 'Indossa un capo/accessorio verde e scatta una foto.', 'non-comune', { day: 16 }),
   m('Festa dei Folli', 'Immortala un’esibizione "pazza"!', 'epica', { day: 16 }),
   m('Skin', 'Scatta una foto indossando un outfit dello stesso colore del sindaco.', 'epica', { day: 16 }),
+  m('Alfo & Mike', 'Scatta una foto con Alfo V. o con Mike Carotenuto in consolle.', 'rara', { day: 16 }),
   m('Momento Solenne', 'Riprendi l’entrata/uscita di San Rocco dalla chiesa durante la processione.', 'non-comune', { day: 16 }),
   m('Compleanno Leggendario', 'Scatta una foto con chi compie gli anni a San Rocco (ancora meglio se si chiama Rocco).', 'leggendaria', { day: 16 }),
   m("Spalla d'Onore", 'Scatta una foto mentre porti San Rocco durante la processione.', 'epica', { day: 16 }),
@@ -121,12 +123,17 @@ const MISSIONS = [
 
   // ── SFIDE GIORNALIERE — 17 AGOSTO ────────────────────────────────
   m('Arlecchino Giallo', 'Indossa un capo/accessorio giallo e scatta una foto.', 'non-comune', { day: 17 }),
+  m('LDA & Aka 7even', 'Scatta una foto con LDA o con Aka 7even.', 'epica', { day: 17 }),
+  m('Disco Inferno', 'Scatta una foto con uno dei Disco Inferno.', 'rara', { day: 17 }),
   m('Alfonso Leo', 'Scatta una foto di Alfonso Leo che presenta i cantanti.', 'non-comune', { day: 17 }),
   m('Shh… non dirlo a nessuno!', 'Individua uno dei membri del team e scrivi qui nella nota la parola segreta che ti forniranno.', 'epica', { day: 17, photo: false }),
   m('In Bilico', 'Flash! Tutti in posa, ma su una sola gamba!', 'epica', { flash: true }),
 
   // ── SFIDE GIORNALIERE — 18 AGOSTO ────────────────────────────────
   m('Campanile ON!', 'Scatta una foto durante l’accensione del campanile.', 'rara', { day: 18 }),
+  m('Vagaband', 'Scatta una foto con un membro della Vagaband.', 'rara', { day: 18 }),
+  m('Musicante', 'Scatta una foto mentre suoni uno strumento la sera dei fuochi.', 'rara', { day: 18 }),
+  m('Campanile sotto i Fuochi', 'Scatta una foto del campanile mentre è illuminato dai fuochi d’artificio.', 'epica', { day: 18 }),
   m('Prima Fila', 'Scatta una foto mentre prendi posto a Piazza Mercato.', 'non-comune', { day: 18 }),
   m('Tutti Pronti', 'Scatta una foto della spesa per i fuochi.', 'non-comune', { day: 18 }),
   m('Tutti in Cerchio', 'Flash! Prendetevi per mano e formate un cerchio. Ricorda di scattare la foto!', 'epica', { flash: true }),
@@ -135,6 +142,15 @@ const MISSIONS = [
   // Peppe Tap Tap non si sa quando passa: la missione la sblocca lo staff
   // quando lo vede in giro, non un orario deciso a tavolino.
   m('Tap Tap', 'Flash! Scatta un selfie con Peppe Tap Tap.', 'non-comune', { flash: true }),
+
+  // ── MISSIONE SU FINESTRA LARGA ───────────────────────────────────
+  // Il montaggio delle batterie sulla provinciale verso Bracigliano non ha un
+  // orario da programma: si comincia giorni prima del Palio. Una finestra dal
+  // 16 al 18 lascia il tempo di beccarli senza aprire la missione ad agosto
+  // intero, quando non c'e' niente da fotografare.
+  m('Tutto Pronto per il Palio',
+    'Scatta una foto mentre preparano i fuochi d’artificio sulla strada provinciale verso Bracigliano.',
+    'epica', { win: DAL_AL(16, 18) }),
 
   // ── MISSIONE A GIORNI ALTERNI ────────────────────────────────────
   // Vale il 13, 14, 15 e 17, ma NON il 16: la finestra fa da recinto esterno

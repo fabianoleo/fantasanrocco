@@ -13,6 +13,10 @@ const { db } = require('./db');
 const PTS = { comune: 25, 'non-comune': 50, rara: 100, epica: 250, leggendaria: 500 };
 const EMOJI = { comune: '⚪', 'non-comune': '🟢', rara: '🔵', epica: '🟣', leggendaria: '🟠' };
 
+// Finestra di un singolo giorno di festa, come nel seed: le sfide giornaliere
+// si vedono solo nel loro giorno (ora italiana, il server legge Europe/Rome).
+const GIORNO = (n) => [`2026-08-${n} 00:00:00`, `2026-08-${n} 23:59:59`];
+
 // find = pezzo di titolo da cercare (senza l'emoji della rarità)
 // Campi modificabili: title, description, repeatable, archived, section
 const PATCHES = [
@@ -26,6 +30,22 @@ const PATCHES = [
   // completare una missione che potrebbe non uscire mai.
   { find: 'Tap Tap', archived: 1, section: null,
     description: 'Flash! Scatta un selfie con Peppe Tap Tap.' },
+  // ── Giro del 30 luglio 2026 ──────────────────────────────────────
+  // I membri del team sono più di uno: la missione va ripetuta per ognuno,
+  // come già si fa con Man of the Match e i calciatori.
+  { find: 'Meet the Team', repeatable: 1 },
+  // Rete di sicurezza: la riga su "Annanz' a Chies" corregge già la panchina,
+  // ma cerca per titolo. Questa cerca anche nel TESTO (inDesc), così prende il
+  // caso in cui la panchina stia scritta in una missione con un altro nome.
+  { find: 'panchina', inDesc: true, description: 'Scatta una foto sulle scale della chiesa.' },
+];
+
+// Missioni da eliminare del tutto (non archiviare: archived=1 vuol dire
+// "flash nascosta", quindi resterebbe sbloccabile per sbaglio).
+// Se qualcuno l'ha già completata NON si cancella: perderebbe i punti a
+// classifica in corso. In quel caso la si nasconde e lo script lo dice.
+const RIMOZIONI = [
+  { find: "A' Ciort", perche: 'la lotteria di San Rocco non si fa più' },
 ];
 
 // Missioni da aggiungere se non ci sono ancora (confronto sul nome, senza emoji)
@@ -43,6 +63,43 @@ const NUOVE = [
     desc: 'Fai una foto al drink con l’adesivo del FantaSanRocco (se sei riuscito a prenderlo).',
     rar: 'non-comune',
     da: '2026-08-13 00:00:00', a: '2026-08-17 23:59:59', giorni: '13,14,15,17' },
+
+  // ── Giro del 30 luglio 2026 ──────────────────────────────────────
+  // Una missione per ogni artista in programmazione. Mazzariello (14) e
+  // Napoliitudine (15) ce l'hanno già dal seed: qui ci sono solo i mancanti,
+  // ognuno legato alla SUA serata, così non si può fotografare un cantante
+  // il giorno in cui non c'è.
+  { name: 'Groove Motion', desc: 'Scatta una foto con un membro della Groove Motion Live Band.',
+    rar: 'rara', da: GIORNO(14)[0], a: GIORNO(14)[1] },
+  { name: 'Alfo & Mike', desc: 'Scatta una foto con Alfo V. o con Mike Carotenuto in consolle.',
+    rar: 'rara', da: GIORNO(16)[0], a: GIORNO(16)[1] },
+  { name: 'LDA & Aka 7even', desc: 'Scatta una foto con LDA o con Aka 7even.',
+    rar: 'epica', da: GIORNO(17)[0], a: GIORNO(17)[1] },
+  { name: 'Disco Inferno', desc: 'Scatta una foto con uno dei Disco Inferno.',
+    rar: 'rara', da: GIORNO(17)[0], a: GIORNO(17)[1] },
+  { name: 'Vagaband', desc: 'Scatta una foto con un membro della Vagaband.',
+    rar: 'rara', da: GIORNO(18)[0], a: GIORNO(18)[1] },
+
+  // Prende in 'sport' il posto lasciato libero dalla lotteria: così il conto
+  // della sezione non cambia e il bonus "sezione completata" resta alla
+  // stessa difficoltà di prima.
+  { name: 'Nu Lumin a San Rocc', desc: 'Accendi un lumino in chiesa lasciando un’offerta e scatta una foto.',
+    rar: 'non-comune', sec: 'sport' },
+
+  // Sera dei fuochi
+  { name: 'Musicante', desc: 'Scatta una foto mentre suoni uno strumento la sera dei fuochi.',
+    rar: 'rara', da: GIORNO(18)[0], a: GIORNO(18)[1] },
+  { name: 'Campanile sotto i Fuochi',
+    desc: 'Scatta una foto del campanile mentre è illuminato dai fuochi d’artificio.',
+    rar: 'epica', da: GIORNO(18)[0], a: GIORNO(18)[1] },
+
+  // Il montaggio delle batterie sulla provinciale verso Bracigliano non ha un
+  // orario da programma: si comincia giorni prima del Palio. Finestra dal 16
+  // al 18, per dare tempo di beccarli senza tenere aperta la missione ad
+  // agosto intero, quando non c'è niente da fotografare.
+  { name: 'Tutto Pronto per il Palio',
+    desc: 'Scatta una foto mentre preparano i fuochi d’artificio sulla strada provinciale verso Bracigliano.',
+    rar: 'epica', da: '2026-08-16 00:00:00', a: '2026-08-18 23:59:59' },
 ];
 
 let added = 0;
@@ -56,15 +113,21 @@ for (const n of NUOVE) {
       n.da || null, n.a || null, n.giorni || null);
   const dove = n.flash ? 'FLASH (nascosta)'
     : n.giorni ? `solo i giorni ${n.giorni}`
-    : `sezione ${n.sec}`;
+    : n.da ? (n.da.slice(5, 10) === n.a.slice(5, 10)
+        ? `solo il ${n.da.slice(8, 10)} agosto`
+        : `dal ${n.da.slice(8, 10)} al ${n.a.slice(8, 10)} agosto`)
+    : n.sec ? `sezione ${n.sec}`
+    : 'sempre visibile';
   console.log(`＋ #${info.lastInsertRowid} "${EMOJI[n.rar]} ${n.name}" · ${PTS[n.rar]}pt · ${dove}`);
   added++;
 }
 
 let changed = 0;
 for (const p of PATCHES) {
-  const rows = db.prepare('SELECT id, title, description, repeatable, archived, section FROM missions WHERE title LIKE ?').all(`%${p.find}%`);
-  if (!rows.length) { console.log(`⚠️  nessuna missione trovata per "${p.find}"`); continue; }
+  const rows = p.inDesc
+    ? db.prepare('SELECT id, title, description, repeatable, archived, section FROM missions WHERE title LIKE ? OR description LIKE ?').all(`%${p.find}%`, `%${p.find}%`)
+    : db.prepare('SELECT id, title, description, repeatable, archived, section FROM missions WHERE title LIKE ?').all(`%${p.find}%`);
+  if (!rows.length) { console.log(`= niente da correggere per "${p.find}"`); continue; }
   for (const r of rows) {
     const title = typeof p.title === 'function' ? p.title(r.title) : (p.title || r.title);
     const description = p.description || r.description;
@@ -89,6 +152,26 @@ for (const p of PATCHES) {
     changed++;
   }
 }
-console.log(`Fatto: ${changed} missioni aggiornate, ${added} aggiunte.`);
+let removed = 0, nascoste = 0;
+for (const r of RIMOZIONI) {
+  const rows = db.prepare('SELECT id, title FROM missions WHERE title LIKE ?').all(`%${r.find}%`);
+  if (!rows.length) { console.log(`= già rimossa: ${r.find}`); continue; }
+  for (const row of rows) {
+    const prove = db.prepare('SELECT COUNT(*) c FROM submissions WHERE mission_id = ?').get(row.id).c;
+    if (prove > 0) {
+      // Cancellarla si porterebbe dietro le prove per effetto della cascata, e
+      // chi l'aveva completata vedrebbe il punteggio scendere a festa in corso.
+      db.prepare('UPDATE missions SET archived = 1, section = NULL WHERE id = ?').run(row.id);
+      console.log(`⚠️  #${row.id} "${row.title}" ha ${prove} prove: NON cancellata, solo nascosta (${r.perche})`);
+      nascoste++;
+    } else {
+      db.prepare('DELETE FROM missions WHERE id = ?').run(row.id);
+      console.log(`✖ #${row.id} "${row.title}" eliminata (${r.perche})`);
+      removed++;
+    }
+  }
+}
+
+console.log(`Fatto: ${changed} missioni aggiornate, ${added} aggiunte, ${removed} eliminate, ${nascoste} nascoste.`);
 const bySec = db.prepare("SELECT section, COUNT(*) c FROM missions WHERE section IS NOT NULL AND archived = 0 GROUP BY section").all();
 console.log('Sezioni ora:', bySec.map((r) => `${r.section}=${r.c}`).join(' · '));

@@ -739,7 +739,10 @@ const PREMI = [
   { pos: 10, nome: 'Macchinetta del caffè',  icona: 'coffee', foto: ['caffe.webp'] },
   { pos: 11, nome: 'Buono acquisto', offerto: 'Cycling Botta', valore: '30 €', icona: 'bike',
     nota: 'Vendita e riparazione bici a Siano dal 1923' },
-  { pos: 12, nome: 'Cesto gastronomico', offerto: 'Vitello Paesano', valore: '30 €', icona: 'box' },
+  // "Buono macelleria" e non "Buono" liscio: in classifica accanto al nickname
+  // si vede solo il nome del premio, e ci sono già un "Buono spesa" e un
+  // "Buono acquisto" — un terzo "Buono" non direbbe nulla.
+  { pos: 12, nome: 'Buono macelleria', offerto: 'Vitello Paesano', valore: '30 €', icona: 'ticket' },
 ];
 
 const PREMI_PODIO = PREMI.filter((p) => p.pos <= 3);
