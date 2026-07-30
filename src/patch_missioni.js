@@ -38,6 +38,10 @@ const PATCHES = [
   // ma cerca per titolo. Questa cerca anche nel TESTO (inDesc), così prende il
   // caso in cui la panchina stia scritta in una missione con un altro nome.
   { find: 'panchina', inDesc: true, description: 'Scatta una foto sulle scale della chiesa.' },
+  // Nel primo giro la missione era stata aperta dal 16 al 18 perché non si
+  // sapeva quando montassero: se un lancio precedente l'ha già creata così,
+  // questa riga le rimette il solo 18.
+  { find: 'Tutto Pronto per il Palio', da: GIORNO(18)[0], a: GIORNO(18)[1] },
 ];
 
 // Missioni da eliminare del tutto (non archiviare: archived=1 vuol dire
@@ -93,13 +97,12 @@ const NUOVE = [
     desc: 'Scatta una foto del campanile mentre è illuminato dai fuochi d’artificio.',
     rar: 'epica', da: GIORNO(18)[0], a: GIORNO(18)[1] },
 
-  // Il montaggio delle batterie sulla provinciale verso Bracigliano non ha un
-  // orario da programma: si comincia giorni prima del Palio. Finestra dal 16
-  // al 18, per dare tempo di beccarli senza tenere aperta la missione ad
-  // agosto intero, quando non c'è niente da fotografare.
+  // Le batterie sulla provinciale verso Bracigliano le montano la mattina del
+  // 18, quindi la missione vale solo quel giorno: aprirla prima significava
+  // tenerla in elenco quando non c'è ancora niente da fotografare.
   { name: 'Tutto Pronto per il Palio',
     desc: 'Scatta una foto mentre preparano i fuochi d’artificio sulla strada provinciale verso Bracigliano.',
-    rar: 'epica', da: '2026-08-16 00:00:00', a: '2026-08-18 23:59:59' },
+    rar: 'epica', da: GIORNO(18)[0], a: GIORNO(18)[1] },
 ];
 
 let added = 0;
@@ -124,9 +127,10 @@ for (const n of NUOVE) {
 
 let changed = 0;
 for (const p of PATCHES) {
+  const CAMPI = 'id, title, description, repeatable, archived, section, active_from, active_to';
   const rows = p.inDesc
-    ? db.prepare('SELECT id, title, description, repeatable, archived, section FROM missions WHERE title LIKE ? OR description LIKE ?').all(`%${p.find}%`, `%${p.find}%`)
-    : db.prepare('SELECT id, title, description, repeatable, archived, section FROM missions WHERE title LIKE ?').all(`%${p.find}%`);
+    ? db.prepare(`SELECT ${CAMPI} FROM missions WHERE title LIKE ? OR description LIKE ?`).all(`%${p.find}%`, `%${p.find}%`)
+    : db.prepare(`SELECT ${CAMPI} FROM missions WHERE title LIKE ?`).all(`%${p.find}%`);
   if (!rows.length) { console.log(`= niente da correggere per "${p.find}"`); continue; }
   for (const r of rows) {
     const title = typeof p.title === 'function' ? p.title(r.title) : (p.title || r.title);
@@ -137,13 +141,21 @@ for (const p of PATCHES) {
     const repeatable = p.repeatable === undefined ? r.repeatable : p.repeatable;
     const archived = p.archived === undefined ? r.archived : p.archived;
     const section = Object.prototype.hasOwnProperty.call(p, 'section') ? p.section : r.section;
+    // La finestra si può correggere anche su una missione già creata: senza
+    // questo, cambiare un giorno voleva dire cancellarla e rifarla a mano.
+    const da = Object.prototype.hasOwnProperty.call(p, 'da') ? p.da : r.active_from;
+    const a  = Object.prototype.hasOwnProperty.call(p, 'a')  ? p.a  : r.active_to;
     if (title === r.title && description === r.description && repeatable === r.repeatable
-        && archived === r.archived && section === r.section) {
+        && archived === r.archived && section === r.section
+        && da === r.active_from && a === r.active_to) {
       console.log(`= già a posto: ${r.title}`); continue;
     }
-    db.prepare('UPDATE missions SET title = ?, description = ?, repeatable = ?, archived = ?, section = ? WHERE id = ?')
-      .run(title, description, repeatable, archived, section, r.id);
+    db.prepare(`UPDATE missions SET title = ?, description = ?, repeatable = ?, archived = ?,
+                section = ?, active_from = ?, active_to = ? WHERE id = ?`)
+      .run(title, description, repeatable, archived, section, da, a, r.id);
     const note = [
+      da !== r.active_from || a !== r.active_to
+        ? (da ? `finestra ${da.slice(8, 10)}→${a.slice(8, 10)} agosto` : 'finestra rimossa') : null,
       repeatable !== r.repeatable ? (repeatable ? 'ora RIPETIBILE' : 'non più ripetibile') : null,
       archived !== r.archived ? (archived ? 'ora FLASH (nascosta)' : 'ora visibile') : null,
       section !== r.section ? (section ? `sezione ${section}` : 'tolta dalla sezione') : null,

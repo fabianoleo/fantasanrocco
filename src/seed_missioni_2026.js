@@ -143,14 +143,11 @@ const MISSIONS = [
   // quando lo vede in giro, non un orario deciso a tavolino.
   m('Tap Tap', 'Flash! Scatta un selfie con Peppe Tap Tap.', 'non-comune', { flash: true }),
 
-  // ── MISSIONE SU FINESTRA LARGA ───────────────────────────────────
-  // Il montaggio delle batterie sulla provinciale verso Bracigliano non ha un
-  // orario da programma: si comincia giorni prima del Palio. Una finestra dal
-  // 16 al 18 lascia il tempo di beccarli senza aprire la missione ad agosto
-  // intero, quando non c'e' niente da fotografare.
+  // Le batterie sulla provinciale verso Bracigliano le montano la mattina del
+  // 18, quindi vale solo quel giorno.
   m('Tutto Pronto per il Palio',
     'Scatta una foto mentre preparano i fuochi d’artificio sulla strada provinciale verso Bracigliano.',
-    'epica', { win: DAL_AL(16, 18) }),
+    'epica', { day: 18 }),
 
   // ── MISSIONE A GIORNI ALTERNI ────────────────────────────────────
   // Vale il 13, 14, 15 e 17, ma NON il 16: la finestra fa da recinto esterno
