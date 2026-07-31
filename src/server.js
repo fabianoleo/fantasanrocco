@@ -87,7 +87,7 @@ function checkImageMagicBytes(filePath) {
 }
 
 const { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR } = require('./db');
-const { placesWithEvents } = require('./data/mapPlaces');
+const { placesWithEvents } = require('./dati/luoghi');
 const auth = require('./auth');
 
 const app = express();
@@ -466,31 +466,8 @@ app.get('/api/online/debug', auth.requireStaff, (req, res) => {
 //  server-authoritative che cicla la playlist all'infinito. Niente skip:
 //  solo "sintonizzati / stop" lato client.
 // =========================================================================
-// ► COME AGGIUNGERE LE CANZONI: metti i file audio in public/radio/ e aggiungi
-//   una voce qui sotto con src, title, (cover opzionale) e duration in secondi.
-//   La durata si può leggere con:  afinfo public/radio/tuofile.mp3
-const RADIO_PLAYLIST = [
-  { src: "/radio/corri-san-rocco.mp3", title: "Corri San Rocco — Inno FantaSanRocco", cover: "/images/logo.png", duration: 195 },
-  { src: "/radio/lda-aka-7even-andamento-lento-visual-video-ft-tullio-de-pisc.mp3", title: "LDA, Aka 7even — Andamento Lento ft. Tullio De Piscopo", cover: "/images/artisti/lda-aka7even.jpg", duration: 212 },
-  { src: "/radio/lda-aka-7even-poesie-clandestine-official-video-sanremo-2026.mp3", title: "LDA, Aka 7even — Poesie Clandestine", cover: "/images/artisti/lda-aka7even.jpg", duration: 209 },
-  { src: "/radio/mazzariello-amarsi-per-lavoro-sanremo-giovani-2025.mp3", title: "Mazzariello — Amarsi Per Lavoro", cover: "/images/artisti/mazzariello.jpg", duration: 185 },
-  { src: "/radio/mazzariello-atti-estremi-in-luogo-pubblico-official-video-1.mp3", title: "Mazzariello — Atti Estremi In Luogo Pubblico", cover: "/images/artisti/mazzariello.jpg", duration: 171 },
-  { src: "/radio/mazzariello-blindati-visual-video.mp3", title: "Mazzariello — Blindati", cover: "/images/artisti/mazzariello.jpg", duration: 122 },
-  { src: "/radio/mazzariello-bombe-carta-visual-video.mp3", title: "Mazzariello — Bombe Carta", cover: "/images/artisti/mazzariello.jpg", duration: 184 },
-  { src: "/radio/mazzariello-finestre-verdi-visual-video.mp3", title: "Mazzariello — Finestre Verdi", cover: "/images/artisti/mazzariello.jpg", duration: 205 },
-  { src: "/radio/mazzariello-manifestazione-d-amore-official-video-sanremo-20.mp3", title: "Mazzariello — Manifestazione D'amore", cover: "/images/artisti/mazzariello-manifestazione.jpg", duration: 191 },
-  { src: "/radio/mazzariello-millisecondi-visual-video.mp3", title: "Mazzariello — Millisecondi", cover: "/images/artisti/mazzariello.jpg", duration: 185 },
-  { src: "/radio/mazzariello-nostalgia-karaoke-lyric-video.mp3", title: "Mazzariello — Nostalgia & Karaoke", cover: "/images/artisti/mazzariello.jpg", duration: 217 },
-  { src: "/radio/mazzariello-orchidee-visual-video.mp3", title: "Mazzariello — Orchidee", cover: "/images/artisti/mazzariello.jpg", duration: 183 },
-  { src: "/radio/mazzariello-per-un-milione-di-euro-official-video.mp3", title: "Mazzariello — Per Un Milione Di Euro", cover: "/images/artisti/mazzariello.jpg", duration: 180 },
-  { src: "/radio/samurai-jay-ossessione.mp3", title: "Samurai Jay — Ossessione", cover: "/images/artisti/samurai-jay-ossessione.jpg", duration: 188 },
-  { src: "/radio/serena-brancale-levante-delia-al-mio-paese-testolyrics.mp3", title: "Serena Brancale, Levante, DELIA — Al Mio Paese", cover: "/images/artisti/al-mio-paese.jpg", duration: 198 },
-  { src: "/radio/serena-brancale-anema-e-core.mp3", title: "Serena Brancale — Anema e Core", cover: "/images/artisti/serena-brancale-anema-e-core.jpg", duration: 185 },
-  { src: "/radio/mikesueg-cinema.mp3", title: "Mikesueg — Cinema", cover: "/images/artisti/mikesueg-cinema.jpg", duration: 215 },
-  { src: "/radio/mikesueg-parigi.mp3", title: "Mikesueg — Parigi", cover: "/images/artisti/mikesueg-parigi.jpg", duration: 214 },
-  { src: "/radio/mikesueg-senza-la-luna.mp3", title: "Mikesueg — Senza La Luna", cover: "/images/artisti/mikesueg-senza-la-luna.jpg", duration: 191 },
-  { src: "/radio/mikesueg-paracadute.mp3", title: "Mikesueg — Paracadute", cover: "/images/artisti/mikesueg-paracadute.jpg", duration: 196 },
-];
+// L'elenco delle canzoni sta in dati/radio.js — vedi lì come aggiungerne.
+const { RADIO_PLAYLIST } = require('./dati/radio');
 // Riferimento fisso della timeline: la posizione "in onda" si calcola da qui.
 const RADIO_EPOCH = Date.UTC(2026, 0, 1, 0, 0, 0);
 
@@ -698,186 +675,18 @@ app.get('/', (req, res) => {
   });
 });
 
-// ── I PREMI, uno per posizione ────────────────────────────────────────────
-// Unico elenco: lo leggono la pagina /premio e la classifica. Tenendone una
-// copia sola non può succedere che la classifica prometta un premio e la
-// pagina dei premi ne dica un altro.
-// Per cambiare l'ordine basta spostare le righe e correggere `pos`.
-//
-// I primi tre hanno la scheda grande (tagline + descrizione + foto), gli
-// altri una card piccola. `foto` sono i file in public/images/premi/.
-//
-// `logo` è il file del marchio in public/sponsor/, lo stesso che gira nella
-// barra sponsor. Si indica a mano e non si ricava da `offerto` per due
-// motivi: i due nomi non coincidono sempre (sul foglio sponsor l'attività è
-// "Al Vitello Paesano", nel premio "Vitello Paesano"), e ci sono marchi che
-// vanno mostrati senza che l'attività offra il premio — il buono del 2º
-// posto si spende da Nemo, ma non è il ristorante a metterlo in palio, e
-// infatti quella scheda non ha `offerto`. Per questo il marchio porta con sé
-// `logoNome`, il nome che finisce nell'alt dell'immagine.
-// I file che non ci sono ancora restano indicati lo stesso: il logo compare
-// da solo il giorno che il PNG arriva, senza rimettere mano a questo elenco.
-const PREMI = [
-  {
-    pos: 1, nome: 'Box viaggi', valore: '250 €', icona: 'globe',
-    tagline: 'Il premio più grande della festa',
-    desc: 'Un cofanetto viaggi da 250 euro. La destinazione e il momento li scegli tu: '
-        + 'chi chiude la festa in cima alla classifica parte.',
-    foto: ['smartbox-cover.webp', 'smartbox-destinazioni.webp'],
-  },
-  {
-    // Niente `offerto`, come per il Percorso Spa: la cena si fa da Nemo, ma
-    // non è il ristorante a metterla in palio.
-    pos: 2, nome: 'Cena da Nemo', valore: '100 €', icona: 'glass',
-    tagline: 'Cento euro da spendere a tavola',
-    desc: 'Un buono da cento euro per il Nemo Restaurant Food & Wine di Salerno: '
-        + 'cucina contemporanea di mare, pesce fresco e crudi, pasta fatta a mano. '
-        + 'Il secondo posto si festeggia seduti, con chi vuoi tu.',
-    logo: 'nemo.png', logoNome: 'Nemo Restaurant Food & Wine',
-  },
-  {
-    // Niente `offerto`: il percorso si fa da The Spa, ma non è la struttura
-    // a metterlo in palio, quindi la scheda non deve dire "offerto da".
-    pos: 3, nome: 'Percorso Spa', valore: '60–80 €', icona: 'sparkle',
-    tagline: 'Relax in pausa, tre ore per rimettersi in sesto',
-    desc: 'Il Percorso Spa di The Spa, al San Severino Park Hotel & Spa: tre ore per rimettersi '
-        + 'da una settimana passata a rincorrere missioni, fuochi e classifica. '
-        + 'Valido dal lunedì al giovedì feriali, esclusi i prefestivi.',
-    // Le tappe del percorso: sul podio diventano una griglia di etichette.
-    incluso: [
-      'Sauna', 'Biosauna', 'Bagno turco', 'Cabina della neve',
-      'Docce emozionali', 'Cascata del ghiaccio',
-      'Piscina con docce cervicali e idromassaggio',
-      'Piscina di deprivazione sensoriale', 'Percorso Kneipp',
-      'Stanza del silenzio con parete di sale',
-      'Salotto relax con angolo tisaneria',
-      'Kit con accappatoio, telo e infradito',
-    ],
-  },
-  { pos: 4,  nome: '6 mesi di prove gratuite', offerto: 'Gym Hall Muscle Zone', icona: 'bolt',
-    logo: 'gym-hall.png' },
-  { pos: 5,  nome: '5 lezioni di personal training', offerto: 'Athena Fitness', icona: 'target',
-    nota: 'Con il personal trainer Claudio De Maio',
-    logo: 'athena-fitness.png' },
-  { pos: 6,  nome: 'Trattamento', offerto: 'Fatima Leo Salon & Academy', valore: '50 €', icona: 'candle',
-    logo: 'fatima-leo.png' },
-  { pos: 7,  nome: 'Buono spesa', offerto: 'Day by Day Multibrand Siano', valore: '50 €', icona: 'ticket',
-    logo: 'day-by-day.png' },
-  // Senza `valore`: erano cinque lampade da 50 €, ora sono tre e quanto valgano
-  // non l'ha detto nessuno. Meglio non scrivere niente che scrivere una cifra
-  // sbagliata su un premio vero. La scheda regge: il valore è facoltativo.
-  { pos: 8,  nome: '3 lampade',   offerto: 'Centro Estetico Medea', icona: 'sun',
-    logo: 'medea.png' },
-  { pos: 9,  nome: 'Friggitrice ad aria', offerto: 'Telefonia Eredi Leo', valore: '40–50 €', icona: 'flame',
-    logo: 'telefonia-eredi-leo.png' },
-  { pos: 10, nome: 'Macchinetta del caffè',  icona: 'coffee', foto: ['caffe.webp'] },
-  // ── Gli ultimi due non si vincono in classifica generale ────────────────
-  // Vanno a chi comanda le classifiche dei due mini-giochi. Hanno `gioco` al
-  // posto di `pos`: è la differenza che tiene separate le due gare, perché
-  // i record dei giochi sono una classifica a parte e non danno punti diretti.
-  { gioco: 'runner', nome: 'Buono acquisto', offerto: 'Cycling Botta', valore: '30 €', icona: 'bike',
-    nota: 'Vendita e riparazione bici a Siano dal 1923',
-    logo: 'cycling-botta.png' },
-  // "Buono macelleria" e non "Buono" liscio: accanto al nickname si vede solo
-  // il nome del premio, e ci sono già un "Buono spesa" e un "Buono acquisto" —
-  // un terzo "Buono" non direbbe nulla.
-  { gioco: 'jetpack', nome: 'Buono macelleria', offerto: 'Vitello Paesano', valore: '30 €', icona: 'ticket',
-    logo: 'vitello-paesano.png', logoNome: 'Al Vitello Paesano' },
-];
+// I premi stanno in dati/premi.js: e' contenuto che cambia spesso e non ha
+// motivo di vivere nel file delle rotte. Vedi la nota li' dentro su perche'
+// l'elenco deve restare uno solo.
+const {
+  PREMI, PREMI_PODIO, PREMI_LISTA, PREMI_GIOCHI,
+  PREMIO_PER_POSIZIONE, PREMIO_PER_GIOCO,
+  NOMI_GIOCHI, ULTIMA_POSIZIONE_PREMIATA,
+} = require('./dati/premi');
 
-// Il marchio si mostra solo se il PNG c'è davvero, come per la barra sponsor:
-// un logo annunciato ma non ancora arrivato diventerebbe un'immagine rotta
-// sulla pagina dei premi. Il controllo si fa una volta sola all'avvio, e
-// scrive `logoSrc` sul premio — la pagina si limita a leggerlo.
-for (const p of PREMI) {
-  if (p.logo && fs.existsSync(path.join(__dirname, '..', 'public', 'sponsor', p.logo))) {
-    p.logoSrc = `/sponsor/${p.logo}`;
-    p.logoNome = p.logoNome || p.offerto || p.nome;
-  }
-}
-
-// Come si chiamano i due giochi, per le etichette. La chiave è la stessa che
-// usa game_runs, così non ci sono due vocabolari per la stessa cosa.
-const NOMI_GIOCHI = { runner: 'Corri San Rocco', jetpack: 'San Rocco Jetpack' };
-
-const PREMI_PODIO = PREMI.filter((p) => p.pos && p.pos <= 3);
-const PREMI_LISTA = PREMI.filter((p) => p.pos && p.pos > 3);
-const PREMI_GIOCHI = PREMI.filter((p) => p.gioco);
-// Fin dove arriva la classifica generale a premiare: si ricava dall'elenco,
-// così aggiungendo un premio non resta una soglia scritta a mano da qualche
-// altra parte che dice un numero diverso.
-const ULTIMA_POSIZIONE_PREMIATA = Math.max(...PREMI.filter((p) => p.pos).map((p) => p.pos));
-
-// Indicizzati per posizione: la classifica deve poter chiedere "che premio
-// c'è al 7º posto?" senza scorrere l'elenco a ogni riga.
-// Solo i premi legati a una posizione: quelli dei giochi non hanno un `pos`,
-// e senza il filtro finirebbero tutti sotto la chiave `undefined`.
-const PREMIO_PER_POSIZIONE = Object.fromEntries(PREMI.filter((p) => p.pos).map((p) => [p.pos, p]));
-// Indicizzati per gioco, per le due sotto-classifiche dei mini-giochi.
-const PREMIO_PER_GIOCO = Object.fromEntries(PREMI_GIOCHI.map((p) => [p.gioco, p]));
-
-// ── Muro sponsor: le attività che mettono i premi ─────────────────────────
-// Le attività sono queste, i loghi arrivano alla spicciolata. Invece di
-// tenere l'elenco a metà, lo teniamo intero e mostriamo solo le voci il cui
-// PNG è già in public/sponsor/: appena il file arriva il logo entra nella
-// barra da solo, senza toccare il codice. Il controllo si fa una volta
-// all'avvio — la barra è in ogni pagina, non può costare un accesso al
-// disco a ogni richiesta.
-// L'ordine segue il foglio scritto a mano degli sponsor (prima colonna e poi
-// seconda), così l'elenco si ricontrolla riga per riga contro l'originale.
-// In fondo chi è arrivato dopo, e sul foglio non c'è.
-const SPONSOR_ATTIVITA = [
-  { file: 'romalba.png',             nome: 'Romalba' },
-  { file: 'nemo.png',                nome: 'Nemo Restaurant Food & Wine' },
-  { file: 'gym-hall.png',            nome: 'Gym Hall Muscle Zone' },
-  { file: 'athena-fitness.png',      nome: 'Athena Fitness' },
-  { file: 'fatima-leo.png',          nome: 'Fatima Leo Salon & Academy' },
-  { file: 'day-by-day.png',          nome: 'Day by Day Multibrand Siano' },
-  { file: 'medea.png',               nome: 'Centro Estetico Medea' },
-  { file: 'telefonia-eredi-leo.png', nome: 'Telefonia Eredi Leo' },
-  { file: 'cycling-botta.png',       nome: 'Cycling Botta' },
-  { file: 'vitello-paesano.png',     nome: 'Al Vitello Paesano' },
-  { file: 'bar-frasci-2-0.png',      nome: 'Bar V. Frasci 2.0' },
-  { file: 'de-santis.png',           nome: 'De Santis' },
-  { file: 'bellini-events.png',      nome: 'Bellini Events' },
-  { file: 'babba-house.png',         nome: 'Babba House' },
-  { file: 'bar-vittoria.png',        nome: 'Bar Vittoria' },
-  { file: 'kalu.png',                nome: 'Kalù' },
-  { file: 'luigi-fotografo.png',     nome: 'Luigi Fotografo' },
-  { file: 'pizzeria-zio-mauro.png',  nome: 'Pizzeria Zio Mauro' },
-  { file: 'pizzeria-frasci.png',     nome: 'Pizzeria V. Frasci' },
-  { file: 'lamberti.png',            nome: 'Studio Dentistico Michele Lamberti' },
-  { file: 'chalet.png',              nome: 'Chalet' },
-  { file: 'revolution.png',          nome: 'Revolution' },
-  // Sul foglio era segnata come "Zio Enrico", ma l'insegna e il logo dicono
-  // Zanzibar: vale il marchio, perché è il nome che finisce nell'alt.
-  { file: 'zio-enrico.png',          nome: 'Zanzibar Lounge Bar' },
-  { file: 'bar-sport.png',           nome: 'Bar Sport' },
-  { file: 'barberia-frasci.png',     nome: 'Barberia Frasci' },
-  { file: 'marcello-frasci.png',     nome: 'Marcello Frasci' },
-  { file: 'franzis.png',             nome: "Franzy's" },
-  { file: 'pizzeria-walter.png',     nome: 'Pizzeria Walter' },
-  { file: 'mauro-parrucchiere.png',  nome: 'Mauro Parrucchiere' },
-  { file: 'bc-coffe.png',            nome: 'BC Coffe & More' },
-  { file: 'parrucchiere-tony.png',   nome: 'Parrucchiere Tony' },
-  { file: 'bar-ideal.png',           nome: 'Bar Ideal' },
-  { file: 'gelateria-gerry.png',     nome: 'Gelateria Gerry' },
-  { file: 'tabacchino.png',          nome: 'Tabacchino della Chiesa' },
-  // ── Non sul foglio, arrivati dopo ──
-  { file: 'target-communication.png', nome: 'Target Communication' },
-  { file: 'di-filippo.png',          nome: 'Di Filippo Fotografi' },
-];
-
-const SPONSOR_LOGHI = (() => {
-  const dir = path.join(__dirname, '..', 'public', 'sponsor');
-  const presenti = SPONSOR_ATTIVITA.filter((s) => fs.existsSync(path.join(dir, s.file)));
-  // Finché non arriva nessun logo vero la barra gira col segnaposto, come
-  // faceva prima: meglio il marchio della festa che una striscia vuota.
-  if (!presenti.length) {
-    return Array.from({ length: 6 }, () => ({ file: 'fantasanrocco.png', nome: 'FantaSanRocco' }));
-  }
-  return presenti;
-})();
+// Sponsor della barra: elenco e controllo dei PNG presenti stanno in
+// dati/sponsor.js. Qui resta solo la pubblicazione alle view.
+const { SPONSOR_LOGHI } = require('./dati/sponsor');
 app.locals.sponsorLoghi = SPONSOR_LOGHI;
 
 // Stemma del Comitato Festa accanto alla riga legale del footer. Stessa
@@ -1441,15 +1250,8 @@ app.get('/storia', (req, res) => {
   res.render('storia', { title: 'La Storia di San Rocco' });
 });
 
-// Palio dei Fuochi — i sei fuochisti e i rioni associati (XXVI Edizione)
-const PALIO_FUOCHISTI = [
-  { name: 'Di Matteo Fireworks Events s.a.s.', place: null, rioni: ['Via Botta'], note: 'con la partecipazione di P.zza Cortemeola' },
-  { name: 'Colangelo Fireworks', place: null, rioni: ['Via Vittoria', 'Via Zambrano', 'Via Torello'] },
-  { name: "L'Artificiosa s.a.s.", place: null, rioni: ['Palazzo – Chivano'] },
-  { name: 'F.lli Romano', place: 'Angri (SA)', rioni: ['Via D’Andrea', 'Via E. & G. Russo', 'Via Pesce', 'Via XX Settembre', 'Via R. Di Filippo', 'Vicolo Corvino', 'Vicolo G. Albano', 'Via Calvanese', 'Via Papa Giovanni XXIII'] },
-  { name: 'Spettacoli Pirotecnici Pepe', place: null, rioni: ['Ass. Terra Nostra', 'Ass. Amici del Fuoco', 'Via Marconi', 'Via Campo', 'Via Variante – “Vasc o Puzz”', 'Via Spinelli'] },
-  { name: 'Emotion Fireworks', place: null, rioni: ['Casaleo – Olivitello'] },
-];
+// I fuochisti in gara stanno in dati/palio.js: cambiano ogni edizione.
+const { PALIO_FUOCHISTI } = require('./dati/palio');
 
 app.get('/palio', (req, res) => {
   // Il pronostico vive qui (non più fra le missioni). Ai non loggati mostro
@@ -1987,13 +1789,8 @@ function festivalDayStartSQL(now = new Date()) {
 // ── Sezioni tematiche delle missioni fisse ─────────────────────────────────
 // Completare TUTTE le missioni di una sezione (almeno una prova approvata per
 // ciascuna) dà un bonus una tantum.
-const SECTIONS = [
-  { key: 'paese',  label: 'Paese & Tradizione',     color: 'gold' },
-  { key: 'food',   label: 'Food & Drink',           color: 'green' },
-  { key: 'social', label: 'Social & Party',         color: 'purple' },
-  { key: 'sport',  label: 'Sport, Team & Comunità', color: 'blue' },
-];
-const SECTION_BONUS = 100;
+// Le quattro sezioni e il bonus di completamento stanno in dati/sezioni.js.
+const { SECTIONS, SECTION_BONUS } = require('./dati/sezioni');
 // Progresso per sezione di un utente: { key: { total, done } }
 function sectionProgress(userId) {
   const rows = db.prepare(`

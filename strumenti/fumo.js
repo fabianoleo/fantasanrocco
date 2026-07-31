@@ -78,6 +78,12 @@ const CONTENUTI = [
   { via: '/',           chi: 'anonimo', cerca: 'premi in palio',    cosa: 'striscia numeri' },
   { via: '/giochi',     chi: 'anonimo', cerca: 'jetpack.js',        cosa: 'script del gioco' },
   { via: '/premio',     chi: 'anonimo', cerca: 'spon-track',        cosa: 'barra sponsor' },
+  // I loghi degli sponsor sui premi si risolvono con un percorso su disco:
+  // spostando il file che li calcola il percorso cambia in silenzio, e la
+  // pagina resta in piedi ma senza marchi. Questo se ne accorge.
+  { via: '/premio',     chi: 'anonimo', cerca: '/sponsor/nemo.png', cosa: 'logo sponsor sul premio' },
+  { via: '/classifica', chi: 'anonimo', cerca: 'lb-prize',          cosa: 'premi in classifica' },
+  { via: '/programmazione', chi: 'anonimo', cerca: 'pg-day',        cosa: 'giorni del programma' },
 ];
 
 const attesa = (ms) => new Promise((r) => setTimeout(r, ms));
