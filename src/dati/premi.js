@@ -99,7 +99,7 @@ const PREMI = [
   // "Buono macelleria" e non "Buono" liscio: accanto al nickname si vede solo
   // il nome del premio, e ci sono già un "Buono spesa" e un "Buono acquisto" —
   // un terzo "Buono" non direbbe nulla.
-  { gioco: 'jetpack', nome: 'Buono macelleria', offerto: 'Vitello Paesano', valore: '30 €', icona: 'ticket',
+  { gioco: 'jetpack', nome: 'Buono macelleria', offerto: 'Vitello Paesano', valore: '20 €', icona: 'ticket',
     logo: 'vitello-paesano.png', logoNome: 'Al Vitello Paesano' },
 ];
 
