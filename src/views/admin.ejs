@@ -9,7 +9,8 @@
     : null;
 %>
 
-<h1 class="staff-title"><%- icon('gear') %> Pannello Admin</h1>
+<h1 class="staff-title"><%- icon(soloMissioni ? 'list' : 'gear') %> <%= soloMissioni ? 'Gestione missioni' : 'Pannello Admin' %></h1>
+<% if (soloMissioni) { %><p class="muted small">Da qui crei e correggi le missioni. Il resto del pannello è riservato agli admin.</p><% } %>
 
 <%# ══════════════ HUB: tutte le cose principali a colpo d'occhio ══════════════ %>
 <div class="adm-hub" id="admHub">
@@ -22,6 +23,7 @@
     </span>
     <span class="adm-tile-badge"><%= missions.length %></span>
   </button>
+  <% if (!soloMissioni) { %>
 
   <button type="button" class="adm-tile" data-panel="premi">
     <span class="adm-tile-ico"><%- icon('gift') %></span>
@@ -135,6 +137,7 @@
     </span>
   </button>
 
+  <% } %>
 </div>
 
 <%# ══════════════ PANNELLI DI DETTAGLIO (uno visibile alla volta) ══════════════ %>
@@ -159,7 +162,7 @@
         </label>
         <label class="check"><input type="checkbox" name="requires_photo" checked> Richiede foto</label>
         <label class="check"><input type="checkbox" name="repeatable"> Ripetibile</label>
-        <label class="check"><input type="checkbox" name="notify"> 🔔 Avvisa tutti</label>
+        <% if (!soloMissioni) { %><label class="check"><input type="checkbox" name="notify"> 🔔 Avvisa tutti</label><% } %>
       </div>
       <div class="row">
         <label>Attiva da (facoltativo)
@@ -220,7 +223,7 @@
             <label class="check"><input type="checkbox" name="requires_photo" <%= m.requires_photo ? 'checked' : '' %>> Foto</label>
             <label class="check"><input type="checkbox" name="repeatable" <%= m.repeatable ? 'checked' : '' %>> Ripetibile</label>
             <label class="check"><input type="checkbox" name="archived" <%= m.archived ? 'checked' : '' %>> Archivia</label>
-            <label class="check"><input type="checkbox" name="notify" checked> 🔔 Avvisa tutti quando esce</label>
+            <% if (!soloMissioni) { %><label class="check"><input type="checkbox" name="notify" checked> 🔔 Avvisa tutti quando esce</label><% } %>
           </div>
           <div class="row">
             <label>Attiva da<input type="text" name="active_from" value="<%= m.active_from || '' %>" placeholder="2026-08-16 18:00"></label>
@@ -259,6 +262,7 @@
 </div>
 
 <%# ── CODICI PREMIO ────────────────────────────────────────────────── %>
+<% if (!soloMissioni) { %>
 <div class="adm-panel" id="p-premi" hidden>
   <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
 
@@ -733,6 +737,7 @@
           <span id="jpScore">0 m</span>
           <span class="jp-best" id="jpBest">record 0</span>
         </div>
+<% } %>
         <canvas class="jp-canvas" id="jpCanvas" aria-label="San Rocco Jetpack"></canvas>
 
         <%# Muta la canzone %>

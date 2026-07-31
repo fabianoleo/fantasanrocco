@@ -61,6 +61,14 @@ const PAGINE = [
   { via: '/classifica',          chi: 'utente',  attesa: 200 },
   { via: '/admin',               chi: 'utente',  attesa: 403 },   // non è admin
 
+  // Il moderatore entra nel pannello ma vede solo le missioni: tutto il
+  // resto resta chiuso. E' un confine di permessi, quindi va sorvegliato —
+  // allargarlo per sbaglio non si vedrebbe da nessuna pagina rotta.
+  { via: '/admin',                       chi: 'moderatore', attesa: 200 },
+  { via: '/moderazione',                 chi: 'moderatore', attesa: 200 },
+  { via: '/admin/statistiche',           chi: 'moderatore', attesa: 403 },
+  { via: '/admin/prove.csv',             chi: 'moderatore', attesa: 403 },
+
   { via: '/admin',                       chi: 'admin', attesa: 200 },
   { via: '/admin/statistiche',           chi: 'admin', attesa: 200 },
   { via: '/admin/statistiche?range=1',   chi: 'admin', attesa: 200 },
@@ -82,6 +90,12 @@ const CONTENUTI = [
   // spostando il file che li calcola il percorso cambia in silenzio, e la
   // pagina resta in piedi ma senza marchi. Questo se ne accorge.
   { via: '/premio',     chi: 'anonimo', cerca: '/sponsor/nemo.png', cosa: 'logo sponsor sul premio' },
+  // I premi in home sono disposti a podio: il gradino e' il segno che la
+  // disposizione c'e' ancora. Nel codice restano in ordine 1-2-3.
+  { via: '/',           chi: 'anonimo', cerca: 'lp-podio-gradino',  cosa: 'podio dei premi in home' },
+  // Il pannello del moderatore non deve contenere i dati riservati: se un
+  // giorno qualcuno toglie il filtro, questa riga se ne accorge.
+  { via: '/admin',      chi: 'moderatore', cerca: 'p-missioni',     cosa: 'moderatore vede le missioni' },
   { via: '/classifica', chi: 'anonimo', cerca: 'lb-prize',          cosa: 'premi in classifica' },
   { via: '/programmazione', chi: 'anonimo', cerca: 'pg-day',        cosa: 'giorni del programma' },
 ];
@@ -179,14 +193,19 @@ function creaSessione() {
       .run(nick, nick + '@fumo.local', h, ruolo);
   };
   crea('fumo_utente', 'user');
+  crea('fumo_moderatore', 'moderator');
   crea('fumo_admin', 'admin');
   db.close();
 
   // 5. sessioni
-  const sessioni = { anonimo: creaSessione(), utente: creaSessione(), admin: creaSessione() };
+  const sessioni = {
+    anonimo: creaSessione(), utente: creaSessione(),
+    moderatore: creaSessione(), admin: creaSessione(),
+  };
   const okU = await sessioni.utente.login('fumo_utente');
+  const okM = await sessioni.moderatore.login('fumo_moderatore');
   const okA = await sessioni.admin.login('fumo_admin');
-  if (!okU || !okA) { console.error('Login di prova fallito (utente=' + okU + ' admin=' + okA + ')'); chiudi(1); }
+  if (!okU || !okM || !okA) { console.error(`Login di prova fallito (utente=${okU} moderatore=${okM} admin=${okA})`); chiudi(1); }
 
   // 6. giro delle pagine
   let guasti = 0;
@@ -207,6 +226,17 @@ function creaSessione() {
     if (!dentro) guasti++;
     console.log(`  ${dentro ? '·' : '✗'} ${c.cosa.padEnd(18)} in ${c.via}`);
   }
+
+  // Controllo a parte: nella pagina del moderatore non deve finire nessuna
+  // email. Non basta che i riquadri siano nascosti — i dati non devono
+  // proprio essere nel sorgente.
+  try {
+    const pag = await (await sessioni.moderatore.get('/admin')).text();
+    const mail = pag.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g) || [];
+    const vere = mail.filter((m) => !/fonts\.bunny|@fanta_sanrocco/.test(m));
+    if (vere.length) { guasti++; console.log(`\n✗ email nel pannello del moderatore: ${vere.slice(0, 3).join(', ')}`); }
+    else console.log('  · nessuna email nel pannello del moderatore');
+  } catch (e) { guasti++; console.log('\n✗ controllo email moderatore fallito: ' + e.message); }
 
   const errori = (logServer.match(/^\s*(Error|TypeError|ReferenceError)/gm) || []).length;
   if (errori) { guasti += errori; console.log(`\n✗ ${errori} errori nel log del server`); }

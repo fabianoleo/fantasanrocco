@@ -2841,40 +2841,53 @@ app.get('/admin/statistiche', auth.requireAdmin, (req, res) => {
   });
 });
 
-app.get('/admin', auth.requireAdmin, async (req, res) => {
+// La pagina è aperta a tutto lo staff, ma i moderatori vedono SOLO le
+// missioni. Non è una questione di nascondere riquadri: i dati che non
+// devono vedere (utenti con le loro email, codici premio, backup, registro
+// azioni, storie segnalate) non vengono proprio interrogati, così non
+// finiscono nemmeno nel sorgente della pagina. Le rotte che modificano
+// quelle cose restano tutte requireAdmin.
+app.get('/admin', auth.requireStaff, async (req, res) => {
+  const soloMissioni = req.currentUser.role !== 'admin';
   // "locked" qui = non archiviata ma con una finestra futura (active_from):
   // sulla pagina pubblica è quella che esce sfocata, solo rarità visibile.
   // Diverso da "archived" (flash/manuale: del tutto invisibile). Nel
   // pannello i due stati hanno un'icona diversa, altrimenti si confondono.
   const missions = db.prepare('SELECT * FROM missions ORDER BY id DESC').all()
     .map((m) => ({ ...m, locked: !m.archived && missionState(m) === 'locked' }));
-  const users = db.prepare('SELECT id, nickname, email, role, created_at FROM users ORDER BY role, nickname').all()
-    .map((u) => ({ ...u, points: userPoints(u.id) }));
-  const codesRaw = db.prepare(`SELECT c.*, u.nickname AS claimer
-    FROM reward_codes c LEFT JOIN users u ON u.id = c.claimed_by
-    ORDER BY c.created_at DESC`).all();
   const host = req.get('host') || '';
   const baseUrl = (host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https') + '://' + host;
-  // Genera il QR (SVG) di ogni codice lato server: pronto da stampare, niente link da copiare
-  const codes = await Promise.all(codesRaw.map(async (c) => {
-    const url = baseUrl + '/r/' + c.code;
-    let qrSvg = '';
-    try { qrSvg = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' }); } catch (e) {}
-    return { ...c, url, qrSvg };
-  }));
-  const backups = fs.readdirSync(BACKUPS_DIR)
-    .filter((f) => f.endsWith('.db'))
-    .map((f) => { const s = fs.statSync(path.join(BACKUPS_DIR, f)); return { name: f, size: s.size, mtime: s.mtimeMs }; })
-    .sort((a, b) => b.mtime - a.mtime);
-  const auditLog = db.prepare('SELECT * FROM audit_log ORDER BY id DESC LIMIT 100').all();
-  const reportedStories = db.prepare(`SELECT s.id, s.media_path, s.hidden, u.nickname AS author,
-      COUNT(r.id) AS reports
-    FROM stories s JOIN users u ON u.id = s.user_id
-    JOIN story_reports r ON r.story_id = s.id
-    GROUP BY s.id ORDER BY reports DESC, s.id DESC`).all();
+
+  // Da qui in giù è roba da admin. Per un moderatore restano tutti vuoti:
+  // non è una tenda davanti ai dati, è che i dati non vengono letti.
+  let users = [], codes = [], backups = [], auditLog = [], reportedStories = [];
+  if (!soloMissioni) {
+    users = db.prepare('SELECT id, nickname, email, role, created_at FROM users ORDER BY role, nickname').all()
+      .map((u) => ({ ...u, points: userPoints(u.id) }));
+    const codesRaw = db.prepare(`SELECT c.*, u.nickname AS claimer
+      FROM reward_codes c LEFT JOIN users u ON u.id = c.claimed_by
+      ORDER BY c.created_at DESC`).all();
+    // Genera il QR (SVG) di ogni codice lato server: pronto da stampare, niente link da copiare
+    codes = await Promise.all(codesRaw.map(async (c) => {
+      const url = baseUrl + '/r/' + c.code;
+      let qrSvg = '';
+      try { qrSvg = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M' }); } catch (e) {}
+      return { ...c, url, qrSvg };
+    }));
+    backups = fs.readdirSync(BACKUPS_DIR)
+      .filter((f) => f.endsWith('.db'))
+      .map((f) => { const s = fs.statSync(path.join(BACKUPS_DIR, f)); return { name: f, size: s.size, mtime: s.mtimeMs }; })
+      .sort((a, b) => b.mtime - a.mtime);
+    auditLog = db.prepare('SELECT * FROM audit_log ORDER BY id DESC LIMIT 100').all();
+    reportedStories = db.prepare(`SELECT s.id, s.media_path, s.hidden, u.nickname AS author,
+        COUNT(r.id) AS reports
+      FROM stories s JOIN users u ON u.id = s.user_id
+      JOIN story_reports r ON r.story_id = s.id
+      GROUP BY s.id ORDER BY reports DESC, s.id DESC`).all();
+  }
   // Pronostico Palio dei Fuochi: stato + distribuzione voti
-  const pst = palioState();
-  const counts = palioVoteCounts();
+  const pst = soloMissioni ? { open: 0, winner: null, points: 0, closes_at: null } : palioState();
+  const counts = soloMissioni ? PALIO_FUOCHISTI.map(() => 0) : palioVoteCounts();
   const totalVotes = counts.reduce((a, b) => a + b, 0);
   const pronostico = {
     open: !!pst.open,
@@ -2886,7 +2899,7 @@ app.get('/admin', auth.requireAdmin, async (req, res) => {
     fuochisti: PALIO_FUOCHISTI.map((f, i) => ({ name: f.name, short: palioShortName(f.name), votes: counts[i] })),
   };
   // Pronostici generici: elenco con opzioni, voti e stato
-  const predictions = db.prepare('SELECT * FROM predictions ORDER BY (winner IS NOT NULL), id DESC').all().map((p) => {
+  const predictions = soloMissioni ? [] : db.prepare('SELECT * FROM predictions ORDER BY (winner IS NOT NULL), id DESC').all().map((p) => {
     const opts = predOptions(p);
     const vc = predVoteCounts(p.id, opts.length);
     return {
@@ -2898,7 +2911,7 @@ app.get('/admin', auth.requireAdmin, async (req, res) => {
     };
   });
   res.render('admin', { title: 'Admin', missions, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico, predictions,
-    sezioni: SECTIONS, notifSubmissions: !!req.currentUser.notif_submissions });
+    sezioni: SECTIONS, notifSubmissions: !!req.currentUser.notif_submissions, soloMissioni });
 });
 
 app.post('/admin/codici', auth.requireAdmin, (req, res) => {
@@ -3069,7 +3082,7 @@ const predictionReminderTimer = setInterval(remindPredictionsClosing, 20 * 60 * 
 predictionReminderTimer.unref?.();
 remindPredictionsClosing();
 
-app.post('/admin/missioni', auth.requireAdmin, (req, res) => {
+app.post('/admin/missioni', auth.requireStaff, (req, res) => {
   const b = req.body;
   const title = (b.title || '').trim();
   if (!title) { flash(req, 'error', 'Il titolo è obbligatorio.'); return res.redirect('/admin'); }
@@ -3092,7 +3105,12 @@ app.post('/admin/missioni', auth.requireAdmin, (req, res) => {
     publishAt,
     section,
   );
-  if (b.notify && !publishAt) {
+  // La spunta "avvisa tutti" suona il telefono a ogni iscritto: resta un
+  // potere da admin. Un moderatore crea e corregge le missioni, ma non manda
+  // notifiche di massa — e non basta togliere la casella dalla pagina, perché
+  // il campo si può rimettere a mano nella richiesta.
+  const puoAvvisare = req.currentUser.role === 'admin';
+  if (b.notify && !publishAt && puoAvvisare) {
     pushBroadcast({ title: 'Nuova missione!', body: title, url: '/missioni' })
       .catch((e) => console.error('[PUSH] nuova missione', e.message));
   }
@@ -3103,7 +3121,7 @@ app.post('/admin/missioni', auth.requireAdmin, (req, res) => {
   res.redirect('/admin');
 });
 
-app.post('/admin/missioni/:id/modifica', auth.requireAdmin, (req, res) => {
+app.post('/admin/missioni/:id/modifica', auth.requireStaff, (req, res) => {
   const b = req.body;
   const prima = db.prepare('SELECT archived FROM missions WHERE id = ?').get(req.params.id);
   if (!prima) { flash(req, 'error', 'Missione inesistente.'); return res.redirect('/admin'); }
@@ -3133,7 +3151,9 @@ app.post('/admin/missioni/:id/modifica', auth.requireAdmin, (req, res) => {
   // Archiviata → pubblica: è un'uscita a mano, annunciala come quelle programmate.
   // La spunta permette di NON avvisare (utile se stavi solo correggendo un errore).
   const uscitaOra = prima.archived === 1 && archived === 0;
-  if (uscitaOra && b.notify) {
+  // Anche qui l'annuncio a tutti resta un potere da admin: un moderatore può
+  // togliere una missione dall'archivio, ma senza suonare i telefoni.
+  if (uscitaOra && b.notify && req.currentUser.role === 'admin') {
     const m = db.prepare('SELECT id, title, points FROM missions WHERE id = ?').get(req.params.id);
     auditSystem('missione.uscita', `«${m.title}» pubblicata a mano da ${req.currentUser.nickname}`);
     announceMission(m);
@@ -3144,7 +3164,7 @@ app.post('/admin/missioni/:id/modifica', auth.requireAdmin, (req, res) => {
   res.redirect('/admin');
 });
 
-app.post('/admin/missioni/:id/elimina', auth.requireAdmin, (req, res) => {
+app.post('/admin/missioni/:id/elimina', auth.requireStaff, (req, res) => {
   const m = db.prepare('SELECT title FROM missions WHERE id = ?').get(req.params.id);
   db.prepare('DELETE FROM missions WHERE id = ?').run(req.params.id);
   audit(req, 'missione.elimina', `#${req.params.id} ${m ? m.title : ''}`);
