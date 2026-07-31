@@ -5232,3 +5232,81 @@ a.lb-prize:hover { color: var(--gold-2); }
 }
 /* Due sole card: senza questo si allargherebbero a tutta riga su desktop */
 .pz-grid-giochi { max-width: 520px; margin-left: auto; margin-right: auto; }
+
+/* ── Podio dei tre premi in home ─────────────────────────────────────────
+   Stesso linguaggio del podio in classifica: secondo a sinistra, primo al
+   centro e più alto, terzo a destra, con un gradino sotto ciascuno.
+   Nel markup le card restano in ordine 1-2-3 e a spostarle è `order`: chi
+   legge la pagina con uno screen reader o un motore di ricerca le incontra
+   in ordine di posizione, non da sinistra a destra. */
+.lp-prizes-grid.lp-podio {
+  display: flex;
+  align-items: flex-end;          /* i gradini poggiano tutti sulla stessa base */
+  justify-content: center;
+  gap: .8rem;
+}
+.lp-podio .lp-prize-card {
+  flex: 1 1 0;
+  min-width: 0;                   /* senza, i nomi lunghi allargano la colonna */
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.6rem 1.2rem 0;       /* niente spazio sotto: lì ci va il gradino */
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  border-bottom: none;
+}
+/* L'ordine visivo del podio. Il primo sta in mezzo, non a sinistra. */
+.lp-podio-silver { order: 1; }
+.lp-podio-gold   { order: 2; }
+.lp-podio-bronze { order: 3; }
+
+/* Il primo si stacca dagli altri: più alto e con più aria in testa */
+.lp-podio-gold { padding-top: 3.4rem; }
+
+/* Il numero di posizione: è quello che rende il podio leggibile subito,
+   prima ancora di guardare le altezze */
+.lp-podio-pos {
+  position: absolute;
+  top: .8rem; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-heading);
+  font-size: .8rem; font-weight: 800; letter-spacing: .06em;
+  color: var(--text-3);
+}
+.lp-podio-gold   .lp-podio-pos { color: var(--gold-2); font-size: 1rem; }
+.lp-podio-silver .lp-podio-pos { color: #c8c8de; }
+.lp-podio-bronze .lp-podio-pos { color: #cd8a3a; }
+.lp-podio .lp-prize-card { position: relative; }
+
+/* Il gradino. Le altezze sono le stesse del podio in classifica, così i due
+   podi del sito si somigliano invece di essere due invenzioni diverse. */
+.lp-podio-gradino {
+  width: 100%;
+  margin-top: auto;               /* spinge il gradino in fondo alla card */
+  border-radius: 0;
+}
+.lp-podio-gold   .lp-podio-gradino { height: 48px; background: linear-gradient(180deg, rgba(245,193,7,.2), rgba(245,193,7,.06)); }
+.lp-podio-silver .lp-podio-gradino { height: 32px; background: linear-gradient(180deg, rgba(180,180,220,.15), rgba(180,180,220,.04)); }
+.lp-podio-bronze .lp-podio-gradino { height: 18px; background: linear-gradient(180deg, rgba(180,100,50,.15), rgba(180,100,50,.04)); }
+
+.lp-podio .lp-prize-icon { margin-bottom: .6rem; font-size: 2.2rem; }
+.lp-podio-gold .lp-prize-icon { font-size: 2.8rem; }
+.lp-podio .lp-prize-card p { margin-bottom: 1.2rem; }
+
+/* Il podio resta un podio anche sul telefono: invece di impilare le card
+   (che lo farebbe sparire) si stringe il testo. La tagline è la prima a
+   cadere, perché è la parte decorativa. */
+@media (max-width: 700px) {
+  .lp-prizes-grid.lp-podio { display: flex; grid-template-columns: none; max-width: none; gap: .4rem; }
+  .lp-podio .lp-prize-card { padding: 2.2rem .6rem 0; }
+  .lp-podio-gold { padding-top: 2.9rem; }
+  .lp-podio .lp-prize-card h3 { font-size: .78rem; }
+  .lp-podio .lp-prize-val { display: block; margin: .3rem 0 0; font-size: .72rem; }
+  .lp-podio .lp-prize-icon { font-size: 1.7rem; }
+  .lp-podio-gold .lp-prize-icon { font-size: 2.1rem; }
+}
+@media (max-width: 560px) {
+  .lp-podio .lp-prize-card p { display: none; }   /* la tagline non ci sta più */
+  .lp-podio .lp-prize-card h3 { font-size: .72rem; }
+  .lp-podio-pos { font-size: .7rem; }
+}

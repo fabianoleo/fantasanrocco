@@ -197,13 +197,21 @@
         alimenta /premio e la classifica: erano scritte a mano e sono rimaste
         "misteriose" per settimane dopo che i premi erano già stati svelati
         altrove. Collegate alla fonte, non può più succedere. %>
-    <div class="lp-prizes-grid">
+    <%# Disposti a podio: secondo a sinistra, primo al centro e più in alto,
+        terzo a destra. Nel codice restano in ordine 1-2-3 e a spostarli è il
+        CSS (`order`), così chi usa uno screen reader o un motore di ricerca
+        li incontra in ordine di posizione e non da sinistra a destra. %>
+    <div class="lp-prizes-grid lp-podio">
       <% const metallo = ['gold', 'silver', 'bronze']; %>
       <% premiPodio.forEach(function (p, i) { %>
-        <div class="lp-prize-card lp-prize-<%= metallo[i] %>" data-reveal="slide-up" data-delay="<%= i %>">
+        <div class="lp-prize-card lp-prize-<%= metallo[i] %> lp-podio-<%= metallo[i] %>" data-reveal="slide-up" data-delay="<%= i %>">
+          <span class="lp-podio-pos"><%= p.pos %>º</span>
           <span class="lp-prize-icon"><%- icon('medal') %></span>
           <h3><%= p.nome %><% if (p.valore) { %> <span class="lp-prize-val"><%= p.valore %></span><% } %></h3>
           <p><%= p.tagline %></p>
+          <%# Il gradino: è quello che rende leggibile il podio a colpo
+              d'occhio, prima ancora di leggere i numeri. %>
+          <span class="lp-podio-gradino" aria-hidden="true"></span>
         </div>
       <% }) %>
     </div>
