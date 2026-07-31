@@ -62,7 +62,7 @@ STATO
   ⬜ = manca il file
   ❌ = file ricevuto ma non utilizzabile, serve rifarlo
 
-A oggi sono in linea 22 loghi su 37.
+A oggi sono in linea 23 loghi su 38.
 
 L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
 
@@ -106,6 +106,7 @@ Non sul foglio, arrivati dopo:
   ✅ target-communication.png Target Communication  schiarito solo nei neri
   ❌ di-filippo.png           Di Filippo Fotografi  export rotto: fondo
                               grigio e un rettangolo bianco sulla destra
+  ✅ vastola.png              L'Arte dei Fiori Vastola  schiarito
 
 DA CHIEDERE ANCORA (1)
 ----------------------
@@ -117,11 +118,11 @@ Nota: il file v-frasci.png in loghi-png/ e' della PIZZERIA, per questo il
 risultato si chiama pizzeria-frasci.png. Il Bar V. Frasci 2.0 e' un'altra
 attivita' e il suo logo manca ancora.
 
-Nota: in loghi-png/ restano solo gli originali dei diciassette loghi arrivati
+Nota: in loghi-png/ restano solo gli originali dei diciotto loghi arrivati
 per ultimi (cycling-botta, pizzeria-zio-mauro, lamberti, kalu, athena-fitness,
 franzis, fatima-leo, zio-enrico, vitello-paesano, target-communication,
 day-by-day, telefonia-eredi-leo, spa, babba-house, claudiopersonal, medea,
-tabacchino).
+tabacchino, vastola).
 Gli altri originali sono stati rimossi: le versioni pronte in questa
 cartella bastano per la barra, ma se un logo va rifatto va richiesto di
 nuovo il file di partenza.

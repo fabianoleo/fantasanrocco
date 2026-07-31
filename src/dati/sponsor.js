@@ -61,6 +61,7 @@ const SPONSOR_ATTIVITA = [
   // ── Non sul foglio, arrivati dopo ──
   { file: 'target-communication.png', nome: 'Target Communication' },
   { file: 'di-filippo.png',          nome: 'Di Filippo Fotografi' },
+  { file: 'vastola.png',             nome: "L'Arte dei Fiori Vastola" },
 ];
 
 const SPONSOR_LOGHI = (() => {

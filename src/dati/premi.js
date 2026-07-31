@@ -86,7 +86,9 @@ const PREMI = [
   // sbagliata su un premio vero. La scheda regge: il valore è facoltativo.
   { pos: 8,  nome: '3 lampade',   offerto: 'Centro Estetico Medea', icona: 'sun',
     logo: 'medea.png' },
-  { pos: 9,  nome: 'Friggitrice ad aria', offerto: 'Telefonia Eredi Leo', valore: '40–50 €', icona: 'flame',
+  // Anche qui senza `valore`, come le lampade: era indicato "40–50 €", una
+  // forbice e non una cifra, e su un premio vero è meglio non scrivere niente.
+  { pos: 9,  nome: 'Friggitrice ad aria', offerto: 'Telefonia Eredi Leo', icona: 'flame',
     logo: 'telefonia-eredi-leo.png' },
   { pos: 10, nome: 'Macchinetta del caffè',  icona: 'coffee', foto: ['caffe.webp'] },
   // ── Gli ultimi due non si vincono in classifica generale ────────────────
