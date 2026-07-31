@@ -550,6 +550,20 @@ const {
 const { SPONSOR_LOGHI } = require('./dati/sponsor');
 app.locals.sponsorLoghi = SPONSOR_LOGHI;
 
+// Gli sponsor scegliibili come padrini di una missione sono SOLO quelli il cui
+// PNG esiste davvero: un marchio annunciato ma senza file diventerebbe
+// un'immagine rotta sulla card. È anche la lista bianca con cui si valida
+// quello che arriva dal pannello — il valore finisce dentro un src, quindi non
+// può essere una stringa qualsiasi scritta nella richiesta.
+const SPONSOR_PER_MISSIONE = SPONSOR_LOGHI;
+const NOME_SPONSOR = Object.fromEntries(SPONSOR_LOGHI.map((s) => [s.file, s.nome]));
+app.locals.sponsorPerMissione = SPONSOR_PER_MISSIONE;
+// Ripulisce il campo `sponsor` che arriva dal form: o è un file in elenco, o è
+// niente. Serve identica alla creazione e alla modifica, quindi sta qui.
+function sponsorValido(v) {
+  return NOME_SPONSOR[v] ? v : null;
+}
+
 // Stemma del Comitato Festa accanto alla riga legale del footer. Stessa
 // regola dei loghi sponsor: se il file non c'è la riga resta di solo testo,
 // invece di mostrare l'icona di immagine rotta in fondo a ogni pagina.
@@ -1884,6 +1898,12 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
         ? true
         : !(statuses.includes('pending') || statuses.includes('approved')),
       completedBy: completedCount[m.id] || 0,
+      // Il marchio di chi mette la missione. Si risolve qui e non nel
+      // template: la card deve solo leggere due stringhe già pronte, e il
+      // nome serve per l'alt dell'immagine. Su una missione ancora bloccata
+      // non si manda: il marchio direbbe di che sfida si tratta.
+      sponsorSrc: (!locked && m.sponsor && NOME_SPONSOR[m.sponsor]) ? `/sponsor/${m.sponsor}` : null,
+      sponsorNome: (!locked && m.sponsor) ? NOME_SPONSOR[m.sponsor] || null : null,
     };
   });
   // Il pronostico del Palio è su /palio: qui resta solo la "tappa" della
@@ -2483,6 +2503,11 @@ app.get('/moderazione', auth.requireStaff, (req, res) => {
 app.post('/moderazione/:id/:azione', auth.requireStaff, (req, res) => {
   const azione = req.params.azione === 'approva' ? 'approved' : 'rejected';
   const reviewNote = (req.body.review_note || '').trim();
+  // Punti bonus decisi da chi modera, su qualunque missione. Il tetto non è
+  // burocrazia: il campo arriva da una richiesta, e senza limite un errore di
+  // battitura (o una richiesta costruita a mano) sposterebbe la classifica.
+  const bonusGrezzo = parseInt(req.body.bonus, 10);
+  const bonus = Number.isInteger(bonusGrezzo) ? Math.max(-500, Math.min(500, bonusGrezzo)) : 0;
   const info = db.prepare(`
     UPDATE submissions
     SET status = ?, reviewed_by = ?, reviewed_at = datetime('now'), review_note = ?
@@ -2492,15 +2517,27 @@ app.post('/moderazione/:id/:azione', auth.requireStaff, (req, res) => {
   if (info.changes === 0) {
     flash(req, 'error', 'Già gestita da un altro moderatore (oppure non esiste più).');
   } else {
-    flash(req, 'success', azione === 'approved' ? 'Approvata ✅' : 'Rifiutata ❌');
+    flash(req, 'success', azione === 'approved'
+      ? (bonus !== 0 ? `Approvata ✅ con ${bonus > 0 ? '+' : ''}${bonus} punti bonus` : 'Approvata ✅')
+      : 'Rifiutata ❌');
     // Notifica push all'utente quando la sua prova viene approvata (punti accreditati)
     if (azione === 'approved') {
       const sub = db.prepare(`SELECT s.user_id, m.title, m.points
         FROM submissions s JOIN missions m ON m.id = s.mission_id WHERE s.id = ?`).get(req.params.id);
       if (sub) {
+        // Il bonus entra in points_adjust: stessa valuta della classifica, dei
+        // giochi e della ruota. Si accredita solo approvando — su un rifiuto
+        // non ci sarebbe niente da premiare.
+        if (bonus !== 0) {
+          db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(bonus, sub.user_id);
+          audit(req, 'prova.bonus', `#${req.params.id} «${sub.title}» ${bonus > 0 ? '+' : ''}${bonus}pt`);
+        }
+        const totale = sub.points + bonus;
         pushToUser(sub.user_id, {
           title: '✅ Missione approvata!',
-          body: `«${sub.title}» validata: +${sub.points} punti!`,
+          body: bonus !== 0
+            ? `«${sub.title}» validata: +${totale} punti (${sub.points} + ${bonus} di bonus)!`
+            : `«${sub.title}» validata: +${sub.points} punti!`,
           url: '/classifica',
         }).catch((e) => console.error('[PUSH] approvazione', e.message));
 
@@ -3144,8 +3181,8 @@ app.post('/admin/missioni', auth.requireStaff, (req, res) => {
   // Sezione: solo una delle quattro previste, altrimenti niente (sfida speciale)
   const section = SECTIONS.some((s) => s.key === b.section) ? b.section : null;
   db.prepare(`INSERT INTO missions
-    (title, description, points, requires_photo, repeatable, active_from, active_to, archived, publish_at, section)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+    (title, description, points, requires_photo, repeatable, active_from, active_to, archived, publish_at, section, sponsor)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
     title,
     (b.description || '').trim(),
     parseInt(b.points, 10) || 0,
@@ -3156,6 +3193,7 @@ app.post('/admin/missioni', auth.requireStaff, (req, res) => {
     (publishAt || b.archived) ? 1 : 0,
     publishAt,
     section,
+    sponsorValido(b.sponsor),
   );
   // La spunta "avvisa tutti" suona il telefono a ogni iscritto: resta un
   // potere da admin. Un moderatore crea e corregge le missioni, ma non manda
@@ -3184,7 +3222,7 @@ app.post('/admin/missioni/:id/modifica', auth.requireStaff, (req, res) => {
   const archived = publishAt ? 1 : (b.archived ? 1 : 0);
   const section = SECTIONS.some((s) => s.key === b.section) ? b.section : null;
   db.prepare(`UPDATE missions SET
-    title=?, description=?, points=?, requires_photo=?, repeatable=?, active_from=?, active_to=?, archived=?, publish_at=?, section=?
+    title=?, description=?, points=?, requires_photo=?, repeatable=?, active_from=?, active_to=?, archived=?, publish_at=?, section=?, sponsor=?
     WHERE id=?`).run(
     (b.title || '').trim(),
     (b.description || '').trim(),
@@ -3196,6 +3234,7 @@ app.post('/admin/missioni/:id/modifica', auth.requireStaff, (req, res) => {
     archived,
     publishAt,
     section,
+    sponsorValido(b.sponsor),
     req.params.id,
   );
   audit(req, 'missione.modifica', `#${req.params.id} ${(b.title || '').trim()}`);

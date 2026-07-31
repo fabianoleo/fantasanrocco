@@ -195,6 +195,18 @@
           <input type="text" name="publish_at" placeholder="2026-08-17 23:45">
         </label>
       </div>
+      <div class="row">
+        <%# In elenco solo gli sponsor col PNG gia' in casa: sceglierne uno
+            senza file metterebbe un'immagine rotta sulla card. %>
+        <label class="field-grow">Sponsor della missione (facoltativo) — il marchio compare sulla card
+          <select name="sponsor">
+            <option value="">Nessuno — missione della festa</option>
+            <% (typeof sponsorPerMissione !== 'undefined' ? sponsorPerMissione : []).forEach((s) => { %>
+              <option value="<%= s.file %>"><%= s.nome %></option>
+            <% }) %>
+          </select>
+        </label>
+      </div>
       <p class="muted small mission-hint">
         <%- icon('alarm') %> Metti qui un orario e la missione nasce <strong>nascosta</strong>: esce da sola
         a quell'ora, con la notifica a tutti. Così prepari le flash con giorni di anticipo.
@@ -250,6 +262,16 @@
             </label>
             <label class="field-grow">Uscita programmata (lascia vuoto per gestirla a mano)
               <input type="text" name="publish_at" value="<%= m.publish_at || '' %>" placeholder="2026-08-17 23:45">
+            </label>
+          </div>
+          <div class="row">
+            <label class="field-grow">Sponsor della missione
+              <select name="sponsor">
+                <option value="">Nessuno — missione della festa</option>
+                <% (typeof sponsorPerMissione !== 'undefined' ? sponsorPerMissione : []).forEach((s) => { %>
+                  <option value="<%= s.file %>" <%= m.sponsor === s.file ? 'selected' : '' %>><%= s.nome %></option>
+                <% }) %>
+              </select>
             </label>
           </div>
           <p class="muted small mission-hint">

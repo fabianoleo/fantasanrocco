@@ -125,6 +125,39 @@ const NUOVE = [
   { name: 'Missione Gnak',
     desc: 'Vestiti da Babbo Natale, offri un drink a qualcuno e scatta una foto del brindisi.',
     rar: 'epica', sec: 'social' },
+
+  // ── Giro del 1º agosto 2026 ──────────────────────────────────────
+  // Nessuna di queste sta in una sezione: entrarci cambierebbe il conto delle
+  // tappe e quindi la difficoltà del bonus «sezione completata», che è già
+  // partito. Restano sfide speciali, visibili sempre.
+  // Due portano il marchio di chi le mette (vedi la colonna `sponsor`): il
+  // logo compare sulla card della missione.
+  { name: 'BE REAL (Sianese)',
+    desc: 'Fai una foto con il dirigente della Real Sianese Michele Lamberti.',
+    rar: 'non-comune', sponsor: 'realsianese.png' },
+  { name: 'Ps. : I love me',
+    desc: 'Fai una foto mentre compri dei fiori per te stessa/o da Vastola.',
+    rar: 'rara', sponsor: 'vastola.png' },
+  // Il bonus dei +10 punti lo aggiunge lo staff in moderazione: qui si dice
+  // solo che c'è, perché è la descrizione a fare la promessa.
+  { name: 'Moltiplicatore di Rocchi',
+    desc: 'Fai una foto con almeno 7 persone di nome "Rocco" (+10 punti bonus se c’è un cane).',
+    rar: 'leggendaria' },
+  { name: 'Gemelli diversi',
+    desc: 'Fai una foto con un tuo omonimo (che ha il tuo stesso nome e cognome).',
+    rar: 'epica' },
+  { name: 'Piazza deserta',
+    desc: 'Fai una foto della piazza principale del paese completamente vuota durante la settimana di festa.',
+    rar: 'non-comune' },
+  { name: 'Spesa folle',
+    desc: 'Fai una foto mentre fai la spesa in abiti "folli" (elegante, in costume, maschera e boccaglio ecc.).',
+    rar: 'epica' },
+  { name: 'Corri Forrest',
+    desc: 'Fai una foto mentre pratichi attività fisica all’aperto.',
+    rar: 'rara' },
+  { name: 'Green days',
+    desc: 'Fai una foto mentre ripulisci le strade (+10 punti bonus se pulisci con uno spazzino).',
+    rar: 'comune' },
 ];
 
 let added = 0;
@@ -132,10 +165,10 @@ for (const n of NUOVE) {
   const esiste = db.prepare('SELECT id FROM missions WHERE title LIKE ?').get(`%${n.name}%`);
   if (esiste) { console.log(`= c'è già: ${n.name} (#${esiste.id})`); continue; }
   const info = db.prepare(`INSERT INTO missions
-    (title, description, points, requires_photo, repeatable, archived, section, active_from, active_to, giorni_attivi)
-    VALUES (?, ?, ?, 1, 0, ?, ?, ?, ?, ?)`)
+    (title, description, points, requires_photo, repeatable, archived, section, active_from, active_to, giorni_attivi, sponsor)
+    VALUES (?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?)`)
     .run(`${EMOJI[n.rar]} ${n.name}`, n.desc, PTS[n.rar], n.flash ? 1 : 0, n.sec || null,
-      n.da || null, n.a || null, n.giorni || null);
+      n.da || null, n.a || null, n.giorni || null, n.sponsor || null);
   const dove = n.flash ? 'FLASH (nascosta)'
     : n.giorni ? `solo i giorni ${n.giorni}`
     : n.da ? (n.da.slice(5, 10) === n.a.slice(5, 10)

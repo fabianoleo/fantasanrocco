@@ -147,6 +147,15 @@
             <h3><span class="m-bonus">BONUS</span> <span class="m-name"><%= m.rarity.name %></span></h3>
             <span class="points-badge"><%= m.points %> pt</span>
           </div>
+          <%# Il marchio di chi mette la missione, quando c'è. Sta fra il
+              titolo e il testo perché è un'attribuzione, non un tag: dirlo
+              dopo la descrizione sembrerebbe una firma in calce. %>
+          <% if (m.sponsorSrc) { %>
+            <p class="mission-sponsor">
+              <img src="<%= m.sponsorSrc %>" alt="<%= m.sponsorNome %>" loading="lazy">
+              <span>Missione di <strong><%= m.sponsorNome %></strong></span>
+            </p>
+          <% } %>
           <p class="mission-desc"><%= m.description %></p>
           <div class="mission-meta">
             <% if (m.rarity.label) { %><span class="rar-chip rar-<%= m.rarity.key %>"><span class="rar-dot" aria-hidden="true"><%= m.rarity.emoji %></span> <%= m.rarity.label %></span><% } %>

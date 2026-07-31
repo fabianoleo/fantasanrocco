@@ -784,6 +784,24 @@ label.check span { flex: 1 1 auto; min-width: 0; }
 .mission-card.inactive { opacity: .42; }
 .mission-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .7rem; }
 .mission-head h3, .mission-head h1 { margin: 0; }
+/* Il marchio dell'attività che mette la missione. Il logo è ALTO fisso e
+   largo quanto viene, come nella barra sponsor: i marchi hanno proporzioni
+   diverse e imporre anche la larghezza li schiaccerebbe. `contain` per lo
+   stesso motivo — un marchio ritagliato non è più quel marchio. */
+.mission-sponsor {
+  display: flex; align-items: center; gap: .5rem;
+  margin: .6rem 0 0; padding: .38rem .6rem;
+  border-radius: .5rem;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.07);
+  font-size: .74rem; color: var(--text-3); line-height: 1.3;
+}
+.mission-sponsor img {
+  height: 26px; width: auto; max-width: 92px;
+  object-fit: contain; flex-shrink: 0;
+}
+.mission-sponsor strong { color: var(--text-2); font-weight: 600; }
+
 .mission-desc { color: var(--text-2); margin: .55rem 0; font-size: .87rem; line-height: 1.58; }
 .points-badge {
   background: linear-gradient(135deg, var(--fire-2), var(--amber), var(--gold));
@@ -856,6 +874,24 @@ label.check span { flex: 1 1 auto; min-width: 0; }
   border: 1px solid rgba(212,160,26,.1);
 }
 .mod-actions { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-top: .5rem; }
+/* Il campo bonus sta ATTACCATO al pulsante Approva, dentro la stessa form:
+   è un dettaglio di quell'azione, e messo altrove sembrerebbe un comando a
+   sé che si può premere per conto suo. */
+.mod-approva { display: inline-flex; align-items: center; gap: .45rem; }
+.mod-bonus {
+  display: inline-flex; align-items: center; gap: .28rem;
+  padding: .2rem .45rem; border-radius: .45rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.09);
+  font-size: .72rem; color: var(--text-3);
+}
+.mod-bonus input {
+  width: 3.6rem; padding: .16rem .3rem; margin: 0;
+  font-size: .78rem; text-align: right;
+  background: transparent; border: none; color: var(--text);
+}
+.mod-bonus input:focus { outline: 1px solid var(--border-gold); border-radius: .25rem; }
+.mod-bonus-lab, .mod-bonus-pt { opacity: .8; }
 .reject-form { display: flex; gap: .4rem; flex: 1; min-width: 200px; }
 .reject-form input { flex: 1; }
 

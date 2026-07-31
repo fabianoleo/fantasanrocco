@@ -131,6 +131,14 @@ try { db.exec('ALTER TABLE missions ADD COLUMN publish_at TEXT'); } catch {}
 // NULL (il caso normale) = tutti i giorni dell'intervallo, come prima.
 try { db.exec('ALTER TABLE missions ADD COLUMN giorni_attivi TEXT'); } catch {}
 
+// Sponsor della missione: il NOME FILE del logo in public/sponsor/, lo stesso
+// che sta in SPONSOR_ATTIVITA (es. "nemo.png"). Ci sono missioni che esistono
+// perché le mette un'attività, e sulla card devono portare il suo marchio.
+// Si tiene il nome del file e non un id: l'elenco degli sponsor vive in un
+// file di dati, non in una tabella, e il file è già la sua chiave.
+// NULL (il caso normale) = missione della festa, senza sponsor.
+try { db.exec('ALTER TABLE missions ADD COLUMN sponsor TEXT'); } catch {}
+
 // Bonus-sezione già accreditati (un utente lo riceve una sola volta per sezione).
 db.exec(`
 CREATE TABLE IF NOT EXISTS section_bonuses (

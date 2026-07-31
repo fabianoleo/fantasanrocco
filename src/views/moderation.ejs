@@ -84,8 +84,18 @@
         <% if (s.note) { %><p class="muted small">Nota: <%= s.note %></p><% } %>
 
         <div class="mod-actions">
-          <form action="/moderazione/<%= s.id %>/approva" method="post" class="inline">
+          <%# Il bonus sta su OGNI missione, non solo su quelle che lo
+              promettono nel testo: certe prove meritano qualcosa in più e
+              deciderlo caso per caso è il mestiere di chi modera. Lasciato a
+              zero (il caso normale) non succede niente. %>
+          <form action="/moderazione/<%= s.id %>/approva" method="post" class="inline mod-approva">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label class="mod-bonus">
+              <span class="mod-bonus-lab">bonus</span>
+              <input type="number" name="bonus" value="0" step="5" min="-500" max="500"
+                     aria-label="Punti bonus da aggiungere a questa prova">
+              <span class="mod-bonus-pt">pt</span>
+            </label>
             <button class="btn btn-ok" type="submit"><%- icon('check') %> Approva</button>
           </form>
           <form action="/moderazione/<%= s.id %>/rifiuta" method="post" class="inline reject-form">

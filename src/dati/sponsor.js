@@ -49,10 +49,12 @@ const SPONSOR_ATTIVITA = [
   { file: 'zio-enrico.png',          nome: 'Zanzibar Lounge Bar' },
   { file: 'bar-sport.png',           nome: 'Bar Sport' },
   { file: 'barberia-frasci.png',     nome: 'Barberia Frasci' },
-  { file: 'marcello-frasci.png',     nome: 'Marcello Frasci' },
+  // Sul foglio "Marcello Frasci", ma l'insegna dice "Marcello barber salon":
+  // vale il marchio, come per Zanzibar. Il nome del file resta la chiave.
+  { file: 'marcello-frasci.png',     nome: 'Marcello Barber Salon' },
   { file: 'franzis.png',             nome: "Franzy's" },
   { file: 'pizzeria-walter.png',     nome: 'Pizzeria Walter' },
-  { file: 'mauro-parrucchiere.png',  nome: 'Mauro Parrucchiere' },
+  { file: 'mauro-parrucchiere.png',  nome: 'Mauro Frasci Il Parrucchiere' },
   { file: 'bc-coffe.png',            nome: 'BC Coffe & More' },
   { file: 'parrucchiere-tony.png',   nome: 'Parrucchiere Tony' },
   { file: 'bar-ideal.png',           nome: 'Bar Ideal' },
