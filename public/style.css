@@ -302,6 +302,24 @@ img { max-width: 100%; display: block; }
 }
 .nav-balance .ico { width: 15px; height: 15px; color: var(--gold-2); flex-shrink: 0; }
 .nav-balance:hover { color: #fff7d0; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(212,160,26,.35); }
+/* Stesso posto e stessa forma del saldo punti, ma pieno d'oro invece che
+   solo bordato: per chi non è entrato è l'unica cosa da fare nella barra,
+   quindi deve staccarsi, non mimetizzarsi con le altre icone. */
+.nav-login {
+  display: inline-flex; align-items: center; gap: .32rem; flex-shrink: 0;
+  padding: .3rem .72rem .3rem .58rem; border-radius: 100px;
+  font-family: var(--font-heading); font-weight: 800; font-size: .82rem;
+  letter-spacing: .02em;
+  color: #1a1206;
+  background: linear-gradient(135deg, var(--gold-2), var(--gold));
+  border: 1px solid transparent;
+  box-shadow: 0 2px 10px rgba(212,160,26,.28), inset 0 1px 0 rgba(255,255,255,.25);
+  transition: box-shadow .25s var(--ease), transform .18s var(--ease);
+  white-space: nowrap;
+}
+.nav-login .ico { width: 15px; height: 15px; color: #1a1206; flex-shrink: 0; }
+.nav-login:hover { transform: translateY(-1px); box-shadow: 0 5px 18px rgba(212,160,26,.45), inset 0 1px 0 rgba(255,255,255,.25); }
+
 .nav-balance-val { line-height: 1; display: inline-block; }
 .nav-balance-val.bump { animation: nav-bal-bump .5s cubic-bezier(.2,1.4,.3,1); }
 @keyframes nav-bal-bump { 0% { transform: scale(1); } 40% { transform: scale(1.35); color: #fff7d0; } 100% { transform: scale(1); } }
@@ -1729,6 +1747,11 @@ body { overflow-x: clip; }
 
 @media (max-width: 768px) {
   .online-pill { font-size: .62rem; padding: .24rem .55rem; }
+  /* Nella barra stretta il pulsante Accedi si stringe come gli altri, ma la
+     parola resta: è il punto di tutto il pulsante, un'icona sola non si
+     capirebbe più delle altre. */
+  .nav-login { font-size: .72rem; padding: .26rem .6rem .26rem .48rem; gap: .26rem; }
+  .nav-login .ico { width: 13px; height: 13px; }
 }
 
 /* ── Mobile menu close button ───────────────────────────────────── */

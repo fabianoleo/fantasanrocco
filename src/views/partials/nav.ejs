@@ -25,10 +25,16 @@
   </div>
   <% } %>
 
-  <%# Saldo punti dell'utente loggato %>
+  <%# Saldo punti dell'utente loggato. A chi non ha fatto l'accesso, nello
+      stesso posto, il pulsante per entrare: prima lì non c'era niente e il
+      modo per accedere stava solo dentro il menu, che non si apre da soli. %>
   <% if (currentUser) { %>
     <a href="/classifica" class="nav-balance" title="I tuoi punti · vai alla classifica">
       <%- icon('trophy') %><span class="nav-balance-val"><%= userBalance %></span>
+    </a>
+  <% } else if (path !== '/login') { %>
+    <a href="/login" class="nav-login" title="Accedi al tuo account">
+      <%- icon('key') %><span>Accedi</span>
     </a>
   <% } %>
 
