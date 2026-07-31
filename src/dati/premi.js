@@ -113,15 +113,19 @@ const PREMI = [
     nota: 'Vendita e riparazione bici a Siano dal 1923',
     logo: 'cycling-botta.png' },
   { gioco: 'jetpack', nome: 'Buono panino e bibita', offerto: 'BC Coffe & More', valore: '30 €', icona: 'coffee',
-    logo: 'bc-coffe.png' },
+    nota: 'Per due persone', logo: 'bc-coffe.png' },
 
   // E uno non si vince nemmeno giocando qui: è del Torneo delle Missioni su
   // Instagram, che è una gara a parte con regole sue. Ha `torneo` al posto di
   // `pos` e di `gioco` — tre categorie diverse perché sono tre gare diverse,
   // e mescolarle in classifica prometterebbe a qualcuno un premio che non può
   // vincere restando sul sito.
+  // Il torneo si è chiuso: `vincitore` è il nome vero e `vincitoreNick` quello
+  // con cui gioca su Instagram. Finché il campo non c'è la scheda resta al
+  // futuro ("al vincitore del torneo"), appena c'è passa al passato e mostra
+  // chi ha vinto — così la pagina non promette un premio già assegnato.
   { torneo: 'instagram', nome: 'Buono premio', offerto: 'Al Vitello Paesano', valore: '20 €', icona: 'instagram',
-    nota: 'Al vincitore del Torneo delle Missioni su Instagram',
+    vincitore: 'Christian Caiazza', vincitoreNick: 'Gnak Gnak',
     logo: 'vitello-paesano.png', logoNome: 'Al Vitello Paesano' },
 ];
 

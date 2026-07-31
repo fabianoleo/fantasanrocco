@@ -201,9 +201,21 @@
   <div class="pz-sponsor-inner">
     <p class="pz-how-kicker">Fuori dal sito</p>
     <h2 class="pz-how-title">Torneo delle Missioni su Instagram</h2>
+    <%# Il testo cambia a torneo finito: finché nessuno ha vinto si spiega
+        cos'è, dopo si dice com'è andata. Il primo premio con un vincitore
+        decide per tutta la sezione — il torneo è uno solo. %>
+    <% const vinto = premiTornei.find(function (p) { return p.vincitore; }); %>
     <p class="pz-sponsor-intro">
-      Questo premio non si vince né in classifica né ai mini-giochi: è del
-      Torneo delle Missioni che si gioca su Instagram, con regole sue.
+      <% if (vinto) { %>
+        Il Torneo delle Missioni su Instagram si è chiuso: l'ha vinto
+        <strong><%= vinto.vincitore %></strong><% if (vinto.vincitoreNick) { %>,
+        in arte <strong><%= vinto.vincitoreNick %></strong><% } %>.
+        Era una gara a parte, con regole sue: non si vinceva né in classifica
+        né ai mini-giochi.
+      <% } else { %>
+        Questo premio non si vince né in classifica né ai mini-giochi: è del
+        Torneo delle Missioni che si gioca su Instagram, con regole sue.
+      <% } %>
     </p>
 
     <ol class="pz-sponsor-grid pz-grid-torneo">
@@ -216,7 +228,12 @@
             <span class="pz-sp-icon"><%- icon(p.icona) %></span>
           <% } %>
           <h3 class="pz-sp-name"><%= p.nome %></h3>
-          <% if (p.nota) { %><p class="pz-sp-note"><%= p.nota %></p><% } %>
+          <% if (p.vincitore) { %>
+            <p class="pz-sp-vinto">
+              <%- icon('trophy') %>
+              <span>Vinto da <strong><%= p.vincitore %></strong><% if (p.vincitoreNick) { %> <em><%= p.vincitoreNick %></em><% } %></span>
+            </p>
+          <% } else if (p.nota) { %><p class="pz-sp-note"><%= p.nota %></p><% } %>
           <% if (p.offerto) { %><p class="pz-sp-by">da <strong><%= p.offerto %></strong></p><% } %>
           <% if (p.valore) { %><span class="pz-sp-value"><%= p.valore %></span><% } %>
         </li>
@@ -224,7 +241,11 @@
     </ol>
 
     <p class="pz-sponsor-foot">
-      Si partecipa da <a href="https://www.instagram.com/fanta_sanrocco/" target="_blank" rel="noopener noreferrer">@fanta_sanrocco</a>.
+      <% if (vinto) { %>
+        Il torneo si giocava da <a href="https://www.instagram.com/fanta_sanrocco/" target="_blank" rel="noopener noreferrer">@fanta_sanrocco</a>.
+      <% } else { %>
+        Si partecipa da <a href="https://www.instagram.com/fanta_sanrocco/" target="_blank" rel="noopener noreferrer">@fanta_sanrocco</a>.
+      <% } %>
     </p>
   </div>
 <% } %>
