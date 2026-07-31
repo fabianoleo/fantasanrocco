@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "seed": "node src/seed.js",
-    "create-admin": "node src/seed.js admin"
+    "seed": "node strumenti/crea_admin.js",
+    "create-admin": "node strumenti/crea_admin.js admin"
   },
   "license": "MIT",
   "dependencies": {

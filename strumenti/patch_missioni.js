@@ -6,9 +6,9 @@
 // rilanciarlo non fa danni e non crea doppioni.
 //
 // Uso (in produzione, dentro il container):
-//   cd /app && node src/patch_missioni.js
+//   cd /app && node strumenti/patch_missioni.js
 // ===================================================================
-const { db } = require('./db');
+const { db } = require('../src/db');
 
 const PTS = { comune: 25, 'non-comune': 50, rara: 100, epica: 250, leggendaria: 500 };
 const EMOJI = { comune: '⚪', 'non-comune': '🟢', rara: '🔵', epica: '🟣', leggendaria: '🟠' };

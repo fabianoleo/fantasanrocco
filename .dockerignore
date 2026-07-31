@@ -9,10 +9,11 @@ _da-sistemare/
 .DS_Store
 npm-debug.log*
 /tmp/
-avvia.sh
+strumenti/avvia.sh
+strumenti/fumo.js
+docs/
 .claude/
 *.md
 IMG_*.JPG
 Dockerfile
 docker-compose.yml
-fly.toml

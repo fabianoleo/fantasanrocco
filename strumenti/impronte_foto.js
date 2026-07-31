@@ -7,11 +7,11 @@
 // quelle già fatte, quindi si può ripetere senza pensieri.
 //
 // Uso (in produzione, dentro il container):
-//   cd /app && node src/impronte_foto.js
+//   cd /app && node strumenti/impronte_foto.js
 // ===================================================================
 const path = require('path');
 const fs = require('fs');
-const { db, UPLOADS_DIR } = require('./db');
+const { db, UPLOADS_DIR } = require('../src/db');
 
 async function dhash(filePath) {
   const { Jimp } = require('jimp');

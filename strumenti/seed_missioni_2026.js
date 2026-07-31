@@ -8,9 +8,9 @@
 // Rarità → punti:  ⚪ Comune 25 · 🟢 Non comune 50 · 🔵 Rara 100 ·
 //                  🟣 Epica 250 · 🟠 Leggendaria 500
 //
-// Uso (in produzione, dentro il container):  node src/seed_missioni_2026.js
+// Uso (in produzione, dentro il container):  node strumenti/seed_missioni_2026.js
 // ===================================================================
-const { db } = require('./db');
+const { db } = require('../src/db');
 
 const PTS = { comune: 25, 'non-comune': 50, rara: 100, epica: 250, leggendaria: 500 };
 const EMOJI = { comune: '⚪', 'non-comune': '🟢', rara: '🔵', epica: '🟣', leggendaria: '🟠' };

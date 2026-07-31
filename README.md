@@ -42,8 +42,8 @@ Se hai Node a portata di mano puoi generarne una così:
 docker compose up -d --build
 
 # 3) Carica le missioni di esempio e crea il PRIMO admin (scegli tu nick e password)
-docker compose exec app node src/seed.js
-docker compose exec app node src/seed.js admin TUONICK LaTuaPasswordSegreta
+docker compose exec app node strumenti/crea_admin.js
+docker compose exec app node strumenti/crea_admin.js admin TUONICK LaTuaPasswordSegreta
 ```
 
 Ora apri il browser su **http://localhost:3000** 🎉
@@ -161,7 +161,7 @@ Sicurezza "da festa di paese": robusta per lo scopo, non è un sistema bancario.
 - **"port is already allocated"**: la porta 3000 è occupata. Cambia `PORT` in `.env`
   e la riga `ports` in `docker-compose.yml`.
 - **Ho dimenticato la password admin**: ricreala con
-  `docker compose exec app node src/seed.js admin TUONICK NuovaPassword`
+  `docker compose exec app node strumenti/crea_admin.js admin TUONICK NuovaPassword`
   (se il nick esiste già, ne aggiorna la password e lo rende admin).
 - **Voglio azzerare tutto**: ferma l'app, cancella `data/fantasanrocco.db` (e svuota
   `data/uploads/`), riavvia e rilancia il seed. ⚠️ Perdi tutti i dati!

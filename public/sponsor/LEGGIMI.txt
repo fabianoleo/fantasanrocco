@@ -4,7 +4,7 @@ LOGHI DEGLI SPONSOR
 I file originali si lasciano cadere in loghi-png/ con il nome che hanno.
 Da li' si preparano con:
 
-    node src/prepara_loghi.js loghi-png/tuofile.png:nome-giusto.png
+    node strumenti/prepara_loghi.js loghi-png/tuofile.png:nome-giusto.png
 
 Lo script toglie il fondo pieno, cancella le cornici che certi export si
 portano dietro, ritaglia il vuoto attorno (senza ritaglio un marchio con
@@ -15,7 +15,7 @@ questa cartella.
 LA BARRA E' SU FONDO SCURO: un marchio nero o marrone scuro non si vede.
 Se non esiste la versione chiara, si aggiunge --schiarisci prima del file:
 
-    node src/prepara_loghi.js --schiarisci loghi-png/tuofile.png:nome.png
+    node strumenti/prepara_loghi.js --schiarisci loghi-png/tuofile.png:nome.png
 
 Ribalta la LUMINOSITA' lasciando stare tinta e saturazione, quindi il nero
 diventa bianco e il marrone diventa crema restando marrone. Un negativo
@@ -32,7 +32,7 @@ scuro il simbolo si vede benissimo, la scritta sparisce. Con --schiarisci si
 salva la scritta ma si spegne il simbolo, quindi non va bene ne' con ne'
 senza. Per questi c'e':
 
-    node src/prepara_loghi.js --schiarisci-scuri loghi-png/tuofile.png:nome.png
+    node strumenti/prepara_loghi.js --schiarisci-scuri loghi-png/tuofile.png:nome.png
 
 Tocca solo i neri e i grigi (poco saturi e scuri) e lascia stare i colori
 del marchio. E' il caso di Athena Fitness: fulmine giallo intatto, scritta
@@ -100,12 +100,8 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ⬜ bar-ideal.png            Bar Ideal
   ⬜ gelateria-gerry.png      Gelateria Gerry
   ⬜ tabacchino.png           Tabacchino della Chiesa
-
-Non sul foglio, arrivati dopo:
-
   ✅ target-communication.png Target Communication  schiarito solo nei neri
-  ❌ di-filippo.png           Di Filippo Fotografi  export rotto: fondo
-                              grigio e un rettangolo bianco sulla destra
+
 
 DA CHIEDERE ANCORA (2)
 ----------------------

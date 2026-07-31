@@ -1,15 +1,15 @@
 // ---------------------------------------------------------------------------
 // seed.js — Utility da riga di comando.
 //
-//   node src/seed.js                      -> carica le missioni di esempio (se la tabella è vuota)
-//   node src/seed.js admin <nick> <pass>  -> crea (o promuove) un utente ADMIN
+//   node strumenti/crea_admin.js                      -> carica le missioni di esempio (se la tabella è vuota)
+//   node strumenti/crea_admin.js admin <nick> <pass>  -> crea (o promuove) un utente ADMIN
 //
 // In Docker:
-//   docker compose exec app node src/seed.js admin peppe SuperSegreta123
+//   docker compose exec app node strumenti/crea_admin.js admin peppe SuperSegreta123
 // ---------------------------------------------------------------------------
 require('dotenv').config();
-const { db } = require('./db');
-const { hashPassword } = require('./auth');
+const { db } = require('../src/db');
+const { hashPassword } = require('../src/auth');
 
 // ── MISSIONI DEMO (attive) ──────────────────────────────────────────────
 // Ogni missione richiede una foto-prova. Solo «Amore e Luci» è ripetibile.
@@ -103,7 +103,7 @@ function resetMissions() {
 
 function createAdmin(nickname, password) {
   if (!nickname || !password) {
-    console.error('Uso: node src/seed.js admin <nickname> <password>');
+    console.error('Uso: node strumenti/crea_admin.js admin <nickname> <password>');
     process.exit(1);
   }
   if (password.length < 6) {
