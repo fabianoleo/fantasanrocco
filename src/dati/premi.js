@@ -91,7 +91,7 @@ const PREMI = [
   // ── Gli ultimi tre non si vincono in classifica generale ────────────────
   // Due vanno a chi comanda le classifiche dei mini-giochi, che sono una gara
   // separata: hanno `gioco` invece di `pos`.
-  { gioco: 'runner', nome: 'Buono Cicli Botti', offerto: 'Cycling Botta', valore: '30 €', icona: 'bike',
+  { gioco: 'runner', nome: 'Buono Cycling Botta', offerto: 'Cycling Botta', valore: '30 €', icona: 'bike',
     nota: 'Vendita e riparazione bici a Siano dal 1923',
     logo: 'cycling-botta.png' },
   { gioco: 'jetpack', nome: 'Buono panino e bibita', offerto: 'BC Coffe & More', valore: '30 €', icona: 'coffee',
