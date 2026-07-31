@@ -265,8 +265,13 @@ function creaSessione() {
       WHERE game_key IS NULL AND archived = 0 AND active_from IS NULL LIMIT 1`).get();
     // una foto vera, presa dalle prove gia' caricate (o generata se non ce ne sono)
     const dir = path.join(RADICE, 'data', 'uploads');
-    let foto = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /\.(jpg|jpeg|png)$/i.test(f))[0] : null;
-    foto = foto ? path.join(dir, foto) : null;
+    // Si preferisce una foto CON la data di scatto: e' l'unica che permette
+    // di controllare davvero che shot_at venga salvata prima di ricodificare.
+    const { datiScatto: leggi } = require(path.join(RADICE, 'src', 'lib', 'foto'));
+    const candidate = fs.existsSync(dir)
+      ? fs.readdirSync(dir).filter((f) => /\.(jpg|jpeg|png)$/i.test(f)).map((f) => path.join(dir, f))
+      : [];
+    let foto = candidate.find((f) => leggi(f).scatto) || candidate[0] || null;
     if (!miss || !foto) {
       esito(false, 'invio prova', 'manca una missione libera o una foto di esempio: prova saltata');
     } else {
@@ -279,6 +284,55 @@ function creaSessione() {
       esito(sub && sub.photo_path && fs.existsSync(path.join(cartella, 'uploads', sub.photo_path)),
         'con il file salvato su disco', `file: ${sub && sub.photo_path}`);
       esito(sub && !!sub.phash, "e l'impronta calcolata per riconoscere i duplicati", `impronta: ${sub && sub.phash}`);
+
+      // ── Ridimensionamento ──────────────────────────────────────────
+      // Con mille iscritti che caricano 15-20 foto al giorno, salvarle come
+      // arrivano dal telefono riempirebbe il disco a meta' festa. Qui si
+      // controlla che il rimpicciolimento avvenga davvero, che non giri la
+      // foto e che non perda la data di scatto.
+      const salvata = path.join(cartella, 'uploads', sub.photo_path);
+      const pesoOrig = fs.statSync(foto).size;
+      const pesoSalv = fs.statSync(salvata).size;
+      esito(pesoSalv < pesoOrig, 'la foto viene rimpicciolita',
+        `${(pesoOrig / 1024 / 1024).toFixed(2)} MB → ${(pesoSalv / 1024).toFixed(0)} KB`);
+
+      const { Jimp } = require(path.join(RADICE, 'node_modules', 'jimp'));
+      const originale = await Jimp.read(foto);
+      const ridotta = await Jimp.read(salvata);
+      esito(Math.max(ridotta.bitmap.width, ridotta.bitmap.height) <= 1600,
+        'e sta dentro i 1600px di lato', `${ridotta.bitmap.width}x${ridotta.bitmap.height}`);
+      // L'orientamento e' il rischio grosso: quasi tutte le foto dei telefoni
+      // hanno il tag EXIF di rotazione, e ricodificarle lo cancella. Se il
+      // verso cambia, le prove finiscono tutte di traverso in moderazione.
+      const vertOrig = originale.bitmap.height > originale.bitmap.width;
+      const vertNuova = ridotta.bitmap.height > ridotta.bitmap.width;
+      esito(vertOrig === vertNuova, 'e resta nel verso giusto (niente foto di traverso)',
+        `originale ${originale.bitmap.width}x${originale.bitmap.height}, salvata ${ridotta.bitmap.width}x${ridotta.bitmap.height}`);
+
+      // La data di scatto si legge prima di ricodificare, altrimenti sparisce
+      // insieme al resto dei metadati.
+      const { datiScatto } = require(path.join(RADICE, 'src', 'lib', 'foto'));
+      const attesa2 = datiScatto(foto).scatto;
+      if (attesa2) {
+        esito(!!sub.shot_at, 'e la data di scatto viene salvata prima di perderla',
+          `attesa ${attesa2.toISOString().slice(0, 19)}, trovata ${sub.shot_at}`);
+      } else {
+        esito(true, 'la foto di prova non ha data di scatto: controllo saltato', '');
+      }
+
+      // Un formato che jimp non sa leggere non deve far perdere la prova:
+      // meglio una foto grande che una foto persa.
+      const webp = path.join(RADICE, 'public', 'images', 'premi', 'caffe.webp');
+      if (fs.existsSync(webp)) {
+        const missW = db.prepare(`SELECT id FROM missions WHERE game_key IS NULL AND archived = 0
+          AND active_from IS NULL AND id NOT IN (SELECT mission_id FROM submissions WHERE user_id = ?) LIMIT 1`).get(idGiocatore);
+        if (missW) {
+          await g.postFile(`/missioni/${missW.id}/invia`, { note: 'webp' }, 'foto', webp, 'prova.webp');
+          const sw = db.prepare('SELECT photo_path FROM submissions ORDER BY id DESC LIMIT 1').get();
+          esito(sw && sw.photo_path && fs.existsSync(path.join(cartella, 'uploads', sw.photo_path)),
+            'un formato che non si sa rimpicciolire non fa perdere la prova', `file: ${sw && sw.photo_path}`);
+        }
+      }
 
       // stessa foto una seconda volta: il controllo duplicati deve accorgersene
       const primaDup = db.prepare("SELECT COUNT(*) c FROM submissions WHERE status='pending'").get().c;

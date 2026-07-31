@@ -312,4 +312,33 @@ CREATE INDEX IF NOT EXISTS idx_game_runs_gioco  ON game_runs(game, created_at);
 CREATE INDEX IF NOT EXISTS idx_game_runs_utente ON game_runs(user_id);
 `);
 
+// Data di scatto letta dall'EXIF al momento del caricamento, PRIMA che il
+// ridimensionamento la cancelli: ricodificare una foto butta via tutti i
+// metadati. Senza questa colonna l'export dei metadati resterebbe a mani
+// vuote proprio da quando le foto vengono rimpicciolite.
+try { db.exec('ALTER TABLE submissions ADD COLUMN shot_at TEXT'); } catch {}
+
+// Segnalazioni degli utenti (bug, suggerimenti, cose che non tornano).
+// Finiscono qui e non in una email: durante la festa una casella di posta non
+// la guarda nessuno, il pannello sì. `user_id` è facoltativo perché un guasto
+// può benissimo impedire di entrare, e chi non riesce ad accedere è proprio
+// quello che ha più bisogno di scrivere.
+// `pagina` e `agente` li mette il browser: senza sapere da dove arriva la
+// segnalazione e con che telefono, metà dei bug non si riproducono.
+db.exec(`
+CREATE TABLE IF NOT EXISTS segnalazioni (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER,
+  nickname   TEXT,
+  tipo       TEXT    NOT NULL DEFAULT 'altro',   -- 'bug' | 'idea' | 'altro'
+  testo      TEXT    NOT NULL,
+  pagina     TEXT,
+  agente     TEXT,
+  letta      INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_segnalazioni_quando ON segnalazioni(created_at);
+CREATE INDEX IF NOT EXISTS idx_segnalazioni_lette  ON segnalazioni(letta);
+`);
+
 module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR };

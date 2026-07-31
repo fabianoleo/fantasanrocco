@@ -81,7 +81,13 @@ const PAGINE = [
 // Frammenti che DEVONO comparire: se una pagina risponde 200 ma vuota, il
 // codice HTTP da solo non se ne accorge.
 const CONTENUTI = [
-  { via: '/premio',     chi: 'anonimo', cerca: 'Box viaggi',        cosa: 'primo premio' },
+  { via: '/premio',     chi: 'anonimo', cerca: 'Vacanza in Europa', cosa: 'primo premio' },
+  // Il tasto delle segnalazioni sta nel footer, quindi e' su ogni pagina: se
+  // sparisce, sparisce ovunque e nessuno puo' piu' segnalare niente.
+  { via: '/',           chi: 'anonimo', cerca: 'segnalaDialog',     cosa: 'modulo segnalazioni nel footer' },
+  // Due nastri sponsor invece di uno: il secondo va al contrario per non
+  // tenere i loghi incolonnati sotto quelli di sopra.
+  { via: '/',           chi: 'anonimo', cerca: 'spon-track-inverso', cosa: 'secondo nastro sponsor' },
   { via: '/classifica', chi: 'anonimo', cerca: 'lb-podium',         cosa: 'podio' },
   { via: '/',           chi: 'anonimo', cerca: 'premi in palio',    cosa: 'striscia numeri' },
   { via: '/giochi',     chi: 'anonimo', cerca: 'jetpack.js',        cosa: 'script del gioco' },
@@ -96,6 +102,7 @@ const CONTENUTI = [
   // Il pannello del moderatore non deve contenere i dati riservati: se un
   // giorno qualcuno toglie il filtro, questa riga se ne accorge.
   { via: '/admin',      chi: 'moderatore', cerca: 'p-missioni',     cosa: 'moderatore vede le missioni' },
+  { via: '/admin',      chi: 'moderatore', cerca: 'p-segnalazioni-utenti', cosa: 'moderatore vede le segnalazioni' },
   { via: '/classifica', chi: 'anonimo', cerca: 'lb-prize',          cosa: 'premi in classifica' },
   { via: '/programmazione', chi: 'anonimo', cerca: 'pg-day',        cosa: 'giorni del programma' },
 ];

@@ -24,7 +24,7 @@
       per un anno, quindi finché questo numero non cambia chi è già passato
       di qui continua a vedere il foglio di stile vecchio. Si alza di uno a
       ogni modifica di style.css. %>
-  <link rel="stylesheet" href="/style.css?v=113">
+  <link rel="stylesheet" href="/style.css?v=116">
   <link rel="stylesheet" href="/radio.css?v=3">
 
   <%# ── PWA (installabile + offline + notifiche) ── %>
@@ -140,15 +140,59 @@
               <% } %>
               <p class="foot-legal">L'utilizzo del nome e dell'immagine di San Rocco è stato autorizzato dal Comitato Festa.</p>
             </div>
+            <%# Il tasto per segnalare sta qui e non in una pagina a sé: chi
+                trova un guasto lo trova mentre sta usando il sito, e un link
+                da raggiungere altrove non lo clicca nessuno. %>
+            <button type="button" class="foot-segnala" id="segnalaApri">
+              <%- icon('warning') %> Segnala un problema
+            </button>
             <p class="foot-motto">ad maiora <%- icon('fireworks') %></p>
           </div>
         </div>
       </div>
     </div>
   </footer>
+
+  <%# ── Finestrella delle segnalazioni ──────────────────────────────
+      <dialog> nativo: si chiude col tasto Esc e blocca il resto della
+      pagina senza una riga di JavaScript per gestirlo. %>
+  <dialog class="sg-dialog" id="segnalaDialog" aria-labelledby="sgTitolo">
+    <form class="sg-form" id="segnalaForm" method="dialog">
+      <h2 class="sg-titolo" id="sgTitolo"><%- icon('warning') %> Segnala un problema</h2>
+      <p class="sg-intro">Qualcosa non funziona, o hai un'idea per migliorare il gioco? Scrivilo qui.</p>
+
+      <div class="sg-tipi" role="radiogroup" aria-label="Tipo di segnalazione">
+        <label class="sg-tipo"><input type="radio" name="tipo" value="bug" checked> Non funziona</label>
+        <label class="sg-tipo"><input type="radio" name="tipo" value="idea"> Ho un'idea</label>
+        <label class="sg-tipo"><input type="radio" name="tipo" value="altro"> Altro</label>
+      </div>
+
+      <label class="sg-campo">
+        <span>Racconta cosa è successo</span>
+        <textarea name="testo" rows="5" maxlength="2000" required
+                  placeholder="Es. quando carico la foto della missione «Mazzariello» resta tutto fermo e non succede niente."></textarea>
+      </label>
+
+      <p class="sg-nota">
+        <% if (currentUser) { %>
+          Arriva allo staff insieme al tuo nickname, così possiamo risponderti.
+        <% } else { %>
+          Puoi scrivere anche senza aver fatto l'accesso.
+        <% } %>
+      </p>
+
+      <p class="sg-esito" id="sgEsito" role="status" aria-live="polite"></p>
+
+      <div class="sg-azioni">
+        <button type="button" class="btn-mini" id="segnalaChiudi">Annulla</button>
+        <button type="submit" class="btn" id="segnalaInvia">Invia</button>
+      </div>
+    </form>
+  </dialog>
   <script src="/app.js?v=13"></script>
   <script src="/radio.js?v=7" defer></script>
   <script src="/menu.js?v=1" defer></script>
   <script src="/pwa.js?v=3" defer></script>
+  <script src="/segnala.js?v=1" defer></script>
 </body>
 </html>

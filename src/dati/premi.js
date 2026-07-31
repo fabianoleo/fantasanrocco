@@ -37,10 +37,17 @@ const RADICE = path.join(__dirname, '..', '..');
 // da solo il giorno che il PNG arriva, senza rimettere mano a questo elenco.
 const PREMI = [
   {
-    pos: 1, nome: 'Box viaggi', valore: '250 €', icona: 'globe',
-    tagline: 'Il premio più grande della festa',
-    desc: 'Un cofanetto viaggi da 250 euro. La destinazione e il momento li scegli tu: '
-        + 'chi chiude la festa in cima alla classifica parte.',
+    pos: 1, nome: 'Vacanza in Europa', valore: '239,90 €', icona: 'globe',
+    tagline: 'Due notti per due, dove volete voi',
+    desc: 'Un cofanetto regalo con due notti e colazione per due persone, da scegliere '
+        + 'fra 304 hotel a 3 e 4 stelle e B&B di charme in tutta Europa. '
+        + 'Estate o inverno poco importa: la destinazione e il momento li decidete voi, '
+        + 'e avete più di tre anni di tempo per farlo.',
+    incluso: [
+      '2 notti con colazione', 'Per 2 persone',
+      'Hotel 3* e 4* o B&B di charme', '304 località in Europa',
+      'Validità 39 mesi', 'Cofanetto regalo o e-Box',
+    ],
     foto: ['smartbox-cover.webp', 'smartbox-destinazioni.webp'],
   },
   {
@@ -54,23 +61,16 @@ const PREMI = [
     logo: 'nemo.png', logoNome: 'Nemo Restaurant Food & Wine',
   },
   {
-    // Niente `offerto`: il percorso si fa da The Spa, ma non è la struttura
-    // a metterlo in palio, quindi la scheda non deve dire "offerto da".
-    pos: 3, nome: 'Percorso Spa', valore: '60–80 €', icona: 'sparkle',
-    tagline: 'Relax in pausa, tre ore per rimettersi in sesto',
-    desc: 'Il Percorso Spa di The Spa, al San Severino Park Hotel & Spa: tre ore per rimettersi '
-        + 'da una settimana passata a rincorrere missioni, fuochi e classifica. '
-        + 'Valido dal lunedì al giovedì feriali, esclusi i prefestivi.',
-    // Le tappe del percorso: sul podio diventano una griglia di etichette.
-    incluso: [
-      'Sauna', 'Biosauna', 'Bagno turco', 'Cabina della neve',
-      'Docce emozionali', 'Cascata del ghiaccio',
-      'Piscina con docce cervicali e idromassaggio',
-      'Piscina di deprivazione sensoriale', 'Percorso Kneipp',
-      'Stanza del silenzio con parete di sale',
-      'Salotto relax con angolo tisaneria',
-      'Kit con accappatoio, telo e infradito',
-    ],
+    // Niente `offerto`: la spa si limita a ospitare, non mette lei il premio
+    // in palio, quindi la scheda non deve dire "offerto da". Il logo si vede
+    // lo stesso — è per questo che `logo` è separato da `offerto`.
+    // Nota: spa.png sta in public/sponsor/ perché è lì che vivono i marchi,
+    // ma NON è in SPONSOR_ATTIVITA e quindi non gira nella barra sponsor.
+    pos: 3, nome: 'Ingresso in Spa', icona: 'sparkle',
+    tagline: 'Una giornata per due, a rimettersi in sesto',
+    desc: 'Ingresso giornaliero feriale in spa per due persone: una giornata intera '
+        + 'per riprendersi da una settimana passata a rincorrere missioni, fuochi e classifica.',
+    logo: 'spa.png', logoNome: 'Virginia Resort',
   },
   { pos: 4,  nome: '6 mesi di prove gratuite', offerto: 'Gym Hall Muscle Zone', icona: 'bolt',
     logo: 'gym-hall.png' },
@@ -78,7 +78,7 @@ const PREMI = [
     nota: 'Con il personal trainer Claudio De Maio',
     logo: 'athena-fitness.png' },
   { pos: 6,  nome: 'Trattamento', offerto: 'Fatima Leo Salon & Academy', valore: '50 €', icona: 'candle',
-    logo: 'fatima-leo.png' },
+    nota: 'Valido un anno', logo: 'fatima-leo.png' },
   { pos: 7,  nome: 'Buono spesa', offerto: 'Day by Day Multibrand Siano', valore: '50 €', icona: 'ticket',
     logo: 'day-by-day.png' },
   // Senza `valore`: erano cinque lampade da 50 €, ora sono tre e quanto valgano

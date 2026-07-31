@@ -20,7 +20,8 @@ const multer = require('multer');
 const nodemailer = require('nodemailer');
 
 // Impronte delle foto e controllo dei primi byte: vedi lib/foto.js.
-const { PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes, ALLOWED_MIME, MIME_TO_EXT } = require('./lib/foto');
+const { PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes, ALLOWED_MIME, MIME_TO_EXT,
+        datiScatto, ridimensiona } = require('./lib/foto');
 
 const { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR } = require('./db');
 const { placesWithEvents } = require('./dati/luoghi');
@@ -738,7 +739,35 @@ const globalLimiter = rateLimit({ windowMs: 60 * 1000, max: 300, standardHeaders
 const gameLimiter = rateLimit({ windowMs: 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false });
 const slotLimiter = rateLimit({ windowMs: 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false });
 const wheelLimiter = rateLimit({ windowMs: 60 * 1000, max: 12, standardHeaders: true, legacyHeaders: false });
+// Segnalazioni: aperte anche a chi non è loggato (un guasto può impedire di
+// entrare, e chi non riesce ad accedere è proprio quello che deve poter
+// scrivere), quindi il freno serve. Cinque ogni dieci minuti bastano per
+// segnalare un problema e non per allagare il pannello.
+const segnalaLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false });
 app.use(globalLimiter);
+
+// ── Segnalazioni dal footer ───────────────────────────────────────────────
+// Il modulo sta in una finestrella nel footer, quindi la risposta è JSON: la
+// pagina non si ricarica e chi stava scrivendo una prova non perde quello che
+// aveva in mano.
+app.post('/segnalazioni', segnalaLimiter, verifyCsrf, (req, res) => {
+  const testo = String(req.body.testo || '').trim().slice(0, 2000);
+  if (testo.length < 10) {
+    return res.status(400).json({ ok: false, message: 'Scrivi almeno una riga: senza dettagli non riusciamo a capire.' });
+  }
+  const tipi = ['bug', 'idea', 'altro'];
+  const tipo = tipi.includes(req.body.tipo) ? req.body.tipo : 'altro';
+  db.prepare(`INSERT INTO segnalazioni (user_id, nickname, tipo, testo, pagina, agente)
+              VALUES (?, ?, ?, ?, ?, ?)`).run(
+    req.currentUser ? req.currentUser.id : null,
+    req.currentUser ? req.currentUser.nickname : null,
+    tipo,
+    testo,
+    String(req.body.pagina || '').slice(0, 200) || null,
+    String(req.get('user-agent') || '').slice(0, 300) || null,
+  );
+  res.json({ ok: true, message: 'Ricevuto, grazie. Ci diamo un’occhiata.' });
+});
 
 // --- Registrazione aperta --------------------------------------------------
 app.get('/registrati', (req, res) => {
@@ -1979,6 +2008,20 @@ app.post('/missioni/:id/invia', auth.requireLogin, (req, res, next) => {
       flash(req, 'error', 'Questa missione richiede una foto come prova.');
       return res.redirect(`/missioni/${m.id}`);
     }
+    // L'ordine di queste tre righe non è casuale.
+    // 1. La data di scatto si legge PRIMA: ricodificare la foto cancella
+    //    tutto l'EXIF, e finirebbe nel nulla.
+    // 2. Poi si rimpicciolisce: dal telefono arrivano 4000px e 2 MB, e con
+    //    mille iscritti il disco finirebbe a metà festa.
+    // 3. L'impronta si calcola DOPO, sul file definitivo — è un confronto
+    //    fra impronte, quindi conta che siano tutte fatte allo stesso modo.
+    let scatto = null;
+    if (req.file) {
+      const ex = datiScatto(path.join(UPLOADS_DIR, req.file.filename));
+      scatto = ex.scatto ? ex.scatto.toISOString().slice(0, 19).replace('T', ' ') : null;
+      const rid = await ridimensiona(UPLOADS_DIR, req.file.filename);
+      if (rid) req.file.filename = rid.nomeFile;   // il nome cambia se era .png
+    }
     // Impronta della foto per il controllo duplicati in moderazione. Se il
     // calcolo fallisce resta NULL e la prova prosegue: non è un motivo per
     // rifiutare l'invio di qualcuno.
@@ -1995,8 +2038,8 @@ app.post('/missioni/:id/invia', auth.requireLogin, (req, res, next) => {
           ? false
           : (statuses.includes('pending') || statuses.includes('approved'));
         if (blocked) return false;
-        db.prepare('INSERT INTO submissions (user_id, mission_id, photo_path, note, phash) VALUES (?, ?, ?, ?, ?)')
-          .run(req.currentUser.id, m.id, req.file ? req.file.filename : null, (req.body.note || '').trim(), phash);
+        db.prepare('INSERT INTO submissions (user_id, mission_id, photo_path, note, phash, shot_at) VALUES (?, ?, ?, ?, ?, ?)')
+          .run(req.currentUser.id, m.id, req.file ? req.file.filename : null, (req.body.note || '').trim(), phash, scatto);
         return true;
       })();
     } catch (e) {
@@ -2513,34 +2556,11 @@ app.get('/r/:code', (req, res) => {
 //  esistono più prima ancora di arrivare a noi. La colonna `data_scatto`
 //  resterà vuota nella maggior parte delle righe: non è un bug dell'export.
 // =========================================================================
-const exifParser = require('exif-parser');
-
-// L'EXIF sta all'inizio del file (segmento APP1): leggere i primi 128kB basta
-// e evita di caricare in memoria una foto da 8 megapixel per ogni riga.
-const EXIF_BYTES = 128 * 1024;
-
-function leggiExif(fileAssoluto) {
-  let fd;
-  try {
-    fd = fs.openSync(fileAssoluto, 'r');
-    const buf = Buffer.alloc(EXIF_BYTES);
-    const letti = fs.readSync(fd, buf, 0, EXIF_BYTES, 0);
-    const t = exifParser.create(buf.subarray(0, letti)).parse().tags || {};
-    // DateTimeOriginal è lo scatto vero; gli altri due sono ripieghi (una
-    // copia o un salvataggio li riscrive, quindi valgono meno).
-    const scatto = t.DateTimeOriginal || t.CreateDate || t.ModifyDate || null;
-    return {
-      scatto: scatto ? new Date(scatto * 1000) : null,
-      esatta: !!t.DateTimeOriginal,
-      dispositivo: [t.Make, t.Model].filter(Boolean).join(' ').trim() || '',
-      gps: t.GPSLatitude !== undefined && t.GPSLongitude !== undefined,
-    };
-  } catch (e) {
-    return { scatto: null, esatta: false, dispositivo: '', gps: false };
-  } finally {
-    if (fd !== undefined) try { fs.closeSync(fd); } catch {}
-  }
-}
+//  NOTA sul ridimensionamento: da quando le foto vengono rimpicciolite al
+//  caricamento, nel file l'EXIF non c'e' piu' — ricodificare lo cancella. La
+//  data viene percio' letta e salvata in submissions.shot_at al momento
+//  dell'invio, e l'export la prende da li'. Per le foto vecchie, caricate
+//  prima del ridimensionamento, si continua a leggerla dal file.
 
 // Una cella CSV: le virgolette si raddoppiano, e si quota sempre così nessun
 // nickname con la virgola o il punto e virgola può spostare le colonne.
@@ -2548,7 +2568,7 @@ const csvCella = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
 app.get('/admin/prove.csv', auth.requireAdmin, (req, res) => {
   const righe = db.prepare(`
-    SELECT s.id, s.created_at, s.status, s.photo_path, s.note, s.phash,
+    SELECT s.id, s.created_at, s.status, s.photo_path, s.note, s.phash, s.shot_at,
            s.reviewed_at, u.nickname, m.title AS missione, m.points
     FROM submissions s
     LEFT JOIN users u   ON u.id = s.user_id
@@ -2566,7 +2586,12 @@ app.get('/admin/prove.csv', auth.requireAdmin, (req, res) => {
   const INIZIO_FESTA = new Date('2026-08-14T00:00:00+02:00');
   for (const r of righe) {
     const nome = path.basename(r.photo_path || '');
-    const ex = nome ? leggiExif(path.join(UPLOADS_DIR, nome)) : { scatto: null, esatta: false, dispositivo: '', gps: false };
+    // Prima la colonna (foto nuove, gia' rimpicciolite), poi il file (foto
+    // vecchie): cosi' l'export continua a funzionare su entrambe.
+    const daFile = nome ? datiScatto(path.join(UPLOADS_DIR, nome)) : { scatto: null, esatta: false, dispositivo: '', gps: false };
+    const ex = r.shot_at
+      ? { ...daFile, scatto: new Date(r.shot_at.replace(' ', 'T') + 'Z'), esatta: true }
+      : daFile;
     const inviata = r.created_at ? new Date(r.created_at.replace(' ', 'T') + 'Z') : null;
     // Quanto tempo passa fra lo scatto e l'invio: se sono giorni, la foto è
     // stata ripescata dalla galleria invece che fatta sul momento.
@@ -2861,6 +2886,11 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
   // Da qui in giù è roba da admin. Per un moderatore restano tutti vuoti:
   // non è una tenda davanti ai dati, è che i dati non vengono letti.
   let users = [], codes = [], backups = [], auditLog = [], reportedStories = [];
+  // Le segnalazioni le legge anche il moderatore: sono il canale con cui gli
+  // utenti dicono che qualcosa non va, e chi sta in prima linea a moderare e'
+  // proprio quello che deve accorgersene. Non contengono dati riservati —
+  // nickname e testo, non email.
+  const segnalazioni = db.prepare('SELECT * FROM segnalazioni ORDER BY letta ASC, id DESC LIMIT 100').all();
   if (!soloMissioni) {
     users = db.prepare('SELECT id, nickname, email, role, created_at FROM users ORDER BY role, nickname').all()
       .map((u) => ({ ...u, points: userPoints(u.id) }));
@@ -2911,7 +2941,13 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
     };
   });
   res.render('admin', { title: 'Admin', missions, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico, predictions,
-    sezioni: SECTIONS, notifSubmissions: !!req.currentUser.notif_submissions, soloMissioni });
+    sezioni: SECTIONS, notifSubmissions: !!req.currentUser.notif_submissions, soloMissioni,
+    segnalazioni });
+});
+
+app.post('/admin/segnalazioni/:id/letta', auth.requireStaff, (req, res) => {
+  db.prepare('UPDATE segnalazioni SET letta = 1 - letta WHERE id = ?').run(req.params.id);
+  res.redirect('/admin');
 });
 
 app.post('/admin/codici', auth.requireAdmin, (req, res) => {

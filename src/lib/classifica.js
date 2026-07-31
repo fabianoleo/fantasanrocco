@@ -12,8 +12,32 @@
 const { db } = require('../db');
 
 // Classifica generale (solo giocatori, esclude staff)
+// Questa query somma TUTTE le prove approvate di TUTTI gli utenti. Misurata
+// con 1000 iscritti e 100.000 prove costa 25ms di CPU, e better-sqlite3 è
+// sincrono: mentre gira, il server non risponde a nessun altro. Il problema
+// non è la classifica in sé — è che la home la esegue a ogni caricamento per
+// mostrare il podio dei primi tre. A 100 pagine al secondo (un picco dopo i
+// fuochi) i due core andrebbero al 124%: il sito si impasta.
+//
+// Con una cache di pochi secondi il conto si fa una volta e si serve a tutti.
+// Il ritardo massimo e' cinque secondi, e su una classifica non lo nota
+// nessuno. Niente invalidazione a mano quando i punti cambiano: i posti che
+// li toccano sono dodici, e una invalidazione applicata in undici sarebbe
+// peggio di nessuna — prometterebbe un aggiornamento immediato che poi
+// tradisce a caso. Il tempo che scade vale per tutti allo stesso modo.
+//
+// ATTENZIONE: userPoints() qui sotto NON passa da questa cache, ed e'
+// voluto. La slot controlla il saldo dentro la transazione per decidere se
+// una puntata e' coperta: con un valore vecchio di cinque secondi si
+// potrebbero spendere punti che non ci sono piu'.
+const CACHE_MS = 5000;
+let cache = null;
+let cacheScade = 0;
+
 function leaderboardRows() {
-  return db.prepare(`
+  const ora = Date.now();
+  if (cache && ora < cacheScade) return cache;
+  cache = db.prepare(`
     SELECT u.id, u.nickname, u.avatar_path,
            COALESCE(SUM(CASE WHEN s.status='approved' THEN m.points ELSE 0 END), 0) + u.points_adjust AS points,
            COUNT(CASE WHEN s.status='approved' THEN 1 END) AS done
@@ -24,7 +48,10 @@ function leaderboardRows() {
     GROUP BY u.id
     ORDER BY points DESC, u.created_at ASC
   `).all();
+  cacheScade = ora + CACHE_MS;
+  return cache;
 }
+
 
 // Saldo punti spendibile di un utente = missioni/gioco approvati + saldo ruota/slot.
 // È lo STESSO totale mostrato in classifica: ruota e slot girano su questi punti.

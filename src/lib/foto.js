@@ -77,4 +77,88 @@ function checkImageMagicBytes(filePath) {
   } catch { return null; }
 }
 
-module.exports = { PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes, ALLOWED_MIME, MIME_TO_EXT };
+// ── Dati EXIF dello scatto ────────────────────────────────────────────────
+// Si legge PRIMA di ridimensionare, perché ricodificare una foto butta via
+// tutti i metadati. Legge solo i primi 128kB: l'EXIF sta nel segmento APP1 a
+// inizio file, e caricare un'immagine intera per una data sarebbe sprecato.
+const EXIF_BYTES = 128 * 1024;
+
+function datiScatto(fileAssoluto) {
+  let fd;
+  try {
+    fd = fs.openSync(fileAssoluto, 'r');
+    const buf = Buffer.alloc(EXIF_BYTES);
+    const letti = fs.readSync(fd, buf, 0, EXIF_BYTES, 0);
+    const t = require('exif-parser').create(buf.subarray(0, letti)).parse().tags || {};
+    // DateTimeOriginal è lo scatto vero; gli altri due sono ripieghi (una
+    // copia o un salvataggio li riscrive, quindi valgono meno).
+    const scatto = t.DateTimeOriginal || t.CreateDate || t.ModifyDate || null;
+    return {
+      scatto: scatto ? new Date(scatto * 1000) : null,
+      esatta: !!t.DateTimeOriginal,
+      dispositivo: [t.Make, t.Model].filter(Boolean).join(' ').trim() || '',
+      gps: t.GPSLatitude !== undefined && t.GPSLongitude !== undefined,
+    };
+  } catch (e) {
+    return { scatto: null, esatta: false, dispositivo: '', gps: false };
+  } finally {
+    if (fd !== undefined) try { fs.closeSync(fd); } catch {}
+  }
+}
+
+// ── Rimpicciolimento delle foto caricate ──────────────────────────────────
+// Le foto arrivano dal telefono a 3000-4000 pixel di lato e quasi 2 MB: roba
+// da stampare un poster, mentre nel sito le guarda un moderatore dentro un
+// riquadro e la galleria usa le miniature. A 1600px di lato lungo e qualità
+// 80 pesano circa sei volte meno, e la differenza non si vede.
+//
+// Sull'orientamento non c'è niente da fare a mano: jimp applica già il tag
+// EXIF quando legge, quindi i pixel che restituisce sono dritti e la foto
+// ricodificata resta dritta anche senza più il tag. (Verificato: 18 foto su
+// 19 di quelle già caricate hanno Orientation=6, e senza questo dettaglio
+// sarebbero finite tutte di traverso.)
+//
+// Regola di fondo: se qualcosa va storto la foto originale resta dov'è.
+// Nessuna ottimizzazione vale la perdita di una prova.
+const LATO_MAX = 1600;
+const QUALITA = 80;
+
+async function ridimensiona(cartella, nomeFile) {
+  const path = require('path');
+  const originale = path.join(cartella, nomeFile);
+  try {
+    const primaByte = fs.statSync(originale).size;
+    const { Jimp } = require('jimp');
+    const img = await Jimp.read(originale);          // applica già l'orientamento
+
+    const lato = Math.max(img.bitmap.width, img.bitmap.height);
+    if (lato > LATO_MAX) {
+      if (img.bitmap.width >= img.bitmap.height) img.resize({ w: LATO_MAX });
+      else img.resize({ h: LATO_MAX });
+    }
+    const buf = await img.getBuffer('image/jpeg', { quality: QUALITA });
+
+    // Se il risultato non è più piccolo non si tocca niente: capita con le
+    // foto già ottimizzate, e riscriverle a vuoto peggiorerebbe la qualità.
+    if (buf.length >= primaByte) return null;
+
+    // Il contenuto ora è JPEG: se il file si chiamava .png o .webp il nome
+    // deve seguirlo, altrimenti resta un'estensione che mente.
+    const nuovoNome = nomeFile.replace(/\.[^.]+$/, '.jpg');
+    const destinazione = path.join(cartella, nuovoNome);
+    fs.writeFileSync(destinazione, buf);
+    if (nuovoNome !== nomeFile) { try { fs.unlinkSync(originale); } catch {} }
+
+    return { nomeFile: nuovoNome, prima: primaByte, dopo: buf.length, lato };
+  } catch (e) {
+    // Formati che jimp non digerisce (WebP e AVIF, per esempio): la foto
+    // resta com'è. Meglio grande che persa.
+    console.error('[FOTO] ridimensionamento saltato:', e.message);
+    return null;
+  }
+}
+
+module.exports = {
+  PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes,
+  ALLOWED_MIME, MIME_TO_EXT, datiScatto, ridimensiona, LATO_MAX,
+};

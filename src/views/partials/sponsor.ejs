@@ -1,13 +1,24 @@
 <%
   /* ─────────────────────────────────────────────────────────────────
-     ELENCO SPONSOR — sta in server.js (SPONSOR_ATTIVITA), perché lì si
-     può controllare quali PNG sono già in public/sponsor/ e mostrare solo
+     ELENCO SPONSOR — sta in src/dati/sponsor.js, perché lì si può
+     controllare quali PNG sono già in public/sponsor/ e mostrare solo
      quelli: un logo annunciato ma senza file sarebbe un'immagine rotta in
      produzione. Per aggiungere un'attività: una riga lì, il PNG a sfondo
      trasparente qui in public/sponsor/, e basta.
      Con l'elenco vuoto la barra non viene disegnata affatto.
      ───────────────────────────────────────────────────────────────── */
   const sponsor = sponsorLoghi || [];
+
+  /* DUE nastri invece di uno. Divisi a logo alterno e non a metà: l'elenco
+     segue l'ordine di arrivo degli sponsor, quindi tagliandolo in due il
+     nastro di sopra avrebbe avuto i primi arrivati e quello di sotto gli
+     ultimi — due file dall'aria diversa. Alternando si mescolano.
+     Sotto i due loghi non si divide: un nastro da uno solo sarebbe un logo
+     che rimbalza, meglio tenerne uno pieno. */
+  const dueNastri = sponsor.length >= 4;
+  const nastri = dueNastri
+    ? [sponsor.filter((_, i) => i % 2 === 0), sponsor.filter((_, i) => i % 2 === 1)]
+    : [sponsor];
 
   /* L'animazione trasla di -50%, cioè di METÀ nastro: perché il giro sia
      continuo, quella metà deve restare più larga dello schermo per tutto il
@@ -20,43 +31,53 @@
      punto di ricongiunzione non cade su una ripetizione intera e lo stacco
      si vede. */
   const LOGHI_MINIMI_PER_META = 24;   // ~2700px: copre un monitor da 2560
-  const RIPETIZIONI = Math.max(4, 2 * Math.ceil(LOGHI_MINIMI_PER_META / sponsor.length));
 
   /* La durata NON può essere fissa: il nastro percorre sempre la propria
      metà, quindi se quella metà si allunga con lo stesso tempo la barra va
      più veloce. Tenendo costante il tempo per singolo logo attraversato, la
      velocità resta identica che gli sponsor siano quattro o quaranta.
-     3,75s a logo riproduce esattamente l'andatura originale. */
-  const SECONDI_PER_LOGO = 3.75;
-  const durata = ((RIPETIZIONI / 2) * sponsor.length * SECONDI_PER_LOGO).toFixed(1);
+     3,75s a logo riproduce l'andatura originale.
+     Il secondo nastro va PIÙ LENTO e in senso OPPOSTO: due file che scorrono
+     insieme alla stessa velocità sembrano un blocco unico, e i loghi
+     resterebbero incolonnati uno sotto l'altro. Così invece si incrociano e
+     la coppia non si ripete mai uguale. */
+  const SECONDI_PER_LOGO = [3.75, 4.9];
+
+  function calcola(elenco, i) {
+    const ripetizioni = Math.max(4, 2 * Math.ceil(LOGHI_MINIMI_PER_META / elenco.length));
+    const durata = ((ripetizioni / 2) * elenco.length * SECONDI_PER_LOGO[i]).toFixed(1);
+    return { elenco, ripetizioni, durata, inverso: i === 1 };
+  }
 %>
 <% if (sponsor.length) { %>
-<section class="spon" aria-label="I nostri sponsor" style="--spon-durata: <%= durata %>s">
+<section class="spon" aria-label="I nostri sponsor">
   <p class="spon-label">I nostri sponsor</p>
 
-  <div class="spon-viewport">
-    <div class="spon-track">
-      <% for (let copia = 0; copia < RIPETIZIONI; copia++) { %>
-        <%# Solo la prima copia è "vera": le altre esistono per il loop e
-            vanno nascoste alla sintesi vocale, che altrimenti leggerebbe
-            l'elenco degli sponsor quattro volte di fila. %>
-        <ul class="spon-group"<% if (copia) { %> aria-hidden="true"<% } %>>
-          <% sponsor.forEach(function (s) { %>
-            <li class="spon-item">
-              <%# Niente loading="lazy": la larghezza del nastro è la somma delle
-                  larghezze reali dei loghi, e finché l'immagine non è caricata
-                  quella larghezza è zero. Con il lazy la barra resterebbe una
-                  fila di spazi vuoti fino a quando non ci si scorre sopra.
-                  Sono PNG da pochi kB, caricarli subito non costa niente. %>
-              <img class="spon-logo"
-                   src="/sponsor/<%= s.file %>"
-                   alt="<%= copia ? '' : s.nome %>"
-                   decoding="async">
-            </li>
-          <% }) %>
-        </ul>
-      <% } %>
+  <% nastri.forEach(function (elenco, i) { const n = calcola(elenco, i); %>
+    <div class="spon-viewport<%= n.inverso ? ' spon-viewport-2' : '' %>" style="--spon-durata: <%= n.durata %>s">
+      <div class="spon-track<%= n.inverso ? ' spon-track-inverso' : '' %>">
+        <% for (let copia = 0; copia < n.ripetizioni; copia++) { %>
+          <%# Solo la prima copia è "vera": le altre esistono per il loop e
+              vanno nascoste alla sintesi vocale, che altrimenti leggerebbe
+              l'elenco degli sponsor quattro volte di fila. %>
+          <ul class="spon-group"<% if (copia) { %> aria-hidden="true"<% } %>>
+            <% n.elenco.forEach(function (s) { %>
+              <li class="spon-item">
+                <%# Niente loading="lazy": la larghezza del nastro è la somma delle
+                    larghezze reali dei loghi, e finché l'immagine non è caricata
+                    quella larghezza è zero. Con il lazy la barra resterebbe una
+                    fila di spazi vuoti fino a quando non ci si scorre sopra.
+                    Sono PNG da pochi kB, caricarli subito non costa niente. %>
+                <img class="spon-logo"
+                     src="/sponsor/<%= s.file %>"
+                     alt="<%= copia ? '' : s.nome %>"
+                     decoding="async">
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </div>
     </div>
-  </div>
+  <% }) %>
 </section>
 <% } %>

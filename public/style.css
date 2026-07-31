@@ -5322,3 +5322,104 @@ a.lb-prize:hover { color: var(--gold-2); }
   .lp-podio .lp-prize-card h3 { font-size: .72rem; }
   .lp-podio-pos { font-size: .7rem; }
 }
+
+/* Il secondo nastro va nella direzione opposta. Stessi fotogrammi, letti al
+   contrario: il punto di ricongiunzione resta esatto come nel primo, mentre
+   riscrivendo una seconda animazione da 0 a +50% si sarebbe dovuto rifare a
+   mano il calcolo che tiene il giro senza stacchi. */
+.spon-track-inverso { animation-direction: reverse; }
+/* Un filo di respiro fra i due nastri, e il secondo leggermente più spento:
+   così si legge come una seconda fila e non come una riga staccata. */
+.spon-viewport-2 { margin-top: .55rem; }
+.spon-viewport-2 .spon-logo { opacity: .78; }
+@media (hover: none) { .spon-viewport-2 .spon-logo { opacity: .8; } }
+@media (hover: hover) { .spon-viewport-2 .spon-logo:hover { opacity: 1; } }
+
+/* ── Segnalazioni: tasto nel footer e finestrella ────────────────────────
+   Sta nel footer perché chi trova un guasto lo trova mentre usa il sito:
+   una pagina separata da raggiungere non la apre nessuno. */
+.foot-segnala {
+  display: inline-flex; align-items: center; gap: .4rem;
+  margin-top: .6rem; padding: .4rem .9rem;
+  border: 1px solid rgba(212,160,26,.25);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-body);
+  font-size: .74rem; letter-spacing: .02em;
+  color: var(--text-3); cursor: pointer;
+  transition: color .2s var(--ease), border-color .2s var(--ease), background .2s var(--ease);
+}
+.foot-segnala:hover { color: var(--gold-2); border-color: var(--gold-2); background: rgba(212,160,26,.08); }
+.foot-segnala .ico { width: 14px; height: 14px; }
+
+.sg-dialog {
+  width: min(94vw, 460px);
+  padding: 0; border: none; border-radius: var(--r-lg);
+  background: transparent;
+  color: var(--text);
+}
+.sg-dialog::backdrop { background: rgba(0,0,0,.72); backdrop-filter: blur(3px); }
+.sg-form {
+  padding: 1.6rem 1.4rem 1.3rem;
+  border: 1px solid var(--border-gold);
+  border-radius: var(--r-lg);
+  background: var(--bg-1, #0b0a14);
+  box-shadow: 0 30px 80px -20px rgba(0,0,0,.8);
+}
+.sg-titolo {
+  display: flex; align-items: center; gap: .45rem;
+  margin: 0 0 .4rem;
+  font-family: var(--font-heading); font-size: 1.05rem; color: var(--gold-2);
+}
+.sg-titolo .ico { width: 19px; height: 19px; }
+.sg-intro { margin: 0 0 1rem; font-size: .84rem; color: var(--text-2); line-height: 1.5; }
+
+.sg-tipi { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .9rem; }
+.sg-tipo {
+  padding: .32rem .7rem;
+  border: 1px solid var(--border); border-radius: 999px;
+  font-size: .76rem; color: var(--text-2); cursor: pointer;
+  transition: border-color .2s var(--ease), color .2s var(--ease), background .2s var(--ease);
+}
+.sg-tipo input { margin-right: .35rem; accent-color: var(--gold); }
+.sg-tipo:has(input:checked) { border-color: var(--gold-2); color: var(--gold-2); background: rgba(212,160,26,.1); }
+
+.sg-campo { display: block; }
+.sg-campo span { display: block; margin-bottom: .35rem; font-size: .78rem; color: var(--text-2); }
+.sg-campo textarea {
+  width: 100%; padding: .7rem .8rem;
+  border: 1px solid var(--border); border-radius: var(--r);
+  background: rgba(255,255,255,.03); color: var(--text);
+  font-family: var(--font-body); font-size: .88rem; line-height: 1.5;
+  resize: vertical;
+}
+.sg-campo textarea:focus { outline: none; border-color: var(--gold-2); }
+
+.sg-nota { margin: .6rem 0 0; font-size: .72rem; color: var(--text-3); line-height: 1.45; }
+.sg-esito { margin: .7rem 0 0; font-size: .8rem; min-height: 1.2em; color: var(--text-2); }
+.sg-esito.is-ok { color: #4ade80; }
+.sg-esito.is-ko { color: var(--fire); }
+.sg-azioni { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1rem; }
+
+/* Righe delle segnalazioni nel pannello admin */
+.sg-riga {
+  padding: .9rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.sg-riga:last-child { border-bottom: none; }
+.sg-riga.is-letta { opacity: .5; }
+.sg-riga-top { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .4rem; }
+.sg-tag {
+  padding: .1rem .5rem; border-radius: 999px;
+  font-size: .66rem; letter-spacing: .04em; text-transform: uppercase;
+  border: 1px solid var(--border);
+}
+.sg-tag-bug   { color: var(--fire); border-color: rgba(232,93,30,.4); }
+.sg-tag-idea  { color: var(--gold-2); border-color: rgba(212,160,26,.4); }
+.sg-tag-altro { color: var(--text-3); }
+.sg-chi { font-size: .8rem; color: var(--text-2); font-weight: 600; }
+.sg-quando { font-size: .72rem; color: var(--text-3); margin-left: auto; }
+.sg-testo { margin: 0 0 .35rem; font-size: .88rem; color: var(--text); line-height: 1.55; white-space: pre-wrap; }
+.sg-meta { margin: 0 0 .5rem; font-size: .7rem; color: var(--text-3); }
+.sg-meta code { background: rgba(255,255,255,.05); padding: .05rem .3rem; border-radius: 4px; }
+.sg-riga-azione { margin: 0; }

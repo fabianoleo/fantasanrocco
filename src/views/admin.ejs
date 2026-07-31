@@ -9,8 +9,8 @@
     : null;
 %>
 
-<h1 class="staff-title"><%- icon(soloMissioni ? 'list' : 'gear') %> <%= soloMissioni ? 'Gestione missioni' : 'Pannello Admin' %></h1>
-<% if (soloMissioni) { %><p class="muted small">Da qui crei e correggi le missioni. Il resto del pannello è riservato agli admin.</p><% } %>
+<h1 class="staff-title"><%- icon(soloMissioni ? 'list' : 'gear') %> <%= soloMissioni ? 'Pannello Staff' : 'Pannello Admin' %></h1>
+<% if (soloMissioni) { %><p class="muted small">Da qui gestisci le missioni e leggi le segnalazioni degli utenti. Il resto del pannello è riservato agli admin.</p><% } %>
 
 <%# ══════════════ HUB: tutte le cose principali a colpo d'occhio ══════════════ %>
 <div class="adm-hub" id="admHub">
@@ -23,6 +23,16 @@
     </span>
     <span class="adm-tile-badge"><%= missions.length %></span>
   </button>
+  <button type="button" class="adm-tile" data-panel="segnalazioni-utenti">
+    <span class="adm-tile-ico"><%- icon('mail') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Segnalazioni dal sito</span>
+      <span class="adm-tile-desc">Bug e idee mandati dagli utenti</span>
+    </span>
+    <% const sgNuove = (segnalazioni || []).filter((s) => !s.letta).length; %>
+    <% if (sgNuove) { %><span class="adm-tile-badge is-alert"><%= sgNuove %></span><% } %>
+  </button>
+
   <% if (!soloMissioni) { %>
 
   <button type="button" class="adm-tile" data-panel="premi">
@@ -262,6 +272,42 @@
 </div>
 
 <%# ── CODICI PREMIO ────────────────────────────────────────────────── %>
+<%# ── BACKUP DATABASE ──────────────────────────────────────────────── %>
+<%# ── SEGNALAZIONI DAGLI UTENTI ─────────────────────────────────────── %>
+<div class="adm-panel" id="p-segnalazioni-utenti" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
+  <section class="card">
+    <h2 class="staff-title"><%- icon('mail') %> Segnalazioni dal sito</h2>
+    <p class="muted small">
+      Arrivano dal tasto «Segnala un problema» nel footer. Sono in ordine: prima le
+      non lette, poi le altre. La pagina e il telefono di chi scrive li registra il
+      browser da solo — senza quelli metà dei guasti non si riesce a rifare.
+    </p>
+    <% if (!(segnalazioni || []).length) { %>
+      <p class="muted small">Nessuna segnalazione. Buon segno.</p>
+    <% } else { %>
+      <% segnalazioni.forEach(function (s) { %>
+        <article class="sg-riga <%= s.letta ? 'is-letta' : '' %>">
+          <div class="sg-riga-top">
+            <span class="sg-tag sg-tag-<%= s.tipo %>"><%= s.tipo === 'bug' ? 'Non funziona' : s.tipo === 'idea' ? 'Idea' : 'Altro' %></span>
+            <span class="sg-chi"><%= s.nickname || 'anonimo' %></span>
+            <span class="sg-quando"><%= s.created_at %></span>
+          </div>
+          <p class="sg-testo"><%= s.testo %></p>
+          <p class="sg-meta">
+            <% if (s.pagina) { %>da <code><%= s.pagina %></code><% } %>
+            <% if (s.agente) { %> · <span title="<%= s.agente %>"><%= s.agente.slice(0, 60) %></span><% } %>
+          </p>
+          <form action="/admin/segnalazioni/<%= s.id %>/letta" method="post" class="sg-riga-azione">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn-mini" type="submit"><%= s.letta ? 'Segna da rileggere' : 'Segna come letta' %></button>
+          </form>
+        </article>
+      <% }) %>
+    <% } %>
+  </section>
+</div>
+
 <% if (!soloMissioni) { %>
 <div class="adm-panel" id="p-premi" hidden>
   <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
@@ -633,7 +679,6 @@
   </section>
 </div>
 
-<%# ── BACKUP DATABASE ──────────────────────────────────────────────── %>
 <div class="adm-panel" id="p-backup" hidden>
   <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
 

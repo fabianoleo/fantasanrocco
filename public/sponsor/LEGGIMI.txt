@@ -62,7 +62,7 @@ STATO
   ⬜ = manca il file
   ❌ = file ricevuto ma non utilizzabile, serve rifarlo
 
-A oggi sono in linea 16 loghi su 36.
+A oggi sono in linea 18 loghi su 36.
 
 L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
 
@@ -71,9 +71,9 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ✅ gym-hall.png             Gym Hall Muscle Zone
   ✅ athena-fitness.png       Athena Fitness  schiarito solo nei neri
   ✅ fatima-leo.png           Fatima Leo Salon & Academy  schiarito
-  ⬜ day-by-day.png           Day by Day Multibrand Siano
+  ✅ day-by-day.png           Day by Day Multibrand Siano  schiarito
   ⬜ medea.png                Centro Estetico Medea
-  ⬜ telefonia-eredi-leo.png  Telefonia Eredi Leo  logo scartato, chiederne un altro
+  ✅ telefonia-eredi-leo.png  Telefonia Eredi Leo  gia' chiaro, nessuno schiarimento
   ✅ cycling-botta.png        Cycling Botta
   ✅ vitello-paesano.png      Al Vitello Paesano  gia' chiaro, nessuno schiarimento
   ⬜ bar-frasci-2-0.png       Bar V. Frasci 2.0
@@ -100,26 +100,35 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ⬜ bar-ideal.png            Bar Ideal
   ⬜ gelateria-gerry.png      Gelateria Gerry
   ⬜ tabacchino.png           Tabacchino della Chiesa
+
+Non sul foglio, arrivati dopo:
+
   ✅ target-communication.png Target Communication  schiarito solo nei neri
+  ❌ di-filippo.png           Di Filippo Fotografi  export rotto: fondo
+                              grigio e un rettangolo bianco sulla destra
 
-
-DA CHIEDERE ANCORA (2)
+DA CHIEDERE ANCORA (1)
 ----------------------
 
   di-filippo    l'export ricevuto e' rotto: fondo grigio e un rettangolo
                 bianco incollato accanto al marchio. Serve rifatto.
-  eredi-leo     il logo ricevuto e' stato scartato, ne serve un altro.
 
 Nota: il file v-frasci.png in loghi-png/ e' della PIZZERIA, per questo il
 risultato si chiama pizzeria-frasci.png. Il Bar V. Frasci 2.0 e' un'altra
 attivita' e il suo logo manca ancora.
 
-Nota: in loghi-png/ restano solo gli originali dei dieci loghi arrivati per
+Nota: in loghi-png/ restano solo gli originali dei tredici loghi arrivati per
 ultimi (cycling-botta, pizzeria-zio-mauro, lamberti, kalu, athena-fitness,
-franzis, fatima-leo, zio-enrico, vitello-paesano, target-communication).
+franzis, fatima-leo, zio-enrico, vitello-paesano, target-communication,
+day-by-day, telefonia-eredi-leo, spa).
 Gli altri originali sono stati rimossi: le versioni pronte in questa
 cartella bastano per la barra, ma se un logo va rifatto va richiesto di
 nuovo il file di partenza.
+
+Nota: spa.png sta in questa cartella ma NON e' uno sponsor e non compare
+nella barra: e' il marchio del Virginia Resort, mostrato sulla scheda del
+terzo premio. Sta qui perche' e' qui che vivono i marchi, ma non e' in
+SPONSOR_ATTIVITA — ed e' quello che decide chi gira nel nastro.
 
 Nota: sul foglio l'attivita' era segnata come "Zio Enrico", ma l'insegna e
 il logo dicono Zanzibar Lounge Bar: in SPONSOR_ATTIVITA vale il marchio,
@@ -141,7 +150,7 @@ il server, il controllo si fa all'avvio).
 Finche' non c'e' nessun logo vero gira il segnaposto fantasanrocco.png.
 
 Per aggiungere un'attivita' non in elenco: aggiungi la riga in
-SPONSOR_ATTIVITA dentro src/server.js, poi copia qui il suo PNG.
+SPONSOR_ATTIVITA dentro src/dati/sponsor.js, poi copia qui il suo PNG.
 
 Loghi consigliati: altezza almeno 200 px, sfondo trasparente, marchio
 chiaro.
