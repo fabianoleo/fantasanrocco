@@ -5011,6 +5011,15 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
 }
 .pz-sp-icon { color: var(--gold); }
 .pz-sp-icon .ico { width: 26px; height: 26px; }
+/* Dal 4º in giù le card stanno affiancate e la fascia dell'immagine deve
+   essere alta uguale in tutte, altrimenti il nome del premio parte più in
+   alto su quelle con l'icona (31px) che su quelle col logo o la foto (54px)
+   e i titoli non sono più sulla stessa riga. È l'allineamento che il
+   commento più sotto dava già per fatto, ma valeva solo per logo e foto. */
+.pz-grid-lista .pz-sp-icon {
+  display: flex; align-items: center; justify-content: center;
+  height: 54px;
+}
 /* Se il premio ha una foto va al posto dell'icona, ma nello stesso ingombro:
    altrimenti una card sola diventa più alta e la griglia si sfalsa. */
 .pz-sp-foto {
@@ -5036,8 +5045,11 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
    scena al nome del premio, che è il dato che si viene a leggere. Si
    rimpicciolisce solo l'immagine: la fascia resta di 54px, altrimenti le
    card con il logo si accorcerebbero rispetto a quelle con l'icona o con
-   la foto e i nomi non sarebbero più sulla stessa riga. */
-.pz-grid-lista .pz-sp-logo img { max-width: 66%; max-height: 78%; }
+   la foto e i nomi non sarebbero più sulla stessa riga.
+   Il primo giro (66%/78%) li aveva ridotti troppo e non si leggevano più:
+   questi valori stanno in mezzo fra quelli e la misura piena di partenza
+   (85%/100%), quindi il marchio si riconosce senza rubare la riga al nome. */
+.pz-grid-lista .pz-sp-logo img { max-width: 76%; max-height: 89%; }
 .pz-sp-name {
   margin: 0;
   font-family: var(--font-heading); font-size: 1rem; font-weight: 600;
