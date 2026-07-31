@@ -1,13 +1,14 @@
 /* ===================================================================
    FantaSanRocco — Service Worker
-   • Offline: pagine (network-first + fallback cache/offline) e statici
-     same-origin (cache-first) → il programma resta consultabile offline.
+   • Pagine: sempre dalla rete (sono personalizzate: mai una copia in cache,
+     altrimenti si vede lo stato di login vecchio). Senza rete → offline.html.
+   • Statici same-origin (cache-first) → l'app si apre subito anche al freddo.
    • I tile della mappa (CARTO) e i font NON vengono intercettati: sono
      risorse cross-origin e passarle dal SW le rompeva (tile grigi / font
      sballati). Le gestisce direttamente il browser, come deve essere.
    • Notifiche push (Web Push): mostra la notifica e gestisce il click.
    =================================================================== */
-const VERSION = 'fsr-v8';
+const VERSION = 'fsr-v9';
 const CORE = ['/offline.html', '/icons/icon-192.png', '/manifest.json'];
 
 self.addEventListener('install', (e) => {
@@ -36,22 +37,14 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return;                 // solo GET, mai POST
   const url = new URL(req.url);
 
-  // Pagine (navigazioni): rete prima, poi cache, poi pagina offline.
-  // Le pagine sensibili (admin/2FA/login) non vengono mai salvate in cache:
-  // su un dispositivo condiviso non deve restare una copia offline dello
-  // storico del pannello admin o dei flussi di autenticazione.
+  // Pagine (navigazioni): SEMPRE dalla rete, mai dalla cache.
+  // Ogni pagina è personalizzata (header con nickname, punti, permessi), quindi
+  // una copia salvata è una fotografia dello stato di login di quel momento:
+  // riaprendo la PWA il service worker serviva quella copia e l'utente sembrava
+  // sloggato pur avendo la sessione valida. Senza rete si mostra la pagina
+  // offline; gli statici (CSS/JS/icone/foto) restano in cache qui sotto.
   if (req.mode === 'navigate') {
-    const noStore = /^\/(admin|2fa|login)(\/|$|\?)/.test(url.pathname + '');
-    if (noStore) { e.respondWith(fetch(req).catch(() => caches.match('/offline.html'))); return; }
-    e.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(VERSION).then((c) => c.put(req, copy)).catch(() => {});
-          return res;
-        })
-        .catch(() => caches.match(req).then((r) => r || caches.match('/offline.html')))
-    );
+    e.respondWith(fetch(req).catch(() => caches.match('/offline.html')));
     return;
   }
 

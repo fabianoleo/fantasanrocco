@@ -170,6 +170,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret-cambiami',
   resave: false,
   saveUninitialized: false,
+  rolling: true, // rinnova la scadenza del cookie a ogni richiesta: chi usa l'app non viene sloggato
   cookie: {
     httpOnly: true,
     sameSite: 'lax',
@@ -183,6 +184,16 @@ app.use((req, res, next) => {
   if (req.headers.cookie && req.headers.cookie.includes('fsr.sid=')) {
     res.setHeader('Set-Cookie', 'fsr.sid=; Path=/; Max-Age=0; HttpOnly; SameSite=lax');
   }
+  next();
+});
+
+// Le pagine HTML non vanno MAI messe in cache: ogni pagina mostra l'header con
+// il nickname (o il pulsante «Accedi»), quindi una copia salvata dal browser o
+// dal service worker mostrerebbe lo stato di login com'era al momento del
+// salvataggio — è il motivo per cui, riaprendo la PWA, sembrava di essere
+// sloggati pur avendo la sessione ancora valida.
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, must-revalidate');
   next();
 });
 
