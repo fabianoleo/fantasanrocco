@@ -62,6 +62,10 @@ const SPONSOR_ATTIVITA = [
   { file: 'target-communication.png', nome: 'Target Communication' },
   { file: 'di-filippo.png',          nome: 'Di Filippo Fotografi' },
   { file: 'vastola.png',             nome: "L'Arte dei Fiori Vastola" },
+  { file: 'alfocerrato.png',         nome: 'Alfonso Cerrato' },
+  { file: 'nilu.png',                nome: 'Nilù' },
+  { file: 'realsianese.png',         nome: 'Real Sianese' },
+  { file: 'trattoria.png',           nome: 'Trattoria da Menà' },
 ];
 
 const SPONSOR_LOGHI = (() => {

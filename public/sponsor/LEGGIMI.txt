@@ -62,11 +62,11 @@ STATO
   ⬜ = manca il file
   ❌ = file ricevuto ma non utilizzabile, serve rifarlo
 
-A oggi sono in linea 23 loghi su 38.
+A oggi sono in linea 34 loghi su 42.
 
 L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
 
-  ⬜ romalba.png              Romalba
+  ✅ romalba.png              Romalba
   ✅ nemo.png                 Nemo Restaurant Food & Wine
   ✅ gym-hall.png             Gym Hall Muscle Zone
   ✅ athena-fitness.png       Athena Fitness  schiarito solo nei neri
@@ -76,28 +76,29 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ✅ telefonia-eredi-leo.png  Telefonia Eredi Leo  gia' chiaro, nessuno schiarimento
   ✅ cycling-botta.png        Cycling Botta
   ✅ vitello-paesano.png      Al Vitello Paesano  gia' chiaro, nessuno schiarimento
+  ⬜ bar-frasci-2-0.png       Bar V. Frasci 2.0
   ✅ de-santis.png            De Santis  schiarito
   ✅ bellini-events.png       Bellini Events
   ✅ babba-house.png          Babba House
   ✅ bar-vittoria.png         Bar Vittoria  schiarito, viene un disco bianco
   ✅ kalu.png                 Kalu'  schiarito
   ✅ claudiopersonal.png      Claudio De Maio Personal Trainer  gia' chiaro
-  ⬜ luigi-fotografo.png      Luigi Fotografo
+  ✅ luigi-fotografo.png      Luigi Fotografo
   ✅ pizzeria-zio-mauro.png   Pizzeria Zio Mauro  schiarito
   ✅ pizzeria-frasci.png      Pizzeria V. Frasci  schiarito
   ✅ lamberti.png             Studio Dentistico Michele Lamberti  schiarito
-  ⬜ chalet.png               Chalet
+  ✅ chalet.png               Chalet
   ⬜ revolution.png           Revolution (Bar Kral)
   ✅ zio-enrico.png           Zanzibar Lounge Bar  schiarito
   ⬜ bar-sport.png            Bar Sport
-  ⬜ barberia-frasci.png      Barberia Frasci
+  ✅ barberia-frasci.png      Barberia Frasci
   ⬜ marcello-frasci.png      Marcello Frasci
   ✅ franzis.png              Franzy's  gia' chiaro, nessuno schiarimento
-  ⬜ pizzeria-walter.png      Pizzeria Walter
+  ✅ pizzeria-walter.png      Pizzeria Walter
   ⬜ mauro-parrucchiere.png   Mauro Parrucchiere
-  ⬜ bc-coffe.png             BC Coffe & More
+  ✅ bc-coffe.png             BC Coffe & More
   ⬜ parrucchiere-tony.png    Parrucchiere Tony
-  ⬜ bar-ideal.png            Bar Ideal
+  ✅ bar-ideal.png            Bar Ideal
   ⬜ gelateria-gerry.png      Gelateria Gerry
   ✅ tabacchino.png           Tabacchino della Chiesa
 
@@ -106,6 +107,10 @@ Non sul foglio, arrivati dopo:
   ✅ target-communication.png Target Communication  schiarito solo nei neri
   ❌ di-filippo.png           Di Filippo Fotografi  export rotto: fondo
                               grigio e un rettangolo bianco sulla destra
+  ✅ alfocerrato.png          Alfonso Cerrato  schiarito solo nei neri
+  ✅ nilu.png                 Nilù  scontornato e schiarito nei neri
+  ✅ realsianese.png          Real Sianese  scontornato
+  ✅ trattoria.png            Trattoria da Menà  scontornato, schiarito nei neri
   ✅ vastola.png              L'Arte dei Fiori Vastola  schiarito
 
 DA CHIEDERE ANCORA (1)
@@ -118,14 +123,10 @@ Nota: il file v-frasci.png in loghi-png/ e' della PIZZERIA, per questo il
 risultato si chiama pizzeria-frasci.png. Il Bar V. Frasci 2.0 e' un'altra
 attivita' e il suo logo manca ancora.
 
-Nota: in loghi-png/ restano solo gli originali dei diciotto loghi arrivati
-per ultimi (cycling-botta, pizzeria-zio-mauro, lamberti, kalu, athena-fitness,
-franzis, fatima-leo, zio-enrico, vitello-paesano, target-communication,
-day-by-day, telefonia-eredi-leo, spa, babba-house, claudiopersonal, medea,
-tabacchino, vastola).
-Gli altri originali sono stati rimossi: le versioni pronte in questa
-cartella bastano per la barra, ma se un logo va rifatto va richiesto di
-nuovo il file di partenza.
+Nota: in loghi-png/ restano gli originali dei 23 loghi arrivati dopo la
+prima infornata. Gli altri sono stati rimossi: le versioni pronte in
+questa cartella bastano per la barra, ma se un logo va rifatto va
+richiesto di nuovo il file di partenza.
 
 Nota: spa.png sta in questa cartella ma NON e' uno sponsor e non compare
 nella barra: e' il marchio del Virginia Resort, mostrato sulla scheda del
