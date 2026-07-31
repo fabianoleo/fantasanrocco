@@ -20,71 +20,8 @@ const multer = require('multer');
 
 const nodemailer = require('nodemailer');
 
-// ── Impronta percettiva delle foto (riconoscere i duplicati) ───────────────
-// dHash: la foto viene ridotta a 9×8 in scala di grigi e ogni pixel viene
-// confrontato con quello alla sua destra → 64 bit. Due immagini uguali danno
-// impronte quasi identiche anche dopo ricompressione o ridimensionamento,
-// perché il rapporto di luminosità fra pixel vicini non cambia.
-//
-// Soglia scelta misurando le foto vere già caricate:
-//   file identico 0 · via WhatsApp max 4 · ricompressa max 2 · screenshot max 3
-//   foto DIVERSE fra loro: mai sotto 8
-// Con 5 restiamo dentro tutti i duplicati reali e lontani dalle foto diverse.
-// Il ritaglio deliberato (fino a 13) sfugge: allargare la soglia
-// significherebbe accusare foto diverse, e qui un falso positivo costa caro.
-const PHASH_SOGLIA = 5;
-
-async function photoHash(filePath) {
-  try {
-    const { Jimp } = require('jimp');
-    const img = await Jimp.read(filePath);
-    img.greyscale().resize({ w: 9, h: 8 });
-    let bits = '';
-    for (let y = 0; y < 8; y++) {
-      for (let x = 0; x < 8; x++) {
-        const a = img.bitmap.data[(img.bitmap.width * y + x) * 4];
-        const b = img.bitmap.data[(img.bitmap.width * y + x + 1) * 4];
-        bits += a > b ? '1' : '0';
-      }
-    }
-    return BigInt('0b' + bits).toString(16).padStart(16, '0');
-  } catch (e) {
-    // Formato che jimp non digerisce (capita con qualche AVIF/JPEG anomalo):
-    // niente impronta, la prova passa comunque. Non è un motivo per bloccarla.
-    console.error('[PHASH]', e.message);
-    return null;
-  }
-}
-
-// Quanti bit differiscono fra due impronte (distanza di Hamming)
-function phashDistanza(a, b) {
-  try {
-    let x = BigInt('0x' + a) ^ BigInt('0x' + b);
-    let n = 0;
-    while (x) { n += Number(x & 1n); x >>= 1n; }
-    return n;
-  } catch (e) { return 64; }
-}
-
-// Magic bytes check sincrono — no dipendenze esterne, no CVE, no loop infinito
-const ALLOWED_MIME = new Set(['image/jpeg','image/png','image/webp','image/gif','image/avif']);
-const MIME_TO_EXT  = { 'image/jpeg':'.jpg','image/png':'.png','image/webp':'.webp','image/gif':'.gif','image/avif':'.avif' };
-
-function checkImageMagicBytes(filePath) {
-  try {
-    const fd  = fs.openSync(filePath, 'r');
-    const buf = Buffer.alloc(16);
-    fs.readSync(fd, buf, 0, 16, 0);
-    fs.closeSync(fd);
-    if (buf[0]===0xFF && buf[1]===0xD8 && buf[2]===0xFF) return 'image/jpeg';
-    if (buf.slice(0,8).equals(Buffer.from([0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A]))) return 'image/png';
-    if (buf.slice(0,4).toString('ascii')==='RIFF' && buf.slice(8,12).toString('ascii')==='WEBP') return 'image/webp';
-    if (buf.slice(0,6).toString('ascii')==='GIF87a' || buf.slice(0,6).toString('ascii')==='GIF89a') return 'image/gif';
-    // AVIF: ftyp box (offset 4) contiene 'avif' o 'avis'
-    if (buf.slice(4,8).toString('ascii')==='ftyp' && (buf.slice(8,12).toString('ascii').startsWith('avif') || buf.slice(8,12).toString('ascii').startsWith('avis'))) return 'image/avif';
-    return null;
-  } catch { return null; }
-}
+// Impronte delle foto e controllo dei primi byte: vedi lib/foto.js.
+const { PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes } = require('./lib/foto');
 
 const { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR } = require('./db');
 const { placesWithEvents } = require('./dati/luoghi');
@@ -273,30 +210,9 @@ async function pushToUser(userId, payload) {
   return rows.length;
 }
 
-// ── Backup automatico del database (copia locale a rotazione) ──────────────
-// Usa l'API di backup online di SQLite (sicura anche con WAL e scritture in
-// corso): produce un file .db consistente senza bloccare il sito.
-const BACKUP_KEEP = 30;                       // quanti snapshot tenere
-const BACKUP_EVERY_MS = 6 * 60 * 60 * 1000;   // ogni 6 ore
-function runBackup(reason) {
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const file = `backup-${stamp}${reason ? '-' + reason : ''}.db`;
-  const dest = path.join(BACKUPS_DIR, file);
-  return db.backup(dest)
-    .then(() => {
-      // Rotazione: tiene solo gli ultimi BACKUP_KEEP file
-      const files = fs.readdirSync(BACKUPS_DIR)
-        .filter((f) => f.endsWith('.db'))
-        .map((f) => ({ f, t: fs.statSync(path.join(BACKUPS_DIR, f)).mtimeMs }))
-        .sort((a, b) => b.t - a.t);
-      files.slice(BACKUP_KEEP).forEach(({ f }) => { try { fs.unlinkSync(path.join(BACKUPS_DIR, f)); } catch (e) {} });
-      console.log(`[BACKUP] creato ${file}`);
-      return file;
-    })
-    .catch((err) => { console.error('[BACKUP] fallito:', err.message); return null; });
-}
-runBackup('avvio');                                          // uno subito all'avvio del server
-setInterval(() => runBackup(), BACKUP_EVERY_MS);
+// Backup del database: vedi lib/backup.js.
+const { runBackup, avviaBackupPeriodici } = require('./lib/backup');
+avviaBackupPeriodici();
 
 // ── Audit log: traccia le azioni sensibili dello staff ──────────────────────
 function audit(req, action, details) {
@@ -825,34 +741,8 @@ function userPoints(userId) {
   return (r ? r.pts : 0) + (u ? u.points_adjust : 0);
 }
 
-// ── Livelli utente (in base ai punti totali) ────────────────────────────
-const LEVELS = [
-  { lv: 1,  title: 'Pellegrino',             at: 0 },
-  { lv: 2,  title: 'Devoto',                 at: 60 },
-  { lv: 3,  title: 'Fedele',                 at: 180 },
-  { lv: 4,  title: 'Portatore di cero',      at: 400 },
-  { lv: 5,  title: 'Cavaliere di San Rocco', at: 750 },
-  { lv: 6,  title: 'Guardiano della festa',  at: 1300 },
-  { lv: 7,  title: 'Veterano del Palio',     at: 2200 },
-  { lv: 8,  title: 'Maestro dei fuochi',     at: 3600 },
-  { lv: 9,  title: 'Leggenda di Siano',      at: 5500 },
-  { lv: 10, title: 'Santo tra i santi',      at: 8500 },
-];
-function userLevel(points) {
-  points = Math.max(0, points || 0);
-  let cur = LEVELS[0];
-  for (const l of LEVELS) { if (points >= l.at) cur = l; else break; }
-  const next = LEVELS.find((l) => l.at > points) || null;
-  const span = next ? (next.at - cur.at) : 1;
-  const into = Math.max(0, points - cur.at);
-  return {
-    level: cur.lv, title: cur.title, points,
-    nextAt: next ? next.at : null, nextTitle: next ? next.title : null,
-    toNext: next ? (next.at - points) : 0,
-    progress: next ? Math.min(100, Math.round(into / span * 100)) : 100,
-    max: !next,
-  };
-}
+// I dieci livelli e il calcolo da punti a livello: vedi lib/livelli.js.
+const { LEVELS, userLevel } = require('./lib/livelli');
 
 // Notifica il salto di livello. Confronta col livello dell'ULTIMA notifica
 // (non con uno "prima/dopo" calcolato sul momento): così si può richiamare
@@ -1218,29 +1108,8 @@ app.post('/2fa/disattiva', auth.requireLogin, (req, res) => {
 //  RECUPERO PASSWORD (utenti non loggati)
 // =========================================================================
 
-// Crea un transporter nodemailer.
-// Priorità: se EMAIL_USER è impostato usa Gmail (semplice per Render).
-// Se invece SMTP_HOST è impostato usa configurazione SMTP completa.
-// Altrimenti dev-mode: il link viene stampato in console.
-function makeMailTransporter() {
-  if (process.env.EMAIL_USER) {
-    return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    });
-  }
-  if (process.env.SMTP_HOST) {
-    return nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 587),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-    });
-  }
-  return null;
-}
+// Configurazione della posta in uscita: vedi lib/email.js.
+const { makeMailTransporter } = require('./lib/email');
 
 app.get('/programmazione', (req, res) => {
   res.render('programmazione', { title: 'Programmazione', places: placesWithEvents() });
