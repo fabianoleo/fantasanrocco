@@ -48,7 +48,22 @@ const PREMI = [
       'Hotel 3* e 4* o B&B di charme', '304 località in Europa',
       'Validità 39 mesi', 'Cofanetto regalo o e-Box',
     ],
-    foto: ['smartbox-cover.webp', 'smartbox-destinazioni.webp'],
+    // Otto foto invece di due: con tre o più il primo premio le mostra a
+    // mazzo di carte (vedi pz-stack in prize.ejs) invece che affiancate.
+    foto: [
+      'smartbox-hotel-royal-opera.webp', 'smartbox-camera-hotel.webp',
+      'smartbox-salotto-camino.webp', 'smartbox-spiaggia-algarve.webp',
+      'smartbox-terrazza-mare.webp', 'smartbox-piazza-bordeaux.webp',
+      'smartbox-maniero-edera.webp', 'smartbox-sacre-coeur.webp',
+    ],
+    // Didascalie del mazzo, nell'ordine di `foto`: senza, le carte sarebbero
+    // otto vedute anonime e non si capirebbe che sono le destinazioni.
+    fotoDidascalie: [
+      'Hotel Royal Opera, Parigi', 'Camera doppia con colazione',
+      'Salotto con camino', 'Spiagge dell’Algarve',
+      'Terrazza sul mare', 'Place de la Bourse, Bordeaux',
+      'Manieri di campagna', 'Sacré-Cœur, Parigi',
+    ],
   },
   {
     // Niente `offerto`: la spa ospita, non mette lei il premio in palio,
@@ -65,11 +80,14 @@ const PREMI = [
   {
     // Come sopra: il buono si spende da Nemo, ma non è il ristorante a
     // metterlo in palio.
-    pos: 3, nome: 'Buono da 100 €', valore: '100 €', icona: 'glass',
-    tagline: 'Cento euro da spendere a tavola',
-    desc: 'Un buono da cento euro per il Nemo Restaurant Food & Wine di Salerno: '
-        + 'cucina contemporanea di mare, pesce fresco e crudi, pasta fatta a mano. '
-        + 'Il terzo posto si festeggia seduti, con chi vuoi tu.',
+    // La cifra si dice UNA volta sola, in `valore`, e non nel titolo: fra
+    // nome, tagline, descrizione e le due righe di dettaglio i "100 €"
+    // finivano ripetuti cinque volte nella stessa scheda.
+    pos: 3, nome: 'Cena da Nemo', valore: '100 €', icona: 'glass',
+    tagline: 'Il terzo posto si festeggia a tavola',
+    desc: 'Un buono per il Nemo Restaurant Food & Wine di Salerno: cucina '
+        + 'contemporanea di mare, pesce fresco e crudi, pasta fatta a mano. '
+        + 'Da spendere seduti, con chi vuoi tu.',
     logo: 'nemo.png', logoNome: 'Nemo Restaurant Food & Wine',
   },
   { pos: 4,  nome: '6 mesi di prova gratuita', offerto: 'Gym Hall Muscle Zone', icona: 'bolt',
