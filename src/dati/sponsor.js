@@ -35,6 +35,9 @@ const SPONSOR_ATTIVITA = [
   { file: 'babba-house.png',         nome: 'Babba House' },
   { file: 'bar-vittoria.png',        nome: 'Bar Vittoria' },
   { file: 'kalu.png',                nome: 'Kalù' },
+  // Sul foglio era segnato solo "Claudio": il logo dice Claudio De Maio
+  // Personal Trainer, e vale il marchio perché è il nome che finisce nell'alt.
+  { file: 'claudiopersonal.png',     nome: 'Claudio De Maio Personal Trainer' },
   { file: 'luigi-fotografo.png',     nome: 'Luigi Fotografo' },
   { file: 'pizzeria-zio-mauro.png',  nome: 'Pizzeria Zio Mauro' },
   { file: 'pizzeria-frasci.png',     nome: 'Pizzeria V. Frasci' },

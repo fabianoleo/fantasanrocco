@@ -62,7 +62,7 @@ STATO
   ⬜ = manca il file
   ❌ = file ricevuto ma non utilizzabile, serve rifarlo
 
-A oggi sono in linea 18 loghi su 36.
+A oggi sono in linea 22 loghi su 37.
 
 L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
 
@@ -72,16 +72,16 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ✅ athena-fitness.png       Athena Fitness  schiarito solo nei neri
   ✅ fatima-leo.png           Fatima Leo Salon & Academy  schiarito
   ✅ day-by-day.png           Day by Day Multibrand Siano  schiarito
-  ⬜ medea.png                Centro Estetico Medea
+  ✅ medea.png                Centro Estetico Medea
   ✅ telefonia-eredi-leo.png  Telefonia Eredi Leo  gia' chiaro, nessuno schiarimento
   ✅ cycling-botta.png        Cycling Botta
   ✅ vitello-paesano.png      Al Vitello Paesano  gia' chiaro, nessuno schiarimento
-  ⬜ bar-frasci-2-0.png       Bar V. Frasci 2.0
   ✅ de-santis.png            De Santis  schiarito
   ✅ bellini-events.png       Bellini Events
-  ⬜ babba-house.png          Babba House
+  ✅ babba-house.png          Babba House
   ✅ bar-vittoria.png         Bar Vittoria  schiarito, viene un disco bianco
   ✅ kalu.png                 Kalu'  schiarito
+  ✅ claudiopersonal.png      Claudio De Maio Personal Trainer  gia' chiaro
   ⬜ luigi-fotografo.png      Luigi Fotografo
   ✅ pizzeria-zio-mauro.png   Pizzeria Zio Mauro  schiarito
   ✅ pizzeria-frasci.png      Pizzeria V. Frasci  schiarito
@@ -99,7 +99,7 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ⬜ parrucchiere-tony.png    Parrucchiere Tony
   ⬜ bar-ideal.png            Bar Ideal
   ⬜ gelateria-gerry.png      Gelateria Gerry
-  ⬜ tabacchino.png           Tabacchino della Chiesa
+  ✅ tabacchino.png           Tabacchino della Chiesa
 
 Non sul foglio, arrivati dopo:
 
@@ -117,10 +117,11 @@ Nota: il file v-frasci.png in loghi-png/ e' della PIZZERIA, per questo il
 risultato si chiama pizzeria-frasci.png. Il Bar V. Frasci 2.0 e' un'altra
 attivita' e il suo logo manca ancora.
 
-Nota: in loghi-png/ restano solo gli originali dei tredici loghi arrivati per
-ultimi (cycling-botta, pizzeria-zio-mauro, lamberti, kalu, athena-fitness,
+Nota: in loghi-png/ restano solo gli originali dei diciassette loghi arrivati
+per ultimi (cycling-botta, pizzeria-zio-mauro, lamberti, kalu, athena-fitness,
 franzis, fatima-leo, zio-enrico, vitello-paesano, target-communication,
-day-by-day, telefonia-eredi-leo, spa).
+day-by-day, telefonia-eredi-leo, spa, babba-house, claudiopersonal, medea,
+tabacchino).
 Gli altri originali sono stati rimossi: le versioni pronte in questa
 cartella bastano per la barra, ma se un logo va rifatto va richiesto di
 nuovo il file di partenza.

@@ -5328,9 +5328,10 @@ a.lb-prize:hover { color: var(--gold-2); }
    riscrivendo una seconda animazione da 0 a +50% si sarebbe dovuto rifare a
    mano il calcolo che tiene il giro senza stacchi. */
 .spon-track-inverso { animation-direction: reverse; }
-/* Un filo di respiro fra i due nastri, e il secondo leggermente più spento:
-   così si legge come una seconda fila e non come una riga staccata. */
-.spon-viewport-2 { margin-top: .55rem; }
+/* Respiro fra i due nastri, e il secondo leggermente più spento: così si
+   legge come una seconda fila e non come una riga staccata. Con .55rem i due
+   nastri si toccavano quasi e sembravano una fascia sola. */
+.spon-viewport-2 { margin-top: 1.4rem; }
 .spon-viewport-2 .spon-logo { opacity: .78; }
 @media (hover: none) { .spon-viewport-2 .spon-logo { opacity: .8; } }
 @media (hover: hover) { .spon-viewport-2 .spon-logo:hover { opacity: 1; } }
