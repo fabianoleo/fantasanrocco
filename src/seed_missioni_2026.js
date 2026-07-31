@@ -72,7 +72,7 @@ const MISSIONS = [
   m('Fila Infinita', 'Scatta una foto mentre sei in una lunga fila al bar.', 'non-comune', { sec: 'food' }),
   m('Vittoria', 'Scatta una foto della colazione o dell’aperitivo al bar Vittoria.', 'non-comune', { sec: 'food' }),
 
-  // ── SOCIAL & PARTY (15) ──────────────────────────────────────────
+  // ── SOCIAL & PARTY (16) ──────────────────────────────────────────
   m('Rocco', 'Scatta una foto con una persona di nome Rocco.', 'non-comune', { rep: true, sec: 'social' }),
   m('Kiss Kiss', 'Scatta una foto mentre dai baci durante la festa.', 'comune', { rep: true, sec: 'social' }),
   m('Spia', 'Scatta una foto mentre si compie un malus da definire.', 'epica', { sec: 'social' }),
@@ -88,6 +88,10 @@ const MISSIONS = [
   m('Calici in Alto', 'Scatta una foto in cui tutti alzano i bicchieri.', 'comune', { sec: 'social' }),
   m('Cecchino', 'Scatta una foto con il pupazzo vinto sparando alle lattine.', 'non-comune', { sec: 'social' }),
   m("Nu Gir Ngopp a Giostr", 'Scatta una foto mentre fai un giro su una giostra presente alla festa.', 'comune', { sec: 'social' }),
+  // Epica come Pigiama Party: il costume ad agosto te lo devi procurare, e qui
+  // in più c'è da offrire da bere. La foto deve mostrare tutte e due le cose,
+  // altrimenti resta un travestimento e basta.
+  m('Missione Gnak', 'Vestiti da Babbo Natale, offri un drink a qualcuno e scatta una foto del brindisi.', 'epica', { sec: 'social' }),
 
   // ── SPORT, TEAM & COMUNITÀ (9) ───────────────────────────────────
   m('Partitella', 'Scatta una foto durante una partita con il pallone in piazza.', 'non-comune', { sec: 'sport' }),

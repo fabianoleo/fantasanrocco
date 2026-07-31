@@ -113,6 +113,18 @@ const NUOVE = [
   { name: 'Tutto Pronto per il Palio',
     desc: 'Scatta una foto mentre preparano i fuochi d’artificio sulla strada provinciale verso Bracigliano.',
     rar: 'epica', da: GIORNO(18)[0], a: GIORNO(18)[1] },
+
+  // ── Giro del 31 luglio 2026 ──────────────────────────────────────
+  // Epica come Pigiama Party: il costume ad agosto te lo devi procurare, e qui
+  // in più c'è da offrire da bere. La foto deve mostrare tutte e due le cose,
+  // altrimenti resta un travestimento e basta.
+  // Entra in 'social' e non fra le sfide speciali: è una missione fissa, si
+  // può fare in un giorno qualunque della festa. Attenzione che così la
+  // sezione passa da 15 a 16 tappe, quindi il bonus «sezione completata»
+  // chiede una missione in più di prima.
+  { name: 'Missione Gnak',
+    desc: 'Vestiti da Babbo Natale, offri un drink a qualcuno e scatta una foto del brindisi.',
+    rar: 'epica', sec: 'social' },
 ];
 
 let added = 0;
