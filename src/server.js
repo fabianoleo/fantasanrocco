@@ -20,7 +20,7 @@ const multer = require('multer');
 const nodemailer = require('nodemailer');
 
 // Impronte delle foto e controllo dei primi byte: vedi lib/foto.js.
-const { PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes } = require('./lib/foto');
+const { PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes, ALLOWED_MIME, MIME_TO_EXT } = require('./lib/foto');
 
 const { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR } = require('./db');
 const { placesWithEvents } = require('./dati/luoghi');

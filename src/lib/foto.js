@@ -77,4 +77,4 @@ function checkImageMagicBytes(filePath) {
   } catch { return null; }
 }
 
-module.exports = { PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes, ALLOWED_MIME };
+module.exports = { PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes, ALLOWED_MIME, MIME_TO_EXT };

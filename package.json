@@ -7,7 +7,10 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed": "node strumenti/crea_admin.js",
-    "create-admin": "node strumenti/crea_admin.js admin"
+    "create-admin": "node strumenti/crea_admin.js admin",
+    "prova": "node strumenti/fumo.js && node strumenti/prova_azioni.js",
+    "prova:pagine": "node strumenti/fumo.js",
+    "prova:azioni": "node strumenti/prova_azioni.js"
   },
   "license": "MIT",
   "dependencies": {
