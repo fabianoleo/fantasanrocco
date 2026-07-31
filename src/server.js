@@ -540,7 +540,7 @@ app.get('/', (req, res) => {
 // motivo di vivere nel file delle rotte. Vedi la nota li' dentro su perche'
 // l'elenco deve restare uno solo.
 const {
-  PREMI, PREMI_PODIO, PREMI_LISTA, PREMI_GIOCHI,
+  PREMI, PREMI_PODIO, PREMI_LISTA, PREMI_GIOCHI, PREMI_TORNEI,
   PREMIO_PER_POSIZIONE, PREMIO_PER_GIOCO,
   NOMI_GIOCHI, ULTIMA_POSIZIONE_PREMIATA,
 } = require('./dati/premi');
@@ -564,6 +564,7 @@ app.get('/premio', (req, res) => {
     premiPodio: PREMI_PODIO,
     premiLista: PREMI_LISTA,
     premiGiochi: PREMI_GIOCHI,
+    premiTornei: PREMI_TORNEI,
     nomiGiochi: NOMI_GIOCHI,
     totalePremi: PREMI.length,
     ultimaPosizione: ULTIMA_POSIZIONE_PREMIATA,

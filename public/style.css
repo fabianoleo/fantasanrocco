@@ -5552,3 +5552,5 @@ a.lb-prize:hover { color: var(--gold-2); }
 .sg-meta { margin: 0 0 .5rem; font-size: .7rem; color: var(--text-3); }
 .sg-meta code { background: rgba(255,255,255,.05); padding: .05rem .3rem; border-radius: 4px; }
 .sg-riga-azione { margin: 0; }
+/* Una sola card: senza limite si allargherebbe a tutta la riga */
+.pz-grid-torneo { max-width: 280px; margin-left: auto; margin-right: auto; }

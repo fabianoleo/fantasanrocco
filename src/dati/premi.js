@@ -37,7 +37,7 @@ const RADICE = path.join(__dirname, '..', '..');
 // da solo il giorno che il PNG arriva, senza rimettere mano a questo elenco.
 const PREMI = [
   {
-    pos: 1, nome: 'Vacanza in Europa', valore: '239,90 €', icona: 'globe',
+    pos: 1, nome: 'SmartBox — Vacanza in Europa', valore: '230 €', icona: 'globe',
     tagline: 'Due notti per due, dove volete voi',
     desc: 'Un cofanetto regalo con due notti e colazione per due persone, da scegliere '
         + 'fra 304 hotel a 3 e 4 stelle e B&B di charme in tutta Europa. '
@@ -48,77 +48,65 @@ const PREMI = [
       'Hotel 3* e 4* o B&B di charme', '304 località in Europa',
       'Validità 39 mesi', 'Cofanetto regalo o e-Box',
     ],
-    // Otto foto invece di due: con tre o più il primo premio le mostra a
-    // mazzo di carte (vedi pz-stack in prize.ejs) invece che affiancate.
-    foto: [
-      'smartbox-hotel-royal-opera.webp', 'smartbox-camera-hotel.webp',
-      'smartbox-salotto-camino.webp', 'smartbox-spiaggia-algarve.webp',
-      'smartbox-terrazza-mare.webp', 'smartbox-piazza-bordeaux.webp',
-      'smartbox-maniero-edera.webp', 'smartbox-sacre-coeur.webp',
-    ],
-    // Didascalie del mazzo, nell'ordine di `foto`: senza, le carte sarebbero
-    // otto vedute anonime e non si capirebbe che sono le destinazioni.
-    fotoDidascalie: [
-      'Hotel Royal Opera, Parigi', 'Camera doppia con colazione',
-      'Salotto con camino', 'Spiagge dell’Algarve',
-      'Terrazza sul mare', 'Place de la Bourse, Bordeaux',
-      'Manieri di campagna', 'Sacré-Cœur, Parigi',
-    ],
+    foto: ['smartbox-cover.webp', 'smartbox-destinazioni.webp'],
   },
   {
-    // Niente `offerto`, come per il Percorso Spa: la cena si fa da Nemo, ma
-    // non è il ristorante a metterla in palio.
-    pos: 2, nome: 'Cena da Nemo', valore: '100 €', icona: 'glass',
+    // Niente `offerto`: la spa ospita, non mette lei il premio in palio,
+    // quindi la scheda non dice "offerto da". Il logo si vede lo stesso — è
+    // per questo che `logo` è separato da `offerto`.
+    // spa.png sta in public/sponsor/ perché è lì che vivono i marchi, ma NON
+    // è in SPONSOR_ATTIVITA: nel nastro degli sponsor non compare.
+    pos: 2, nome: 'Percorso SPA', icona: 'sparkle',
+    tagline: 'Una giornata per due, a rimettersi in sesto',
+    desc: 'Percorso SPA al Virginia Resort per due persone: una giornata intera per '
+        + 'riprendersi da una settimana passata a rincorrere missioni, fuochi e classifica.',
+    logo: 'spa.png', logoNome: 'Virginia Resort',
+  },
+  {
+    // Come sopra: il buono si spende da Nemo, ma non è il ristorante a
+    // metterlo in palio.
+    pos: 3, nome: 'Buono da 100 €', valore: '100 €', icona: 'glass',
     tagline: 'Cento euro da spendere a tavola',
     desc: 'Un buono da cento euro per il Nemo Restaurant Food & Wine di Salerno: '
         + 'cucina contemporanea di mare, pesce fresco e crudi, pasta fatta a mano. '
-        + 'Il secondo posto si festeggia seduti, con chi vuoi tu.',
+        + 'Il terzo posto si festeggia seduti, con chi vuoi tu.',
     logo: 'nemo.png', logoNome: 'Nemo Restaurant Food & Wine',
   },
-  {
-    // Niente `offerto`: la spa si limita a ospitare, non mette lei il premio
-    // in palio, quindi la scheda non deve dire "offerto da". Il logo si vede
-    // lo stesso — è per questo che `logo` è separato da `offerto`.
-    // Nota: spa.png sta in public/sponsor/ perché è lì che vivono i marchi,
-    // ma NON è in SPONSOR_ATTIVITA e quindi non gira nella barra sponsor.
-    pos: 3, nome: 'Ingresso in Spa', icona: 'sparkle',
-    tagline: 'Una giornata per due, a rimettersi in sesto',
-    desc: 'Ingresso giornaliero feriale in spa per due persone: una giornata intera '
-        + 'per riprendersi da una settimana passata a rincorrere missioni, fuochi e classifica.',
-    logo: 'spa.png', logoNome: 'Virginia Resort',
-  },
-  { pos: 4,  nome: '6 mesi di prove gratuite', offerto: 'Gym Hall Muscle Zone', icona: 'bolt',
+  { pos: 4,  nome: '6 mesi di prova gratuita', offerto: 'Gym Hall Muscle Zone', icona: 'bolt',
     logo: 'gym-hall.png' },
   { pos: 5,  nome: '5 lezioni di personal training', offerto: 'Athena Fitness', icona: 'target',
     nota: 'Con il personal trainer Claudio De Maio',
     logo: 'athena-fitness.png' },
-  { pos: 6,  nome: 'Trattamento', offerto: 'Fatima Leo Salon & Academy', valore: '50 €', icona: 'candle',
-    nota: 'Valido un anno', logo: 'fatima-leo.png' },
-  { pos: 7,  nome: 'Buono spesa', offerto: 'Day by Day Multibrand Siano', valore: '50 €', icona: 'ticket',
-    logo: 'day-by-day.png' },
-  // Senza `valore`: erano cinque lampade da 50 €, ora sono tre e quanto valgano
-  // non l'ha detto nessuno. Meglio non scrivere niente che scrivere una cifra
-  // sbagliata su un premio vero. La scheda regge: il valore è facoltativo.
-  { pos: 8,  nome: '3 lampade',   offerto: 'Centro Estetico Medea', icona: 'sun',
-    logo: 'medea.png' },
-  // Anche qui senza `valore`, come le lampade: era indicato "40–50 €", una
-  // forbice e non una cifra, e su un premio vero è meglio non scrivere niente.
-  { pos: 9,  nome: 'Friggitrice ad aria', offerto: 'Telefonia Eredi Leo', icona: 'flame',
+  { pos: 6,  nome: 'Friggitrice ad aria', offerto: 'Telefonia Eredi Leo', icona: 'flame',
     logo: 'telefonia-eredi-leo.png' },
-  { pos: 10, nome: 'Macchinetta del caffè',  icona: 'coffee', foto: ['caffe.webp'] },
-  // ── Gli ultimi due non si vincono in classifica generale ────────────────
-  // Vanno a chi comanda le classifiche dei due mini-giochi. Hanno `gioco` al
-  // posto di `pos`: è la differenza che tiene separate le due gare, perché
-  // i record dei giochi sono una classifica a parte e non danno punti diretti.
-  { gioco: 'runner', nome: 'Buono acquisto', offerto: 'Cycling Botta', valore: '30 €', icona: 'bike',
+  { pos: 7,  nome: 'Buono trattamento', offerto: 'Fatima Leo Salon & Academy', valore: '50 €', icona: 'candle',
+    nota: 'Valido un anno', logo: 'fatima-leo.png' },
+  { pos: 8,  nome: 'Buono spesa', offerto: 'Day by Day Multibrand Siano', valore: '50 €', icona: 'ticket',
+    logo: 'day-by-day.png' },
+  { pos: 9,  nome: 'Buono', offerto: 'Alfonso Cerrato', valore: '30 €', icona: 'gift',
+    logo: 'alfocerrato.png' },
+  { pos: 10, nome: 'Buono 3 lampade', offerto: 'Centro Estetico Medea', icona: 'sun',
+    logo: 'medea.png' },
+
+  // ── Gli ultimi tre non si vincono in classifica generale ────────────────
+  // Due vanno a chi comanda le classifiche dei mini-giochi, che sono una gara
+  // separata: hanno `gioco` invece di `pos`.
+  { gioco: 'runner', nome: 'Buono Cicli Botti', offerto: 'Cycling Botta', valore: '30 €', icona: 'bike',
     nota: 'Vendita e riparazione bici a Siano dal 1923',
     logo: 'cycling-botta.png' },
-  // "Buono macelleria" e non "Buono" liscio: accanto al nickname si vede solo
-  // il nome del premio, e ci sono già un "Buono spesa" e un "Buono acquisto" —
-  // un terzo "Buono" non direbbe nulla.
-  { gioco: 'jetpack', nome: 'Buono macelleria', offerto: 'Vitello Paesano', valore: '20 €', icona: 'ticket',
+  { gioco: 'jetpack', nome: 'Buono panino e bibita', offerto: 'BC Coffe & More', valore: '30 €', icona: 'coffee',
+    logo: 'bc-coffe.png' },
+
+  // E uno non si vince nemmeno giocando qui: è del Torneo delle Missioni su
+  // Instagram, che è una gara a parte con regole sue. Ha `torneo` al posto di
+  // `pos` e di `gioco` — tre categorie diverse perché sono tre gare diverse,
+  // e mescolarle in classifica prometterebbe a qualcuno un premio che non può
+  // vincere restando sul sito.
+  { torneo: 'instagram', nome: 'Buono premio', offerto: 'Al Vitello Paesano', valore: '20 €', icona: 'instagram',
+    nota: 'Al vincitore del Torneo delle Missioni su Instagram',
     logo: 'vitello-paesano.png', logoNome: 'Al Vitello Paesano' },
 ];
+
 
 // Il marchio si mostra solo se il PNG c'è davvero, come per la barra sponsor:
 // un logo annunciato ma non ancora arrivato diventerebbe un'immagine rotta
@@ -138,6 +126,11 @@ const NOMI_GIOCHI = { runner: 'Corri San Rocco', jetpack: 'San Rocco Jetpack' };
 const PREMI_PODIO = PREMI.filter((p) => p.pos && p.pos <= 3);
 const PREMI_LISTA = PREMI.filter((p) => p.pos && p.pos > 3);
 const PREMI_GIOCHI = PREMI.filter((p) => p.gioco);
+// Terza categoria: i premi che non si vincono nè in classifica nè giocando
+// qui, ma in gare che vivono fuori dal sito (per ora il Torneo delle Missioni
+// su Instagram). Tenerli separati serve a non prometterli a chi guarda la
+// classifica: da lì non si raggiungono.
+const PREMI_TORNEI = PREMI.filter((p) => p.torneo);
 // Fin dove arriva la classifica generale a premiare: si ricava dall'elenco,
 // così aggiungendo un premio non resta una soglia scritta a mano da qualche
 // altra parte che dice un numero diverso.
@@ -155,6 +148,7 @@ module.exports = {
   PREMI,
   PREMI_PODIO,
   PREMI_LISTA,
+  PREMI_TORNEI,
   PREMI_GIOCHI,
   PREMIO_PER_POSIZIONE,
   PREMIO_PER_GIOCO,

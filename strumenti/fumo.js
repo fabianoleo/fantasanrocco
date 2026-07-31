@@ -81,7 +81,11 @@ const PAGINE = [
 // Frammenti che DEVONO comparire: se una pagina risponde 200 ma vuota, il
 // codice HTTP da solo non se ne accorge.
 const CONTENUTI = [
-  { via: '/premio',     chi: 'anonimo', cerca: 'Vacanza in Europa', cosa: 'primo premio' },
+  { via: '/premio',     chi: 'anonimo', cerca: 'SmartBox',          cosa: 'primo premio' },
+  // Il premio del Torneo Instagram non si vince nè in classifica nè ai
+  // giochi: ha una sezione sua, e senza questa riga potrebbe sparire senza
+  // che nessuna pagina si rompa.
+  { via: '/premio',     chi: 'anonimo', cerca: 'Torneo delle Missioni', cosa: 'premio del torneo Instagram' },
   // Il tasto delle segnalazioni sta nel footer, quindi e' su ogni pagina: se
   // sparisce, sparisce ovunque e nessuno puo' piu' segnalare niente.
   { via: '/',           chi: 'anonimo', cerca: 'segnalaDialog',     cosa: 'modulo segnalazioni nel footer' },
