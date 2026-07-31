@@ -131,9 +131,16 @@ function creaSessione() {
 
   // 2. server sulla copia. SECURE_COOKIES spento: in locale si va in http e
   //    il cookie di sessione con `secure` non verrebbe mai rimandato indietro.
+  // VAPID svuotate: il database di prova e' una COPIA di quello vero e si
+  // porta dietro gli endpoint REALI dei dispositivi iscritti. Senza chiavi
+  // il server mette PUSH_ENABLED a false e non puo' raggiungere nessuno.
   const srv = spawn(process.execPath, [path.join(RADICE, 'src', 'server.js')], {
     cwd: RADICE,
-    env: { ...process.env, DATA_DIR: cartella, PORT: String(PORTA), SECURE_COOKIES: 'false' },
+    env: {
+      ...process.env,
+      DATA_DIR: cartella, PORT: String(PORTA), SECURE_COOKIES: 'false',
+      VAPID_PUBLIC_KEY: '', VAPID_PRIVATE_KEY: '',
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let logServer = '';

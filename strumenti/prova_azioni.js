@@ -110,9 +110,18 @@ function creaSessione() {
   if (fs.existsSync(vero)) fs.copyFileSync(vero, path.join(cartella, 'fantasanrocco.db'));
   fs.mkdirSync(path.join(cartella, 'uploads'), { recursive: true });
 
+  // VAPID svuotate di proposito: senza chiavi il server mette PUSH_ENABLED a
+  // false e nessuna notifica parte. Il database di prova e' una COPIA di
+  // quello vero e contiene gli endpoint REALI dei dispositivi iscritti:
+  // caricare una foto avvisa lo staff, e senza questa riga la prova
+  // suonerebbe il telefono di qualcuno ogni volta che la si lancia.
   const srv = spawn(process.execPath, [path.join(RADICE, 'src', 'server.js')], {
     cwd: RADICE,
-    env: { ...process.env, DATA_DIR: cartella, PORT: String(PORTA), SECURE_COOKIES: 'false' },
+    env: {
+      ...process.env,
+      DATA_DIR: cartella, PORT: String(PORTA), SECURE_COOKIES: 'false',
+      VAPID_PUBLIC_KEY: '', VAPID_PRIVATE_KEY: '',
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   let log = '';
