@@ -3715,10 +3715,25 @@ app.post('/admin/reset-gioco', auth.requireAdmin, (req, res) => {
     db.prepare('UPDATE invites SET used = 0, used_by_user_id = NULL, used_at = NULL').run();
     db.prepare("UPDATE invites SET created_by = NULL WHERE created_by IN (SELECT id FROM users WHERE role != 'admin')").run();
     db.prepare("DELETE FROM users WHERE role != 'admin'").run();   // tutti gli utenti tranne gli admin
-    // I codici premio (link/QR) restano, ma tornano TUTTI riscattabili
+    // I codici premio (link/QR) restano, ma tornano TUTTI riscattabili: i QR
+    // sono già stampati e appesi, buttarli via a ogni reset non avrebbe senso.
     db.prepare('UPDATE reward_codes SET claimed_by = NULL, claimed_at = NULL').run();
-    // Classifica pulita: azzera anche le statistiche di gioco degli admin rimasti
+    // Storico delle partite: si azzera come tutto il resto. Gli utenti che le
+    // hanno giocate spariscono qui sotto, quindi tenerlo lascerebbe righe che
+    // puntano a nessuno — e la pagina statistiche direbbe "N partite" con
+    // zero giocatori in elenco.
+    db.prepare('DELETE FROM game_runs').run();
+    // Missioni di carriera del Jetpack. Per gli utenti cancellati sparirebbero
+    // da sole (ON DELETE CASCADE), ma gli admin restano: senza questo si
+    // ritroverebbero zero stelle e tre missioni già a metà, e le chiuderebbero
+    // al primo volo riprendendosi subito i gradi.
+    db.prepare('DELETE FROM jetpack_missions').run();
+    // Classifica pulita: azzera anche le statistiche di gioco degli admin
+    // rimasti. Le tre colonne jp_* sono arrivate dopo ed erano rimaste fuori:
+    // un admin si teneva record e stelle, e con le stelle già in tasca si
+    // riprendeva i gradi (e i punti) al primo volo.
     db.prepare(`UPDATE users SET points_adjust = 0, game_best = 0, game_plays = 0,
+                jp_best = 0, jp_plays = 0, jp_stars = 0,
                 streak_day = 0, streak_last_day = NULL, last_wheel_day = NULL`).run();
   })();
 
