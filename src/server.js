@@ -2098,9 +2098,13 @@ app.get('/profilo', auth.requireLogin, (req, res) => {
     ORDER BY s.created_at DESC
   `).all(req.currentUser.id);
   const total = userPoints(req.currentUser.id);
+  // «missioni totali» si conta, non si scrive a mano: era rimasto 105 mentre
+  // in home lo stesso numero era già dinamico, e le due pagine si
+  // contraddicevano. Stesso conteggio della home, vedi la nota lì.
+  const nMissioni = db.prepare('SELECT COUNT(*) c FROM missions').get().c;
   res.render('profile', {
     title: 'Il mio profilo',
-    subs, total,
+    subs, total, nMissioni,
     level: userLevel(total),
     badges: userGameAchievements(req.currentUser.id),
     streak: streakStatus(req.currentUser),
