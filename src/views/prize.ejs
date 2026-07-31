@@ -53,7 +53,30 @@
         </ul>
       </div>
       <div class="pz-photos-area">
-        <% if (foto.length >= 2) { %>
+        <%# Da tre foto in su il riquadro diventa un mazzo di carte: il primo
+            premio ne ha otto, affiancate sarebbero otto francobolli. Si
+            sfoglia trascinando su e giù, con le frecce o con i tasti.
+            Senza JavaScript resta la prima carta, che è una foto normale. %>
+        <% if (foto.length >= 3) { const didas = p.fotoDidascalie || []; %>
+          <div class="pz-stack" data-pz-stack>
+            <ul class="pz-stack-cards <%= st.bordo %>">
+              <% foto.forEach(function (f, i) { %>
+                <li class="pz-stack-card" style="--i: <%= i %>">
+                  <img src="/images/premi/<%= f %>"
+                       alt="<%= didas[i] || p.nome %>"
+                       <%= i === 0 ? '' : 'loading="lazy"' %>
+                       draggable="false">
+                  <% if (didas[i]) { %><span class="pz-stack-cap"><%= didas[i] %></span><% } %>
+                </li>
+              <% }) %>
+            </ul>
+            <button type="button" class="pz-stack-nav pz-stack-prev" aria-label="Foto precedente"><%- icon('chevron-left') %></button>
+            <button type="button" class="pz-stack-nav pz-stack-next" aria-label="Foto successiva"><%- icon('chevron-right') %></button>
+            <div class="pz-stack-dots" aria-hidden="true">
+              <% foto.forEach(function (f, i) { %><span class="pz-stack-dot"></span><% }) %>
+            </div>
+          </div>
+        <% } else if (foto.length >= 2) { %>
           <div class="pz-photos-duo">
             <% foto.slice(0, 2).forEach(function (f) { %>
               <div class="pz-photo <%= st.bordo %>">
@@ -211,3 +234,5 @@
     </div>
   </div>
 </div>
+
+<script src="/premio-stack.js?v=2" defer></script>

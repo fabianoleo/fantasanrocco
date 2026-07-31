@@ -48,7 +48,22 @@ const PREMI = [
       'Hotel 3* e 4* o B&B di charme', '304 località in Europa',
       'Validità 39 mesi', 'Cofanetto regalo o e-Box',
     ],
-    foto: ['smartbox-cover.webp', 'smartbox-destinazioni.webp'],
+    // Otto foto invece di due: con tre o più il primo premio le mostra a
+    // mazzo di carte (vedi pz-stack in prize.ejs) invece che affiancate.
+    foto: [
+      'smartbox-hotel-royal-opera.webp', 'smartbox-camera-hotel.webp',
+      'smartbox-salotto-camino.webp', 'smartbox-spiaggia-algarve.webp',
+      'smartbox-terrazza-mare.webp', 'smartbox-piazza-bordeaux.webp',
+      'smartbox-maniero-edera.webp', 'smartbox-sacre-coeur.webp',
+    ],
+    // Didascalie del mazzo, nell'ordine di `foto`: senza, le carte sarebbero
+    // otto vedute anonime e non si capirebbe che sono le destinazioni.
+    fotoDidascalie: [
+      'Hotel Royal Opera, Parigi', 'Camera doppia con colazione',
+      'Salotto con camino', 'Spiagge dell’Algarve',
+      'Terrazza sul mare', 'Place de la Bourse, Bordeaux',
+      'Manieri di campagna', 'Sacré-Cœur, Parigi',
+    ],
   },
   {
     // Niente `offerto`, come per il Percorso Spa: la cena si fa da Nemo, ma

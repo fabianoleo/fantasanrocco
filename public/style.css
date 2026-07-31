@@ -2725,6 +2725,111 @@ body { overflow-x: clip; }
 }
 .pz-photo:hover img { transform: scale(1.06); }
 .pz-photo-single img { aspect-ratio: 5/4; }
+/* ── Mazzo di carte (premi con tre o più foto) ─────────────────────────────
+   Le carte stanno una sopra l'altra, sfalsate verso l'alto e via via più
+   piccole e più spente. Si sfoglia trascinando su e giù, con le frecce ai
+   lati o con i tasti direzionali. La posizione nel mazzo la scrive il JS in
+   --pos: qui c'è solo come si traduce in trasformazione, così l'animazione
+   resta al compositore e non passa dal JS a ogni fotogramma. */
+.pz-stack {
+  --pz-stack-off: 13px;    /* di quanto sporge una carta da quella davanti */
+  --pz-stack-scala: .052;  /* quanto rimpicciolisce a ogni posizione */
+  --pz-stack-visibili: 4;  /* oltre questa profondità le carte non si vedono */
+  position: relative;
+  border-radius: .6rem;
+  /* Spazio in alto per le carte sfalsate e in basso per i pallini, altrimenti
+     mangerebbero il bordo del riquadro. */
+  padding: calc(var(--pz-stack-off) * var(--pz-stack-visibili)) 0 1.6rem;
+}
+/* La cornice della medaglia sta qui e non sul contenitore esterno: questo
+   riquadro ha esattamente l'ingombro della carta davanti, mentre il
+   contenitore è più alto per via dello spazio delle carte sfalsate e dei
+   pallini, e il filo dorato gli girerebbe attorno storto. */
+.pz-stack-cards {
+  position: relative;
+  list-style: none; margin: 0; padding: 0;
+  aspect-ratio: 4/3;
+  border-radius: .6rem;
+}
+.pz-stack-card {
+  /* Posizione nel mazzo. Il valore di partenza è l'ordine in cui le carte
+     stanno nell'HTML (--i, scritto dal template): così, se il JS non parte,
+     davanti resta la PRIMA foto e non l'ultima del sorgente. Da lì in poi è
+     il JS a riscrivere --pos inline, che vince su questa. */
+  --pos: var(--i, 0);
+  position: absolute; inset: 0;
+  border-radius: .6rem; overflow: hidden;
+  background: #0b0a14;
+  transform: translate3d(0, calc(var(--pos) * var(--pz-stack-off) * -1), 0)
+             scale(calc(1 - var(--pos) * var(--pz-stack-scala)));
+  filter: brightness(calc(1 - var(--pos) * .13));
+  z-index: calc(100 - var(--pos));
+  transition: transform .42s var(--ease, cubic-bezier(.22,1,.36,1)),
+              filter .42s ease, opacity .3s ease;
+  /* Le carte troppo in fondo si spengono: tenerle tutte disegnate allunga il
+     mazzo di una scaletta che non si legge più e costa comunque al compositore. */
+  opacity: 1;
+}
+.pz-stack-card[data-oltre] { opacity: 0; pointer-events: none; }
+/* La carta davanti la marca il JS con data-fronte: NON è la prima del DOM,
+   che resta ferma mentre il mazzo gira. */
+.pz-stack-card[data-fronte] { cursor: grab; touch-action: pan-x; }
+.pz-stack.is-drag .pz-stack-card { transition: none; }
+.pz-stack.is-drag .pz-stack-card[data-fronte] { cursor: grabbing; }
+.pz-stack-card img {
+  width: 100%; height: 100%; display: block;
+  object-fit: cover;
+  -webkit-user-select: none; user-select: none;
+}
+.pz-stack-cap {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 1.6rem .8rem .6rem;
+  font-size: .78rem; font-weight: 600; color: #fff;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.72) 60%);
+  opacity: 0; transition: opacity .3s ease;
+}
+/* La didascalia sta solo sulla carta davanti: sulle altre spunterebbe dal
+   bordo sfalsato come una riga di testo mozzata. */
+.pz-stack-card[data-fronte] .pz-stack-cap { opacity: 1; }
+
+.pz-stack-nav {
+  position: absolute; top: 50%; z-index: 200;
+  display: grid; place-items: center;
+  width: 34px; height: 34px; padding: 0;
+  border-radius: 100px; cursor: pointer;
+  color: var(--text); background: rgba(12,10,22,.72);
+  border: 1px solid var(--border-gold);
+  backdrop-filter: blur(6px);
+  transform: translateY(-50%);
+  transition: background .2s var(--ease), transform .2s var(--ease);
+}
+.pz-stack-nav:hover { background: rgba(20,17,34,.9); }
+.pz-stack-prev { left: -10px; }
+.pz-stack-next { right: -10px; }
+.pz-stack-prev:hover { transform: translateY(-50%) translateX(-2px); }
+.pz-stack-next:hover { transform: translateY(-50%) translateX(2px); }
+.pz-stack-nav .ico { width: 17px; height: 17px; }
+
+.pz-stack-dots {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; justify-content: center; gap: .3rem;
+}
+.pz-stack-dot {
+  width: 5px; height: 5px; border-radius: 100px;
+  background: rgba(255,255,255,.22);
+  transition: width .3s var(--ease), background .3s ease;
+}
+.pz-stack-dot[data-on] { width: 17px; background: var(--gold-2); }
+
+/* Senza JavaScript il mazzo non si sfoglia: si tiene la prima foto e si
+   tolgono i comandi, che non farebbero niente. */
+.pz-stack:not([data-pronto]) .pz-stack-nav,
+.pz-stack:not([data-pronto]) .pz-stack-dots { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pz-stack-card { transition: none; }
+}
+
 .pz-photo-border-gold   { box-shadow: 0 0 0 1px rgba(212,160,26,.22), 0 16px 48px rgba(212,160,26,.1); }
 .pz-photo-border-silver { box-shadow: 0 0 0 1px rgba(192,192,220,.18), 0 16px 48px rgba(192,192,220,.07); }
 .pz-photo-border-bronze { box-shadow: 0 0 0 1px rgba(205,127,50,.22), 0 16px 48px rgba(205,127,50,.09); }
