@@ -714,8 +714,7 @@ app.get('/', (req, res) => {
 // vanno mostrati senza che l'attività offra il premio — il buono del 2º
 // posto si spende da Nemo, ma non è il ristorante a metterlo in palio, e
 // infatti quella scheda non ha `offerto`. Per questo il marchio porta con sé
-// `logoNome` (il nome per l'alt) e, sul podio, `logoNota` (la riga che dice
-// che rapporto c'è fra l'attività e il premio).
+// `logoNome`, il nome che finisce nell'alt dell'immagine.
 // I file che non ci sono ancora restano indicati lo stesso: il logo compare
 // da solo il giorno che il PNG arriva, senza rimettere mano a questo elenco.
 const PREMI = [
@@ -735,7 +734,6 @@ const PREMI = [
         + 'cucina contemporanea di mare, pesce fresco e crudi, pasta fatta a mano. '
         + 'Il secondo posto si festeggia seduti, con chi vuoi tu.',
     logo: 'nemo.png', logoNome: 'Nemo Restaurant Food & Wine',
-    logoNota: 'Il buono si spende da',
   },
   {
     // Niente `offerto`: il percorso si fa da The Spa, ma non è la struttura

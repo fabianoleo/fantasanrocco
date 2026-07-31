@@ -51,16 +51,6 @@
           <% if (p.offerto) { %><li><%- icon('pin') %> Offerto da <%= p.offerto %></li><% } %>
           <li><%- icon('trophy') %> Va a chi chiude al <%= st.label.toLowerCase() %></li>
         </ul>
-        <%# Il marchio dell'attività, quando il PNG c'è (server.js riempie
-            `logoSrc` solo in quel caso). La riga sopra dice che rapporto ha
-            con il premio: «Offerto da» sarebbe falso per la cena, che si
-            mangia da Nemo ma non è il ristorante a metterla in palio. %>
-        <% if (p.logoSrc) { %>
-          <div class="pz-brand">
-            <span class="pz-brand-kicker"><%= p.logoNota || 'Offerto da' %></span>
-            <img class="pz-brand-logo" src="<%= p.logoSrc %>" alt="<%= p.logoNome %>" loading="lazy">
-          </div>
-        <% } %>
       </div>
       <div class="pz-photos-area">
         <% if (foto.length >= 2) { %>
@@ -74,6 +64,14 @@
         <% } else if (foto.length === 1) { %>
           <div class="pz-photo pz-photo-single <%= st.bordo %>">
             <img src="/images/premi/<%= foto[0] %>" alt="<%= p.nome %>" loading="lazy">
+          </div>
+        <%# Senza foto del premio, ma con il marchio dell'attività: il logo
+            prende il riquadro al posto del segnaposto «Foto in arrivo».
+            Sta da solo, senza didascalia: la scheda dice già nel testo e
+            nell'elenco che rapporto c'è fra l'attività e il premio. %>
+        <% } else if (p.logoSrc) { %>
+          <div class="pz-photo-brand <%= st.bordo %>">
+            <img src="<%= p.logoSrc %>" alt="<%= p.logoNome %>" loading="lazy">
           </div>
         <% } else { %>
           <div class="pz-photo-placeholder">
@@ -100,7 +98,7 @@
       anche arrivando <%= ultimaPos %>º.
     </p>
 
-    <ol class="pz-sponsor-grid">
+    <ol class="pz-sponsor-grid pz-grid-lista">
       <% premiLista.forEach(function (p) { %>
         <li class="pz-sp-card">
           <span class="pz-sp-pos"><%= p.pos %>º</span>
