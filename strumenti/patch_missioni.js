@@ -49,6 +49,19 @@ const PATCHES = [
   { find: 'Primo Cittadino', description: 'Scatta una foto con il Sindaco di Siano. Non durante la processione.' },
   { find: 'Benedizione', description: 'Scatta una foto con il parroco. Non durante la processione.' },
   { find: 'Musica Maestro', description: 'Scatta un selfie con la banda musicale. Non durante la processione, mentre stanno suonando.' },
+  // ── Giro del 1º agosto 2026 ──────────────────────────────────────
+  // Le otto nuove erano nate senza sezione, quindi finivano fra le sfide
+  // speciali. Ora stanno nelle quattro sezioni, divise per tema. Queste righe
+  // servono se un lancio precedente le ha già create: il blocco NUOVE salta
+  // le missioni che esistono, e da solo non le sposterebbe mai.
+  { find: 'BE REAL', section: 'sport' },
+  { find: 'I love me', section: 'paese' },
+  { find: 'Moltiplicatore di Rocchi', section: 'social' },
+  { find: 'Gemelli diversi', section: 'social' },
+  { find: 'Piazza deserta', section: 'paese' },
+  { find: 'Spesa folle', section: 'food' },
+  { find: 'Corri Forrest', section: 'sport' },
+  { find: 'Green days', section: 'sport' },
 ];
 
 // Missioni da eliminare del tutto (non archiviare: archived=1 vuol dire
@@ -127,37 +140,37 @@ const NUOVE = [
     rar: 'epica', sec: 'social' },
 
   // ── Giro del 1º agosto 2026 ──────────────────────────────────────
-  // Nessuna di queste sta in una sezione: entrarci cambierebbe il conto delle
-  // tappe e quindi la difficoltà del bonus «sezione completata», che è già
-  // partito. Restano sfide speciali, visibili sempre.
+  // Divise fra le quattro sezioni, per tema. Attenzione: ogni missione in più
+  // in una sezione alza di uno il conto delle tappe, e quindi il bonus
+  // «sezione completata» chiede una missione in più di prima.
   // Due portano il marchio di chi le mette (vedi la colonna `sponsor`): il
   // logo compare sulla card della missione.
   { name: 'BE REAL (Sianese)',
     desc: 'Fai una foto con il dirigente della Real Sianese Michele Lamberti.',
-    rar: 'non-comune', sponsor: 'realsianese.png' },
+    rar: 'non-comune', sec: 'sport', sponsor: 'realsianese.png' },
   { name: 'Ps. : I love me',
     desc: 'Fai una foto mentre compri dei fiori per te stessa/o da Vastola.',
-    rar: 'rara', sponsor: 'vastola.png' },
+    rar: 'rara', sec: 'paese', sponsor: 'vastola.png' },
   // Il bonus dei +10 punti lo aggiunge lo staff in moderazione: qui si dice
   // solo che c'è, perché è la descrizione a fare la promessa.
   { name: 'Moltiplicatore di Rocchi',
     desc: 'Fai una foto con almeno 7 persone di nome "Rocco" (+10 punti bonus se c’è un cane).',
-    rar: 'leggendaria' },
+    rar: 'leggendaria', sec: 'social' },
   { name: 'Gemelli diversi',
     desc: 'Fai una foto con un tuo omonimo (che ha il tuo stesso nome e cognome).',
-    rar: 'epica' },
+    rar: 'epica', sec: 'social' },
   { name: 'Piazza deserta',
     desc: 'Fai una foto della piazza principale del paese completamente vuota durante la settimana di festa.',
-    rar: 'non-comune' },
+    rar: 'non-comune', sec: 'paese' },
   { name: 'Spesa folle',
     desc: 'Fai una foto mentre fai la spesa in abiti "folli" (elegante, in costume, maschera e boccaglio ecc.).',
-    rar: 'epica' },
+    rar: 'epica', sec: 'food' },
   { name: 'Corri Forrest',
     desc: 'Fai una foto mentre pratichi attività fisica all’aperto.',
-    rar: 'rara' },
+    rar: 'rara', sec: 'sport' },
   { name: 'Green days',
     desc: 'Fai una foto mentre ripulisci le strade (+10 punti bonus se pulisci con uno spazzino).',
-    rar: 'comune' },
+    rar: 'comune', sec: 'sport' },
 ];
 
 let added = 0;
