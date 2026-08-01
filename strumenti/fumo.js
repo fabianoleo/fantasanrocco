@@ -92,7 +92,7 @@ const CONTENUTI = [
   // Due nastri sponsor invece di uno: il secondo va al contrario per non
   // tenere i loghi incolonnati sotto quelli di sopra.
   { via: '/',           chi: 'anonimo', cerca: 'spon-track-inverso', cosa: 'secondo nastro sponsor' },
-  { via: '/classifica', chi: 'anonimo', cerca: 'lb-podium',         cosa: 'podio' },
+  { via: '/classifica', chi: 'anonimo', cerca: 'lbc-podio',         cosa: 'podio' },
   { via: '/',           chi: 'anonimo', cerca: 'premi in palio',    cosa: 'striscia numeri' },
   { via: '/giochi',     chi: 'anonimo', cerca: 'jetpack.js',        cosa: 'script del gioco' },
   { via: '/premio',     chi: 'anonimo', cerca: 'spon-track',        cosa: 'barra sponsor' },
