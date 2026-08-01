@@ -1512,7 +1512,7 @@ function festivalDayStartSQL(now = new Date()) {
 // Completare TUTTE le missioni di una sezione (almeno una prova approvata per
 // ciascuna) dà un bonus una tantum.
 // Le quattro sezioni e il bonus di completamento stanno in dati/sezioni.js.
-const { SECTIONS, SECTION_BONUS } = require('./dati/sezioni');
+const { SECTIONS, sectionBonus, SECTION_BONUS_MAX } = require('./dati/sezioni');
 // Progresso per sezione di un utente: { key: { total, done } }
 function sectionProgress(userId) {
   const rows = db.prepare(`
@@ -1543,7 +1543,8 @@ function checkAndAwardSections(userId) {
     if (db.prepare('SELECT 1 FROM section_bonuses WHERE user_id = ? AND section = ?').get(userId, s.key)) continue;
     db.transaction(() => {
       const ins = db.prepare('INSERT OR IGNORE INTO section_bonuses (user_id, section) VALUES (?, ?)').run(userId, s.key);
-      if (ins.changes) db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(SECTION_BONUS, userId);
+      // Il bonus e' quello della SUA sezione, non piu' uno uguale per tutte.
+      if (ins.changes) db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(sectionBonus(s.key), userId);
     })();
     awarded.push(s);
   }
@@ -1560,11 +1561,12 @@ function awardSectionsAndNotify(userId, req) {
   try {
     for (const s of checkAndAwardSections(userId)) {
       awarded.push(s);
-      if (req) audit(req, 'sezione.bonus', `${s.label} → +${SECTION_BONUS}pt a user#${userId}`);
-      else auditSystem('sezione.bonus', `${s.label} → +${SECTION_BONUS}pt a user#${userId}`);
+      const pt = sectionBonus(s.key);
+      if (req) audit(req, 'sezione.bonus', `${s.label} → +${pt}pt a user#${userId}`);
+      else auditSystem('sezione.bonus', `${s.label} → +${pt}pt a user#${userId}`);
       pushToUser(userId, {
         title: '🏅 Set di missioni completato!',
-        body: `Hai finito "${s.label}": +${SECTION_BONUS} punti bonus!`,
+        body: `Hai finito "${s.label}": +${pt} punti bonus!`,
         url: '/missioni',
       }).catch((e) => console.error('[PUSH] bonus sezione', e.message));
     }
@@ -1934,10 +1936,10 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
     .all(req.currentUser.id).map((r) => r.section));
   const sections = SECTIONS.map((s) => {
     const p = prog[s.key] || { total: 0, done: 0 };
-    return { ...s, total: p.total, done: p.done, completed: p.total > 0 && p.done >= p.total, awarded: awardedSet.has(s.key), bonus: SECTION_BONUS };
+    return { ...s, total: p.total, done: p.done, completed: p.total > 0 && p.done >= p.total, awarded: awardedSet.has(s.key) };
   }).filter((s) => s.total > 0);
 
-  res.render('missions', { title: 'Missioni', missions: list, palioLink, sections, sectionBonus: SECTION_BONUS, staff, predictions: predictionsForUser(req.currentUser.id) });
+  res.render('missions', { title: 'Missioni', missions: list, palioLink, sections, sectionBonusMax: SECTION_BONUS_MAX, staff, predictions: predictionsForUser(req.currentUser.id) });
 });
 
 // Salva/aggiorna il pronostico dell'utente (una scelta tra i 6 fuochisti)
@@ -1959,7 +1961,7 @@ app.post('/missioni/pronostico', auth.requireLogin, verifyCsrf, (req, res) => {
   // Il voto è l'ultima tappa di "Paese & Tradizione" per molti: qui può
   // scattare il bonus di sezione, che altrimenti si controlla solo in moderazione.
   for (const s of awardSectionsAndNotify(req.currentUser.id, req)) {
-    flash(req, 'success', `🏅 Sezione "${s.label}" completata: +${SECTION_BONUS} punti bonus!`);
+    flash(req, 'success', `🏅 Sezione "${s.label}" completata: +${sectionBonus(s.key)} punti bonus!`);
   }
   checkLevelUp(req.currentUser.id);
   res.redirect('/palio#pronostico');

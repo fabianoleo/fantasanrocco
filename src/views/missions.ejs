@@ -67,7 +67,10 @@
 <% const secs = (typeof sections !== 'undefined' && sections) ? sections : []; %>
 <% if (secs.length) { %>
   <section class="card ms-secpanel">
-    <h2 class="staff-title"><%- icon('trophy') %> Sezioni · completa tutte le missioni di una sezione e prendi <strong>+<%= sectionBonus %> punti</strong></h2>
+    <%# «fino a»: il bonus non è più uguale per tutte le sezioni, e ognuna
+        dice il suo qui sotto. Promettere una cifra sola sarebbe una bugia
+        per tre sezioni su quattro. %>
+    <h2 class="staff-title"><%- icon('trophy') %> Sezioni · completa tutte le missioni di una sezione e prendi <strong>fino a +<%= sectionBonusMax %> punti</strong></h2>
     <div class="ms-secgrid">
       <% secs.forEach((s) => { %>
         <a class="ms-secprog ms-sec-<%= s.color %> <%= s.completed ? 'is-done' : '' %>" href="#sez-<%= s.key %>">

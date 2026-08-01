@@ -111,6 +111,24 @@
   let py, vy, dist, score, coins, speed, thrust, pressEdge, inv;
   let zaps, items, pops, sparks, missiles, fedeli;
   let spawnZ, spawnC, spawnHalo, spawnM, spawnF, animT, last, shake, overTimer, overFlash;
+
+  // ── Il tocco che ripartiva da solo ──────────────────────────────
+  // Si vola tempestando lo schermo di tocchi. Quando si muore, il tocco
+  // successivo — che parte pochi millisecondi dopo, quando il dito e' gia'
+  // in movimento — faceva ripartire la partita all'istante: le statistiche
+  // finali non le vedeva nessuno, perche' la schermata veniva saltata prima
+  // ancora di comparire.
+  // Da qui in poi, appena morti, il tocco NON vale finche' il pannello non
+  // e' a video piu' un momento di grazia. Mezzo secondo non bastava: il
+  // pannello arriva dopo 1150ms, e un tocco al secondo lo avrebbe saltato
+  // lo stesso.
+  const OVER_PANNELLO_MS = 1150;   // dopo quanto compare il pannello
+  const OVER_GRAZIA_MS   = 350;    // ...e quanto ancora si ignora il tocco
+  let overDaQuando = 0;            // istante della morte
+  // Vero finche' non si puo' ripartire. `state` da solo non basta: 'over'
+  // dura finche' non si ricomincia, e serve sapere da QUANTO.
+  const ripartenzaBloccata = () =>
+    state === 'over' && (performance.now() - overDaQuando) < OVER_PANNELLO_MS + OVER_GRAZIA_MS;
   // Trasformazioni + parole
   let mode, modeT, modeMax, word, wordMode, wordIdx, letterGap;
   let gravDir, jumps, onGround, transforms, knocked, halos;
@@ -178,6 +196,7 @@
   const setThrust = (on) => { if (on && !thrust) pressEdge = true; thrust = on; };
   const onDown = (e) => {
     if (e.cancelable) e.preventDefault();
+    if (ripartenzaBloccata()) return;            // appena morti il tocco non vale
     if (state === 'idle' || state === 'over') { start(); return; }
     if (state === 'paused') return;              // in pausa il tocco non spinge
     setThrust(true);
@@ -200,7 +219,14 @@
     root.addEventListener('selectstart', (e) => e.preventDefault());
     root.addEventListener('contextmenu', (e) => e.preventDefault());
   }
-  if (playBtn) playBtn.addEventListener('click', (e) => { e.preventDefault(); start(); });
+  // Anche il pulsante «Riprova» sta dentro l'overlay, che compare proprio
+  // mentre il dito puo' essere ancora in movimento: senza guardia un tocco
+  // partito prima ci finirebbe sopra e ripartirebbe lo stesso.
+  if (playBtn) playBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (ripartenzaBloccata()) return;
+    start();
+  });
 
   // Pulsante di spinta "SALI": alternativa al tocco sullo schermo
   const thrustBtn = document.getElementById('jpThrust');
@@ -208,6 +234,7 @@
     const btnDown = (e) => {
       if (e.cancelable) e.preventDefault();
       thrustBtn.classList.add('is-on');
+      if (ripartenzaBloccata()) return;
       if (state === 'idle' || state === 'over') { start(); return; }
       if (state === 'paused') return;
       setThrust(true);
@@ -231,6 +258,7 @@
     }
     if (e.code === 'Space' || e.code === 'ArrowUp') {
       e.preventDefault();
+      if (ripartenzaBloccata()) return;
       if (state === 'idle' || state === 'over') start();
       else if (state === 'run') setThrust(true);
     }
@@ -647,6 +675,7 @@
     songStop();
     shake = 18;
     overFlash = 0;                     // conta i frame dalla morte: anima la scritta
+    overDaQuando = performance.now();  // da qui parte il tempo in cui il tocco non vale
     burst(PX + PW / 2, py + PH / 2, '#ff5a3c', 26);
     burst(PX + PW / 2, py + PH / 2, '#f5c842', 14);
     const total = Math.floor(dist);
@@ -659,7 +688,7 @@
     overTimer = setTimeout(() => {
       overlay.classList.remove('jp-hidden');
       renderOverPanel();
-    }, 1150);                          // il tempo di leggere «GAME OVER»
+    }, OVER_PANNELLO_MS);              // il tempo di leggere «GAME OVER»
   }
 
   // Pannello di fine partita. Viene ridisegnato quando arriva la risposta del
