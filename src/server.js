@@ -1877,6 +1877,11 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
   const completedCount = {};
   for (const r of rows) completedCount[r.mission_id] = r.cnt;
 
+  // Lo staff vede in chiaro anche le sfide non ancora uscite: gli serve per
+  // rileggere i testi prima che escano. Per tutti gli altri la sorpresa va
+  // tolta dall'HTML, non solo sfocata (vedi sotto).
+  const staff = ['moderator', 'admin'].includes(req.currentUser.role);
+
   const list = missions.map((m) => {
     const statuses = byMission[m.id] || [];
     const state = missionState(m);
@@ -1884,9 +1889,11 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
     return {
       ...m,
       // Di una missione ancora bloccata NON mando titolo e descrizione al
-      // browser: la sfocatura è solo estetica, la sorpresa va tolta dall'HTML.
-      title: locked ? null : m.title,
-      description: locked ? null : m.description,
+      // browser: la sfocatura è solo estetica, e chi apre gli strumenti da
+      // sviluppatore leggerebbe la sorpresa. Allo staff invece si mandano,
+      // perché il pulsante «sbircia» deve avere qualcosa da scoprire.
+      title: (locked && !staff) ? null : m.title,
+      description: (locked && !staff) ? null : m.description,
       rarity: missionParts(m.title),
       locked,
       expired: state === 'expired',
@@ -1904,6 +1911,12 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
       // non si manda: il marchio direbbe di che sfida si tratta.
       sponsorSrc: (!locked && m.sponsor && NOME_SPONSOR[m.sponsor]) ? `/sponsor/${m.sponsor}` : null,
       sponsorNome: (!locked && m.sponsor) ? NOME_SPONSOR[m.sponsor] || null : null,
+      // Giorno della sfida, per raggrupparle in pagina. La chiave è la data
+      // nuda perché si ordina da sola come stringa; l'etichetta è per gli
+      // occhi. Senza finestra restano fuori dai gruppi per data: sono le
+      // sfide che valgono sempre.
+      giornoKey: m.active_from ? String(m.active_from).slice(0, 10) : null,
+      giornoLabel: m.active_from ? romeDayLabel(m.active_from) : null,
     };
   });
   // Il pronostico del Palio è su /palio: qui resta solo la "tappa" della
@@ -1924,7 +1937,7 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
     return { ...s, total: p.total, done: p.done, completed: p.total > 0 && p.done >= p.total, awarded: awardedSet.has(s.key), bonus: SECTION_BONUS };
   }).filter((s) => s.total > 0);
 
-  res.render('missions', { title: 'Missioni', missions: list, palioLink, sections, sectionBonus: SECTION_BONUS, predictions: predictionsForUser(req.currentUser.id) });
+  res.render('missions', { title: 'Missioni', missions: list, palioLink, sections, sectionBonus: SECTION_BONUS, staff, predictions: predictionsForUser(req.currentUser.id) });
 });
 
 // Salva/aggiorna il pronostico dell'utente (una scelta tra i 6 fuochisti)
@@ -2450,7 +2463,8 @@ setInterval(purgeExpiredStories, 30 * 60 * 1000).unref?.();
 // =========================================================================
 app.get('/moderazione', auth.requireStaff, (req, res) => {
   const pending = db.prepare(`
-    SELECT s.*, u.nickname, m.title, m.points, m.requires_photo
+    SELECT s.*, u.nickname, m.title, m.points, m.requires_photo,
+           m.description AS mission_desc
     FROM submissions s
     JOIN users u ON u.id = s.user_id
     JOIN missions m ON m.id = s.mission_id

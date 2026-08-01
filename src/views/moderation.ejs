@@ -26,6 +26,13 @@
           <span class="muted small"><%= s.created_at %></span>
         </div>
 
+        <%# La consegna della missione, sotto al titolo: senza, per decidere se
+            una foto va bene bisognava ricordarsi a memoria cosa chiedeva la
+            missione, o aprirla in un'altra scheda. È il testo su cui si giudica. %>
+        <% if (s.mission_desc) { %>
+          <p class="mod-consegna"><%= s.mission_desc %></p>
+        <% } %>
+
         <%# ── Foto già vista altrove: confronto affiancato ─────────────── %>
         <% const dup = (s.duplicati && s.duplicati.length) ? s.duplicati : null; %>
         <% if (s.photo_path && !s.phash) { %>

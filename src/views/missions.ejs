@@ -95,6 +95,26 @@
   });
   const others = missions.filter((m) => !m.section);
   if (others.length) groups.push({ sec: null, list: others });
+
+  /* Le sfide speciali si dividono per GIORNO, in ordine crescente: sono la
+     sorpresa della festa, e quello che conta sapere non è quali sono ma
+     quante ne escono e quando. La chiave è la data nuda (YYYY-MM-DD), che
+     si ordina da sola come stringa senza passare per Date.
+     Quelle senza finestra valgono sempre, quindi non stanno in nessun
+     giorno: vanno in fondo, in un gruppo loro. */
+  function perGiorno(elenco) {
+    const perData = new Map();
+    const senzaData = [];
+    elenco.forEach((m) => {
+      if (!m.giornoKey) { senzaData.push(m); return; }
+      if (!perData.has(m.giornoKey)) perData.set(m.giornoKey, { key: m.giornoKey, label: m.giornoLabel, list: [] });
+      perData.get(m.giornoKey).list.push(m);
+    });
+    const fasce = Array.from(perData.values()).sort((a, b) => a.key < b.key ? -1 : 1);
+    if (senzaData.length) fasce.push({ key: null, label: null, list: senzaData });
+    return fasce;
+  }
+  const staffPuoSbirciare = (typeof staff !== 'undefined' && staff);
 %>
 <% groups.forEach((g) => { %>
   <% if (g.sec) { %>
@@ -102,86 +122,70 @@
       <span><%= g.sec.label %> (<%= g.sec.total %>)</span>
       <span class="ms-sechead-badge"><%= g.sec.done %>/<%= g.sec.total %> · +<%= g.sec.bonus %> pt</span>
     </div>
-  <% } else { %>
-    <div class="ms-sechead ms-sec-other"><span>Sfide speciali</span></div>
-  <% } %>
 
-  <div class="mission-grid">
-    <%# Il pronostico del Palio conta come tappa di "Paese & Tradizione", ma si
-        vota su /palio: qui c'è solo il collegamento. %>
-    <% if (g.sec && g.sec.key === 'paese' && typeof palioLink !== 'undefined' && palioLink) { %>
-      <a class="mission-card mission-card-link" href="/palio#pronostico">
-        <div class="mission-head">
-          <h3><span class="m-bonus">BONUS</span> <span class="m-name">Pronostico del Palio</span></h3>
-          <span class="points-badge"><%= palioLink.points %> pt</span>
-        </div>
-        <p class="mission-desc">Indovina quale fuochista vince il Palio. Si vota nella pagina <strong>Palio dei Fuochi</strong>: basta dare una risposta perché conti per questa sezione.</p>
-        <div class="mission-meta">
-          <% if (palioLink.voted) { %>
-            <span class="tag tag-ok"><%- icon('check-circle') %> Pronostico dato</span>
-          <% } else if (palioLink.open) { %>
-            <span class="tag tag-live"><%- icon('dot') %> Da fare</span>
-          <% } else { %>
-            <span class="tag tag-off"><%- icon('hourglass') %> Pronostici chiusi</span>
-          <% } %>
-          <span class="tag"><%- icon('fireworks') %> Vai al Palio →</span>
-        </div>
-      </a>
-    <% } %>
-    <% g.list.forEach((m) => { %>
-      <% if (m.locked) { %>
-        <%# Non ancora sbloccata: si vede solo la rarità, il resto è un velo. %>
-        <div class="mission-card is-locked" aria-label="Missione bloccata, rarità <%= m.rarity.label %>, <%= m.points %> punti<%= m.unlockLabel ? ', si sblocca il ' + m.unlockLabel : '' %>">
+    <div class="mission-grid">
+      <%# Il pronostico del Palio conta come tappa di "Paese & Tradizione", ma si
+          vota su /palio: qui c'è solo il collegamento. %>
+      <% if (g.sec.key === 'paese' && typeof palioLink !== 'undefined' && palioLink) { %>
+        <a class="mission-card mission-card-link" href="/palio#pronostico">
           <div class="mission-head">
-            <span class="rar-chip rar-<%= m.rarity.key %>"><span class="rar-dot" aria-hidden="true"><%= m.rarity.emoji %></span> <%= m.rarity.label %></span>
-            <span class="points-badge"><%= m.points %> pt</span>
+            <h3><span class="m-bonus">BONUS</span> <span class="m-name">Pronostico del Palio</span></h3>
+            <span class="points-badge"><%= palioLink.points %> pt</span>
           </div>
-          <div class="mlock-skel" aria-hidden="true"><span></span><span></span><span></span></div>
+          <p class="mission-desc">Indovina quale fuochista vince il Palio. Si vota nella pagina <strong>Palio dei Fuochi</strong>: basta dare una risposta perché conti per questa sezione.</p>
           <div class="mission-meta">
-            <span class="tag tag-off"><%- icon('lock') %> <%= m.unlockLabel ? 'Si sblocca il ' + m.unlockLabel : 'Non ancora disponibile' %></span>
-          </div>
-        </div>
-      <% } else { %>
-        <a class="mission-card <%= m.activeNow ? '' : 'inactive' %>" href="/missioni/<%= m.id %>">
-          <div class="mission-head">
-            <h3><span class="m-bonus">BONUS</span> <span class="m-name"><%= m.rarity.name %></span></h3>
-            <span class="points-badge"><%= m.points %> pt</span>
-          </div>
-          <%# Il marchio di chi mette la missione, quando c'è. Sta fra il
-              titolo e il testo perché è un'attribuzione, non un tag: dirlo
-              dopo la descrizione sembrerebbe una firma in calce. %>
-          <% if (m.sponsorSrc) { %>
-            <p class="mission-sponsor">
-              <img src="<%= m.sponsorSrc %>" alt="<%= m.sponsorNome %>" loading="lazy">
-              <span>Missione di <strong><%= m.sponsorNome %></strong></span>
-            </p>
-          <% } %>
-          <p class="mission-desc"><%= m.description %></p>
-          <div class="mission-meta">
-            <% if (m.rarity.label) { %><span class="rar-chip rar-<%= m.rarity.key %>"><span class="rar-dot" aria-hidden="true"><%= m.rarity.emoji %></span> <%= m.rarity.label %></span><% } %>
-            <% if (m.hasApproved && !m.repeatable) { %>
-              <span class="tag tag-ok"><%- icon('check-circle') %> Fatta oggi</span>
-            <% } else if (m.hasPending) { %>
-              <span class="tag tag-pending"><%- icon('hourglass') %> In attesa</span>
-            <% } %>
-            <% if (m.repeatable) { %><span class="tag"><%- icon('repeat') %> Ripetibile</span><% } %>
-            <% if (m.requires_photo) { %><span class="tag"><%- icon('camera') %> Foto</span><% } %>
-            <% if (m.expired) { %>
-              <span class="tag tag-off"><%- icon('alarm') %> Scaduta</span>
+            <% if (palioLink.voted) { %>
+              <span class="tag tag-ok"><%- icon('check-circle') %> Pronostico dato</span>
+            <% } else if (palioLink.open) { %>
+              <span class="tag tag-live"><%- icon('dot') %> Da fare</span>
             <% } else { %>
-              <span class="tag tag-live"><%- icon('dot') %> Attiva</span>
+              <span class="tag tag-off"><%- icon('hourglass') %> Pronostici chiusi</span>
             <% } %>
-          </div>
-          <div class="mission-counter">
-            <span class="mc-icon"><%- icon('people') %></span>
-            <span class="mc-val"><%= m.completedBy %></span>
-            <span class="mc-label"><%= m.completedBy === 1 ? 'persona ha completato' : 'persone hanno completato' %></span>
+            <span class="tag"><%- icon('fireworks') %> Vai al Palio →</span>
           </div>
         </a>
       <% } %>
+      <% g.list.forEach((m) => { %>
+        <%- include('partials/mission-card', { m: m, sbircia: false }) %>
+      <% }) %>
+    </div>
+
+  <% } else { %>
+    <%# ── SFIDE SPECIALI ────────────────────────────────────────────────
+        Divise per giorno, in ordine crescente. Sono la sorpresa della festa:
+        finché non è il loro giorno restano coperte, e quello che si deve
+        capire a colpo d'occhio è quante ne escono e quando. %>
+    <% const fasce = perGiorno(g.list); %>
+    <div class="ms-sechead ms-sec-other">
+      <span>Sfide speciali</span>
+      <% if (staffPuoSbirciare) { %>
+        <%# Solo per lo staff, e solo per gli occhi di chi preme: scopre le
+            carte in questa pagina e basta, non pubblica niente. Ricaricando
+            tornano coperte. %>
+        <button type="button" class="ms-sbircia" data-ms-sbircia aria-pressed="false">
+          <%- icon('key') %> <span class="ms-sbircia-txt">Sbircia</span>
+        </button>
+      <% } %>
+    </div>
+
+    <% fasce.forEach((f) => { %>
+      <div class="ms-giorno">
+        <span class="ms-giorno-lab">
+          <%- icon(f.label ? 'clock' : 'sparkle') %>
+          <%= f.label ? f.label : 'Sempre disponibili' %>
+        </span>
+        <span class="ms-giorno-n"><%= f.list.length %></span>
+      </div>
+      <div class="mission-grid">
+        <% f.list.forEach((m) => { %>
+          <%- include('partials/mission-card', { m: m, sbircia: staffPuoSbirciare }) %>
+        <% }) %>
+      </div>
     <% }) %>
-  </div>
+  <% } %>
 <% }) %>
 <% if (missions.length === 0) { %>
   <p class="muted">Nessuna missione disponibile al momento. Torna più tardi!</p>
 <% } %>
+
+<script src="/missioni.js?v=1" defer></script>

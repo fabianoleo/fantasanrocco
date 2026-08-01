@@ -570,33 +570,6 @@ h3 {
   font-size: .96rem; letter-spacing: .05em;
 }
 
-.leaderboard { list-style: none; }
-.lb-row {
-  display: flex; align-items: center; gap: .8rem;
-  padding: .82rem .62rem;
-  border-radius: var(--r-sm);
-  transition: background .2s var(--ease);
-}
-.lb-row:hover { background: rgba(255,255,255,0.038); }
-.lb-row.top {
-  background: linear-gradient(90deg, rgba(212,160,26,0.09), transparent 80%);
-  border-left: 2px solid rgba(212,160,26,0.48);
-  padding-left: .82rem;
-}
-.rank {
-  width: 2rem; text-align: center;
-  font-family: var(--font-heading);
-  font-weight: 700; color: var(--text-3);
-  font-size: .86rem; letter-spacing: .04em;
-}
-.lb-name   { flex: 1; font-weight: 500; }
-.lb-points {
-  font-family: var(--font-heading);
-  font-weight: 700; color: var(--gold);
-  font-size: .92rem; letter-spacing: .05em;
-}
-.lb-done   { color: var(--text-3); font-size: .76rem; }
-
 /* ---------- How it works ------------------------------------------- */
 .how ol {
   padding-left: 1.3rem;
@@ -1523,9 +1496,6 @@ body { overflow-x: clip; }
   .lp-final { padding: 7rem 1.2rem 10rem; }
   .lp-final-title { font-size: clamp(2.2rem, 11vw, 3.5rem); }
 
-  /* Leaderboard */
-  .lb-done { display: none; }
-
   /* Profile big number */
   .big-total { font-size: 2.8rem; }
 
@@ -1570,103 +1540,6 @@ body { overflow-x: clip; }
 }
 .lb-empty-icon { font-size: 3.5rem; display: block; margin-bottom: .5rem; }
 
-/* ── Podium ─────────────────────────────────────────────────────── */
-.lb-podium-wrap {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: .75rem;
-  padding: 2rem 1rem 0;
-  margin-bottom: 1.5rem;
-}
-
-.lb-podium-card {
-  display: flex; flex-direction: column; align-items: center;
-  flex: 1; max-width: 220px; min-width: 0;
-  border-radius: var(--r-lg) var(--r-lg) 0 0;
-  padding: 1.6rem 1rem 0;
-  position: relative; overflow: hidden;
-  border: 1px solid rgba(255,255,255,.06);
-  border-bottom: none;
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  transition: transform .35s var(--spring);
-}
-.lb-podium-card:hover { transform: translateY(-4px); }
-
-/* Gold */
-.lb-podium-gold {
-  border-color: rgba(245,193,7,.35);
-  background: linear-gradient(180deg, rgba(212,150,20,.14) 0%, var(--bg-card) 60%);
-  box-shadow: 0 -8px 40px rgba(245,193,7,.1), inset 0 1px 0 rgba(245,193,7,.2);
-}
-/* Silver */
-.lb-podium-silver {
-  border-color: rgba(180,180,210,.25);
-  background: linear-gradient(180deg, rgba(160,160,200,.1) 0%, var(--bg-card) 60%);
-}
-/* Bronze */
-.lb-podium-bronze {
-  border-color: rgba(180,100,50,.28);
-  background: linear-gradient(180deg, rgba(160,90,40,.1) 0%, var(--bg-card) 60%);
-}
-
-/* 1st place taller */
-.lb-podium-first { padding-top: 2.2rem; }
-
-.lb-podium-medal { font-size: 2.4rem; margin-bottom: .6rem; line-height: 1; }
-.lb-podium-first .lb-podium-medal { font-size: 3rem; }
-
-.lb-podium-name {
-  font-family: var(--font-heading);
-  font-size: .82rem; letter-spacing: .05em;
-  color: var(--text); text-align: center;
-  margin-bottom: .8rem;
-  word-break: break-word;
-}
-
-.lb-podium-pts {
-  font-family: var(--font-display);
-  font-weight: 900; line-height: 1;
-  font-size: clamp(1.8rem, 5vw, 2.8rem);
-  letter-spacing: .02em;
-}
-.lb-podium-gold   .lb-podium-pts {
-  background: linear-gradient(135deg, #ffd700, #fff3a0, #d4a01a);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  filter: drop-shadow(0 0 14px rgba(245,193,7,.5));
-}
-.lb-podium-silver .lb-podium-pts {
-  background: linear-gradient(135deg, #c8c8e0, #eeeef8, #9898b0);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-.lb-podium-bronze .lb-podium-pts {
-  background: linear-gradient(135deg, #cd7f32, #e8a060, #9a5020);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-}
-
-.lb-podium-pts-label {
-  font-family: var(--font-heading);
-  font-size: .6rem; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--text-3); margin-top: .15rem; margin-bottom: .6rem;
-}
-.lb-podium-done {
-  font-size: .72rem; color: var(--text-3);
-  font-family: var(--font-heading); letter-spacing: .04em;
-  margin-bottom: 1rem;
-}
-
-/* Bottom pedestal bar */
-.lb-podium-bar {
-  width: 100%; margin-top: auto;
-  border-radius: 0;
-}
-.lb-podium-bar-gold   { height: 48px; background: linear-gradient(180deg, rgba(245,193,7,.2), rgba(245,193,7,.06)); }
-.lb-podium-bar-silver { height: 32px; background: linear-gradient(180deg, rgba(180,180,220,.15), rgba(180,180,220,.04)); }
-.lb-podium-bar-bronze { height: 18px; background: linear-gradient(180deg, rgba(180,100,50,.15), rgba(180,100,50,.04)); }
-
-/* "tu" badge */
-.lb-me { outline: 1px solid rgba(212,160,26,.4); }
 .lb-you {
   display: inline-block;
   font-family: var(--font-body);
@@ -1676,59 +1549,6 @@ body { overflow-x: clip; }
   border-radius: 980px; padding: .1rem .4rem;
   margin-left: .3rem; vertical-align: middle;
   font-weight: 600;
-}
-
-/* ── Lista 4°+ ──────────────────────────────────────────────────── */
-.lb-list-wrap {
-  margin-top: 0 !important;
-  border-radius: 0 0 var(--r-lg) var(--r-lg) !important;
-}
-.lb-list-title {
-  font-size: .72rem !important;
-  letter-spacing: .14em !important;
-  text-transform: uppercase;
-  color: var(--text-3) !important;
-  margin-bottom: .8rem !important;
-}
-.lb-list { list-style: none; }
-.lb-list-row {
-  display: flex; align-items: center; gap: .8rem;
-  padding: .78rem .3rem;
-  border-bottom: 1px solid rgba(255,255,255,.045);
-  transition: background .18s var(--ease);
-  border-radius: 8px;
-}
-.lb-list-row:last-child { border-bottom: none; }
-.lb-list-row:hover { background: rgba(255,255,255,.04); }
-.lb-list-row.lb-me { background: rgba(212,160,26,.07); }
-.lb-list-row.lb-me:hover { background: rgba(212,160,26,.1); }
-
-.lb-list-rank {
-  font-family: var(--font-heading);
-  font-size: .8rem; letter-spacing: .05em;
-  color: var(--text-3); width: 2.2rem; text-align: center; flex-shrink: 0;
-}
-.lb-list-name { flex: 1; font-weight: 500; font-size: .92rem; }
-.lb-list-done { font-size: .75rem; color: var(--text-3); white-space: nowrap; }
-.lb-list-pts  {
-  font-family: var(--font-heading);
-  font-weight: 700; font-size: .95rem;
-  color: var(--gold); letter-spacing: .05em; white-space: nowrap;
-}
-.lb-list-pts small {
-  font-size: .6rem; color: var(--text-3); margin-left: .1rem; letter-spacing: .06em;
-}
-
-/* ── Mobile ─────────────────────────────────────────────────────── */
-@media (max-width: 600px) {
-  .lb-podium-wrap { gap: .45rem; padding: 1.5rem .5rem 0; }
-  .lb-podium-card { padding: 1.2rem .6rem 0; border-radius: 14px 14px 0 0; }
-  .lb-podium-first { padding-top: 1.7rem; }
-  .lb-podium-medal { font-size: 1.8rem; }
-  .lb-podium-first .lb-podium-medal { font-size: 2.2rem; }
-  .lb-podium-name { font-size: .72rem; }
-  .lb-podium-done { font-size: .65rem; }
-  .lb-list-done { display: none; }
 }
 
 /* ── Online pill ─────────────────────────────────────────────────── */
@@ -3246,11 +3066,6 @@ body { overflow-x: clip; }
 
 /* ── Classifica ───────────────────────────────────────────────── */
 .lb-empty-icon { color: var(--gold-2); display: inline-flex; }
-.lb-podium-gold   .lb-podium-medal { color: var(--medal-gold); }
-.lb-podium-silver .lb-podium-medal { color: var(--medal-silver); }
-.lb-podium-bronze .lb-podium-medal { color: var(--medal-bronze); }
-.lb-podium-medal { display: inline-flex; justify-content: center; }
-.lb-podium-medal .ico { filter: drop-shadow(0 4px 16px rgba(0,0,0,.55)); }
 
 /* ── Pagina Premi ─────────────────────────────────────────────── */
 .pz-rank-label { /* già flex */ }
@@ -3494,17 +3309,6 @@ textarea:focus-visible,
 }
 .lb-subpanel { display: none; }
 .lb-subpanel.lb-subpanel-active { display: block; animation: fade-up .35s var(--ease) both; }
-/* stelle di carriera accanto al nome nella classifica Jetpack */
-.lb-stars {
-  margin-left: .45rem; font-size: .74em; color: var(--gold);
-  white-space: nowrap; opacity: .9;
-}
-
-/* medaglia inline nel rank della classifica gioco */
-.lb-medal-inline { display: inline-flex; font-size: 1.5rem; line-height: 1; }
-.lb-medal-inline .ico { width: 1em; height: 1em; }
-.lb-list-game .lb-list-pts small { display: block; text-align: right; }
-
 /* ===================================================================
    MEGA-MENU desktop — tendina con anteprima immagini (hover slideshow)
    =================================================================== */
@@ -4337,21 +4141,6 @@ textarea:focus-visible,
   .nav-wheel-btn.is-ready::before, .nav-wheel-btn.is-ready::after { animation: none; opacity: 0; }
 }
 
-/* ── Classifica: foto profilo/iniziali nel podio (prime 3) ───────── */
-.lb-podium-avatar-wrap { position: relative; display: inline-flex; margin-bottom: .55rem; }
-.avatar.lb-podium-avatar { width: 60px; height: 60px; font-size: 1.4rem; border-width: 2px; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
-.lb-podium-first .lb-podium-avatar { width: 78px; height: 78px; font-size: 1.9rem; }
-.lb-podium-avatar-wrap .lb-podium-medal {
-  position: absolute; right: -6px; bottom: -6px; margin: 0;
-  font-size: 1.25rem; line-height: 1; filter: drop-shadow(0 1px 2px rgba(0,0,0,.65));
-}
-.lb-podium-first .lb-podium-avatar-wrap .lb-podium-medal { font-size: 1.5rem; }
-@media (max-width: 560px) {
-  .avatar.lb-podium-avatar { width: 46px; height: 46px; font-size: 1.05rem; }
-  .lb-podium-first .lb-podium-avatar { width: 58px; height: 58px; font-size: 1.35rem; }
-  .lb-podium-avatar-wrap .lb-podium-medal { font-size: 1rem; right: -4px; bottom: -4px; }
-}
-
 /* ── Admin: registro azioni (audit log) ─────────────────────────── */
 .audit-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .4rem; max-height: 420px; overflow-y: auto; }
 .audit-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: baseline; padding: .5rem .65rem; border-radius: 8px; background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.06); font-size: .78rem; }
@@ -5085,6 +4874,15 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
   display: block;
   height: var(--spon-h);
   width: auto;
+  /* Tetto alla larghezza. La regola della barra e' che i marchi sono tutti
+     ALTI uguali, ma un'insegna lunga e bassa (Kursaal e' 9 volte piu' larga
+     che alta) a quell'altezza diventa una striscia da 450px: da sola occupa
+     lo spazio di quattro marchi e sbilancia il nastro. Oltre il tetto si
+     rimpicciolisce in proporzione — piu' bassa degli altri, ma finalmente
+     larga come loro. `contain` perche' `cover` la ritaglierebbe, e un
+     marchio tagliato non e' piu' quel marchio. */
+  max-width: 168px;
+  object-fit: contain;
   /* ── Effetto grigio → colore: per averli SEMPRE a colori basta cancellare
         le due righe qui sotto e la regola .spon-logo:hover più avanti. ── */
   filter: grayscale(1);
@@ -5282,11 +5080,6 @@ a.lb-prize:hover { color: var(--gold-2); }
    faceva crescere la riga fino al doppio delle altre e la lista diventava
    un accordion di altezze diverse. */
 .lb-prize-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* Nella lista il nome è una colonna: il premio va sotto, non di fianco.
-   `min-width: 0` è la riga che conta: senza, il flex item si rifiuta di
-   scendere sotto la larghezza del testo e l'etichetta esce dalla riga. */
-.lb-list-name { display: flex; flex-direction: column; min-width: 0; }
 
 /* Sul podio la card è stretta e centrata: il premio ci sta solo se rimpicciolito */
 .lb-prize-podio {
@@ -5785,3 +5578,60 @@ a.lb-prize:hover { color: var(--gold-2); }
   .lbc-r-pos { width: 1.5rem; font-size: .82rem; }
   .lbc-r-nome { font-size: .84rem; }
 }
+
+/* ===================================================================
+   SFIDE SPECIALI — divise per giorno, e il velo dello staff
+   =================================================================== */
+/* Intestazione del giorno: sta fra le fasce, non dentro la griglia, e dice
+   quante sfide escono quel giorno. Chi guarda deve capire che c'è qualcosa
+   in arrivo e quando, non cosa. */
+.ms-giorno {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .8rem; margin: 1.4rem 0 .7rem; padding: 0 .2rem;
+}
+.ms-giorno-lab {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: .82rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--text-2);
+}
+.ms-giorno-lab .ico { width: 15px; height: 15px; color: var(--gold-2); }
+.ms-giorno-n {
+  padding: .16rem .55rem; border-radius: 100px;
+  font-size: .72rem; color: var(--text-3);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+/* Il pulsante «sbircia», solo per lo staff. Sta nell'intestazione della
+   sezione perché vale per tutte le sfide coperte, non per una sola. */
+.ms-sbircia {
+  display: inline-flex; align-items: center; gap: .34rem;
+  padding: .24rem .6rem; border-radius: 100px; cursor: pointer;
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: .72rem; letter-spacing: .06em;
+  color: var(--gold-2);
+  background: rgba(243,198,75,.1);
+  border: 1px solid var(--border-gold);
+  transition: background .2s var(--ease), color .2s var(--ease);
+}
+.ms-sbircia:hover { background: rgba(243,198,75,.2); color: #fff7d0; }
+.ms-sbircia .ico { width: 13px; height: 13px; }
+.ms-sbircia[aria-pressed="true"] { background: var(--gold-2); color: #1a1206; border-color: transparent; }
+.ms-sbircia[aria-pressed="true"] .ico { color: #1a1206; }
+
+/* Il contenuto vero sotto il velo: c'è solo nelle pagine dello staff.
+   `user-select: none` finché è coperto, altrimenti si potrebbe selezionare
+   il testo sfocato e leggerlo incollandolo altrove. */
+.mlock-vero {
+  margin: .9rem 0 .2rem;
+  filter: blur(6px);
+  user-select: none;
+  transition: filter .3s var(--ease, cubic-bezier(.22,1,.36,1));
+}
+.mlock-vero .m-name { margin: 0 0 .3rem; font-size: 1rem; }
+.mlock-vero .mission-desc { margin: 0; }
+/* Scoperto: il velo va via da TUTTE le carte insieme, non una per una —
+   lo staff sta rileggendo l'elenco, non una singola sfida. */
+.ms-svelato .mlock-vero { filter: none; user-select: text; }
+.ms-svelato .mission-card.is-locked { opacity: 1; }
