@@ -68,7 +68,7 @@ function userPoints(userId) {
 // Classifica del mini-gioco: per punteggio record (solo chi ha giocato)
 function gameLeaderboardRows() {
   return db.prepare(`
-    SELECT id, nickname, game_best AS best
+    SELECT id, nickname, avatar_path, game_best AS best
     FROM users
     WHERE role = 'user' AND game_best > 0
     ORDER BY game_best DESC, created_at ASC
@@ -79,7 +79,7 @@ function gameLeaderboardRows() {
 // Le stelle servono solo da secondo criterio a parità di metri.
 function jetpackLeaderboardRows() {
   return db.prepare(`
-    SELECT id, nickname, jp_best AS best, jp_stars AS stars
+    SELECT id, nickname, avatar_path, jp_best AS best, jp_stars AS stars
     FROM users
     WHERE role = 'user' AND jp_best > 0
     ORDER BY jp_best DESC, jp_stars DESC, created_at ASC

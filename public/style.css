@@ -5613,3 +5613,175 @@ a.lb-prize:hover { color: var(--gold-2); }
 .sg-riga-azione { margin: 0; }
 /* Una sola card: senza limite si allargherebbe a tutta la riga */
 .pz-grid-torneo { max-width: 280px; margin-left: auto; margin-right: auto; }
+
+/* ===================================================================
+   SCHEDA CLASSIFICA (partials/leaderboard-card.ejs)
+   Le tre classifiche — generale, Corri San Rocco, Jetpack — usano lo
+   stesso pezzo: scheda con intestazione, podio dei primi tre, lista
+   paginata dal quarto in giù. Prima ognuna aveva il suo impianto.
+   Font e oro sono quelli del sito: cambia la struttura, non la voce.
+   =================================================================== */
+.lbc {
+  border-radius: 1.1rem;
+  border: 1px solid rgba(255,255,255,.07);
+  background: var(--bg-card, rgba(16,14,28,.55));
+  backdrop-filter: blur(16px);
+  padding: 1.5rem 1.4rem 1.6rem;
+  box-shadow: 0 18px 50px rgba(0,0,0,.35);
+}
+.lbc-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 1rem; margin-bottom: 1.4rem;
+}
+.lbc-title {
+  margin: 0; font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: 1.28rem; letter-spacing: .01em; color: var(--text);
+}
+.lbc-periodo { margin: .28rem 0 0; font-size: .82rem; color: var(--text-3); }
+/* Il conteggio è un dato di servizio, non un titolo: resta una pastiglia
+   piccola e spenta, così non compete con il nome della classifica. */
+.lbc-conta {
+  flex-shrink: 0;
+  padding: .26rem .66rem; border-radius: 100px;
+  font-size: .72rem; color: var(--text-3);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+/* ── Podio ────────────────────────────────────────────────────────
+   Il primo sta in MEZZO e più alto, non a sinistra: in fila per rango
+   sarebbe una lista con le medaglie attaccate, non un podio. */
+.lbc-podio {
+  display: flex; align-items: flex-end; justify-content: center;
+  gap: .6rem; margin-bottom: 1.5rem;
+}
+.lbc-p {
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center;
+  flex: 1; max-width: 210px; min-width: 0;
+  padding: 1.1rem .7rem .9rem;
+  border-radius: .9rem .9rem 0 0;
+  border: 1px solid rgba(255,255,255,.07); border-bottom: none;
+  background: rgba(255,255,255,.025);
+  transition: transform .3s var(--ease, cubic-bezier(.22,1,.36,1));
+}
+.lbc-p:hover { transform: translateY(-3px); }
+/* Il primo più alto degli altri due: è il gradino, non un'enfasi grafica. */
+.lbc-p-primo { padding-top: 1.7rem; }
+.lbc-p-gold   { border-color: rgba(245,193,7,.32);  background: linear-gradient(180deg, rgba(212,150,20,.15), rgba(255,255,255,.02) 65%); }
+.lbc-p-silver { border-color: rgba(192,192,220,.22); background: linear-gradient(180deg, rgba(192,192,220,.1), rgba(255,255,255,.02) 65%); }
+.lbc-p-bronze { border-color: rgba(205,127,50,.26);  background: linear-gradient(180deg, rgba(205,127,50,.12), rgba(255,255,255,.02) 65%); }
+
+.lbc-p-top { position: relative; display: block; margin-bottom: .55rem; }
+.lbc-p-avatar { width: 56px; height: 56px; }
+/* Senza avatar (i giochi) resta il numero: il podio deve funzionare anche
+   dove non ci sono foto profilo da mostrare. */
+.lbc-p-num {
+  display: grid; place-items: center;
+  width: 56px; height: 56px; border-radius: 100px;
+  font-family: var(--font-heading, 'Cinzel', serif); font-size: 1.4rem; font-weight: 700;
+  color: var(--gold-2);
+  background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.09);
+}
+.lbc-p-medaglia {
+  position: absolute; right: -6px; bottom: -4px;
+  display: grid; place-items: center; width: 24px; height: 24px;
+  border-radius: 100px; background: #12101d; border: 1px solid rgba(255,255,255,.1);
+}
+.lbc-p-medaglia .ico { width: 14px; height: 14px; }
+.lbc-p-gold   .lbc-p-medaglia .ico { color: #f3c64b; }
+.lbc-p-silver .lbc-p-medaglia .ico { color: #cfcfe4; }
+.lbc-p-bronze .lbc-p-medaglia .ico { color: #cd7f32; }
+
+.lbc-p-nome {
+  font-weight: 700; font-size: .88rem; color: var(--text);
+  text-align: center; line-height: 1.25;
+  max-width: 100%; overflow-wrap: anywhere;
+}
+.lbc-p-val {
+  margin-top: .4rem;
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: 1.5rem; font-weight: 800; line-height: 1; color: var(--gold-2);
+}
+.lbc-p-unita { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+.lbc-p-byline { margin-top: .3rem; font-size: .72rem; color: var(--text-3); }
+/* La barretta in fondo dà l'altezza del gradino senza un div vuoto per lato. */
+.lbc-p-barra { width: 100%; height: 4px; margin-top: .8rem; border-radius: 2px; }
+.lbc-p-gold   .lbc-p-barra { background: linear-gradient(90deg, var(--gold-2), var(--gold)); }
+.lbc-p-silver .lbc-p-barra { background: linear-gradient(90deg, #d8d8ea, #9a9ab4); }
+.lbc-p-bronze .lbc-p-barra { background: linear-gradient(90deg, #e0a469, #a35f22); }
+
+/* ── Lista dal quarto in giù ──────────────────────────────────────── */
+.lbc-lista { list-style: none; margin: 0; padding: 0; }
+.lbc-riga {
+  display: flex; align-items: center; gap: .8rem;
+  padding: .68rem .5rem;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.lbc-riga:last-child { border-bottom: none; }
+/* Serve DAVVERO: l'attributo `hidden` di suo vale `display:none`, ma è una
+   regola del browser a specificità zero e il `display:flex` qui sopra la
+   batte. Senza questa riga la paginazione marcava le righe come nascoste e
+   restavano tutte a video. */
+.lbc-riga[hidden] { display: none; }
+.lbc-r-pos {
+  flex-shrink: 0; width: 2rem; text-align: center;
+  font-family: var(--font-heading, 'Cinzel', serif); font-weight: 700;
+  font-size: .92rem; color: var(--text-3);
+}
+.lbc-r-txt { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: .3rem .5rem; }
+.lbc-r-nome { font-weight: 600; font-size: .9rem; color: var(--text); overflow-wrap: anywhere; }
+.lbc-r-byline { font-size: .74rem; color: var(--text-3); }
+.lbc-r-val {
+  flex-shrink: 0;
+  font-family: var(--font-heading, 'Cinzel', serif); font-weight: 800;
+  font-size: 1rem; color: var(--gold-2);
+}
+.lbc-r-val small { margin-left: .18rem; font-size: .64rem; font-weight: 600; color: var(--text-3); }
+
+/* La riga di chi guarda: bordo dorato a sinistra invece di uno sfondo pieno.
+   Deve trovarsi di colpo scorrendo, senza che la classifica sembri sua. */
+.lbc-mio { position: relative; background: rgba(243,198,75,.055); border-radius: .5rem; }
+.lbc-riga.lbc-mio { box-shadow: inset 3px 0 0 var(--gold-2); }
+.lbc-p.lbc-mio { border-color: rgba(243,198,75,.5); }
+
+/* ── Paginazione ─────────────────────────────────────────────────── */
+.lbc-pager {
+  display: flex; align-items: center; justify-content: center; gap: .8rem;
+  margin-top: 1rem; padding-top: .9rem;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.lbc-pg {
+  display: grid; place-items: center;
+  width: 32px; height: 32px; padding: 0; border-radius: 100px; cursor: pointer;
+  color: var(--text); background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.09);
+  transition: background .2s var(--ease), opacity .2s var(--ease);
+}
+.lbc-pg:hover:not(:disabled) { background: rgba(255,255,255,.09); }
+.lbc-pg:disabled { opacity: .3; cursor: default; }
+.lbc-pg .ico { width: 16px; height: 16px; }
+.lbc-pg-stato {
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: .8rem; color: var(--text-3); min-width: 3.4rem; text-align: center;
+}
+
+.lbc-nota { margin: 1.1rem 0 0; text-align: center; font-size: .8rem; color: var(--text-3); }
+.lbc-nota a { color: var(--gold); }
+
+@media (max-width: 560px) {
+  .lbc { padding: 1.1rem .9rem 1.2rem; }
+  .lbc-head { flex-direction: column; gap: .5rem; }
+  .lbc-podio { gap: .35rem; }
+  .lbc-p { padding: .8rem .35rem .7rem; }
+  .lbc-p-primo { padding-top: 1.2rem; }
+  .lbc-p-avatar, .lbc-p-num { width: 44px; height: 44px; }
+  .lbc-p-num { font-size: 1.1rem; }
+  .lbc-p-nome { font-size: .76rem; }
+  .lbc-p-val { font-size: 1.2rem; }
+  /* Su schermo stretto la didascalia del podio sparisce: tre colonne strette
+     più una riga di testo ciascuna diventano illeggibili. Resta nella lista. */
+  .lbc-p-byline { display: none; }
+  .lbc-r-pos { width: 1.5rem; font-size: .82rem; }
+  .lbc-r-nome { font-size: .84rem; }
+}

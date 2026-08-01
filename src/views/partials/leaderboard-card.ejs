@@ -1,0 +1,111 @@
+<%# ── Scheda classifica riusabile ──────────────────────────────────────────
+    Le tre classifiche del sito (generale, Corri San Rocco, Jetpack) avevano
+    ognuna il suo impianto: podio solo la generale, medaglie in riga le altre.
+    Qui c'è un solo pezzo per tutte e tre — stessa scheda, stesso podio,
+    stessa lista paginata — e le differenze passano dai locals.
+
+    Locals attesi (oggetto `lb`):
+      titolo       intestazione della scheda
+      periodo      riga sotto il titolo (il "da → a" del componente)
+      righe        [{ id, nome, byline, valore, unita, premio, utente }]
+                   `utente` serve solo dove si mostra l'avatar (generale)
+      mioId        id dell'utente loggato, per evidenziare la sua riga
+      avatar       true → il podio mostra le foto profilo
+      perPagina    quante righe per pagina nella lista (default 10)
+      nota         paragrafo facoltativo sotto la lista
+    ───────────────────────────────────────────────────────────────────── %>
+<%
+  const righe = lb.righe || [];
+  const mio = lb.mioId || null;
+  const perPagina = lb.perPagina || 10;
+  // Il podio prende i primi tre e la lista parte dal quarto: sono due letture
+  // diverse della stessa classifica, non due classifiche.
+  const podio = righe.slice(0, 3);
+  const resto = righe.slice(3);
+  // Ordine visivo del podio: secondo, PRIMO, terzo. Il primo sta in mezzo e
+  // più in alto, come su un podio vero — in fila per rango sembrerebbe una
+  // lista qualsiasi con le medaglie attaccate.
+  const ordinePodio = [podio[1], podio[0], podio[2]].filter(Boolean);
+  const metallo = ['gold', 'silver', 'bronze'];
+%>
+<section class="lbc">
+  <header class="lbc-head">
+    <div class="lbc-head-txt">
+      <h2 class="lbc-title"><%= lb.titolo %></h2>
+      <% if (lb.periodo) { %><p class="lbc-periodo"><%= lb.periodo %></p><% } %>
+    </div>
+    <% if (righe.length) { %>
+      <span class="lbc-conta"><%= righe.length %> <%= righe.length === 1 ? 'in gara' : 'in gara' %></span>
+    <% } %>
+  </header>
+
+  <% if (!righe.length) { %>
+    <div class="lb-empty">
+      <span class="lb-empty-icon"><%- icon(lb.iconaVuoto || 'trophy') %></span>
+      <p><%= lb.testoVuoto || 'Ancora nessuno in classifica.' %></p>
+      <% if (lb.sottoVuoto) { %><p class="muted small"><%= lb.sottoVuoto %></p><% } %>
+      <% if (lb.ctaVuoto) { %>
+        <a href="<%= lb.ctaVuoto.href %>" class="btn" style="margin-top:1.5rem"><%= lb.ctaVuoto.label %></a>
+      <% } %>
+    </div>
+  <% } else { %>
+
+    <%# ── Podio ───────────────────────────────────────────────────────── %>
+    <div class="lbc-podio">
+      <% ordinePodio.forEach(function (r) { %>
+        <% const pos = podio.indexOf(r); const io = mio && r.id === mio; %>
+        <div class="lbc-p lbc-p-<%= metallo[pos] %> <%= pos === 0 ? 'lbc-p-primo' : '' %> <%= io ? 'lbc-mio' : '' %>">
+          <span class="lbc-p-top">
+            <% if (lb.avatar && r.utente) { %>
+              <%- include('avatar', { user: r.utente, cls: 'lbc-p-avatar' }) %>
+            <% } else { %>
+              <span class="lbc-p-num"><%= pos + 1 %></span>
+            <% } %>
+            <span class="lbc-p-medaglia"><%- icon('medal') %></span>
+          </span>
+          <span class="lbc-p-nome"><%= r.nome %><% if (io) { %> <span class="lb-you">tu</span><% } %></span>
+          <span class="lbc-p-val"><%= r.valore %></span>
+          <span class="lbc-p-unita"><%= r.unita %></span>
+          <% if (r.byline) { %><span class="lbc-p-byline"><%= r.byline %></span><% } %>
+          <% if (r.premio) { %>
+            <a class="lb-prize lb-prize-podio" href="/premio" title="<%= r.premio.title %>"><%- icon(r.premio.icona) %><span class="lb-prize-txt"><%= r.premio.nome %></span></a>
+          <% } %>
+          <div class="lbc-p-barra"></div>
+        </div>
+      <% }) %>
+    </div>
+
+    <%# ── Lista dal quarto in poi ──────────────────────────────────────
+        Le righe si stampano TUTTE: la paginazione la fa il JS nascondendo
+        quelle fuori pagina. Senza JavaScript resta una lista intera, che è
+        una classifica leggibile — mentre paginare lato server avrebbe
+        significato un giro di rete per sfogliare dieci nomi. %>
+    <% if (resto.length) { %>
+      <div class="lbc-lista-wrap" data-lb-pager data-per-pagina="<%= perPagina %>">
+        <ol class="lbc-lista" start="4">
+          <% resto.forEach(function (r, i) { %>
+            <% const io = mio && r.id === mio; %>
+            <li class="lbc-riga <%= io ? 'lbc-mio' : '' %>" data-i="<%= i %>">
+              <span class="lbc-r-pos"><%= i + 4 %></span>
+              <span class="lbc-r-txt">
+                <span class="lbc-r-nome"><%= r.nome %><% if (io) { %> <span class="lb-you">tu</span><% } %></span>
+                <% if (r.byline) { %><span class="lbc-r-byline"><%= r.byline %></span><% } %>
+                <% if (r.premio) { %>
+                  <a class="lb-prize" href="/premio" title="<%= r.premio.title %>"><%- icon(r.premio.icona) %><span class="lb-prize-txt"><%= r.premio.nome %></span></a>
+                <% } %>
+              </span>
+              <span class="lbc-r-val"><%= r.valore %><small><%= r.unita %></small></span>
+            </li>
+          <% }) %>
+        </ol>
+        <div class="lbc-pager" hidden>
+          <button type="button" class="lbc-pg lbc-pg-prev" aria-label="Pagina precedente"><%- icon('chevron-left') %></button>
+          <span class="lbc-pg-stato" aria-live="polite"></span>
+          <button type="button" class="lbc-pg lbc-pg-next" aria-label="Pagina successiva"><%- icon('chevron-right') %></button>
+        </div>
+      </div>
+    <% } %>
+
+    <% if (lb.nota) { %><p class="lbc-nota"><%- lb.nota %></p><% } %>
+  <% } %>
+</section>
