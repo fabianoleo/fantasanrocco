@@ -40,13 +40,21 @@ function leaderboardRows() {
   cache = db.prepare(`
     SELECT u.id, u.nickname, u.avatar_path,
            COALESCE(SUM(CASE WHEN s.status='approved' THEN m.points ELSE 0 END), 0) + u.points_adjust AS points,
-           COUNT(CASE WHEN s.status='approved' THEN 1 END) AS done
+           COUNT(CASE WHEN s.status='approved' THEN 1 END) AS done,
+           -- Spareggio: i due record dei mini-giochi sommati. Sono grandezze
+           -- diverse (punti del Runner e metri del Jetpack) e sommarle non ha
+           -- un senso fisico: serve solo a mettere in fila due persone che
+           -- hanno gli stessi punti, e premia chi ha giocato di piu'.
+           (u.game_best + u.jp_best) AS spareggio
     FROM users u
     LEFT JOIN submissions s ON s.user_id = u.id
     LEFT JOIN missions m    ON m.id = s.mission_id
     WHERE u.role = 'user'
     GROUP BY u.id
-    ORDER BY points DESC, u.created_at ASC
+    -- A pari punti conta lo spareggio; a pari spareggio (tipico di chi non ha
+    -- mai giocato: zero e zero) resta l'ordine d'iscrizione, che e' l'unico
+    -- criterio che non finisce mai in parita'.
+    ORDER BY points DESC, spareggio DESC, u.created_at ASC
   `).all();
   cacheScade = ora + CACHE_MS;
   return cache;
