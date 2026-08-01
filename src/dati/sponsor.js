@@ -64,6 +64,10 @@ const SPONSOR_ATTIVITA = [
   { file: 'target-communication.png', nome: 'Target Communication' },
   { file: 'di-filippo.png',          nome: 'Di Filippo Fotografi' },
   { file: 'vastola.png',             nome: "L'Arte dei Fiori Vastola" },
+  { file: 'cafe-maria.png',          nome: 'Café Maria' },
+  { file: 'kursaal.png',             nome: 'Kursaal Bar' },
+  // Da non confondere con pizzeria-zio-mauro.png: sono due attivita' diverse.
+  { file: 'dimauro.png',             nome: 'Di Mauro Pizza Napoletana' },
   { file: 'alfocerrato.png',         nome: 'Alfonso Cerrato' },
   { file: 'nilu.png',                nome: 'Nilù' },
   { file: 'realsianese.png',         nome: 'Real Sianese' },
