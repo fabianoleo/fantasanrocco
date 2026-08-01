@@ -93,9 +93,12 @@
       .to(".text-track", { duration: 1.8, y: 0, scale: 1, filter: "blur(0px)", rotationX: 0, ease: "expo.out" })
       .to(".text-days", { duration: 1.4, clipPath: "inset(0 0% 0 0)", ease: "power4.inOut" }, "-=1.0");
 
-    // Su mobile accorciamo la corsa dello scroll: l'animazione avanza più in
-    // fretta e si arriva prima al contenuto (meno "scroll a vuoto").
-    const scrollEnd = isMobile ? 3200 : 7000;
+    // Su mobile la corsa dello scroll è MOLTO più corta che su desktop: al
+    // telefono si scorre col pollice, e 3200px di sezione agganciata volevano
+    // dire una decina di sfregate prima di arrivare al contenuto. La sequenza
+    // è la stessa, solo compressa: le durate della timeline sono relative,
+    // quindi accorciare la corsa non salta nessun passaggio.
+    const scrollEnd = isMobile ? 1300 : 7000;
     const scrollTl = gsap.timeline({
       scrollTrigger: {
         trigger: root,
@@ -103,7 +106,11 @@
         end: "+=" + scrollEnd,
         pin: true,
         pinSpacing: true,
-        scrub: 1,
+        // scrub è il ritardo fra il dito e l'animazione. Un secondo pieno su
+        // touch si sente come lentezza: il dito si ferma e la pagina continua
+        // ad andare. Su telefono lo teniamo appena percettibile, giusto per
+        // smussare gli scatti dello swipe.
+        scrub: isMobile ? 0.25 : 1,
         // anticipatePin serve contro il "flash" da rotellina veloce, ma sul
         // touch anticipa il pin durante lo swipe e fa scattare la sezione.
         anticipatePin: isMobile ? 0 : 1,
