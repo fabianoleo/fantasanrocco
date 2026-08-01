@@ -62,7 +62,7 @@ STATO
   ⬜ = manca il file
   ❌ = file ricevuto ma non utilizzabile, serve rifarlo
 
-A oggi sono in linea 40 loghi su 45.
+A oggi sono in linea 43 loghi su 47.
 
 L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
 
@@ -88,7 +88,8 @@ L'ordine e' quello del foglio scritto a mano (prima colonna, poi seconda).
   ✅ pizzeria-frasci.png      Pizzeria V. Frasci  schiarito
   ✅ lamberti.png             Studio Dentistico Michele Lamberti  schiarito
   ✅ chalet.png               Cafe' Le Chalet  gia' chiaro (oro e bianco)
-  ⬜ revolution.png           Revolution (Bar Kral)
+  ✅ revolution.png           Bar Kral Revolution  gia' chiaro (oro su nero).
+                              Arrivato come bar-kral.png
   ✅ zio-enrico.png           Zanzibar Lounge Bar  schiarito
   ✅ barberia-frasci.png      Barberia Frasci  schiarito
   ✅ marcello-frasci.png      Marcello Barber Salon  gia' chiaro, tolto il
@@ -117,6 +118,10 @@ Non sul foglio, arrivati dopo:
                               nella barra viene largo il doppio degli altri
   ✅ dimauro.png              Di Mauro Pizza Napoletana  gia' chiaro (oro e
                               rosso). NON e' Pizzeria Zio Mauro: altra attivita'
+  ✅ atelierfruttaeverdura.png  Atelier di Frutta e Verdura  schiarito: senza,
+                              il sottotitolo blu notte spariva sul nero
+  ✅ squarciagola.png         Squarciagola  gia' chiaro (verde). Scritta lunga
+                              e bassa: nella barra va a sbattere sul tetto
 
 DA CHIEDERE ANCORA (1)
 ----------------------
@@ -143,7 +148,7 @@ somigliano tutti. Per non confonderli:
   mauro-parrucchiere.png  Mauro Frasci Il Parrucchiere
 Prima di sovrascriverne uno, apri l'immagine e guarda quale dei cinque e'.
 
-Nota: in loghi-png/ restano gli originali dei 35 loghi arrivati dopo la
+Nota: in loghi-png/ restano gli originali dei 38 loghi arrivati dopo la
 prima infornata. Gli altri sono stati rimossi: le versioni pronte in
 questa cartella bastano per la barra, ma se un logo va rifatto va
 richiesto di nuovo il file di partenza.

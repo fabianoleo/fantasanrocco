@@ -43,7 +43,9 @@ const SPONSOR_ATTIVITA = [
   { file: 'pizzeria-frasci.png',     nome: 'Pizzeria V. Frasci' },
   { file: 'lamberti.png',            nome: 'Studio Dentistico Michele Lamberti' },
   { file: 'chalet.png',              nome: 'Chalet' },
-  { file: 'revolution.png',          nome: 'Revolution' },
+  // Sul foglio "Revolution (Bar Kral)", ma il marchio dice "Bar Kral
+  // Revolution": vale il marchio. Il file e' arrivato come bar-kral.png.
+  { file: 'revolution.png',          nome: 'Bar Kral Revolution' },
   // Sul foglio era segnata come "Zio Enrico", ma l'insegna e il logo dicono
   // Zanzibar: vale il marchio, perché è il nome che finisce nell'alt.
   { file: 'zio-enrico.png',          nome: 'Zanzibar Lounge Bar' },
@@ -68,6 +70,8 @@ const SPONSOR_ATTIVITA = [
   { file: 'kursaal.png',             nome: 'Kursaal Bar' },
   // Da non confondere con pizzeria-zio-mauro.png: sono due attivita' diverse.
   { file: 'dimauro.png',             nome: 'Di Mauro Pizza Napoletana' },
+  { file: 'atelierfruttaeverdura.png', nome: 'Atelier di Frutta e Verdura' },
+  { file: 'squarciagola.png',        nome: 'Squarciagola' },
   { file: 'alfocerrato.png',         nome: 'Alfonso Cerrato' },
   { file: 'nilu.png',                nome: 'Nilù' },
   { file: 'realsianese.png',         nome: 'Real Sianese' },
