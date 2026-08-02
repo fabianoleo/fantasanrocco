@@ -24,7 +24,7 @@
       per un anno, quindi finché questo numero non cambia chi è già passato
       di qui continua a vedere il foglio di stile vecchio. Si alza di uno a
       ogni modifica di style.css. %>
-  <link rel="stylesheet" href="/style.css?v=127">
+  <link rel="stylesheet" href="/style.css?v=128">
   <link rel="stylesheet" href="/radio.css?v=3">
 
   <%# ── PWA (installabile + offline + notifiche) ── %>
@@ -194,5 +194,8 @@
   <script src="/menu.js?v=1" defer></script>
   <script src="/pwa.js?v=3" defer></script>
   <script src="/segnala.js?v=1" defer></script>
+  <%# Non fa nulla se nella pagina non c'è un campo da vestire: costa un
+      paio di kB e sta qui per non aggiungere un blocco di <script> per vista. %>
+  <script src="/otp.js?v=1" defer></script>
 </body>
 </html>

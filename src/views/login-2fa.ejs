@@ -1,12 +1,34 @@
 <section class="card center" style="max-width:420px;margin:2.5rem auto">
   <h1>Verifica in due passaggi</h1>
-  <p class="muted">Inserisci il codice a 6 cifre della tua app di autenticazione (o un codice di recupero).</p>
+  <p class="muted">Inserisci il codice a 6 cifre della tua app di autenticazione.</p>
   <form action="/login/2fa" method="post">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <label>Codice
-      <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" autofocus required placeholder="123456" style="text-align:center;letter-spacing:.3em;font-size:1.2rem">
-    </label>
-    <button class="btn" type="submit">Verifica</button>
+
+    <div id="bloccoOtp">
+      <%# Il campo resta questo: le caselle che si vedono sono un vestito
+          che otp.js gli mette addosso, e se il JavaScript non parte qui
+          si scrive il codice a mano come prima. %>
+      <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code"
+             required autofocus placeholder="123456"
+             data-otp data-otp-length="6" data-otp-autofocus data-otp-autosubmit
+             data-otp-label="Codice di verifica"
+             style="text-align:center;letter-spacing:.3em;font-size:1.2rem">
+    </div>
+
+    <%# I codici di recupero sono 8 caratteri esadecimali, non 6 cifre:
+        non entrerebbero mai nelle caselle, quindi hanno il loro campo. %>
+    <div id="bloccoRecupero" hidden>
+      <label>Codice di recupero
+        <input type="text" name="code" inputmode="text" autocomplete="off" disabled
+               placeholder="es. 3f9a1c02" maxlength="32"
+               style="text-align:center;letter-spacing:.16em;font-size:1.05rem">
+      </label>
+    </div>
+
+    <button class="btn" type="submit" style="margin-top:1rem">Verifica</button>
   </form>
+
+  <button type="button" class="otp-aiuto" data-otp-scambio>Non hai il telefono? Usa un codice di recupero</button>
+
   <p class="muted small" style="margin-top:1rem"><a href="/login">← Torna al login</a></p>
 </section>

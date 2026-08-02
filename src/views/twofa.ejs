@@ -28,7 +28,9 @@
     <form action="/2fa/attiva" method="post" class="mission-form" style="margin-top:1rem">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <label>Codice a 6 cifre generato dall'app
-        <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" required placeholder="123456" style="letter-spacing:.2em">
+        <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" required
+               placeholder="123456" style="letter-spacing:.2em"
+               data-otp data-otp-length="6" data-otp-label="Codice dall'app di autenticazione">
       </label>
       <button class="btn" type="submit">Attiva 2FA</button>
     </form>

@@ -5780,3 +5780,134 @@ a.lb-prize:hover { color: var(--gold-2); }
 .sfd-punti { font-family: var(--font-heading, 'Cinzel', serif); font-size: 1.9rem; font-weight: 800; line-height: 1; color: var(--text); }
 .sfd-vs { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
 .sfd-vince .sfd-punti { color: var(--gold-2); }
+
+/* ===================================================================
+   CAMPO OTP + FORZA DELLA PASSWORD
+   =================================================================== */
+
+/* ---------- Caselle del codice a 6 cifre ---------------------------- */
+
+/* Il campo originale resta nel form ma sparisce dalla vista. Non uso
+   display:none perché su alcuni gestori di password quello smette di
+   essere compilabile in automatico. */
+.otp-vero {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0);
+  white-space: nowrap; border: 0;
+}
+
+.otp {
+  display: flex; gap: .45rem;
+  justify-content: center;
+  margin: .2rem 0 .1rem;
+}
+.otp--errore { animation: otp-scuote .34s var(--ease); }
+.otp--attesa { opacity: .55; pointer-events: none; transition: opacity .2s var(--ease); }
+
+@keyframes otp-scuote {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  45% { transform: translateX(5px); }
+  70% { transform: translateX(-3px); }
+}
+
+.otp-casella { position: relative; width: 2.9rem; height: 3.5rem; }
+.otp-casella--stacco { margin-left: .85rem; }
+
+.otp-input {
+  width: 100%; height: 100%;
+  padding: 0; margin: 0;
+  border: 2px solid var(--border);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, .025);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .45);
+  text-align: center;
+  font-size: 1.1rem;
+  /* Il carattere vero lo disegna .otp-carattere qui sopra: questo testo
+     serve solo a tenere il cursore del sistema dove deve stare. */
+  color: transparent;
+  caret-color: transparent;
+  outline: none;
+  transition: border-color .16s var(--ease), background .16s var(--ease), box-shadow .16s var(--ease);
+}
+.otp-input::selection { background: transparent; }
+.otp-input:disabled { opacity: .45; }
+
+.otp-casella--piena .otp-input { border-color: var(--border-gold); background: rgba(212, 160, 26, .05); }
+.otp-casella--attiva .otp-input {
+  border-color: var(--gold-2);
+  background: rgba(212, 160, 26, .08);
+  box-shadow: 0 0 0 3px rgba(212, 160, 26, .14);
+}
+.otp--errore .otp-input {
+  border-color: var(--red);
+  background: rgba(231, 76, 60, .08);
+  box-shadow: none;
+}
+
+.otp-segno {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  pointer-events: none;
+}
+.otp-carattere {
+  grid-area: 1 / 1;
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: 1.4rem; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  animation: otp-entra .2s var(--luxury) both;
+}
+.otp-carattere--esce { animation: otp-esce .16s var(--ease) both; }
+
+@keyframes otp-entra {
+  from { opacity: 0; transform: translateY(9px) scale(.97); filter: blur(5px); }
+  to   { opacity: 1; transform: none;                        filter: blur(0); }
+}
+@keyframes otp-esce {
+  from { opacity: 1; transform: none; }
+  to   { opacity: 0; transform: translateY(-6px) scale(.98); filter: blur(3px); }
+}
+
+/* Il trattino che lampeggia: si vede solo nella casella dove sta il
+   cursore e solo finché è vuota, così non copre la cifra scritta. */
+.otp-cursore {
+  position: absolute; top: 50%; left: 50%;
+  width: 2px; height: 1.15rem;
+  margin: -.575rem 0 0 -1px;
+  border-radius: 1px;
+  background: var(--gold-2);
+  opacity: 0;
+  pointer-events: none;
+}
+.otp-casella--attiva:not(.otp-casella--piena) .otp-cursore { animation: otp-lampeggia 1.06s steps(1) infinite; }
+@keyframes otp-lampeggia { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+.otp-aiuto {
+  display: block;
+  margin: .9rem auto 0;
+  background: none; border: 0;
+  font: inherit; font-size: .8rem;
+  color: var(--text-2);
+  text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer;
+}
+.otp-aiuto:hover { color: var(--gold-2); }
+
+@media (max-width: 400px) {
+  .otp { gap: .3rem; }
+  .otp-casella { width: 2.5rem; height: 3.1rem; }
+  .otp-casella--stacco { margin-left: .55rem; }
+  .otp-carattere { font-size: 1.2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .otp--errore,
+  .otp-carattere,
+  .otp-carattere--esce,
+  .otp-casella--attiva:not(.otp-casella--piena) .otp-cursore { animation: none; }
+  .otp-cursore { opacity: 1; }
+}
+
