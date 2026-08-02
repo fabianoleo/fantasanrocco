@@ -5911,3 +5911,70 @@ a.lb-prize:hover { color: var(--gold-2); }
   .otp-cursore { opacity: 1; }
 }
 
+/* ---------- Forza della password ------------------------------------ */
+
+.fp { margin: .55rem 0 .2rem; }
+
+.fp-barre { display: grid; gap: .3rem; }
+.fp-barra {
+  position: relative;
+  height: 5px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, .07);
+  overflow: hidden;
+}
+.fp-barra > i {
+  position: absolute; inset: 0;
+  border-radius: 2px;
+  background: var(--text-3);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform .3s var(--spring) var(--ritardo, 0s), background .2s var(--ease);
+}
+.fp-barra--accesa > i { transform: scaleX(1); }
+
+.fp[data-tono="rosso"] .fp-barra > i { background: var(--red); }
+.fp[data-tono="ambra"] .fp-barra > i { background: var(--amber); }
+.fp[data-tono="verde"] .fp-barra > i { background: var(--green); }
+
+.fp-riga {
+  display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+  min-height: 1.15rem;
+  margin-top: .4rem;
+}
+.fp-voce { font-size: .78rem; font-weight: 600; letter-spacing: .02em; color: var(--text-2); }
+.fp[data-tono="rosso"] .fp-voce { color: var(--red); }
+.fp[data-tono="ambra"] .fp-voce { color: var(--amber); }
+.fp[data-tono="verde"] .fp-voce { color: var(--green); }
+
+.fp-scontata {
+  font-size: .72rem; color: var(--amber);
+  opacity: 0; transition: opacity .2s var(--ease);
+}
+.fp-scontata--vista { opacity: 1; }
+
+.fp-criteri { list-style: none; margin: .65rem 0 0; padding: 0; display: grid; gap: .35rem; }
+.fp-criterio { display: flex; align-items: center; gap: .5rem; }
+
+.fp-spunta {
+  position: relative;
+  display: grid; place-items: center;
+  flex: 0 0 auto;
+  width: 15px; height: 15px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, .03);
+  color: #06210f;
+  transition: background .2s var(--ease), border-color .2s var(--ease);
+}
+.fp-spunta svg { width: 9px; height: 9px; opacity: 0; transform: scale(.6); transition: opacity .18s var(--ease), transform .18s var(--spring); }
+.fp-criterio--ok .fp-spunta { background: var(--green); border-color: var(--green); }
+.fp-criterio--ok .fp-spunta svg { opacity: 1; transform: none; }
+
+.fp-testo { font-size: .78rem; color: var(--text-3); transition: color .2s var(--ease); }
+.fp-criterio--ok .fp-testo { color: var(--text-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .fp-barra > i,
+  .fp-spunta svg { transition: none; }
+}
