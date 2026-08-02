@@ -619,6 +619,9 @@
             <span class="user-name"><%= u.nickname %></span>
             <span class="role-badge role-<%= u.role %>"><%= u.role %></span>
             <span class="user-pts"><%= u.points %> pt</span>
+            <%# Da qui si vede da dove arrivano quei punti: serve quando un
+                punteggio non torna e bisogna capire com'e' cresciuto. %>
+            <a class="user-storico" href="/admin/punti/<%= u.id %>"><%- icon('list') %> Storico</a>
           </div>
           <p class="user-email">
             <% if (u.email) { %>

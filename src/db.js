@@ -353,6 +353,31 @@ CREATE INDEX IF NOT EXISTS idx_sfide_sfidante ON sfide(sfidante_id, stato);
 CREATE INDEX IF NOT EXISTS idx_sfide_email    ON sfide(sfidato_email);
 `);
 
+// ── Registro dei movimenti di punti ────────────────────────────────────
+// `users.points_adjust` è un totale che si muove e basta: ruota, slot,
+// striscia e bonus ci entrano tutti dentro senza lasciare traccia, e
+// davanti a un punteggio sospetto non c'era modo di sapere da dove
+// arrivasse. Qui ogni movimento lascia la sua riga.
+//
+// NON sostituisce points_adjust: quello resta il totale, questo è la
+// storia. Tenerli separati significa che il saldo non dipende dal
+// registro — se una riga mancasse, i punti restano giusti lo stesso.
+//
+// I punti delle MISSIONI non passano di qui: stanno già in submissions,
+// con foto, data e chi ha approvato. La pagina dello storico li unisce.
+db.exec(`
+CREATE TABLE IF NOT EXISTS punti_movimenti (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  delta      INTEGER NOT NULL,          -- può essere negativo (slot persa, storni)
+  causa      TEXT    NOT NULL,          -- 'ruota' | 'slot' | 'striscia' | ...
+  dettaglio  TEXT,                      -- testo leggibile: "puntata 20, vinti 0"
+  created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_movimenti_utente ON punti_movimenti(user_id, id);
+CREATE INDEX IF NOT EXISTS idx_movimenti_causa  ON punti_movimenti(causa);
+`);
+
 // Data di scatto letta dall'EXIF al momento del caricamento, PRIMA che il
 // ridimensionamento la cancelli: ricodificare una foto butta via tutti i
 // metadati. Senza questa colonna l'export dei metadati resterebbe a mani

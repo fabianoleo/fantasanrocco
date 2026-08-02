@@ -1,0 +1,75 @@
+<%# ── Storico punti di un utente (solo admin) ──────────────────────────────
+    Serve a rispondere a una domanda sola: questi punti da dove arrivano?
+    ───────────────────────────────────────────────────────────────────── %>
+<a class="adm-back" href="/admin"><%- icon('arrow-left') %> Torna al pannello</a>
+
+<div class="sp-testa">
+  <div>
+    <p class="lp-kicker">Storico punti</p>
+    <h1 class="sp-nome"><%= utente.nickname %></h1>
+    <p class="sp-meta">
+      <span class="role-badge role-<%= utente.role %>"><%= utente.role %></span>
+      iscritto il <%= String(utente.created_at).slice(0, 10) %>
+    </p>
+  </div>
+  <div class="sp-totale">
+    <span class="sp-totale-val"><%= totale %></span>
+    <span class="sp-totale-lab">punti in classifica</span>
+  </div>
+</div>
+
+<%# ── Da dove arrivano, in sintesi ───────────────────────────────────── %>
+<section class="card sp-card">
+  <h2 class="staff-title"><%- icon('chart') %> Da dove arrivano</h2>
+  <% if (!riepilogo.length) { %>
+    <p class="muted">Nessun movimento registrato.</p>
+  <% } else { %>
+    <% const max = Math.max(...riepilogo.map((r) => Math.abs(r.totale)), 1); %>
+    <div class="sp-riep">
+      <% riepilogo.forEach((r) => { %>
+        <div class="sp-riep-riga <%= r.totale < 0 ? 'is-meno' : '' %>">
+          <span class="sp-riep-nome"><%= r.titolo %></span>
+          <span class="sp-riep-barra"><span style="width: <%= Math.round(Math.abs(r.totale) / max * 100) %>%"></span></span>
+          <span class="sp-riep-quante"><%= r.quante %>×</span>
+          <span class="sp-riep-tot"><%= r.totale > 0 ? '+' : '' %><%= r.totale %></span>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+
+  <% if (nonSpiegato !== 0) { %>
+    <%# Il registro dei movimenti è nato dopo il gioco: quello che è successo
+        prima non è stato registrato e non si può ricostruire. Meglio dirlo
+        che far sembrare completo un elenco che non lo è. %>
+    <p class="sp-avviso">
+      <%- icon('warning') %>
+      <span>
+        <strong><%= nonSpiegato > 0 ? '+' : '' %><%= nonSpiegato %> punti</strong> non compaiono qui sotto.
+        Sono movimenti avvenuti <strong>prima che esistesse il registro</strong> — ruota, slot e striscia
+        allora non lasciavano traccia. Da adesso in poi ogni movimento viene registrato.
+      </span>
+    </p>
+  <% } %>
+</section>
+
+<%# ── Riga per riga ──────────────────────────────────────────────────── %>
+<section class="card sp-card">
+  <h2 class="staff-title"><%- icon('list') %> Movimento per movimento (<%= voci.length %>)</h2>
+  <% if (!voci.length) { %>
+    <p class="muted">Ancora niente da mostrare.</p>
+  <% } else { %>
+    <ol class="sp-lista">
+      <% voci.forEach((v) => { %>
+        <li class="sp-voce sp-voce-<%= v.causa %> <%= v.delta < 0 ? 'is-meno' : '' %>">
+          <span class="sp-quando"><%= String(v.quando).replace('T', ' ').slice(0, 16) %></span>
+          <span class="sp-cosa">
+            <span class="sp-titolo"><%= v.titolo %></span>
+            <% if (v.dettaglio) { %><span class="sp-dett"><%= v.dettaglio %></span><% } %>
+          </span>
+          <span class="sp-tag"><%= v.tipo === 'missione' ? 'missione' : (v.tipo === 'movimento' ? v.causa : v.causa) %></span>
+          <span class="sp-delta"><%= v.delta > 0 ? '+' : '' %><%= v.delta %></span>
+        </li>
+      <% }) %>
+    </ol>
+  <% } %>
+</section>

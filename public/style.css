@@ -6091,3 +6091,77 @@ a.lb-prize:hover { color: var(--gold-2); }
   .sl-pt-sym { width: 36px; height: 36px; }
   .sl-pt-val { grid-column: 1 / -1; justify-content: flex-start; }
 }
+
+/* ===================================================================
+   STORICO PUNTI di un utente (pannello admin)
+   Risponde a una domanda sola: questi punti da dove arrivano?
+   =================================================================== */
+.sp-testa {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap; margin: 1rem 0 1.4rem;
+}
+.sp-nome { margin: .2rem 0 .3rem; font-family: var(--font-heading, 'Cinzel', serif); font-size: 1.7rem; color: var(--text); }
+.sp-meta { margin: 0; font-size: .82rem; color: var(--text-3); display: flex; align-items: center; gap: .5rem; }
+.sp-totale { text-align: right; }
+.sp-totale-val { display: block; font-family: var(--font-heading, 'Cinzel', serif); font-size: 2.2rem; font-weight: 800; line-height: 1; color: var(--gold-2); }
+.sp-totale-lab { font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+.sp-card { margin-bottom: 1.2rem; }
+
+/* Sintesi per causa */
+.sp-riep { display: flex; flex-direction: column; gap: .45rem; }
+.sp-riep-riga { display: grid; grid-template-columns: 10rem 1fr 3rem 4.5rem; align-items: center; gap: .6rem; font-size: .84rem; }
+.sp-riep-nome { color: var(--text-2); overflow-wrap: anywhere; }
+.sp-riep-barra { height: 7px; border-radius: 999px; background: rgba(255,255,255,.06); overflow: hidden; }
+.sp-riep-barra span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--gold-2), var(--gold)); }
+.sp-riep-riga.is-meno .sp-riep-barra span { background: linear-gradient(90deg, #e05252, #a33); }
+.sp-riep-quante { font-size: .74rem; color: var(--text-3); text-align: right; }
+.sp-riep-tot { font-family: var(--font-heading, 'Cinzel', serif); font-weight: 700; text-align: right; color: var(--gold-2); }
+.sp-riep-riga.is-meno .sp-riep-tot { color: #ff8a8a; }
+
+/* L'avviso sul pezzo non spiegato: va detto, non nascosto */
+.sp-avviso {
+  display: flex; gap: .55rem; align-items: flex-start;
+  margin: 1rem 0 0; padding: .7rem .85rem; border-radius: .55rem;
+  font-size: .82rem; line-height: 1.5; color: var(--text-2);
+  background: rgba(243,198,75,.07); border: 1px solid var(--border-gold);
+}
+.sp-avviso .ico { width: 16px; height: 16px; flex-shrink: 0; margin-top: .15rem; color: var(--gold-2); }
+
+/* Elenco dei movimenti */
+.sp-lista { list-style: none; margin: 0; padding: 0; }
+.sp-voce {
+  display: grid; grid-template-columns: 8.5rem 1fr 6rem 4.5rem; align-items: center; gap: .7rem;
+  padding: .55rem .5rem; border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.sp-voce:last-child { border-bottom: none; }
+.sp-quando { font-size: .74rem; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.sp-cosa { display: flex; flex-direction: column; gap: .12rem; min-width: 0; }
+.sp-titolo { font-size: .86rem; color: var(--text); overflow-wrap: anywhere; }
+.sp-dett { font-size: .74rem; color: var(--text-3); overflow-wrap: anywhere; }
+.sp-tag {
+  justify-self: start; padding: .12rem .45rem; border-radius: .3rem;
+  font-size: .68rem; letter-spacing: .04em; color: var(--text-3);
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+}
+/* Le cause che meritano un occhio in più: slot e punti dati a mano */
+.sp-voce-slot .sp-tag  { color: #ffc48a; border-color: rgba(255,196,138,.3); }
+.sp-voce-admin .sp-tag { color: #ff9ec4; border-color: rgba(255,158,196,.35); }
+.sp-delta { font-family: var(--font-heading, 'Cinzel', serif); font-weight: 700; text-align: right; color: #7ee0a0; }
+.sp-voce.is-meno .sp-delta { color: #ff8a8a; }
+
+.user-storico {
+  display: inline-flex; align-items: center; gap: .28rem;
+  padding: .16rem .5rem; border-radius: 100px;
+  font-size: .72rem; color: var(--gold-2); text-decoration: none;
+  background: rgba(243,198,75,.09); border: 1px solid var(--border-gold);
+}
+.user-storico:hover { background: rgba(243,198,75,.18); }
+.user-storico .ico { width: 12px; height: 12px; }
+
+@media (max-width: 640px) {
+  .sp-riep-riga { grid-template-columns: 1fr 3rem 4.5rem; }
+  .sp-riep-barra { grid-column: 1 / -1; order: 3; }
+  .sp-voce { grid-template-columns: 1fr 4.5rem; row-gap: .2rem; }
+  .sp-quando { grid-column: 1 / -1; }
+  .sp-tag { grid-column: 1; }
+}

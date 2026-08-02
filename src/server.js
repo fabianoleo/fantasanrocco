@@ -551,6 +551,9 @@ const {
 // Sponsor della barra: elenco e controllo dei PNG presenti stanno in
 // dati/sponsor.js. Qui resta solo la pubblicazione alle view.
 const slot5 = require('./giochi/slot');
+// Ogni movimento di punti passa da qui e lascia la sua riga nel registro:
+// vedi lib/punti.js sul perche'.
+const punti = require('./lib/punti');
 const { SPONSOR_LOGHI } = require('./dati/sponsor');
 app.locals.sponsorLoghi = SPONSOR_LOGHI;
 
@@ -1076,7 +1079,7 @@ function predictionsForUser(userId) {
 function predictionAward(pred, winnerIdx) {
   return db.transaction(() => {
     for (const v of db.prepare('SELECT user_id, awarded_points FROM prediction_votes WHERE prediction_id = ? AND awarded_points <> 0').all(pred.id)) {
-      db.prepare('UPDATE users SET points_adjust = points_adjust - ? WHERE id = ?').run(v.awarded_points, v.user_id);
+      punti.muovi(v.user_id, -v.awarded_points, 'storno', `Pronostico «${pred.title}» ridichiarato`);
     }
     db.prepare('UPDATE prediction_votes SET awarded_points = 0 WHERE prediction_id = ? AND awarded_points <> 0').run(pred.id);
     const winners = [];
@@ -1086,7 +1089,7 @@ function predictionAward(pred, winnerIdx) {
         if (!chosen.includes(winnerIdx)) continue;
         const pts = chosen.length > 1 ? Math.floor(pred.points / 2) : pred.points;   // hedge → metà punti
         if (pts <= 0) continue;
-        db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(pts, v.user_id);
+        punti.muovi(v.user_id, pts, 'pronostico', `«${pred.title}»` + (chosen.length > 1 ? ' (più risposte: metà punti)' : ''));
         db.prepare('UPDATE prediction_votes SET awarded_points = ? WHERE prediction_id = ? AND user_id = ?').run(pts, pred.id, v.user_id);
         winners.push(v.user_id);
       }
@@ -1674,7 +1677,7 @@ function checkAndAwardSections(userId) {
     db.transaction(() => {
       const ins = db.prepare('INSERT OR IGNORE INTO section_bonuses (user_id, section) VALUES (?, ?)').run(userId, s.key);
       // Il bonus e' quello della SUA sezione, non piu' uno uguale per tutte.
-      if (ins.changes) db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(sectionBonus(s.key), userId);
+      if (ins.changes) punti.muovi(userId, sectionBonus(s.key), 'sezione', s.label);
     })();
     awarded.push(s);
   }
@@ -1734,8 +1737,9 @@ app.post('/api/streak/claim', auth.requireLogin, verifyCsrf, (req, res) => {
   const st = streakStatus(req.currentUser);
   const day = st.day;
   const bonus = STREAK_BONUS[day - 1] || 0;
-  db.prepare('UPDATE users SET streak_day = ?, streak_last_day = ?, points_adjust = points_adjust + ? WHERE id = ?')
-    .run(day, today, bonus, req.currentUser.id);
+  db.prepare('UPDATE users SET streak_day = ?, streak_last_day = ? WHERE id = ?')
+    .run(day, today, req.currentUser.id);
+  punti.muovi(req.currentUser.id, bonus, 'striscia', `Giorno ${day} di 7`);
   checkLevelUp(req.currentUser.id);
   res.json({ ok: true, claimed: true, day, bonus, currentDay: day, bonuses: STREAK_BONUS, balance: userPoints(req.currentUser.id) });
 });
@@ -1798,8 +1802,8 @@ app.post('/ruota/gira', auth.requireLogin, wheelLimiter, (req, res) => {
     if (u && u.last_wheel_day === today) return false;
     const pick = weightedPick(WHEEL_PRIZES);
     const idx = WHEEL_PRIZES.indexOf(pick);
-    db.prepare('UPDATE users SET points_adjust = points_adjust + ?, last_wheel_day = ? WHERE id = ?')
-      .run(pick.points, today, req.currentUser.id);
+    db.prepare('UPDATE users SET last_wheel_day = ? WHERE id = ?').run(today, req.currentUser.id);
+    punti.muovi(req.currentUser.id, pick.points, 'ruota', pick.jackpot ? 'JACKPOT!' : `Vinti ${pick.points}`);
     result = { index: idx, points: pick.points, jackpot: !!pick.jackpot };
     return true;
   })();
@@ -1847,37 +1851,10 @@ function evalSlot(reels) {
 // La slot vive dentro la sezione unica «Giochi e Slot»
 app.get('/slot', (req, res) => res.redirect(301, '/giochi?g=slot'));
 
-// VECCHIA slot a 3 rulli. Resta come riferimento della tabella e dei limiti,
-// ma non risponde piu' a nessun indirizzo: la sostituisce la 5x4 piu' sotto.
-function _slotVecchia(req, res) {
-  // Puntata libera: qui NON ci si fida di nulla che arrivi dal browser.
-  // Deve essere un intero dentro i limiti; il controllo sul saldo è più sotto,
-  // dentro la transazione, per evitare doppie giocate in parallelo.
-  const bet = Number.parseInt(req.body.bet, 10);
-  if (!Number.isInteger(bet) || bet < SLOT_BET_MIN || bet > SLOT_BET_MAX) {
-    return res.status(400).json({
-      ok: false,
-      error: 'bet',
-      message: `Puntata non valida: da ${SLOT_BET_MIN} a ${SLOT_BET_MAX} punti.`,
-    });
-  }
-  let out = null;
-  const ok = db.transaction(() => {
-    const balance = userPoints(req.currentUser.id);
-    if (balance < bet) return false;                       // non puoi puntare più di quanto hai
-    const reels = [weightedPick(SLOT_SYMBOLS).key, weightedPick(SLOT_SYMBOLS).key, weightedPick(SLOT_SYMBOLS).key];
-    const r = evalSlot(reels);
-    const payout = Math.floor(r.mult * bet);               // vincita lorda (puntata inclusa)
-    const net = payout - bet;                              // effetto sul saldo
-    db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(net, req.currentUser.id);
-    out = { reels, payout, net, win: payout > 0, kind: r.kind, sym: r.sym, jackpot: r.jackpot };
-    return true;
-  })();
-  if (!ok) return res.status(400).json({ ok: false, error: 'funds', message: 'Punti insufficienti per questa puntata.' });
-  if (out.net > 0) checkLevelUp(req.currentUser.id);
-  res.json({ ok: true, bet, ...out, balance: userPoints(req.currentUser.id) });
-}
-void _slotVecchia;
+// La slot a 3 rulli e' stata sostituita dalla 5x4 (giochi/slot.js). La sua
+// funzione e' stata tolta del tutto: era irraggiungibile, ma muoveva i punti
+// scavalcando il registro dei movimenti — una trappola per chi ci ripassa.
+// Le costanti SLOT_* qui sopra restano: le usano la rotta nuova e la pagina.
 
 // ── SLOT 5x4 «Tombola di San Rocco» ────────────────────────────────────
 // La matematica sta tutta in giochi/slot.js e gira SOLO qui: il browser
@@ -1900,7 +1877,8 @@ app.post('/slot/gira', auth.requireLogin, slotLimiter, (req, res) => {
     const g = slot5.gioca(cryptoRandom);
     const payout = slot5.punti(g.unita, bet);
     const net = payout - bet;
-    db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(net, req.currentUser.id);
+    punti.muovi(req.currentUser.id, net, 'slot',
+      `Puntata ${bet}, vinti ${payout}` + (g.bonus ? ' (con la Corsa del Cane)' : ''));
     out = {
       griglia: g.griglia,
       vincite: g.vincite,
@@ -2718,7 +2696,7 @@ app.post('/moderazione/:id/:azione', auth.requireStaff, (req, res) => {
         // giochi e della ruota. Si accredita solo approvando — su un rifiuto
         // non ci sarebbe niente da premiare.
         if (bonus !== 0) {
-          db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(bonus, sub.user_id);
+          punti.muovi(sub.user_id, bonus, 'moderazione', `${req.currentUser.nickname} su «${sub.title}»`);
           audit(req, 'prova.bonus', `#${req.params.id} «${sub.title}» ${bonus > 0 ? '+' : ''}${bonus}pt`);
         }
         const totale = sub.points + bonus;
@@ -2778,7 +2756,7 @@ app.get('/r/:code', (req, res) => {
   const upd = db.prepare("UPDATE reward_codes SET claimed_by = ?, claimed_at = datetime('now') WHERE code = ? AND claimed_by IS NULL")
     .run(req.currentUser.id, code);
   if (upd.changes === 1) {
-    db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(rc.points, req.currentUser.id);
+    punti.muovi(req.currentUser.id, rc.points, 'codice', `Codice ${code}`);
     checkLevelUp(req.currentUser.id);
     return res.render('claim', { title: 'Premio riscattato!', outcome: 'won', rc, balance: userPoints(req.currentUser.id) });
   }
@@ -2863,6 +2841,24 @@ app.get('/admin/prove.csv', auth.requireAdmin, (req, res) => {
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', `attachment; filename="prove-fantasanrocco-${oggi}.csv"`);
   res.send(out.join('\r\n'));
+});
+
+// Storico dei punti di un utente. Serve quando un punteggio non torna e
+// bisogna capire com'e' cresciuto: da qui si vede riga per riga.
+app.get('/admin/punti/:id', auth.requireAdmin, (req, res) => {
+  const u = db.prepare('SELECT id, nickname, email, role, points_adjust, created_at FROM users WHERE id = ?')
+    .get(req.params.id);
+  if (!u) return res.status(404).render('error', { title: 'Storico', message: 'Utente inesistente.' });
+  res.render('admin-punti', {
+    title: `Storico punti · ${u.nickname}`,
+    utente: u,
+    totale: userPoints(u.id),
+    voci: punti.storico(u.id),
+    riepilogo: punti.riepilogo(u.id),
+    // Quanto del saldo non e' spiegato dal registro: sui conti piu' vecchi
+    // del registro stesso e' normale che resti un pezzo scoperto.
+    nonSpiegato: punti.nonSpiegato(u.id),
+  });
 });
 
 app.get('/admin/statistiche', auth.requireAdmin, (req, res) => {
@@ -3563,7 +3559,7 @@ app.post('/admin/utenti/:id/bonus', auth.requireAdmin, (req, res) => {
   const pts = parseInt(req.body.points, 10);
   if (!Number.isFinite(pts) || pts === 0) { flash(req, 'error', 'Inserisci un numero di punti valido (diverso da 0).'); return res.redirect('/admin'); }
   const reason = (req.body.reason || '').trim().slice(0, 120);
-  db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(pts, target.id);
+  punti.muovi(target.id, pts, 'admin', `${req.currentUser.nickname}` + (reason ? ': ' + reason : ''));
   audit(req, 'utente.bonus', `${target.nickname}: ${pts > 0 ? '+' : ''}${pts}pt${reason ? ' (' + reason + ')' : ''}`);
   const segno = pts > 0 ? '+' : '';
   // Notifica push all'utente interessato (solo se ha le notifiche attive)
@@ -3607,14 +3603,14 @@ app.post('/admin/pronostico/vincitore', auth.requireAdmin, (req, res) => {
   const winners = db.transaction(() => {
     // Storna accrediti precedenti (in caso di ri-dichiarazione)
     for (const p of db.prepare('SELECT user_id, awarded_points FROM palio_predictions WHERE awarded_points <> 0').all()) {
-      db.prepare('UPDATE users SET points_adjust = points_adjust - ? WHERE id = ?').run(p.awarded_points, p.user_id);
+      punti.muovi(p.user_id, -p.awarded_points, 'storno', 'Palio ridichiarato');
     }
     db.prepare('UPDATE palio_predictions SET awarded_points = 0 WHERE awarded_points <> 0').run();
     // Accredita ai vincitori
     const win = db.prepare('SELECT user_id FROM palio_predictions WHERE choice = ?').all(winner);
     if (points > 0) {
       for (const p of win) {
-        db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(points, p.user_id);
+        punti.muovi(p.user_id, points, 'palio', PALIO_FUOCHISTI[winner].name);
       }
       db.prepare('UPDATE palio_predictions SET awarded_points = ? WHERE choice = ?').run(points, winner);
     }
@@ -3639,7 +3635,7 @@ app.post('/admin/pronostico/vincitore', auth.requireAdmin, (req, res) => {
 app.post('/admin/pronostico/reset', auth.requireAdmin, (req, res) => {
   db.transaction(() => {
     for (const p of db.prepare('SELECT user_id, awarded_points FROM palio_predictions WHERE awarded_points <> 0').all()) {
-      db.prepare('UPDATE users SET points_adjust = points_adjust - ? WHERE id = ?').run(p.awarded_points, p.user_id);
+      punti.muovi(p.user_id, -p.awarded_points, 'storno', 'Palio ridichiarato');
     }
     db.prepare('UPDATE palio_predictions SET awarded_points = 0 WHERE awarded_points <> 0').run();
     db.prepare("UPDATE palio_pronostico SET winner = NULL, open = 1, resolved_at = NULL WHERE id = 1").run();
