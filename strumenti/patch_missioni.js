@@ -17,6 +17,15 @@ const EMOJI = { comune: '⚪', 'non-comune': '🟢', rara: '🔵', epica: '🟣'
 // si vedono solo nel loro giorno (ora italiana, il server legge Europe/Rome).
 const GIORNO = (n) => [`2026-08-${n} 00:00:00`, `2026-08-${n} 23:59:59`];
 
+// Finestra di un PRONOSTICO: si apre alle 18 del giorno prima e si chiude
+// alle 18 del giorno stesso, cioè PRIMA che la sera cominci. È la parte che
+// rende il gioco un gioco: se restasse aperta dopo, chiunque potrebbe
+// mandare la risposta avendo già visto com'era vestito.
+const PRONOSTICO = (n) => [
+  `2026-08-${String(n - 1).padStart(2, '0')} 18:00:00`,
+  `2026-08-${String(n).padStart(2, '0')} 18:00:00`,
+];
+
 // find = pezzo di titolo da cercare (senza l'emoji della rarità)
 // Campi modificabili: title, description, repeatable, archived, section
 const PATCHES = [
@@ -62,6 +71,18 @@ const PATCHES = [
   { find: 'Spesa folle', section: 'food' },
   { find: 'Corri Forrest', section: 'sport' },
   { find: 'Green days', section: 'sport' },
+  // ── Giro del 3 agosto 2026 ───────────────────────────────────────
+  // Il flash mob adesso ha una data e un committente: smette di essere una
+  // flash nascosta da sbloccare a sorpresa e diventa una missione del 14.
+  // Sale anche di rarità, da rara a epica (rar cambia emoji E punti).
+  // La foto anni '80 finisce su Facebook, non qui: la prova che serve allo
+  // staff è lo screenshot del post, se no non c'è modo di verificarla.
+  { find: 'Tiemp Bell',
+    description: 'Pubblica una foto anni ’80 sul gruppo Facebook del paese (Sei di Siano se…). '
+               + 'Come prova invia lo screenshot del post.' },
+  { find: 'Flash Mob', rar: 'epica', archived: 0, section: null,
+    da: GIORNO(14)[0], a: GIORNO(14)[1],
+    description: 'Partecipa e fai una foto al flash mob organizzato dal Comitato San Rocco in collaborazione con il FantaSanRocco.' },
 ];
 
 // Missioni da eliminare del tutto (non archiviare: archived=1 vuol dire
@@ -73,6 +94,15 @@ const RIMOZIONI = [
   // Attenzione a non confonderla con "Sticker Limited Edition", che è
   // l'adesivo sul drink e resta: questa era il bollino col logo.
   { find: 'Bollino', perche: 'missione tolta dall\'elenco' },
+  // La vecchia sticker valeva su più giorni e in nessun locale preciso: al
+  // suo posto ce ne sono cinque, una per bar. `esatto` è indispensabile: le
+  // nuove si chiamano "Sticker Limited Edition · <bar>" e un LIKE se le
+  // porterebbe via tutte, subito dopo averle create.
+  { find: 'Sticker Limited Edition', esatto: true,
+    perche: 'sostituita da una missione per ciascuno dei cinque bar' },
+  // `esatto` anche qui, per non toccare "Campanile sotto i Fuochi" e il
+  // "Bonus Campanile", che restano tutti e due.
+  { find: 'Campanile ON!', esatto: true, perche: 'missione tolta dall\'elenco' },
 ];
 
 // Missioni da aggiungere se non ci sono ancora (confronto sul nome, senza emoji)
@@ -83,13 +113,11 @@ const NUOVE = [
   { name: "Nu Gir Ngopp a Giostr", desc: 'Scatta una foto mentre fai un giro su una giostra presente alla festa.', rar: 'comune', sec: 'social' },
   { name: 'Vittoria', desc: 'Scatta una foto della colazione o dell’aperitivo al bar Vittoria.', rar: 'non-comune', sec: 'food' },
   { name: 'È sempre San Valentino da Romalba', desc: 'Scatta una foto del mazzo di fiori comprato da Romalba per il/la tuo/a partner.', rar: 'rara', sec: 'paese' },
-  { name: 'Flash Mob', desc: 'Flash! Scatta una foto mentre partecipi al flash mob.', rar: 'rara', flash: true },
-  // Vale il 13, 14, 15 e 17 ma non il 16: la finestra fa da recinto esterno,
-  // `giorni` ne ritaglia il buco (vedi giorni_attivi in db.js).
-  { name: 'Sticker Limited Edition',
-    desc: 'Fai una foto al drink con l’adesivo del FantaSanRocco (se sei riuscito a prenderlo).',
-    rar: 'non-comune',
-    da: '2026-08-13 00:00:00', a: '2026-08-17 23:59:59', giorni: '13,14,15,17' },
+  // Il flash mob ha una data: il 14. Non è più una flash da sbloccare a
+  // sorpresa (vedi anche la riga in PATCHES, che sistema quella già creata).
+  { name: 'Flash Mob',
+    desc: 'Partecipa e fai una foto al flash mob organizzato dal Comitato San Rocco in collaborazione con il FantaSanRocco.',
+    rar: 'epica', da: GIORNO(14)[0], a: GIORNO(14)[1] },
 
   // ── Giro del 30 luglio 2026 ──────────────────────────────────────
   // Una missione per ogni artista in programmazione. Mazzariello (14) e
@@ -171,16 +199,75 @@ const NUOVE = [
   { name: 'Green days',
     desc: 'Fai una foto mentre ripulisci le strade (+10 punti bonus se pulisci con uno spazzino).',
     rar: 'comune', sec: 'sport' },
+
+  // ── Giro del 3 agosto 2026 ───────────────────────────────────────
+
+  // L'ADESIVO, UNA SERA PER OGNI BAR.
+  // Prima era una missione sola valida su più giorni: si prendeva un adesivo
+  // qualunque e si chiudeva lì. Ora ognuna è legata al suo locale e alla sua
+  // sera, così il giro dei bar è il gioco. La vecchia sparisce (vedi
+  // RIMOZIONI, con nome esatto per non portarsi via anche queste).
+  // Il 16 e il 18 non c'è nessun bar: sono i due buchi voluti.
+  ...[
+    ['12', 'Bar Ideal',        'bar-ideal.png'],
+    ['13', 'Chalet',           'chalet.png'],
+    ['14', 'Revolution',       'revolution.png'],
+    ['15', 'Bar V. Frasci 2.0', 'bar-frasci-2-0.png'],
+    ['17', 'Zanzibar',          null],
+  ].map(([g, bar, logo]) => ({
+    name: `Sticker Limited Edition · ${bar}`,
+    desc: `Fai una foto al drink con l’adesivo del FantaSanRocco preso al ${bar} `
+        + '(se sei riuscito a prenderlo). Attenzione: gli adesivi sono limitati, non barate 😜',
+    rar: 'rara', da: GIORNO(g)[0], a: GIORNO(g)[1], sponsor: logo,
+  })),
+
+  // IL PRONOSTICO SUL PRESENTATORE.
+  // Una per sera, dal 14 al 18. La finestra si chiude alle 18 della sera
+  // stessa: dopo, il colore lo hanno visto tutti e non sarebbe più un
+  // pronostico. Senza foto — la risposta si scrive nella nota per lo staff.
+  // I colori giusti NON stanno qui e non stanno da nessuna parte nel codice:
+  // questo repository è pubblico su GitHub, chiunque potrebbe leggerli.
+  // Li tiene lo staff, e in moderazione si approva o si rifiuta a mano.
+  ...[14, 15, 16, 17, 18].map((g) => ({
+    name: `«Oltre» i colori · ${g} agosto`,
+    desc: 'Indovina di che colore sarà l’outfit del presentatore stasera. '
+        + 'Scrivi il colore nella «nota per lo staff»: si invia una volta sola, '
+        + 'e si chiude alle 18 — prima che cominci la serata.',
+    rar: 'non-comune', foto: false, da: PRONOSTICO(g)[0], a: PRONOSTICO(g)[1],
+  })),
+
+  { name: 'Missione Banana Giò',
+    desc: 'Fai una foto con Giovanni Riccio e la banana gonfiabile all’Atelier di frutta e verdura.',
+    rar: 'rara', sponsor: 'atelierfruttaeverdura.png' },
+
+  { name: 'Canta a squarciagola',
+    desc: 'Fai una foto al neon con il logo «Squarciagola».',
+    rar: 'comune', da: GIORNO(13)[0], a: GIORNO(13)[1], sponsor: 'squarciagola.png' },
+
+  { name: 'Babbà House',
+    desc: 'Fai una foto a una Peroni con il campanile sullo sfondo.',
+    rar: 'non-comune', sponsor: 'babba-house.png' },
+
+  // Senza foto: la prova è il link, e si incolla nella nota per lo staff.
+  { name: 'Corri su TikTok',
+    desc: 'Realizza un TikTok con il suono «Corri San Rocco» e incolla il link nella '
+        + '«nota per lo staff». Attenzione: il profilo deve essere pubblico e ricordati '
+        + 'di taggare @fantasanrocco.',
+    rar: 'epica', foto: false },
 ];
 
 let added = 0;
 for (const n of NUOVE) {
   const esiste = db.prepare('SELECT id FROM missions WHERE title LIKE ?').get(`%${n.name}%`);
   if (esiste) { console.log(`= c'è già: ${n.name} (#${esiste.id})`); continue; }
+  // `foto: false` → prova SENZA foto: la risposta si scrive nella «nota per
+  // lo staff» del modulo. Serve ai pronostici e al link di TikTok, dove una
+  // fotografia non dimostrerebbe niente.
   const info = db.prepare(`INSERT INTO missions
     (title, description, points, requires_photo, repeatable, archived, section, active_from, active_to, giorni_attivi, sponsor)
-    VALUES (?, ?, ?, 1, 0, ?, ?, ?, ?, ?, ?)`)
-    .run(`${EMOJI[n.rar]} ${n.name}`, n.desc, PTS[n.rar], n.flash ? 1 : 0, n.sec || null,
+    VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)`)
+    .run(`${EMOJI[n.rar]} ${n.name}`, n.desc, PTS[n.rar], n.foto === false ? 0 : 1,
+      n.flash ? 1 : 0, n.sec || null,
       n.da || null, n.a || null, n.giorni || null, n.sponsor || null);
   const dove = n.flash ? 'FLASH (nascosta)'
     : n.giorni ? `solo i giorni ${n.giorni}`
@@ -189,20 +276,30 @@ for (const n of NUOVE) {
         : `dal ${n.da.slice(8, 10)} al ${n.a.slice(8, 10)} agosto`)
     : n.sec ? `sezione ${n.sec}`
     : 'sempre visibile';
-  console.log(`＋ #${info.lastInsertRowid} "${EMOJI[n.rar]} ${n.name}" · ${PTS[n.rar]}pt · ${dove}`);
+  console.log(`＋ #${info.lastInsertRowid} "${EMOJI[n.rar]} ${n.name}" · ${PTS[n.rar]}pt · ${dove}`
+    + (n.foto === false ? ' · senza foto' : ''));
   added++;
 }
 
 let changed = 0;
 for (const p of PATCHES) {
-  const CAMPI = 'id, title, description, repeatable, archived, section, active_from, active_to';
+  const CAMPI = 'id, title, description, points, repeatable, archived, section, active_from, active_to';
   const rows = p.inDesc
     ? db.prepare(`SELECT ${CAMPI} FROM missions WHERE title LIKE ? OR description LIKE ?`).all(`%${p.find}%`, `%${p.find}%`)
     : db.prepare(`SELECT ${CAMPI} FROM missions WHERE title LIKE ?`).all(`%${p.find}%`);
   if (!rows.length) { console.log(`= niente da correggere per "${p.find}"`); continue; }
   for (const r of rows) {
-    const title = typeof p.title === 'function' ? p.title(r.title) : (p.title || r.title);
+    let title = typeof p.title === 'function' ? p.title(r.title) : (p.title || r.title);
     const description = p.description || r.description;
+    // Cambiare rarità vuol dire due cose insieme: l'emoji davanti al titolo
+    // (da cui il sito ricava l'etichetta) e i punti. Farne una sola lascia
+    // una missione che dice «epica» e ne paga 100.
+    let points = r.points;
+    if (p.rar) {
+      points = PTS[p.rar];
+      const nome = title.replace(/^[^\p{L}\p{N}"'«(]+/u, '').trim();
+      title = `${EMOJI[p.rar]} ${nome}`;
+    }
     // `section: null` è una modifica voluta (togli dalla sezione), non un
     // "campo assente": va distinta con hasOwnProperty, altrimenti `|| r.section`
     // la rimetterebbe dov'era.
@@ -214,14 +311,15 @@ for (const p of PATCHES) {
     const da = Object.prototype.hasOwnProperty.call(p, 'da') ? p.da : r.active_from;
     const a  = Object.prototype.hasOwnProperty.call(p, 'a')  ? p.a  : r.active_to;
     if (title === r.title && description === r.description && repeatable === r.repeatable
-        && archived === r.archived && section === r.section
+        && archived === r.archived && section === r.section && points === r.points
         && da === r.active_from && a === r.active_to) {
       console.log(`= già a posto: ${r.title}`); continue;
     }
-    db.prepare(`UPDATE missions SET title = ?, description = ?, repeatable = ?, archived = ?,
+    db.prepare(`UPDATE missions SET title = ?, description = ?, points = ?, repeatable = ?, archived = ?,
                 section = ?, active_from = ?, active_to = ? WHERE id = ?`)
-      .run(title, description, repeatable, archived, section, da, a, r.id);
+      .run(title, description, points, repeatable, archived, section, da, a, r.id);
     const note = [
+      points !== r.points ? `${r.points}→${points} punti` : null,
       da !== r.active_from || a !== r.active_to
         ? (da ? `finestra ${da.slice(8, 10)}→${a.slice(8, 10)} agosto` : 'finestra rimossa') : null,
       repeatable !== r.repeatable ? (repeatable ? 'ora RIPETIBILE' : 'non più ripetibile') : null,
@@ -234,7 +332,13 @@ for (const p of PATCHES) {
 }
 let removed = 0, nascoste = 0;
 for (const r of RIMOZIONI) {
-  const rows = db.prepare('SELECT id, title, archived, section FROM missions WHERE title LIKE ?').all(`%${r.find}%`);
+  // `esatto: true` → si toglie SOLO la missione con quel nome preciso.
+  // Serve quando le sostitute si chiamano quasi uguale: cercare "Sticker
+  // Limited Edition" col LIKE avrebbe cancellato anche le cinque nuove,
+  // subito dopo averle create.
+  const tutte = db.prepare('SELECT id, title, archived, section FROM missions WHERE title LIKE ?').all(`%${r.find}%`);
+  const senzaEmoji = (t) => String(t).replace(/^[^\p{L}\p{N}"'«(]+/u, '').trim();
+  const rows = r.esatto ? tutte.filter((x) => senzaEmoji(x.title) === r.find) : tutte;
   if (!rows.length) { console.log(`= già rimossa: ${r.find}`); continue; }
   for (const row of rows) {
     const prove = db.prepare('SELECT COUNT(*) c FROM submissions WHERE mission_id = ?').get(row.id).c;

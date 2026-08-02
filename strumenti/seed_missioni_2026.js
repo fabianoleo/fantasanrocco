@@ -50,7 +50,7 @@ const MISSIONS = [
   m('Cantiere', 'Scatta una foto di un anziano che critica un lavoro pubblico.', 'non-comune', { sec: 'paese' }),
   m('Asso di Mazze', 'Scatta una foto di una partita a carte davanti alla Chiesa.', 'comune', { sec: 'paese' }),
   m('Fuori Orario', 'Scatta una foto davanti a un bar dopo la chiusura.', 'comune', { sec: 'paese' }),
-  m("E' Tiemp Bell...", "Pubblica una foto anni '80 sul gruppo Facebook del paese (Sei di Siano se…).", 'non-comune', { sec: 'paese' }),
+  m("E' Tiemp Bell...", "Pubblica una foto anni '80 sul gruppo Facebook del paese (Sei di Siano se…). Come prova invia lo screenshot del post.", 'non-comune', { sec: 'paese' }),
   m("Ngopp a' Cappell", 'Scatta una foto panoramica del paese.', 'non-comune', { sec: 'paese' }),
   m("Annanz' a Chies", 'Scatta una foto sulle scale della chiesa.', 'comune', { sec: 'paese' }),
   m('Benvenuti a Siano', 'Scatta una foto davanti alla scritta con una posa creativa.', 'non-comune', { sec: 'paese' }),
@@ -138,7 +138,6 @@ const MISSIONS = [
   m('In Bilico', 'Flash! Tutti in posa, ma su una sola gamba!', 'epica', { flash: true }),
 
   // ── SFIDE GIORNALIERE — 18 AGOSTO ────────────────────────────────
-  m('Campanile ON!', 'Scatta una foto durante l’accensione del campanile.', 'rara', { day: 18 }),
   m('Vagaband', 'Scatta una foto con un membro della Vagaband.', 'rara', { day: 18 }),
   m('Musicante', 'Scatta una foto mentre suoni uno strumento la sera dei fuochi.', 'rara', { day: 18 }),
   m('Campanile sotto i Fuochi', 'Scatta una foto del campanile mentre è illuminato dai fuochi d’artificio.', 'epica', { day: 18 }),
