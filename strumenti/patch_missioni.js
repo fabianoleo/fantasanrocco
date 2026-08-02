@@ -63,7 +63,9 @@ const PATCHES = [
   // speciali. Ora stanno nelle quattro sezioni, divise per tema. Queste righe
   // servono se un lancio precedente le ha già create: il blocco NUOVE salta
   // le missioni che esistono, e da solo non le sposterebbe mai.
-  { find: 'BE REAL', section: 'sport' },
+  // Michele Lamberti è il PRESIDENTE della Real Sianese, non un dirigente.
+  { find: 'BE REAL', section: 'sport',
+    description: 'Fai una foto con il presidente della Real Sianese Michele Lamberti.' },
   { find: 'I love me', section: 'paese' },
   { find: 'Moltiplicatore di Rocchi', section: 'social' },
   { find: 'Gemelli diversi', section: 'social' },
@@ -83,6 +85,17 @@ const PATCHES = [
   { find: 'Flash Mob', rar: 'epica', archived: 0, section: null,
     da: GIORNO(14)[0], a: GIORNO(14)[1],
     description: 'Partecipa e fai una foto al flash mob organizzato dal Comitato San Rocco in collaborazione con il FantaSanRocco.' },
+  // I tre malus non erano ancora stati decisi quando la missione è nata
+  // («un malus da definire»): adesso ci sono, e vanno scritti, se no chi
+  // gioca non sa cosa deve cogliere sul fatto. Ripetibile perché i malus
+  // sono tre e capitano più volte a sera.
+  { find: 'Spia', repeatable: 1,
+    description: 'Scatta una foto mentre qualcuno compie uno dei tre malus: bere acqua, piangere o litigare.' },
+  // La storia su Instagram sparisce dopo 24 ore: senza screenshot lo staff
+  // non ha più niente da guardare quando modera.
+  { find: 'Trash Royale',
+    description: 'Pubblica una storia Instagram volutamente trash sul tuo profilo pubblico '
+               + 'taggando "Fanta SanRocco". Come prova invia lo screenshot della storia.' },
 ];
 
 // Missioni da eliminare del tutto (non archiviare: archived=1 vuol dire
@@ -174,7 +187,7 @@ const NUOVE = [
   // Due portano il marchio di chi le mette (vedi la colonna `sponsor`): il
   // logo compare sulla card della missione.
   { name: 'BE REAL (Sianese)',
-    desc: 'Fai una foto con il dirigente della Real Sianese Michele Lamberti.',
+    desc: 'Fai una foto con il presidente della Real Sianese Michele Lamberti.',
     rar: 'non-comune', sec: 'sport', sponsor: 'realsianese.png' },
   { name: 'Ps. : I love me',
     desc: 'Fai una foto mentre compri dei fiori per te stessa/o da Vastola.',

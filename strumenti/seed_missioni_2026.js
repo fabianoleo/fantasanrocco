@@ -75,9 +75,9 @@ const MISSIONS = [
   // ── SOCIAL & PARTY (16) ──────────────────────────────────────────
   m('Rocco', 'Scatta una foto con una persona di nome Rocco.', 'non-comune', { rep: true, sec: 'social' }),
   m('Kiss Kiss', 'Scatta una foto mentre dai baci durante la festa.', 'comune', { rep: true, sec: 'social' }),
-  m('Spia', 'Scatta una foto mentre si compie un malus da definire.', 'epica', { sec: 'social' }),
+  m('Spia', 'Scatta una foto mentre qualcuno compie uno dei tre malus: bere acqua, piangere o litigare.', 'epica', { rep: true, sec: 'social' }),
   m("Miettc a' Man Toji", 'Scatta un selfie in chiesa con la statua di un Santo.', 'non-comune', { sec: 'social' }),
-  m('Trash Royale', 'Pubblica una storia Instagram volutamente trash sul tuo profilo pubblico taggando "Fanta SanRocco".', 'rara', { sec: 'social' }),
+  m('Trash Royale', 'Pubblica una storia Instagram volutamente trash sul tuo profilo pubblico taggando "Fanta SanRocco". Come prova invia lo screenshot della storia.', 'rara', { sec: 'social' }),
   m('Maracaibo', 'Entra in un trenino umano che balla e scatta una foto.', 'non-comune', { sec: 'social' }),
   m('Mangiata', 'Scatta un selfie durante una mangiata sulla terra.', 'epica', { sec: 'social' }),
   m('On Air', 'Fatti intervistare da chi fa riprese/interviste ufficiali dell’evento.', 'epica', { sec: 'social' }),
