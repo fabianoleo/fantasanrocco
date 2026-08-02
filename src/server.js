@@ -40,6 +40,9 @@ app.set('layout', 'layout');
 
 // Helper icone SVG disponibile in tutte le view: <%- icon('flame') %>
 app.locals.icon = require('./icons').icon;
+// Disegni dei simboli della slot: helper globale come icon(), perche' una
+// funzione definita dentro un partial EJS non esce da quel partial.
+app.locals.simboloSlot = require('./giochi/slot-simboli').simboloSlot;
 
 // Rarità: nel DB il titolo è salvato come "🔵 Primo Cittadino", cioè con
 // l'emoji-pallino davanti. Qui la stacco dal nome così le view possono
@@ -547,6 +550,7 @@ const {
 
 // Sponsor della barra: elenco e controllo dei PNG presenti stanno in
 // dati/sponsor.js. Qui resta solo la pubblicazione alle view.
+const slot5 = require('./giochi/slot');
 const { SPONSOR_LOGHI } = require('./dati/sponsor');
 app.locals.sponsorLoghi = SPONSOR_LOGHI;
 
@@ -1132,6 +1136,14 @@ app.get('/giochi', (req, res) => {
     betMax: SLOT_BET_MAX,
     triple: SLOT_TRIPLE,
     pair: SLOT_PAIR,
+    // Slot 5x4: simboli, tabella e linee servono alla pagina per disegnare
+    // la griglia e la tabella dei pagamenti.
+    slot5: {
+      colonne: slot5.COLONNE, righe: slot5.RIGHE,
+      simboli: slot5.SIMBOLI, pagamenti: slot5.PAGAMENTI,
+      linee: slot5.LINEE.length, bonusMinimo: slot5.BONUS_MINIMO,
+      moltiplicatori: slot5.BONUS_MOLTIPLICATORI,
+    },
     balance: req.currentUser ? userPoints(req.currentUser.id) : 0,
     // Missioni di carriera del Jetpack (3 attive) + grado raggiunto
     jpMissions: jpMissionsFor(req.currentUser ? req.currentUser.id : null),
@@ -1835,7 +1847,9 @@ function evalSlot(reels) {
 // La slot vive dentro la sezione unica «Giochi e Slot»
 app.get('/slot', (req, res) => res.redirect(301, '/giochi?g=slot'));
 
-app.post('/slot/gira', auth.requireLogin, slotLimiter, (req, res) => {
+// VECCHIA slot a 3 rulli. Resta come riferimento della tabella e dei limiti,
+// ma non risponde piu' a nessun indirizzo: la sostituisce la 5x4 piu' sotto.
+function _slotVecchia(req, res) {
   // Puntata libera: qui NON ci si fida di nulla che arrivi dal browser.
   // Deve essere un intero dentro i limiti; il controllo sul saldo è più sotto,
   // dentro la transazione, per evitare doppie giocate in parallelo.
@@ -1857,6 +1871,47 @@ app.post('/slot/gira', auth.requireLogin, slotLimiter, (req, res) => {
     const net = payout - bet;                              // effetto sul saldo
     db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(net, req.currentUser.id);
     out = { reels, payout, net, win: payout > 0, kind: r.kind, sym: r.sym, jackpot: r.jackpot };
+    return true;
+  })();
+  if (!ok) return res.status(400).json({ ok: false, error: 'funds', message: 'Punti insufficienti per questa puntata.' });
+  if (out.net > 0) checkLevelUp(req.currentUser.id);
+  res.json({ ok: true, bet, ...out, balance: userPoints(req.currentUser.id) });
+}
+void _slotVecchia;
+
+// ── SLOT 5x4 «Tombola di San Rocco» ────────────────────────────────────
+// La matematica sta tutta in giochi/slot.js e gira SOLO qui: il browser
+// riceve la griglia gia' decisa e la disegna. Il ritorno al giocatore e'
+// misurato con strumenti/slot_rtp.js — 87,6%, quindi a lungo si perde.
+
+app.post('/slot/gira', auth.requireLogin, slotLimiter, (req, res) => {
+  const bet = Number.parseInt(req.body.bet, 10);
+  if (!Number.isInteger(bet) || bet < SLOT_BET_MIN || bet > SLOT_BET_MAX) {
+    return res.status(400).json({
+      ok: false, error: 'bet',
+      message: `Puntata non valida: da ${SLOT_BET_MIN} a ${SLOT_BET_MAX} punti.`,
+    });
+  }
+  let out = null;
+  const ok = db.transaction(() => {
+    const balance = userPoints(req.currentUser.id);
+    if (balance < bet) return false;
+    // cryptoRandom: la casualita' e' quella del sistema, mai quella del browser
+    const g = slot5.gioca(cryptoRandom);
+    const payout = slot5.punti(g.unita, bet);
+    const net = payout - bet;
+    db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(net, req.currentUser.id);
+    out = {
+      griglia: g.griglia,
+      vincite: g.vincite,
+      cani: g.cani,
+      bonus: g.bonus ? {
+        // al browser servono solo i passi da disegnare, non la matematica
+        passi: g.bonus.passi.map((p) => ({ griglia: p.griglia, cane: p.cane, mult: p.mult, vincite: p.vincite })),
+        punti: slot5.punti(g.bonus.totale, bet),
+      } : null,
+      payout, net, win: payout > 0,
+    };
     return true;
   })();
   if (!ok) return res.status(400).json({ ok: false, error: 'funds', message: 'Punti insufficienti per questa puntata.' });
