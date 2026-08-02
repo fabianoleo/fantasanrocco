@@ -4,7 +4,7 @@
 <%# ── HERO ────────────────────────────────────────────────────────── %>
 <div class="pg-hero lp-full">
   <div class="pg-hero-inner">
-    <p class="lp-kicker" style="margin-bottom:1rem;letter-spacing:.22em">14 — 18 Agosto 2026 &nbsp;·&nbsp; Siano (SA)</p>
+    <p class="lp-kicker" style="margin-bottom:1rem;letter-spacing:.22em">12 — 18 Agosto 2026 &nbsp;·&nbsp; Siano (SA)</p>
     <h1 class="pg-title">Programmazione</h1>
     <p class="pg-sub">Scopri tutti gli appuntamenti della settimana:<br>musica, spettacoli, divertimento e tradizione.</p>
     <div class="pg-hero-badges">
@@ -22,448 +22,230 @@
 </div>
 
 <%# ─────────────────────────────────────────────────────────────────
-    VENERDÌ 14 AGOSTO
-    ─────────────────────────────────────────────────────────────── %>
-<div class="pg-day lp-full">
-  <div class="pg-day-inner">
-    <div class="pg-day-header">
-      <span class="pg-day-num">14</span>
-      <div class="pg-day-info">
-        <span class="pg-day-name">Venerdì</span>
-        <span class="pg-day-month">Agosto 2026</span>
+    IL PROGRAMMA, GIORNO PER GIORNO
+    Prima stava tutto scritto a mano, una <article> per evento: quaranta
+    schede quasi identiche in cui cambiare l'ordine voleva dire spostare
+    blocchi di venti righe. Ora il contenuto sta nell'elenco qui sotto e
+    il disegno si fa una volta sola in fondo.
+
+    Dentro ogni giorno il CIVILE viene prima del RELIGIOSO, e i giorni
+    vanno in ordine crescente dal 12 in poi.
+
+    fascia: decide colore e icona della card
+      'morning' mattino · 'evening' sera · 'night' notte
+    ───────────────────────────────────────────────────────────────── %>
+<%
+  const GIORNI = [
+    {
+      num: 12, nome: 'Mercoledì',
+      civile: [],
+      religioso: [
+        { ora: '18:30', fino: '19:00', fascia: 'evening', luogo: 'Chiesa di San Rocco',
+          titolo: 'Novena a San Rocco',
+          desc: 'Ore 18.30 — Santo Rosario. Ore 19.00 — Solenne Celebrazione Eucaristica con omelia, Novena, Supplica a San Rocco e venerazione della Reliquia.' },
+      ],
+    },
+    {
+      num: 13, nome: 'Giovedì', occhiello: 'Giornata penitenziale',
+      civile: [],
+      religioso: [
+        { ora: '09:30', fino: '12:00', fascia: 'morning', luogo: 'Chiesa di San Rocco',
+          titolo: 'Confessioni',
+          desc: 'Giornata penitenziale. Confessioni dalle 9.30 alle 12.00 e dalle 16.30 alle 19.00.' },
+        { ora: '18:30', fino: '19:00', fascia: 'evening', luogo: 'Chiesa di San Rocco',
+          titolo: 'Santo Rosario e Coroncina',
+          desc: 'Ore 18.30 — Santo Rosario e Coroncina. Ore 19.00 — Solenne Celebrazione Eucaristica con Novena.' },
+      ],
+    },
+    {
+      num: 14, nome: 'Venerdì', occhiello: 'Apertura della Festa Patronale',
+      civile: [
+        { ora: '09:30', fascia: 'morning', luogo: 'Piazza San Rocco', luogoId: 'piazza-san-rocco',
+          titolo: 'Apertura ufficiale della Festa',
+          desc: 'Tradizionale giro per le principali strade cittadine del Complesso Bandistico «Città di Castel San Giorgio».',
+          badge: 'fam' },
+        { ora: '21:00', fascia: 'night', luogo: 'Piazza San Rocco', luogoId: 'piazza-san-rocco',
+          titolo: 'Accensione delle Luminarie Artistiche',
+          desc: 'A seguire il flash mob organizzato dalle Scuole di danza di Siano.',
+          badge: 'big' },
+        { ora: '21:30', fascia: 'night', luogo: 'Siano', luogoId: 'siano-centro',
+          titolo: 'Groove Motion Live Band', badge: 'live' },
+        { ora: '24:00', fascia: 'night', luogo: 'Piazza San Rocco', luogoId: 'piazza-san-rocco',
+          titolo: 'Mazzariello', sottotitolo: 'Live in Concerto', badge: 'live' },
+      ],
+      religioso: [
+        { ora: '18:30', fino: '19:00', fascia: 'evening', luogo: 'Chiesa di San Rocco',
+          titolo: 'Sacramento della Confermazione',
+          desc: 'Ore 18.30 — Accoglienza dei Cresimandi e dei loro padrini e madrine. Ore 19.00 — Solenne Celebrazione Eucaristica presieduta da S.E.R. Mons. Francesco Alfano, Arcivescovo di Sorrento-Castellammare di Stabia, con l’Amministrazione del Sacramento della Confermazione.' },
+      ],
+    },
+    {
+      num: 15, nome: 'Sabato', occhiello: 'Vigilia della Solennità di San Rocco',
+      civile: [
+        { ora: '20:00', fascia: 'evening', luogo: 'Piazza San Rocco', luogoId: 'piazza-san-rocco',
+          titolo: 'Premio San Rocco 2026',
+          desc: 'Cerimonia di consegna delle benemerenze a personalità, associazioni e cittadini che si sono distinti per il loro servizio alla comunità.',
+          badge: 'big' },
+        { ora: '21:00', fascia: 'night', luogo: 'Piazza San Rocco', luogoId: 'piazza-san-rocco',
+          titolo: 'Napoliitudine', sottotitolo: 'con Sal Esposito',
+          desc: 'Grande spettacolo dedicato alla musica classica napoletana.',
+          badge: 'live', immagine: '/images/artisti/napoliitudine.jpg' },
+      ],
+      religioso: [
+        { ora: '19:00', fascia: 'evening', luogo: 'Chiesa di San Rocco',
+          titolo: 'Conclusione della Solenne Novena',
+          desc: 'Solenne Celebrazione Eucaristica presieduta da S.E.R. Mons. Alfonso Raimo, Vescovo Ausiliare dell’Arcidiocesi di Salerno-Campagna-Acerno, con la partecipazione di tutti i Gruppi Parrocchiali, delle Associazioni ecclesiali e dei Portatori dei Santi. È anche la Solennità dell’Assunzione della Beata Vergine Maria.' },
+        { ora: '24:00', fascia: 'night', luogo: 'Chiesa di San Rocco',
+          titolo: 'Santa Messa di Mezzanotte',
+          sottotitolo: 'per tutti i Giovani volati in Cielo',
+          desc: 'Una celebrazione di preghiera e di speranza, affidando al Signore per intercessione di San Rocco tutti i giovani che hanno concluso il loro pellegrinaggio terreno. Al termine sarà acceso un lume dinanzi alla Venerata Statua in loro memoria.' },
+      ],
+    },
+    {
+      num: 16, nome: 'Domenica', occhiello: 'Solennità di San Rocco — Patrono della Città di Siano',
+      civile: [
+        { ora: '08:30', fascia: 'morning', luogo: 'Vie di Siano', luogoId: 'siano-centro',
+          titolo: 'Giro del Complesso Bandistico «Città di Fisciano»',
+          desc: 'Tradizionale giro per le vie cittadine.',
+          badge: 'fam' },
+        { ora: '20:00', fascia: 'night', luogo: 'Piazza San Rocco', luogoId: 'piazza-san-rocco',
+          titolo: 'Gran Concerto Bandistico',
+          sottotitolo: 'Complesso Bandistico «Città di Fisciano»',
+          desc: 'Al termine della Solenne Processione. Diretto dal Maestro Cav. Paolo Adesso, con la partecipazione dei cantanti lirici Anita Celentano (soprano), Giovanni Germano (tenore), Michele Rago (mezzosoprano) e Antonio Palumbo (baritono).',
+          badge: 'big' },
+        { ora: '23:30', fascia: 'night', luogo: 'Siano', luogoId: 'siano-centro',
+          titolo: 'Alfo V. &amp; Mike Carotenuto DJ', badge: 'dj' },
+      ],
+      religioso: [
+        { ora: '07:30', fino: '09:00', fascia: 'morning', luogo: 'Chiesa di San Rocco',
+          titolo: 'Sante Messe', desc: 'Sante Messe delle 7.30 e delle 9.00.' },
+        { ora: '10:30', fascia: 'morning', luogo: 'Piazza Municipio',
+          titolo: 'Il Corteo dei Bambini', sottotitolo: '— per la prima volta a Siano',
+          desc: 'Accoglienza di S.E.R. Mons. Andrea Bellandi, Arcivescovo Metropolita di Salerno-Campagna-Acerno, da parte delle Autorità civili e militari, del Clero, delle Associazioni, dei Comitati Festa e dell’intera Comunità. Il corteo di tutti i bambini di Siano parte da Piazza Municipio verso la Chiesa di San Rocco, quale segno di affidamento delle nuove generazioni al Santo Patrono.' },
+        { ora: '11:00', fascia: 'morning', luogo: 'Chiesa di San Rocco',
+          titolo: 'Solenne Pontificale',
+          desc: 'Celebrazione Eucaristica Pontificale presieduta da S.E.R. Mons. Andrea Bellandi, Arcivescovo Metropolita di Salerno-Campagna-Acerno.' },
+        { ora: '18:00', fascia: 'evening', luogo: 'Vie di Siano', luogoId: 'siano-centro',
+          titolo: 'La Processione di San Rocco',
+          desc: 'Solenne Processione per le principali vie della Città. Al rientro: Atto di Affidamento della Città di Siano a San Rocco, Solenne Benedizione della Città e venerazione della Reliquia del Santo Patrono.' },
+      ],
+    },
+    {
+      num: 17, nome: 'Lunedì',
+      civile: [
+        { ora: '22:00', fascia: 'night', luogo: 'Piazza Borsellino', luogoId: 'piazza-borsellino',
+          titolo: 'LDA &amp; Aka 7even', desc: 'Grande Concerto Live.',
+          grande: true, badge: 'live', immagine: '/images/artisti/lda-aka7even.jpg' },
+        { ora: '23:30', fascia: 'night', luogo: 'Piazza San Rocco', luogoId: 'piazza-san-rocco',
+          titolo: 'Disco Inferno',
+          desc: 'Al termine del concerto. Il grande party della Festa Patronale con i migliori successi dance dagli anni Settanta ai giorni nostri.',
+          badge: 'dj' },
+      ],
+      religioso: [
+        { ora: '19:00', fascia: 'evening', luogo: 'Chiesa di San Rocco',
+          titolo: 'Santa Messa in suffragio dei Defunti',
+          desc: 'In suffragio di tutti i fedeli defunti della Comunità di Siano, con particolare ricordo dei componenti del Comitato Festa, dei Portatori dei Santi, dei benefattori e di tutti coloro che hanno servito con generosità la Parrocchia e la Comunità.' },
+      ],
+    },
+    {
+      num: 18, nome: 'Martedì', occhiello: 'Conclusione della Festa Patronale',
+      civile: [
+        { ora: '10:30', fino: '12:00', fascia: 'morning', luogo: 'Siano', luogoId: 'siano-centro',
+          titolo: 'Luna Park', desc: 'Giostre e intrattenimento per bambini.', badge: 'fam' },
+        { ora: '18:00', fascia: 'evening', luogo: 'Vie di Siano', luogoId: 'siano-centro',
+          titolo: 'Vagaband', desc: 'Street band itinerante con musica e animazione.',
+          badge: 'live' },
+        { ora: '21:00', fascia: 'night', luogo: 'Piazza San Rocco', luogoId: 'piazza-san-rocco',
+          titolo: 'Accensione del Campanile di San Rocco', badge: 'big' },
+        { ora: '22:30', fascia: 'night', luogo: 'Piazza Mercato', luogoId: 'piazza-mercato',
+          titolo: 'XXVI Palio dei Fuochi', sottotitolo: 'a cura dei Comitati Rionali',
+          desc: 'A seguire: estrazione della lotteria San Rocco 2026, premiazione del XXVI Palio dei Fuochi e proclamazione del vincitore.',
+          grande: true, fuoco: true, badge: 'big' },
+        { ora: '01:00', fascia: 'night', luogo: 'Piazza San Rocco', luogoId: 'piazza-san-rocco',
+          titolo: 'DJ Set Raffaele ARTevent', sottotitolo: 'gran finale', badge: 'dj' },
+      ],
+      religioso: [
+        { ora: '19:00', fascia: 'evening', luogo: 'Chiesa di San Rocco',
+          titolo: 'Santa Messa di Ringraziamento',
+          desc: 'Al termine della Celebrazione si terrà la Benedizione dei Cani: in memoria del fedele cane che, secondo la tradizione, soccorse San Rocco durante la sua malattia, sono invitati tutti coloro che desiderano affidare i propri cani alla sua protezione.' },
+      ],
+    },
+  ];
+
+  const ICONA_FASCIA = { morning: 'sun', evening: 'sunset', night: 'moon' };
+  const NOME_FASCIA  = { morning: 'Mattino', evening: 'Sera', night: 'Notte' };
+  const BADGE = {
+    live: { cls: 'pg-badge-live', ico: 'guitar',     txt: 'Live Band' },
+    dj:   { cls: 'pg-badge-dj',   ico: 'headphones', txt: 'DJ Set' },
+    big:  { cls: 'pg-badge-big',  ico: 'flame',      txt: 'Grande Evento' },
+    fam:  { cls: 'pg-badge-fam',  ico: 'people',     txt: 'Famiglie' },
+  };
+%>
+
+<% GIORNI.forEach(function (g) { %>
+  <div class="pg-day lp-full">
+    <div class="pg-day-inner">
+      <div class="pg-day-header">
+        <span class="pg-day-num"><%= g.num %></span>
+        <div class="pg-day-info">
+          <span class="pg-day-name"><%= g.nome %></span>
+          <span class="pg-day-month">Agosto 2026</span>
+        </div>
+        <div class="pg-day-line"></div>
       </div>
-      <div class="pg-day-line"></div>
+      <% if (g.occhiello) { %><p class="pg-day-kicker"><%= g.occhiello %></p><% } %>
+
+      <%# Civile prima, religioso dopo. Il titoletto compare solo se il giorno
+          ha davvero tutte e due le parti: il 12 e il 13 sono solo religiosi, e
+          scrivere «Programma religioso» sopra l'unica cosa che c'e' sarebbe
+          rumore. %>
+      <% const dueParti = g.civile.length > 0 && g.religioso.length > 0; %>
+      <%# L'elenco sta in una variabile e non scritto in linea nel forEach: una
+          riga che comincia con «[» viene letta come indicizzazione di quella
+          prima, e il template non compila piu'. %>
+      <% const parti = [{ tipo: 'civile', elenco: g.civile }, { tipo: 'religioso', elenco: g.religioso }]; %>
+      <% parti.forEach(function (parte) { %>
+        <% const tipo = parte.tipo, elenco = parte.elenco; %>
+        <% if (elenco.length) { %>
+        <% if (dueParti) { %>
+          <p class="pg-parte pg-parte-<%= tipo %>">
+            <%- icon(tipo === 'civile' ? 'music' : 'candle') %>
+            Programma <%= tipo %>
+          </p>
+        <% } %>
+        <% elenco.forEach(function (e) { %>
+          <article class="pg-card pg-<%= e.fascia %> <%= tipo === 'religioso' ? 'pg-religioso' : '' %> <%= e.grande ? 'pg-card-grande' : '' %>">
+            <div class="pg-card-time">
+              <span class="pg-time-icon"><%- icon(tipo === 'religioso' ? 'candle' : ICONA_FASCIA[e.fascia]) %></span>
+              <span class="pg-time-val"><%= e.ora %></span>
+              <span class="pg-time-label"><%= NOME_FASCIA[e.fascia] %><% if (e.fino) { %> &nbsp;–&nbsp; <%= e.fino %><% } %></span>
+            </div>
+            <div class="pg-card-body">
+              <div class="pg-card-meta">
+                <span class="pg-location"><%- icon('pin') %><%= e.luogo %></span>
+              </div>
+              <h2 <% if (e.luogoId) { %>data-map-place="<%= e.luogoId %>"<% } %>
+                  class="pg-card-title <%= e.grande ? 'pg-title-grande' : '' %>"
+                  <% if (e.fuoco) { %>style="-webkit-text-fill-color: var(--fire) !important; color: var(--fire) !important; text-shadow: 0 0 28px rgba(232,78,27,.5);"<% } %>><%- e.titolo %><% if (e.sottotitolo) { %><br><span class="pg-card-subtitle"><%= e.sottotitolo %></span><% } %></h2>
+              <% if (e.desc) { %><p class="pg-card-desc"><%= e.desc %></p><% } %>
+              <% if (e.immagine) { %>
+                <div class="pg-card-media"><img src="<%= e.immagine %>" alt="<%= e.titolo.replace(/&amp;/g, 'e') %>" loading="lazy"></div>
+              <% } %>
+              <div class="pg-badges">
+                <% if (tipo === 'religioso') { %>
+                  <span class="pg-badge pg-badge-big"><%- icon('candle') %> Rito Religioso</span>
+                <% } else if (e.badge && BADGE[e.badge]) { %>
+                  <span class="pg-badge <%= BADGE[e.badge].cls %>"><%- icon(BADGE[e.badge].ico) %> <%= BADGE[e.badge].txt %></span>
+                <% } %>
+              </div>
+            </div>
+          </article>
+        <% }) %>
+        <% } %>
+      <% }) %>
     </div>
-
-    <%# Religioso: Sacramento della Confermazione %>
-    <article class="pg-card pg-religioso pg-evening">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('candle') %></span>
-        <span class="pg-time-val">18:30</span>
-        <span class="pg-time-label">Sera</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Piazza San Rocco</span>
-        </div>
-        <h2 data-map-place="piazza-san-rocco" class="pg-card-title">Sacramento della Confermazione</h2>
-        <p class="pg-card-desc">Ore 18.30 — Santo Rosario. Ore 19.00 — Santa Messa, solenne Celebrazione Eucaristica presieduta da S.E. Mons. Francesco Alfano, Arcivescovo di Sorrento-Castellammare di Stabia. Partecipano Misericordia di Siano, Fratres, AVO e Protezione Civile "Croce Azzurra".</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-big"><%- icon('candle') %> Rito Religioso</span>
-        </div>
-      </div>
-    </article>
-
-    <%# Evento: Groove Motion 21:30 %>
-    <article class="pg-card pg-evening">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('sunset') %></span>
-        <span class="pg-time-val">21:30</span>
-        <span class="pg-time-label">Sera</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Siano</span>
-        </div>
-        <h2 data-map-place="siano-centro" class="pg-card-title">Groove Motion Live Band</h2>
-        <p class="pg-card-desc">Una serata dal groove unico. Non mancare!</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-live"><%- icon('guitar') %> Live Band</span>
-          <span class="pg-badge pg-badge-musica"><%- icon('music') %> Musica</span>
-        </div>
-      </div>
-      <div class="pg-artist">
-        <img class="pg-artist-photo" src="/images/artisti/groove-motion.jpg" width="320" height="320" alt="Groove Motion Live Band" loading="lazy">
-        <div class="pg-ig-row">
-          <a class="pg-ig" href="https://www.instagram.com/groovemotionliveband/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Groove Motion Live Band"><%- icon('instagram') %><span>@groovemotionliveband</span></a>
-        </div>
-      </div>
-    </article>
-
-    <%# Evento: Mazzariello 23:30 %>
-    <article class="pg-card pg-night">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('moon') %></span>
-        <span class="pg-time-val">23:30</span>
-        <span class="pg-time-label">Notte</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Piazza San Rocco</span>
-        </div>
-        <h2 data-map-place="piazza-san-rocco" class="pg-card-title">Mazzariello</h2>
-        <p class="pg-card-desc">Il divertimento continua!</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-dj"><%- icon('headphones') %> DJ Set</span>
-          <span class="pg-badge pg-badge-musica"><%- icon('music') %> Musica</span>
-        </div>
-      </div>
-      <div class="pg-artist">
-        <img class="pg-artist-photo" src="/images/artisti/mazzariello.jpg" width="608" height="760" alt="Mazzariello" loading="lazy">
-        <div class="pg-ig-row">
-          <a class="pg-ig" href="https://www.instagram.com/_mazzariello/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Mazzariello"><%- icon('instagram') %><span>@_mazzariello</span></a>
-        </div>
-      </div>
-    </article>
   </div>
-</div>
-
-<%# ─────────────────────────────────────────────────────────────────
-    SABATO 15 AGOSTO
-    ─────────────────────────────────────────────────────────────── %>
-<div class="pg-day lp-full">
-  <div class="pg-day-inner">
-    <div class="pg-day-header">
-      <span class="pg-day-num">15</span>
-      <div class="pg-day-info">
-        <span class="pg-day-name">Sabato</span>
-        <span class="pg-day-month">Agosto 2026</span>
-      </div>
-      <div class="pg-day-line"></div>
-    </div>
-
-    <%# Religioso: Solennità dell'Assunta %>
-    <article class="pg-card pg-religioso pg-evening">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('candle') %></span>
-        <span class="pg-time-val">18:30</span>
-        <span class="pg-time-label">Sera</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Piazza San Rocco</span>
-        </div>
-        <h2 data-map-place="piazza-san-rocco" class="pg-card-title">Solennità della Beata Vergine Maria Assunta in Cielo</h2>
-        <p class="pg-card-desc">Ore 18.30 — Santo Rosario. Ore 19.00 — Santa Messa, solenne Celebrazione Eucaristica presieduta da S.E.R. Mons. Alfonso Raimo, Vescovo Ausiliare dell'Arcidiocesi di Salerno-Campagna-Acerno. Con la partecipazione di gruppi parrocchiali, associazioni ecclesiali e Portatori dei Santi.</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-big"><%- icon('candle') %> Rito Religioso</span>
-        </div>
-      </div>
-    </article>
-
-    <%# Evento: Napoliitudine 21:30 %>
-    <article class="pg-card pg-evening">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('sunset') %></span>
-        <span class="pg-time-val">21:30</span>
-        <span class="pg-time-label">Sera</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Piazza San Rocco, Siano</span>
-        </div>
-        <h2 data-map-place="piazza-san-rocco" class="pg-card-title">Napoliitudine<br><span class="pg-card-subtitle">con Sal Esposito – «Ce sta je sempe Tour»</span></h2>
-        <p class="pg-card-desc">Spettacolo e divertimento assicurato. Non mancare!</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-live"><%- icon('guitar') %> Live Band</span>
-          <span class="pg-badge pg-badge-musica"><%- icon('music') %> Musica</span>
-        </div>
-      </div>
-      <div class="pg-artist">
-        <img class="pg-artist-photo" src="/images/artisti/napoliitudine.jpg" width="760" height="758" alt="Napoliitudine con Sal Esposito" loading="lazy">
-        <div class="pg-ig-row">
-          <a class="pg-ig" href="https://www.instagram.com/napolitudinee_/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Napoliitudine"><%- icon('instagram') %><span>@napolitudinee_</span></a>
-        </div>
-      </div>
-    </article>
-  </div>
-</div>
-
-<%# ─────────────────────────────────────────────────────────────────
-    DOMENICA 16 AGOSTO
-    ─────────────────────────────────────────────────────────────── %>
-<div class="pg-day lp-full">
-  <div class="pg-day-inner">
-    <div class="pg-day-header">
-      <span class="pg-day-num">16</span>
-      <div class="pg-day-info">
-        <span class="pg-day-name">Domenica</span>
-        <span class="pg-day-month">Agosto 2026</span>
-      </div>
-      <div class="pg-day-line"></div>
-    </div>
-
-    <%# Religioso: Solennità di San Rocco — orario Messe %>
-    <article class="pg-card pg-religioso pg-morning">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('candle') %></span>
-        <span class="pg-time-val">7:30</span>
-        <span class="pg-time-label">Mattino</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Piazza San Rocco</span>
-        </div>
-        <h2 data-map-place="piazza-san-rocco" class="pg-card-title">Solennità di San Rocco — Sante Messe</h2>
-        <p class="pg-card-desc">Ore 00.00 — Santa Messa per tutti i giovani volati in Cielo. Ore 7.30 — Santa Messa. Ore 9.00 — Santa Messa. Ore 11.00 — Santa Messa solenne, presieduta da S.E.R. Mons. Andrea Bellandi, Arcivescovo Metropolita di Salerno-Campagna-Acerno.</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-big"><%- icon('candle') %> Rito Religioso</span>
-        </div>
-      </div>
-    </article>
-
-    <%# Evento: Corteo dei Bambini 10:15 %>
-    <article class="pg-card pg-morning">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('sun') %></span>
-        <span class="pg-time-val">10:15</span>
-        <span class="pg-time-label">Mattino</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Piazza Municipio</span>
-        </div>
-        <h2 data-map-place="siano-centro" class="pg-card-title">Il Corteo dei Bambini <span class="pg-card-subtitle">— per la prima volta a Siano</span></h2>
-        <p class="pg-card-desc">Un momento interamente dedicato ai bambini: un corteo di gioia, speranza e preghiera in cui saranno proprio loro i protagonisti. Dopo l'accoglienza di S.E.R. Mons. Andrea Bellandi, Arcivescovo Metropolita di Salerno-Campagna-Acerno, partirà il corteo verso la Chiesa di San Rocco, dove si terrà il solenne atto di affidamento di tutti i bambini al Santo Patrono e una preghiera per la pace. Portate i vostri bambini, nipoti, figli: più saremo, più forte sarà il messaggio.</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-fam"><%- icon('people') %> Famiglie</span>
-          <span class="pg-badge pg-badge-big"><%- icon('candle') %> Prima Edizione</span>
-        </div>
-      </div>
-    </article>
-
-    <%# Evento: La Processione 17:00 %>
-    <article class="pg-card pg-afternoon">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('clock') %></span>
-        <span class="pg-time-val">17:00</span>
-        <span class="pg-time-label">Pomeriggio</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Vie di Siano</span>
-        </div>
-        <h2 data-map-place="siano-centro" class="pg-card-title">La Processione di San Rocco</h2>
-        <p class="pg-card-desc">Il momento più atteso della festa: la statua del Santo portata a spalla per le vie di Siano, tra applausi, preghiere e fuochi d'artificio. Il cuore pulsante della devozione sianese.</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-big"><%- icon('candle') %> Tradizione</span>
-          <span class="pg-badge pg-badge-fam"><%- icon('people') %> Famiglie</span>
-        </div>
-      </div>
-    </article>
-
-    <%# Evento: Alfo V. & Mike 23:30 %>
-    <article class="pg-card pg-night">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('moon') %></span>
-        <span class="pg-time-val">23:30</span>
-        <span class="pg-time-label">Notte</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Siano</span>
-        </div>
-        <h2 data-map-place="siano-centro" class="pg-card-title">Alfo V. &amp; Mike Carotenuto DJ</h2>
-        <p class="pg-card-desc">Siete pronti a ballare? Vi aspettiamo in tanti!</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-dj"><%- icon('headphones') %> DJ Set</span>
-          <span class="pg-badge pg-badge-musica"><%- icon('music') %> Musica</span>
-        </div>
-      </div>
-      <div class="pg-artist pg-artist-multi">
-        <div class="pg-artist-photos">
-          <img class="pg-artist-photo" src="/images/artisti/mike-carotenuto.jpg" width="320" height="320" alt="Mike Carotenuto DJ" loading="lazy">
-          <img class="pg-artist-photo" src="/images/artisti/alfovi.jpg" width="320" height="320" alt="Alfo V." loading="lazy">
-        </div>
-        <div class="pg-ig-row">
-          <a class="pg-ig" href="https://www.instagram.com/mikecarotenuto_dj/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Mike Carotenuto"><%- icon('instagram') %><span>@mikecarotenuto_dj</span></a>
-          <a class="pg-ig" href="https://www.instagram.com/alfo.vi/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Alfo V."><%- icon('instagram') %><span>@alfo.vi</span></a>
-        </div>
-      </div>
-    </article>
-  </div>
-</div>
-
-<%# ─────────────────────────────────────────────────────────────────
-    LUNEDÌ 17 AGOSTO
-    ─────────────────────────────────────────────────────────────── %>
-<div class="pg-day lp-full">
-  <div class="pg-day-inner">
-    <div class="pg-day-header">
-      <span class="pg-day-num">17</span>
-      <div class="pg-day-info">
-        <span class="pg-day-name">Lunedì</span>
-        <span class="pg-day-month">Agosto 2026</span>
-      </div>
-      <div class="pg-day-line"></div>
-    </div>
-
-    <%# Religioso: Santa Messa per tutti i defunti %>
-    <article class="pg-card pg-religioso pg-night">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('candle') %></span>
-        <span class="pg-time-val">19:00</span>
-        <span class="pg-time-label">Sera</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Piazza San Rocco</span>
-        </div>
-        <h2 data-map-place="piazza-san-rocco" class="pg-card-title">Santa Messa per tutti i defunti</h2>
-        <p class="pg-card-desc">Celebrazione Eucaristica in suffragio di tutti i fedeli defunti della Comunità di Siano, con particolare ricordo dei componenti del Comitato Festa, dei Portatori dei Santi, dei benefattori e di tutti coloro che hanno servito con generosità la Parrocchia e la Comunità.</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-big"><%- icon('candle') %> Rito Religioso</span>
-        </div>
-      </div>
-    </article>
-
-    <%# Grande Evento: LDA & Aka 7even 21:30 %>
-    <article class="pg-card pg-card-grande pg-evening">
-      <div class="pg-grande-glow"></div>
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('sunset') %></span>
-        <span class="pg-time-val">21:30</span>
-        <span class="pg-time-label">Sera</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Piazza Borsellino, Siano</span>
-        </div>
-        <h2 data-map-place="piazza-borsellino" class="pg-card-title pg-title-grande">LDA &amp; Aka 7even</h2>
-        <p class="pg-card-subtitle-tour">«Primo e Ultimo Ballo Summer Tour»</p>
-        <p class="pg-card-desc">Mega evento della Festa di San Rocco 2026.</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-big"><%- icon('flame') %> Grande Evento</span>
-          <span class="pg-badge pg-badge-live"><%- icon('guitar') %> Live Band</span>
-          <span class="pg-badge pg-badge-musica"><%- icon('music') %> Musica</span>
-        </div>
-      </div>
-      <div class="pg-artist">
-        <img class="pg-artist-photo" src="/images/artisti/lda-aka7even.jpg" width="639" height="450" alt="LDA & Aka 7even" loading="lazy">
-        <div class="pg-ig-row">
-          <a class="pg-ig" href="https://www.instagram.com/lucadalessio_real/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di LDA"><%- icon('instagram') %><span>@lucadalessio_real</span></a>
-          <a class="pg-ig" href="https://www.instagram.com/aka7even/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Aka 7even"><%- icon('instagram') %><span>@aka7even</span></a>
-        </div>
-      </div>
-    </article>
-
-    <%# Evento: Disco Inferno 23:30 %>
-    <article class="pg-card pg-night">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('moon') %></span>
-        <span class="pg-time-val">23:30</span>
-        <span class="pg-time-label">Notte</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Siano</span>
-        </div>
-        <h2 data-map-place="siano-centro" class="pg-card-title">Disco Inferno</h2>
-        <p class="pg-card-desc">Una serata dove il ritmo ti travolgerà!</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-dj"><%- icon('headphones') %> DJ Set</span>
-          <span class="pg-badge pg-badge-musica"><%- icon('music') %> Musica</span>
-        </div>
-        <div class="pg-ig-row">
-          <a class="pg-ig" href="https://www.instagram.com/discoinferno70_/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Disco Inferno"><%- icon('instagram') %><span>@discoinferno70_</span></a>
-        </div>
-      </div>
-    </article>
-  </div>
-</div>
-
-<%# ─────────────────────────────────────────────────────────────────
-    MARTEDÌ 18 AGOSTO
-    ─────────────────────────────────────────────────────────────── %>
-<div class="pg-day lp-full">
-  <div class="pg-day-inner">
-    <div class="pg-day-header">
-      <span class="pg-day-num">18</span>
-      <div class="pg-day-info">
-        <span class="pg-day-name">Martedì</span>
-        <span class="pg-day-month">Agosto 2026</span>
-      </div>
-      <div class="pg-day-line"></div>
-    </div>
-
-    <%# Evento: Luna Park 10:30 %>
-    <article class="pg-card pg-morning">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('sun') %></span>
-        <span class="pg-time-val">10:30</span>
-        <span class="pg-time-label">Mattino &nbsp;–&nbsp; 12:00</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Siano</span>
-        </div>
-        <h2 data-map-place="siano-centro" class="pg-card-title">Luna Park</h2>
-        <p class="pg-card-desc">Giostre e intrattenimento per bambini.</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-fam"><%- icon('people') %> Famiglie</span>
-        </div>
-      </div>
-    </article>
-
-    <%# Evento: Vagaband 18:30 %>
-    <article class="pg-card pg-afternoon">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('sunset') %></span>
-        <span class="pg-time-val">18:30</span>
-        <span class="pg-time-label">Pomeriggio</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Strade di Siano</span>
-        </div>
-        <h2 data-map-place="siano-centro" class="pg-card-title">Vagaband</h2>
-        <p class="pg-card-desc">Musica, canti e balli per le strade di Siano!</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-live"><%- icon('guitar') %> Live Band</span>
-          <span class="pg-badge pg-badge-musica"><%- icon('music') %> Musica</span>
-        </div>
-        <div class="pg-ig-row">
-          <a class="pg-ig" href="https://www.instagram.com/vagabandstreetband/" target="_blank" rel="noopener noreferrer" aria-label="Instagram di Vagaband"><%- icon('instagram') %><span>@vagabandstreetband</span></a>
-        </div>
-      </div>
-    </article>
-
-    <%# Religioso: Santa Messa di ringraziamento + Benedizione dei Cani %>
-    <article class="pg-card pg-religioso pg-night">
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('candle') %></span>
-        <span class="pg-time-val">19:00</span>
-        <span class="pg-time-label">Sera</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Piazza San Rocco</span>
-        </div>
-        <h2 data-map-place="piazza-san-rocco" class="pg-card-title">Santa Messa di ringraziamento e Benedizione dei Cani</h2>
-        <p class="pg-card-desc">Al termine della Celebrazione Eucaristica si terrà la Benedizione dei Cani, in memoria del fedele cane che, secondo la tradizione, soccorse San Rocco durante la sua malattia, portandogli ogni giorno il pane e rimanendogli accanto con instancabile fedeltà. Un momento di preghiera e ringraziamento per gli animali d'affezione e per il dono del Creato: sono invitati a partecipare tutti coloro che desiderano affidare i propri cani alla protezione di San Rocco.</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-big"><%- icon('candle') %> Rito Religioso</span>
-          <span class="pg-badge pg-badge-fam"><%- icon('people') %> Famiglie</span>
-        </div>
-      </div>
-    </article>
-
-    <%# Grande Evento: Palio dei Fuochi 22:30 %>
-    <article class="pg-card pg-card-grande pg-night">
-      <div class="pg-grande-glow" style="background: radial-gradient(ellipse at 50% 0%, rgba(232,78,27,.25) 0%, transparent 70%);"></div>
-      <div class="pg-card-time">
-        <span class="pg-time-icon"><%- icon('fireworks') %></span>
-        <span class="pg-time-val">22:30</span>
-        <span class="pg-time-label">Notte</span>
-      </div>
-      <div class="pg-card-body">
-        <div class="pg-card-meta">
-          <span class="pg-location"><%- icon('pin') %>Siano</span>
-        </div>
-        <h2 data-map-place="siano-centro" class="pg-card-title pg-title-grande" style="-webkit-text-fill-color: var(--fire) !important; color: var(--fire) !important; text-shadow: 0 0 28px rgba(232,78,27,.5);">Palio dei Fuochi</h2>
-        <p class="pg-card-subtitle-tour">XXVI Edizione &middot; Memorial Don Franco Aliberti</p>
-        <p class="pg-card-desc">Lo spettacolo pirotecnico più atteso dell'anno: sei squadre di artificieri, ognuna legata ai propri rioni, si sfidano nel cielo di Siano in una gara di luci, colori e botti che ha reso la festa famosa in tutta Italia.</p>
-        <div class="pg-badges">
-          <span class="pg-badge pg-badge-big"><%- icon('flame') %> Grande Evento</span>
-          <span class="pg-badge" style="background:rgba(232,78,27,.15);color:#e84e1b;border-color:rgba(232,78,27,.3)"><%- icon('fireworks') %> Fuochi d'Artificio</span>
-        </div>
-        <div class="pg-ig-row">
-          <a class="pg-ig" href="/palio" aria-label="Scopri i sei fuochisti e i rioni del Palio dei Fuochi"><%- icon('fireworks') %><span>Scopri i 6 fuochisti e i rioni &rarr;</span></a>
-        </div>
-      </div>
-    </article>
-  </div>
-</div>
+<% }) %>
 
 <%# ── MAPPA DEI LUOGHI (Leaflet + OpenStreetMap) ──────────────────── %>
 <% if (typeof places !== 'undefined' && places && places.length) { %>

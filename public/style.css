@@ -5635,3 +5635,44 @@ a.lb-prize:hover { color: var(--gold-2); }
    lo staff sta rileggendo l'elenco, non una singola sfida. */
 .ms-svelato .mlock-vero { filter: none; user-select: text; }
 .ms-svelato .mission-card.is-locked { opacity: 1; }
+
+/* ===================================================================
+   PROGRAMMAZIONE — occhiello del giorno e le due parti del programma
+   =================================================================== */
+/* Il sottotitolo del giorno ("Vigilia della Solennità", "Giornata
+   penitenziale"): sta sotto la data e dice che giorno e', non cosa c'e'. */
+.pg-day-kicker {
+  margin: -.4rem 0 1.4rem;
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: .82rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--gold-2); opacity: .85;
+}
+
+/* Titoletto che separa il civile dal religioso dentro lo stesso giorno.
+   Compare solo dove il giorno ha davvero tutte e due le parti: scriverlo
+   sopra l'unica cosa che c'e' sarebbe rumore. */
+.pg-parte {
+  display: flex; align-items: center; gap: .45rem;
+  margin: 2rem 0 .9rem;
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: .74rem; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--text-3);
+}
+.pg-parte::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,.1), transparent);
+}
+.pg-parte .ico { width: 15px; height: 15px; }
+.pg-parte-civile .ico    { color: var(--fire, #e84e1b); }
+.pg-parte-religioso .ico { color: var(--gold-2); }
+/* Il primo titoletto del giorno non ha bisogno di staccarsi: sopra c'e'
+   gia' l'intestazione della data. */
+.pg-parte:first-of-type { margin-top: .2rem; }
+
+/* Foto dell'artista dentro la card */
+.pg-card-media {
+  margin: .9rem 0 .2rem;
+  border-radius: .6rem; overflow: hidden;
+  max-width: 420px;
+}
+.pg-card-media img { width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover; }
