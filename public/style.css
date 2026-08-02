@@ -4054,10 +4054,6 @@ textarea:focus-visible,
 .streak-pop-day .b { font-size: .72rem; font-weight: 700; }
 .streak-pop-btn { width: 100%; justify-content: center; }
 
-/* ── Radio: contatore "chi ascolta ora" ── */
-.radio-listeners { display: inline-flex; align-items: center; gap: .4rem; font-size: .74rem; color: var(--text-2); margin: -.2rem 0 .2rem; }
-.radio-listeners .rl-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 7px var(--green); flex-shrink: 0; }
-.radio-listeners b { color: var(--gold-2); }
 
 /* ── Admin: codici premio (link/QR monouso) ─────────────────────── */
 .reward-list { list-style: none; margin: 1rem 0 0; padding: 0; display: flex; flex-direction: column; gap: .7rem; }
@@ -6337,4 +6333,19 @@ a.lb-prize:hover { color: var(--gold-2); }
   .sp-voce { grid-template-columns: 1fr 4.5rem; row-gap: .2rem; }
   .sp-quando { grid-column: 1 / -1; }
   .sp-tag { grid-column: 1; }
+}
+
+/* Intestazioni dei giorni nell'elenco missioni del pannello staff */
+.adm-giorno {
+  display: flex; align-items: center; gap: .5rem;
+  margin: 1.4rem 0 .5rem; padding-bottom: .35rem;
+  border-bottom: 1px solid var(--border-gold);
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: .95rem; letter-spacing: .06em; color: var(--gold-2);
+}
+.adm-giorno:first-of-type { margin-top: .2rem; }
+.adm-giorno-n {
+  padding: .05rem .4rem; border-radius: 100px;
+  font-family: var(--font-body, sans-serif); font-size: .68rem; font-weight: 600;
+  background: rgba(255,255,255,.06); border: 1px solid var(--border); color: var(--text-3);
 }

@@ -217,7 +217,14 @@
 
   <section class="card">
     <h2 class="staff-title"><%- icon('list') %> Missioni esistenti (<%= missions.length %>)</h2>
-    <% missions.forEach((m) => { %>
+    <p class="muted small" style="margin:-.4rem 0 .8rem">
+      Divise per giorno, in ordine crescente. Ci sono anche le <strong>flash</strong>
+      (<span class="mission-state mission-state-flash"><%- icon('bolt') %></span> = nascosta agli utenti):
+      stanno nel giorno in cui vanno sbloccate.
+    </p>
+    <% (typeof gruppiMissioni !== 'undefined' ? gruppiMissioni : [{ etichetta: '', missioni: missions }]).forEach((gr) => { %>
+      <h3 class="adm-giorno"><%= gr.etichetta %> <span class="adm-giorno-n"><%= gr.missioni.length %></span></h3>
+      <% gr.missioni.forEach((m) => { %>
       <details class="admin-mission">
         <summary>
           <span>
@@ -289,6 +296,7 @@
           <button class="btn btn-no" type="submit"><%- icon('trash') %> Elimina</button>
         </form>
       </details>
+      <% }) %>
     <% }) %>
   </section>
 </div>

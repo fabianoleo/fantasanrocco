@@ -324,70 +324,6 @@ app.get('/api/online/debug', auth.requireStaff, (req, res) => {
   res.json({ count: _onlineCount(), entries });
 });
 
-// =========================================================================
-//  RADIO «Radio San Rocco» — stazione condivisa
-//  Tutti ascoltano la STESSA canzone alla STESSA posizione: una timeline
-//  server-authoritative che cicla la playlist all'infinito. Niente skip:
-//  solo "sintonizzati / stop" lato client.
-// =========================================================================
-// L'elenco delle canzoni sta in dati/radio.js — vedi lì come aggiungerne.
-const { RADIO_PLAYLIST } = require('./dati/radio');
-// Riferimento fisso della timeline: la posizione "in onda" si calcola da qui.
-const RADIO_EPOCH = Date.UTC(2026, 0, 1, 0, 0, 0);
-
-// ── "Chi ascolta ora": contatore live degli ascoltatori della radio ──────
-// Il client manda /api/radio/ping?uid=UUID ogni ~10s MENTRE sta ascoltando.
-const _radioListeners = new Map();   // uid → timestamp
-const RADIO_LISTEN_TTL = 25_000;     // ~2 ping mancati = non ascolta più
-function radioCount() {
-  const cutoff = Date.now() - RADIO_LISTEN_TTL;
-  return [..._radioListeners.values()].filter((t) => t >= cutoff).length;
-}
-app.get('/api/radio/ping', (req, res) => {
-  // Chiave per UTENTE se loggato (così lo stesso account su più dispositivi
-  // conta UNA sola volta); altrimenti per dispositivo (uid anonimo).
-  const key = req.currentUser
-    ? 'u:' + req.currentUser.id
-    : (typeof req.query.uid === 'string' ? 'a:' + req.query.uid.slice(0, 64) : null);
-  if (key) {
-    if (req.query.leave === '1') {
-      _radioListeners.delete(key);            // pausa / chiusura → smette subito di contare
-    } else if (_radioListeners.has(key) || _radioListeners.size < 5000) {
-      _radioListeners.set(key, Date.now());
-    }
-  }
-  res.json({ ok: true, listeners: radioCount() });
-});
-setInterval(() => {
-  const cutoff = Date.now() - RADIO_LISTEN_TTL;
-  for (const [id, t] of _radioListeners) if (t < cutoff) _radioListeners.delete(id);
-}, 10_000).unref?.();
-
-// Cosa è "in onda" adesso (indice canzone + offset in secondi), uguale per tutti.
-app.get('/api/radio/now', (req, res) => {
-  if (!RADIO_PLAYLIST.length) return res.json({ ok: true, playing: false });
-  const total = RADIO_PLAYLIST.reduce((a, t) => a + (t.duration || 0), 0);
-  if (total <= 0) return res.json({ ok: true, playing: false });
-  let elapsed = (((Date.now() - RADIO_EPOCH) / 1000) % total + total) % total;
-  let idx = 0;
-  for (let i = 0; i < RADIO_PLAYLIST.length; i++) {
-    if (elapsed < RADIO_PLAYLIST[i].duration) { idx = i; break; }
-    elapsed -= RADIO_PLAYLIST[i].duration;
-  }
-  const t = RADIO_PLAYLIST[idx];
-  res.json({
-    ok: true, playing: true,
-    index: idx, count: RADIO_PLAYLIST.length,
-    src: t.src, title: t.title, cover: t.cover || null,
-    offset: elapsed, duration: t.duration,
-    listeners: radioCount(),
-    serverTime: Date.now(),
-  });
-});
-
-// Reso disponibile alle view per mostrare/nascondere il player.
-app.locals.radioOn = RADIO_PLAYLIST.length > 0;
-
 // --- Upload foto (multer) ---------------------------------------------------
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOADS_DIR),
@@ -3118,6 +3054,51 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
   // pannello i due stati hanno un'icona diversa, altrimenti si confondono.
   const missions = db.prepare('SELECT * FROM missions ORDER BY id DESC').all()
     .map((m) => ({ ...m, locked: !m.archived && missionState(m) === 'locked' }));
+
+  // Le missioni raggruppate per GIORNO, in ordine crescente. Prima erano
+  // elencate per id, cioè nell'ordine in cui qualcuno le ha scritte: per
+  // trovare quelle di stasera bisognava scorrere tutto. Le flash ci sono
+  // sempre state (la query non filtra archived) ma in mezzo a quel mucchio
+  // non le vedeva nessuno: dentro al loro giorno si trovano.
+  //
+  // Il giorno di riferimento è quello in cui la missione si può ancora fare:
+  // per un pronostico che apre il 13 alle 18 e chiude il 14 alle 18, il
+  // giorno è il 14, non il 13.
+  const giornoDiFesta = (m) => {
+    if (m.giorni_attivi) {
+      const g = String(m.giorni_attivi).split(',').map((x) => parseInt(x, 10)).filter(Number.isInteger);
+      if (g.length) return Math.min(...g);
+    }
+    const quando = m.active_to || m.active_from;
+    if (!quando) return null;
+    const g = parseInt(String(quando).slice(8, 10), 10);
+    return Number.isInteger(g) ? g : null;
+  };
+  const perGiorno = new Map();
+  const sempre = [];
+  const flashSenzaData = [];
+  for (const m of missions) {
+    const g = giornoDiFesta(m);
+    if (g === null) {
+      // Le flash senza data vanno in un gruppo loro. Se restassero mescolate
+      // alle fisse sparirebbero in un elenco di centocinquanta righe, ed è
+      // proprio quello che rendeva impossibile trovarle.
+      (m.archived ? flashSenzaData : sempre).push(m);
+      continue;
+    }
+    if (!perGiorno.has(g)) perGiorno.set(g, []);
+    perGiorno.get(g).push(m);
+  }
+  const gruppiMissioni = [...perGiorno.keys()]
+    .sort((a, b) => a - b)
+    .map((g) => ({ etichetta: `${g} agosto`, giorno: g, missioni: perGiorno.get(g) }));
+  // Quelle senza data in testa: sono lo zoccolo che vale tutta la settimana.
+  if (sempre.length) {
+    gruppiMissioni.unshift({ etichetta: 'Senza data — valgono tutta la settimana', giorno: null, missioni: sempre });
+  }
+  if (flashSenzaData.length) {
+    gruppiMissioni.push({ etichetta: 'Flash senza data — le sblocca lo staff a mano', giorno: null, missioni: flashSenzaData });
+  }
   const host = req.get('host') || '';
   const baseUrl = (host.includes('localhost') || host.includes('127.0.0.1') ? 'http' : 'https') + '://' + host;
 
@@ -3178,7 +3159,7 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
       closesAt: p.closes_at,
     };
   });
-  res.render('admin', { title: 'Admin', missions, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico, predictions,
+  res.render('admin', { title: 'Admin', missions, gruppiMissioni, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico, predictions,
     sezioni: SECTIONS, notifSubmissions: !!req.currentUser.notif_submissions, soloMissioni,
     segnalazioni });
 });
