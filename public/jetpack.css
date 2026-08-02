@@ -342,3 +342,17 @@
   .jp-pause-btns { gap: .35rem; margin-top: .4rem; }
   .jp-btn2 { font-size: .54rem; padding: .5rem .8rem; }
 }
+
+/* ── Su telefono il riquadro va quasi a filo schermo ────────────────────
+   La grafica e' a pixel e il canvas ha una risoluzione FISSA di 320x200:
+   l'8:5 del CSS gli corrisponde esatto, e cambiarlo stirerebbe il disegno.
+   L'unico modo onesto di farlo piu' grande e' quindi allargarlo, e l'unico
+   spazio disponibile sono i 12px di margine del contenitore. Se ne
+   riprendono 6 per lato, lasciando un filo di respiro: a filo esatto gli
+   angoli arrotondati toccherebbero il bordo dello schermo. */
+@media (max-width: 720px) {
+  .jp-stage {
+    margin-inline: -6px;
+    border-radius: 12px;
+  }
+}

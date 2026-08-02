@@ -388,3 +388,16 @@
   .gm-8btn { font-size: .5rem; padding: .55rem .5rem; border-width: 4px; gap: .4rem; }
   .gm-8btn svg { width: 12px; height: 12px; }
 }
+
+/* ── Su telefono il riquadro va quasi a filo schermo ────────────────────
+   Come per il Jetpack: canvas a risoluzione fissa 300x200, il 3:2 del CSS
+   ci corrisponde e non si tocca. Qui pero' c'era piu' da guadagnare — il
+   riquadro perdeva 16px per lato di padding suo PIU' i 12 del contenitore,
+   e restava largo 319 su 375. Tolto il padding e ripresi 6px per lato. */
+@media (max-width: 720px) {
+  .gm-stage-wrap {
+    padding-inline: 0;
+    margin-inline: -6px;
+  }
+  .gm-stage { border-radius: 12px; }
+}
