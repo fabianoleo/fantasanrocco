@@ -5816,7 +5816,13 @@ a.lb-prize:hover { color: var(--gold-2); }
 .otp-casella { position: relative; width: 2.9rem; height: 3.5rem; }
 .otp-casella--stacco { margin-left: .85rem; }
 
-.otp-input {
+/* Il selettore è .otp .otp-input e non il solo .otp-input di proposito.
+   Più su nel foglio c'è input[type="text"], … che vale più di una classe
+   sola, e vinceva su tutto: rimetteva il bordo a 1px, il riempimento a
+   .82rem 1rem e — soprattutto — il colore del testo. Il risultato era la
+   cifra dell'input che si vedeva SOTTO quella disegnata qui sopra: due
+   numeri sovrapposti e sfalsati. */
+.otp .otp-input {
   width: 100%; height: 100%;
   padding: 0; margin: 0;
   border: 2px solid var(--border);
@@ -5832,8 +5838,8 @@ a.lb-prize:hover { color: var(--gold-2); }
   outline: none;
   transition: border-color .16s var(--ease), background .16s var(--ease), box-shadow .16s var(--ease);
 }
-.otp-input::selection { background: transparent; }
-.otp-input:disabled { opacity: .45; }
+.otp .otp-input::selection { background: transparent; }
+.otp .otp-input:disabled { opacity: .45; }
 
 .otp-casella--piena .otp-input { border-color: var(--border-gold); background: rgba(212, 160, 26, .05); }
 .otp-casella--attiva .otp-input {
@@ -5854,9 +5860,13 @@ a.lb-prize:hover { color: var(--gold-2); }
 }
 .otp-carattere {
   grid-area: 1 / 1;
-  font-family: var(--font-heading, 'Cinzel', serif);
-  font-size: 1.4rem; font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  /* Non Cinzel: le sue cifre sono in stile antico, ballano sulla linea di
+     base e si somigliano troppo. Qui si ricopia un codice guardandolo, e
+     l'unica cosa che conta è che uno zero non sembri una O. */
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 1.35rem; font-weight: 600;
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: .01em;
   color: var(--text);
   animation: otp-entra .2s var(--luxury) both;
 }
