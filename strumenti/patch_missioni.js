@@ -38,6 +38,7 @@ const PATCHES = [
   // sezione, altrimenti il bonus "sezione completata" chiederebbe di
   // completare una missione che potrebbe non uscire mai.
   { find: 'Tap Tap', archived: 1, section: null,
+    da: GIORNO(13)[0], a: GIORNO(13)[1],
     description: 'Flash! Scatta un selfie con Peppe Tap Tap.' },
   // ── Giro del 30 luglio 2026 ──────────────────────────────────────
   // I membri del team sono più di uno: la missione va ripetuta per ognuno,
@@ -96,6 +97,28 @@ const PATCHES = [
   { find: 'Trash Royale',
     description: 'Pubblica una storia Instagram volutamente trash sul tuo profilo pubblico '
                + 'taggando "Fanta SanRocco". Come prova invia lo screenshot della storia.' },
+
+  // Le tre nuove erano nate senza sezione, quindi restavano fra le sfide
+  // speciali insieme alle giornaliere. Una per sezione, secondo quello che
+  // raccontano: la Peroni sta nel cibo, la bottega di frutta e il suo
+  // padrone nel paese, il TikTok nel social. Attenzione che ognuna alza di
+  // uno il conto della sua sezione, e quindi il bonus «sezione completata»
+  // chiede una missione in più di prima.
+  { find: 'Banana Giò',      section: 'paese' },
+  { find: 'Babbà House',     section: 'food' },
+  { find: 'Corri su TikTok', section: 'social' },
+
+  // OGNI FLASH HA LA SUA SERA.
+  // Restano nascoste — è il senso della flash: la sblocca lo staff quando il
+  // momento arriva — ma adesso la finestra le tiene dentro il loro giorno.
+  // Serve a due cose: se qualcuno la sblocca il giorno sbagliato non si può
+  // inviare niente, e nel pannello dello staff smettono di stare tutte in
+  // fondo nel mucchio «senza data» e si trovano nella sera in cui servono.
+  // Peppe Tap Tap sta il 13 (vedi la riga più su, che le mette la finestra).
+  { find: 'Il Tesoro Perduto', da: GIORNO(14)[0], a: GIORNO(14)[1] },
+  { find: 'Selfie XXL',        da: GIORNO(15)[0], a: GIORNO(15)[1] },
+  { find: 'In Bilico',         da: GIORNO(17)[0], a: GIORNO(17)[1] },
+  { find: 'Tutti in Cerchio',  da: GIORNO(18)[0], a: GIORNO(18)[1] },
 ];
 
 // Missioni da eliminare del tutto (non archiviare: archived=1 vuol dire
@@ -251,7 +274,7 @@ const NUOVE = [
 
   { name: 'Missione Banana Giò',
     desc: 'Fai una foto con Giovanni Riccio e la banana gonfiabile all’Atelier di frutta e verdura.',
-    rar: 'rara', sponsor: 'atelierfruttaeverdura.png' },
+    rar: 'rara', sec: 'paese', sponsor: 'atelierfruttaeverdura.png' },
 
   { name: 'Canta a squarciagola',
     desc: 'Fai una foto al neon con il logo «Squarciagola».',
@@ -259,14 +282,14 @@ const NUOVE = [
 
   { name: 'Babbà House',
     desc: 'Fai una foto a una Peroni con il campanile sullo sfondo.',
-    rar: 'non-comune', sponsor: 'babba-house.png' },
+    rar: 'non-comune', sec: 'food', sponsor: 'babba-house.png' },
 
   // Senza foto: la prova è il link, e si incolla nella nota per lo staff.
   { name: 'Corri su TikTok',
     desc: 'Realizza un TikTok con il suono «Corri San Rocco» e incolla il link nella '
         + '«nota per lo staff». Attenzione: il profilo deve essere pubblico e ricordati '
         + 'di taggare @fantasanrocco.',
-    rar: 'epica', foto: false },
+    rar: 'epica', foto: false, sec: 'social' },
 ];
 
 let added = 0;

@@ -18,6 +18,7 @@ const EMOJI = { comune: '⚪', 'non-comune': '🟢', rara: '🔵', epica: '🟣'
 // Finestre "giorno festa" per le sfide giornaliere (ora italiana; il server le
 // interpreta come Europe/Rome). Ogni sfida è visibile solo nel suo giorno.
 const DAY = {
+  13: ['2026-08-13 00:00:00', '2026-08-13 23:59:59'],
   14: ['2026-08-14 00:00:00', '2026-08-14 23:59:59'],
   15: ['2026-08-15 00:00:00', '2026-08-15 23:59:59'],
   16: ['2026-08-16 00:00:00', '2026-08-16 23:59:59'],
@@ -109,13 +110,13 @@ const MISSIONS = [
   m('Groove Motion', 'Scatta una foto con un membro della Groove Motion Live Band.', 'rara', { day: 14 }),
   m('Arlecchino Rosso', 'Indossa un capo/accessorio rosso e scatta una foto.', 'non-comune', { day: 14 }),
   m('Fanta SanRocco', 'Seleziona dalla galleria la foto del telo "Fanta SanRocco"… sempre se l’hai fatta!', 'leggendaria', { day: 14 }),
-  m('Selfie XXL', 'Flash! Fai entrare almeno 15 persone nello stesso selfie.', 'epica', { flash: true }),
+  m('Selfie XXL', 'Flash! Fai entrare almeno 15 persone nello stesso selfie.', 'epica', { flash: true, day: 15 }),
   m('Flash Mob', 'Flash! Scatta una foto mentre partecipi al flash mob.', 'rara', { flash: true }),
 
   // ── SFIDE GIORNALIERE — 15 AGOSTO ────────────────────────────────
   m('Napoliitudine', 'Scatta una foto con un membro della band "Napoliitudine".', 'epica', { day: 15 }),
   m('Arlecchino Arancione', 'Indossa un capo/accessorio arancione e scatta una foto.', 'non-comune', { day: 15 }),
-  m('Il Tesoro Perduto', 'Flash! Completa la Caccia al Tesoro seguendo gli indizi dello staff.', 'leggendaria', { flash: true }),
+  m('Il Tesoro Perduto', 'Flash! Completa la Caccia al Tesoro seguendo gli indizi dello staff.', 'leggendaria', { flash: true, day: 14 }),
 
   // ── SFIDE GIORNALIERE — 16 AGOSTO ────────────────────────────────
   m('Arlecchino Verde', 'Indossa un capo/accessorio verde e scatta una foto.', 'non-comune', { day: 16 }),
@@ -135,7 +136,7 @@ const MISSIONS = [
   m('Disco Inferno', 'Scatta una foto con uno dei Disco Inferno.', 'rara', { day: 17 }),
   m('Alfonso Leo', 'Scatta una foto di Alfonso Leo che presenta i cantanti.', 'non-comune', { day: 17 }),
   m('Shh… non dirlo a nessuno!', 'Individua uno dei membri del team e scrivi qui nella nota la parola segreta che ti forniranno.', 'epica', { day: 17, photo: false }),
-  m('In Bilico', 'Flash! Tutti in posa, ma su una sola gamba!', 'epica', { flash: true }),
+  m('In Bilico', 'Flash! Tutti in posa, ma su una sola gamba!', 'epica', { flash: true, day: 17 }),
 
   // ── SFIDE GIORNALIERE — 18 AGOSTO ────────────────────────────────
   m('Vagaband', 'Scatta una foto con un membro della Vagaband.', 'rara', { day: 18 }),
@@ -143,12 +144,12 @@ const MISSIONS = [
   m('Campanile sotto i Fuochi', 'Scatta una foto del campanile mentre è illuminato dai fuochi d’artificio.', 'epica', { day: 18 }),
   m('Prima Fila', 'Scatta una foto mentre prendi posto a Piazza Mercato.', 'non-comune', { day: 18 }),
   m('Tutti Pronti', 'Scatta una foto della spesa per i fuochi.', 'non-comune', { day: 18 }),
-  m('Tutti in Cerchio', 'Flash! Prendetevi per mano e formate un cerchio. Ricorda di scattare la foto!', 'epica', { flash: true }),
+  m('Tutti in Cerchio', 'Flash! Prendetevi per mano e formate un cerchio. Ricorda di scattare la foto!', 'epica', { flash: true, day: 18 }),
 
   // ── FLASH SENZA GIORNO FISSO ─────────────────────────────────────
   // Peppe Tap Tap non si sa quando passa: la missione la sblocca lo staff
   // quando lo vede in giro, non un orario deciso a tavolino.
-  m('Tap Tap', 'Flash! Scatta un selfie con Peppe Tap Tap.', 'non-comune', { flash: true }),
+  m('Tap Tap', 'Flash! Scatta un selfie con Peppe Tap Tap.', 'non-comune', { flash: true, day: 13 }),
 
   // Le batterie sulla provinciale verso Bracigliano le montano la mattina del
   // 18, quindi vale solo quel giorno.
