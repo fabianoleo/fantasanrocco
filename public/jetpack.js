@@ -157,8 +157,8 @@
   // MISSIONI DI CARRIERA tenute dal server (3 attive, restano fra le partite,
   // danno stelle, gradi e punti in classifica). Vedi reportRun()/paintMissions().
 
-  // ── Colonna sonora: come «Corri San Rocco» — interrompe la radio e suona la canzone ──
-  let gameSong = null, radioWasOn = false, songMuted = false;
+  // ── Colonna sonora: «Corri San Rocco» mentre si gioca ──
+  let gameSong = null, songMuted = false;
   const ensureSong = () => {
     if (gameSong) return gameSong;
     try {
@@ -169,8 +169,6 @@
     return gameSong;
   };
   const songPlay = () => {
-    const R = window.FSRRadio;
-    if (R && R.isPlaying && R.isPlaying()) { radioWasOn = true; R.pause(); }
     const s = ensureSong();
     if (s) { try { s.currentTime = 0; } catch (e) {} s.play().catch(() => {}); }
   };
@@ -178,8 +176,6 @@
   const songPause = () => { if (gameSong) gameSong.pause(); };
   const songStop = () => {
     if (gameSong) { gameSong.pause(); try { gameSong.currentTime = 0; } catch (e) {} }
-    if (radioWasOn && window.FSRRadio && window.FSRRadio.resume) window.FSRRadio.resume();
-    radioWasOn = false;
   };
   function applyMute() {
     if (gameSong) gameSong.muted = songMuted;

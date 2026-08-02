@@ -37,8 +37,8 @@
   let px, target, dist, bonus, score, inv, mult, items, popups, fx, spawnT, coinT, haloT, relicT, fwT, animT, last, shake, reported, coinRain, coinRainT;
   let keyL = false, keyR = false, pointerX = null, overTimer = null, gameToken = null;
 
-  // ── Colonna sonora: mentre giochi interrompe la radio e suona «Corri San Rocco» ──
-  let gameSong = null, radioWasOn = false, songMuted = false;
+  // ── Colonna sonora: «Corri San Rocco» mentre si gioca ──
+  let gameSong = null, songMuted = false;
   const ensureSong = () => {
     if (gameSong) return gameSong;
     try {
@@ -49,8 +49,6 @@
     return gameSong;
   };
   const songPlay = () => {
-    const R = window.FSRRadio;                               // metti in pausa la radio globale
-    if (R && R.isPlaying && R.isPlaying()) { radioWasOn = true; R.pause(); }
     const s = ensureSong();
     if (s) { try { s.currentTime = 0; } catch (e) {} s.play().catch(() => {}); }
   };
@@ -58,8 +56,6 @@
   const songPause = () => { if (gameSong) gameSong.pause(); };
   const songStop = () => {
     if (gameSong) { gameSong.pause(); try { gameSong.currentTime = 0; } catch (e) {} }
-    if (radioWasOn && window.FSRRadio && window.FSRRadio.resume) window.FSRRadio.resume();
-    radioWasOn = false;                                      // riprendi la radio se era accesa
   };
 
   function reset() {
@@ -166,7 +162,7 @@
   const kicker = document.getElementById('gmKicker');
   function setPauseBtn() { if (pauseBtn) pauseBtn.classList.toggle('is-on', state === 'run'); }
 
-  // ── Mute della canzone del gioco (solo la traccia del gioco, non la radio) ──
+  // ── Mute della canzone del gioco ──
   const muteBtn = document.getElementById('gmMuteBtn');
   function applyMute() {
     if (gameSong) gameSong.muted = songMuted;

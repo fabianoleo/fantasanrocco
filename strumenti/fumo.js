@@ -44,7 +44,6 @@ const PAGINE = [
   { via: '/registrati',          chi: 'anonimo', attesa: 200 },
   { via: '/password-dimenticata',chi: 'anonimo', attesa: 200 },
   { via: '/health',              chi: 'anonimo', attesa: 200 },
-  { via: '/api/radio/now',       chi: 'anonimo', attesa: 200 },
   { via: '/api/online',          chi: 'anonimo', attesa: 200 },
   { via: '/missioni',            chi: 'anonimo', attesa: 302 },   // riservata: rimanda al login
   { via: '/profilo',             chi: 'anonimo', attesa: 302 },

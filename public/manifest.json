@@ -1,7 +1,7 @@
 {
   "name": "FantaSanRocco",
   "short_name": "FantaSanRocco",
-  "description": "Il gioco della Festa di San Rocco a Siano: missioni, classifica, mini-giochi, radio e programma.",
+  "description": "Il gioco della Festa di San Rocco a Siano: missioni, classifica, mini-giochi e programma.",
   "lang": "it",
   "dir": "ltr",
   "start_url": "/?source=pwa",
