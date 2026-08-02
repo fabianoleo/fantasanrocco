@@ -2,10 +2,17 @@
 // FantaSanRocco — I DISEGNI dei simboli della slot
 // -------------------------------------------------------------------
 // Due livelli, e si devono vedere diversi a colpo d'occhio:
-//   BASSI  lettere piatte e colorate, senza cornice — 10 J Q K A
-//   ALTI   figure dentro una cornice colorata
+//   BASSI  sagome piatte a UNA tinta, senza cornice
+//   ALTI   figure a più colori dentro una cornice colorata
 // È la distinzione delle slot vere: quando esce una figura in cornice
 // sai subito che vale, senza dover leggere la tabella.
+//
+// I bassi erano 10 J Q K A, cioè le carte da poker che stanno in ogni
+// slot del mondo e non dicono niente di Siano. Ora sono cinque cose
+// della festa. La distinzione fra i due livelli però RESTA, ed è per
+// questo che i bassi sono sagome a tinta unita e non figurine colorate:
+// se si colorano tutti allo stesso modo, la griglia diventa una macchia
+// e non si capisce più al volo se è uscito qualcosa di buono.
 //
 // Sta in un modulo e non in un partial EJS perché una funzione definita
 // dentro un partial NON esce da quel partial: l'include gira in uno
@@ -13,12 +20,40 @@
 // initials), e questo si aggancia allo stesso modo.
 // ===================================================================
 
-const LETTERE = {
-  dieci: { txt: '10', col: '#f3c64b' },
-  jack:  { txt: 'J',  col: '#c98bff' },
-  donna: { txt: 'Q',  col: '#5ad1ff' },
-  re:    { txt: 'K',  col: '#ff8ad1' },
-  asso:  { txt: 'A',  col: '#ff5a3c' },
+// BASSI — sagoma a tinta unita, un colore ciascuno per riconoscerli
+// prima ancora di mettere a fuoco il disegno.
+const BASSI = {
+  // Il lumino che si accende in chiesa: la missione della beneficenza.
+  lumino: { col: '#9aa8ff', d:
+    '<path d="M16 3.6q3.6 3.9 3.6 6.7a3.6 3.6 0 0 1-7.2 0q0-2.8 3.6-6.7z"/>' +
+    '<path d="M10.4 13h11.2l-1 13.7a1.7 1.7 0 0 1-1.7 1.6h-5.8a1.7 1.7 0 0 1-1.7-1.6z" opacity=".62"/>' },
+  // La tammorra: si suona per strada dietro alla processione.
+  tammorra: { col: '#5ad1ff', d:
+    '<path d="M16 5.5A10.5 10.5 0 1 0 16 26.5 10.5 10.5 0 1 0 16 5.5m0 3a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15z"/>' +
+    '<circle cx="16" cy="16" r="5.4" opacity=".42"/>' +
+    '<circle cx="16" cy="4.6" r="2"/><circle cx="25.5" cy="11" r="2"/><circle cx="6.5" cy="11" r="2"/>' },
+  // La giostra del Luna Park, in piazza per tutta la festa. Il tetto ha le
+  // gonne profonde e sopra la bandierina: senza, a 40 pixel sembrava un
+  // tavolino da giardino.
+  giostra: { col: '#ff8ad1', d:
+    '<path d="M15.3 2.2h1.4v5h-1.4z"/><path d="M16.7 2.2 21.6 4.1 16.7 6z"/>' +
+    '<path d="M16 6.4 28.2 15.6q-3.05 3-6.1 0-3.05 3-6.1 0-3.05 3-6.1 0-3.05 3-6.1 0z"/>' +
+    '<rect x="15.2" y="16" width="1.6" height="9.6" rx=".8"/>' +
+    '<rect x="8.7" y="17.6" width="1.4" height="8" rx=".7" opacity=".62"/>' +
+    '<rect x="21.9" y="17.6" width="1.4" height="8" rx=".7" opacity=".62"/>' +
+    '<rect x="6.6" y="25.6" width="18.8" height="2.3" rx="1.15" opacity=".62"/>' },
+  // Le luminarie: gli archi di luci sopra la strada. L'arco è sottile e le
+  // lampadine grosse, se no da lontano resta solo una gobba.
+  luminarie: { col: '#7bffb0', d:
+    '<path d="M6 28.2V17.8a10 10 0 0 1 20 0v10.4h-2.6V17.8a7.4 7.4 0 0 0-14.8 0v10.4z"/>' +
+    '<circle cx="16" cy="7.6" r="2.5"/>' +
+    '<circle cx="9.2" cy="10.9" r="2.2"/><circle cx="22.8" cy="10.9" r="2.2"/>' +
+    '<circle cx="5.1" cy="18.6" r="2"/><circle cx="26.9" cy="18.6" r="2"/>' +
+    '<circle cx="5.1" cy="25.4" r="1.7" opacity=".55"/><circle cx="26.9" cy="25.4" r="1.7" opacity=".55"/>' },
+  // La campana del campanile, quella che apre e chiude la festa.
+  campana: { col: '#ffb43c', d:
+    '<path d="M16 3.8a2 2 0 0 1 1.9 1.5q5.4 2.1 5.4 8.5v4.6l2.1 3.4h-18.8l2.1-3.4v-4.6q0-6.4 5.4-8.5a2 2 0 0 1 1.9-1.5z"/>' +
+    '<circle cx="16" cy="25.4" r="2.3"/>' },
 };
 
 // Cornice di ogni figura: più sale il valore, più la cornice è calda.
@@ -79,9 +114,13 @@ const FIGURE = {
 
 // Torna il pezzo di HTML del simbolo. Le chiavi arrivano da giochi/slot.js.
 function simboloSlot(k) {
-  const L = LETTERE[k];
-  if (L) {
-    return `<span class="sl-sym sl-sym-basso" data-sym="${k}" style="color:${L.col}">${L.txt}</span>`;
+  const B = BASSI[k];
+  if (B) {
+    // fill="currentColor" su tutto il gruppo: la sagoma è a tinta unica e il
+    // colore lo decide il `color` qui sotto, così le opacità interne restano
+    // sfumature dello stesso colore e non diventano un secondo colore.
+    return `<span class="sl-sym sl-sym-basso" data-sym="${k}" style="color:${B.col}">`
+         + `<svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">${B.d}</svg></span>`;
   }
   const figura = FIGURE[k];
   if (!figura) return '';
@@ -90,4 +129,4 @@ function simboloSlot(k) {
        + `<svg viewBox="0 0 32 32" aria-hidden="true">${figura}</svg></span>`;
 }
 
-module.exports = { simboloSlot, LETTERE, CORNICI, FIGURE };
+module.exports = { simboloSlot, BASSI, CORNICI, FIGURE };

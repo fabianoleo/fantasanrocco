@@ -12,7 +12,10 @@
 // una slot una slot e non un lancio di dadi.
 //
 // I SIMBOLI SONO SU DUE LIVELLI, e si vedono diversi
-//   BASSI  A K Q J 10  — lettere piatte, pagano poco
+//   BASSI  lumino, tammorra, giostra, luminarie, campana — sagome piatte,
+//          pagano poco. Erano 10 J Q K A: cambiati SOLO i nomi e i disegni,
+//          pesi e pagamenti sono rimasti quelli misurati, quindi il ritorno
+//          della macchina non si è mosso di un centesimo.
 //   ALTI   percoca, vino, braciola, fuoco, san rocco — figure, pagano molto
 // più il JOLLY (sostituisce tutto tranne il cane) e il CANE (il bonus).
 //
@@ -29,11 +32,11 @@ const RIGHE = 4;
 // ── Simboli ────────────────────────────────────────────────────────
 // `alto: true` → figura disegnata dentro la cornice; gli altri sono lettere.
 const SIMBOLI = {
-  dieci:    { label: '10', alto: false },
-  jack:     { label: 'J',  alto: false },
-  donna:    { label: 'Q',  alto: false },
-  re:       { label: 'K',  alto: false },
-  asso:     { label: 'A',  alto: false },
+  lumino:    { label: 'Lumino',    alto: false },
+  tammorra:  { label: 'Tammorra',  alto: false },
+  giostra:   { label: 'Giostra',   alto: false },
+  luminarie: { label: 'Luminarie', alto: false },
+  campana:   { label: 'Campana',   alto: false },
   percoca:  { label: 'Percoca',   alto: true },
   vino:     { label: 'Vino',      alto: true },
   braciola: { label: 'Braciola',  alto: true },
@@ -52,11 +55,11 @@ const SIMBOLI = {
 // La puntata si divide sulle 20 linee, quindi una vincita da 100 unità su
 // una puntata da 20 punti rende 100 × 20 / 20 = 100 punti.
 const PAGAMENTI = {
-  dieci:    { 2: 1, 3: 7,  4: 20,  5: 51 },
-  jack:     { 2: 1, 3: 7,  4: 20,  5: 51 },
-  donna:    { 2: 2, 3: 9,  4: 27,  5: 68 },
-  re:       { 2: 2, 3: 9,  4: 27,  5: 68 },
-  asso:     { 2: 3, 3: 10,  4: 34,  5: 85 },
+  lumino:    { 2: 1, 3: 7,  4: 20, 5: 51 },
+  tammorra:  { 2: 1, 3: 7,  4: 20, 5: 51 },
+  giostra:   { 2: 2, 3: 9,  4: 27, 5: 68 },
+  luminarie: { 2: 2, 3: 9,  4: 27, 5: 68 },
+  campana:   { 2: 3, 3: 10, 4: 34, 5: 85 },
   percoca:  { 3: 17,  4: 60,  5: 153 },
   vino:     { 3: 24,  4: 85, 5: 222 },
   braciola: { 3: 31,  4: 119, 5: 323 },
@@ -91,19 +94,19 @@ function striscia(pezzi) {
 
 const STRISCE = [
   // colonna 1
-  striscia({ dieci: 15, jack: 14, donna: 9, re: 9, asso: 8,
+  striscia({ lumino: 15, tammorra: 14, giostra: 9, luminarie: 9, campana: 8,
              percoca: 5, vino: 4, braciola: 3, fuoco: 2, sanrocco: 1, jolly: 2, cane: 2 }),
   // colonna 2
-  striscia({ dieci: 15, jack: 14, donna: 9, re: 9, asso: 8,
+  striscia({ lumino: 15, tammorra: 14, giostra: 9, luminarie: 9, campana: 8,
              percoca: 5, vino: 4, braciola: 3, fuoco: 2, sanrocco: 1, jolly: 3 }),
   // colonna 3
-  striscia({ dieci: 15, jack: 14, donna: 9, re: 9, asso: 8,
+  striscia({ lumino: 15, tammorra: 14, giostra: 9, luminarie: 9, campana: 8,
              percoca: 5, vino: 4, braciola: 3, fuoco: 2, sanrocco: 1, jolly: 3, cane: 2 }),
   // colonna 4
-  striscia({ dieci: 15, jack: 14, donna: 9, re: 9, asso: 8,
+  striscia({ lumino: 15, tammorra: 14, giostra: 9, luminarie: 9, campana: 8,
              percoca: 5, vino: 4, braciola: 3, fuoco: 2, sanrocco: 1, jolly: 3 }),
   // colonna 5
-  striscia({ dieci: 15, jack: 14, donna: 9, re: 9, asso: 8,
+  striscia({ lumino: 15, tammorra: 14, giostra: 9, luminarie: 9, campana: 8,
              percoca: 5, vino: 4, braciola: 3, fuoco: 2, sanrocco: 1, jolly: 2, cane: 2 }),
 ];
 

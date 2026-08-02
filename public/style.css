@@ -5992,37 +5992,90 @@ a.lb-prize:hover { color: var(--gold-2); }
 /* ===================================================================
    SLOT 5×4 «Tombola di San Rocco»
    I simboli sono su due livelli e si devono distinguere a colpo
-   d'occhio: le lettere sono piatte e senza cornice, le figure stanno
-   dentro un riquadro colorato. Chi gioca capisce se ha preso qualcosa
-   di buono prima ancora di leggere la tabella.
-   =================================================================== */
-.sl-wrap { max-width: 760px; margin: 0 auto; padding: 0 .6rem; position: relative; }
+   d'occhio: i bassi sono sagome a tinta unita senza cornice, gli alti
+   sono figure a colori dentro un riquadro. Chi gioca capisce se ha
+   preso qualcosa di buono prima ancora di leggere la tabella.
 
+   Tutto è dimensionato per stare in UNA schermata: la griglia non si
+   allarga oltre quello che l'altezza della finestra le concede, così
+   sotto restano sempre visibili la puntata, il tasto e l'esito.
+   =================================================================== */
+.sl-scena {
+  display: grid; gap: 1.1rem;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  max-width: 1180px; margin: 0 auto;
+}
+@media (min-width: 1060px) {
+  /* Su schermo largo il tavolo sta a sinistra e le informazioni a destra:
+     è l'unico modo per vedere insieme la griglia e quanto paga.
+     Il .container del sito però è largo 800px, e due colonne lì dentro non
+     ci stanno: i margini negativi allargano SOLO questa scena, senza
+     toccare la gabbia di tutte le altre pagine. */
+  .sl-scena {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+    gap: 1.5rem;
+    margin-inline: calc((100% - min(1160px, 100vw - 3rem)) / 2);
+  }
+}
+
+.sl-tavolo { min-width: 0; }
+.sl-wrap { margin: 0 auto; padding: 0 .4rem; position: relative; }
+.sl-quadro { position: relative; }
+
+/* Il freno all'altezza. La griglia è 5×4 di celle quadrate, quindi è
+   alta 4/5 di quanto è larga: per stare in `h` di altezza non può
+   superare `h × 1.25` di larghezza. Il numero sottratto è lo spazio che
+   si prendono barra in alto, saldo, puntata, tasto ed esito. */
 .sl-griglia {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
-  padding: 8px; border-radius: .9rem;
-  background: #241a3d;
+  display: flex; gap: 5px;
+  width: 100%;
+  max-width: min(680px, calc((100svh - 380px) * 1.25));
+  margin: 0 auto;
+  padding: 7px; border-radius: .9rem;
+  background: linear-gradient(180deg, #2a1e46, #1b1433);
   border: 2px solid var(--gold-2, #f3c64b);
   box-shadow: 0 12px 40px rgba(0,0,0,.5), inset 0 0 40px rgba(0,0,0,.35);
 }
-.sl-col { display: grid; grid-template-rows: repeat(4, 1fr); gap: 4px; }
+
+/* Ogni colonna è una finestrella: il nastro dentro è più lungo di lei e
+   quello che esce dai bordi non si deve vedere. */
+.sl-col {
+  flex: 1 1 0; min-width: 0;
+  overflow: hidden; border-radius: .45rem;
+  transition: box-shadow .3s var(--ease);
+}
+.sl-nastro { display: flex; flex-direction: column; gap: 5px; will-change: transform; }
 .sl-cella {
-  position: relative; aspect-ratio: 1;
+  position: relative; flex: 0 0 auto;
+  aspect-ratio: 1;
   display: grid; place-items: center;
   border-radius: .4rem;
-  background: rgba(0,0,0,.18);
-  transition: background .2s ease, box-shadow .25s ease;
+  background: rgba(0,0,0,.22);
+  transition: background .2s var(--ease), box-shadow .25s var(--ease);
 }
-/* Durante il giro la colonna si sfoca: basta questo a dare il movimento,
-   senza far scorrere davvero una striscia lunga. */
-.sl-col.is-gira .sl-cella { filter: blur(2px); opacity: .85; }
+
+/* Mentre gira si sfoca appena: aiuta l'occhio a leggere il movimento
+   come velocità invece che come sfarfallio. */
+.sl-col.is-gira .sl-nastro { filter: blur(1.6px); }
+
+/* L'attesa: i primi tre rulli hanno già due cani e il bonus è a un passo.
+   La cornice pulsa finché non si sa come va a finire. */
+.sl-col.is-attesa {
+  box-shadow: 0 0 0 2px var(--gold-2), 0 0 22px rgba(243,198,75,.45);
+  animation: sl-attesa .62s ease-in-out infinite alternate;
+}
+@keyframes sl-attesa {
+  from { box-shadow: 0 0 0 2px rgba(243,198,75,.45), 0 0 14px rgba(243,198,75,.25); }
+  to   { box-shadow: 0 0 0 2px #fff7d0, 0 0 30px rgba(243,198,75,.6); }
+}
 
 .sl-sym { display: grid; place-items: center; width: 100%; height: 100%; }
-/* BASSI: lettera piatta, nessuna cornice. Il colore fa da riconoscimento. */
-.sl-sym-basso {
-  font-family: var(--font-heading, 'Cinzel', serif);
-  font-size: clamp(1.1rem, 5.5vw, 2rem); font-weight: 900; line-height: 1;
-  text-shadow: 0 2px 0 rgba(0,0,0,.45);
+/* BASSI: sagoma a tinta unita, nessuna cornice. */
+.sl-sym-basso { padding: 13%; }
+.sl-sym-basso svg {
+  width: 100%; height: 100%; display: block;
+  filter: drop-shadow(0 2px 1px rgba(0,0,0,.55));
 }
 /* ALTI: figura dentro una cornice colorata, come nelle slot vere. */
 .sl-sym-alto {
@@ -6033,63 +6086,183 @@ a.lb-prize:hover { color: var(--gold-2); }
 }
 .sl-sym-alto svg { width: 100%; height: 100%; display: block; }
 
-/* Celle che fanno parte di una linea vincente */
-.sl-cella.is-vinta {
-  background: rgba(243,198,75,.22);
-  box-shadow: inset 0 0 0 2px var(--gold-2, #f3c64b);
-  animation: sl-lampo .7s ease-in-out infinite alternate;
+/* L'atterraggio del rullo: un rimbalzo solo, corto. */
+.sl-cella.is-atterra .sl-sym { animation: sl-atterra .3s var(--spring) both; }
+@keyframes sl-atterra {
+  0%   { transform: translateY(-9%) scale(1.06); }
+  60%  { transform: translateY(2%)  scale(.985); }
+  100% { transform: none; }
 }
-@keyframes sl-lampo { from { box-shadow: inset 0 0 0 2px rgba(243,198,75,.5); } to { box-shadow: inset 0 0 0 2px #fff7d0; } }
-/* Il cane: si vede subito dov'è, ed è quello che poi cammina */
-.sl-cella.is-cane { box-shadow: inset 0 0 0 2px #ff6b9a, 0 0 18px rgba(255,107,154,.5); }
 
-/* Pannello del bonus */
+/* Celle che fanno parte di una linea vincente: un lampo all'accensione,
+   poi un respiro lento. Prima lampeggiavano forte all'infinito e con
+   dieci linee accese la griglia diventava una stroboscopica. */
+.sl-cella.is-vinta {
+  background: rgba(243,198,75,.2);
+  box-shadow: inset 0 0 0 2px var(--gold-2, #f3c64b), 0 0 16px rgba(243,198,75,.3);
+  animation: sl-accende .34s var(--spring) both, sl-respiro 1.8s ease-in-out .34s infinite alternate;
+}
+@keyframes sl-accende {
+  0%   { transform: scale(1);    box-shadow: inset 0 0 0 2px #fff7d0, 0 0 0 rgba(243,198,75,0); }
+  45%  { transform: scale(1.07); box-shadow: inset 0 0 0 3px #fff7d0, 0 0 26px rgba(243,198,75,.75); }
+  100% { transform: scale(1); }
+}
+@keyframes sl-respiro {
+  from { box-shadow: inset 0 0 0 2px rgba(243,198,75,.55), 0 0 10px rgba(243,198,75,.2); }
+  to   { box-shadow: inset 0 0 0 2px #fff7d0,               0 0 22px rgba(243,198,75,.45); }
+}
+
+/* Il cane: si vede subito dov'è, ed è quello che poi cammina. */
+.sl-cella.is-cane {
+  box-shadow: inset 0 0 0 2px #ff6b9a, 0 0 20px rgba(255,107,154,.55);
+  animation: sl-cane 1.1s ease-in-out infinite alternate;
+}
+@keyframes sl-cane {
+  from { box-shadow: inset 0 0 0 2px rgba(255,107,154,.6), 0 0 12px rgba(255,107,154,.3); }
+  to   { box-shadow: inset 0 0 0 3px #ffb3cd,              0 0 30px rgba(255,107,154,.7); }
+}
+
+/* ── Il pannello della Corsa del Cane ──────────────────────────────
+   Sta appoggiato in basso SOPRA la griglia e non la copre tutta: si
+   deve continuare a vedere dove cammina il cane. */
 .sl-bonus {
-  display: flex; align-items: center; justify-content: center; gap: .7rem;
-  margin-bottom: .6rem; padding: .5rem .9rem; border-radius: 100px;
-  background: linear-gradient(135deg, rgba(255,107,154,.2), rgba(243,198,75,.15));
+  position: absolute; left: 8px; right: 8px; bottom: 8px;
+  display: flex; flex-direction: column; gap: .5rem;
+  padding: .6rem .7rem; border-radius: .7rem;
+  background: linear-gradient(180deg, rgba(26,12,26,.86), rgba(12,6,16,.95));
+  backdrop-filter: blur(7px);
   border: 1px solid #ff6b9a;
+  box-shadow: 0 -8px 30px rgba(0,0,0,.5);
+  animation: sl-bonus-entra .34s var(--spring) both;
 }
 .sl-bonus[hidden] { display: none; }
-.sl-bonus-tit { font-family: var(--font-heading, 'Cinzel', serif); font-size: .85rem; letter-spacing: .08em; color: #ffd0e0; }
-.sl-bonus-mult { font-family: var(--font-heading, 'Cinzel', serif); font-size: 1.2rem; font-weight: 800; color: var(--gold-2); }
+@keyframes sl-bonus-entra {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+.sl-bonus-testa { display: flex; align-items: center; gap: .6rem; }
+.sl-bonus-sym { display: block; width: 34px; height: 34px; flex: 0 0 auto; }
+.sl-bonus-tit {
+  margin: 0; font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: .95rem; font-weight: 700; letter-spacing: .04em; color: #ffd0e0;
+}
+.sl-bonus-sub { margin: .1rem 0 0; font-size: .72rem; line-height: 1.35; color: var(--text-2); }
+.sl-bonus-punti {
+  margin: 0; text-align: center;
+  font-size: .78rem; font-weight: 600; color: var(--gold-2);
+}
+
+/* La scala dei moltiplicatori: si vede dove siamo e dove si arriva. */
+.sl-scala { display: flex; gap: .3rem; list-style: none; margin: 0; padding: 0; }
+.sl-scala-p {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: .05rem;
+  padding: .25rem .1rem; border-radius: .4rem;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09);
+  transition: background .25s var(--ease), border-color .25s var(--ease),
+              transform .25s var(--spring), opacity .25s var(--ease);
+}
+.sl-scala-n { font-size: .58rem; letter-spacing: .06em; color: var(--text-3); }
+.sl-scala-m { font-family: var(--font-heading, 'Cinzel', serif); font-size: .92rem; color: var(--text-2); }
+.sl-scala-p.is-fatto { opacity: .4; }
+.sl-scala-p.is-ora {
+  background: rgba(243,198,75,.2); border-color: var(--gold-2);
+  transform: scale(1.1);
+}
+.sl-scala-p.is-ora .sl-scala-m { color: var(--gold-2); }
+.sl-scala-p.is-ora .sl-scala-n { color: var(--gold-2); }
+
+/* ── Esito ─────────────────────────────────────────────────────────── */
+.cz-outcome.is-bonus { color: #ffb3cd; }
+.cz-cifra { font-family: var(--font-heading, 'Cinzel', serif); font-size: 1.25em; color: var(--gold-2); }
+.cz-di-cui { display: block; font-size: .78em; color: var(--text-3); }
+
+/* ── Le informazioni a fianco ──────────────────────────────────────── */
+.sl-info { display: flex; flex-direction: column; gap: .55rem; min-width: 0; }
+
+.sl-spec {
+  display: grid; grid-template-columns: 42px 1fr; gap: .6rem; align-items: start;
+  padding: .6rem .7rem; border-radius: .7rem;
+  background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08);
+}
+.sl-spec--cane { background: rgba(255,107,154,.08); border-color: rgba(255,107,154,.3); }
+.sl-spec-sym { display: block; width: 42px; height: 42px; }
+.sl-spec-n {
+  margin: 0 0 .25rem; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
+  font-weight: 700; font-size: .9rem; color: var(--text);
+}
+.sl-spec-d { margin: 0; font-size: .76rem; line-height: 1.45; color: var(--text-2); }
+.sl-spec-lab {
+  margin: .55rem 0 .3rem;
+  font-size: .66rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3);
+}
+.sl-tag {
+  padding: .1rem .4rem; border-radius: 100px;
+  font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 700;
+  background: rgba(91,141,238,.18); border: 1px solid rgba(91,141,238,.45); color: #9ab8ff;
+}
+.sl-tag--bonus { background: rgba(255,107,154,.18); border-color: rgba(255,107,154,.5); color: #ffb3cd; }
+.sl-scala--statica .sl-scala-p { padding: .2rem .1rem; }
 
 /* ── Tabella dei pagamenti ─────────────────────────────────────────── */
-.sl-pt { display: flex; flex-direction: column; gap: .35rem; margin-top: 1rem; }
-.sl-pt-riga {
-  display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: .7rem;
-  padding: .45rem .6rem; border-radius: .5rem;
-  background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.06);
-}
-.sl-pt-riga.is-alto { background: rgba(243,198,75,.06); border-color: rgba(243,198,75,.16); }
-.sl-pt-sym { display: block; width: 44px; height: 44px; }
-.sl-pt-nome { font-size: .86rem; color: var(--text-2); }
-.sl-pt-val { display: flex; gap: .4rem; flex-wrap: wrap; justify-content: flex-end; }
-.sl-pt-q {
-  padding: .12rem .42rem; border-radius: .3rem;
-  font-size: .74rem; color: var(--text-3);
-  background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.07);
-}
-.sl-pt-q b { color: var(--gold-2); margin-right: .18rem; }
-
-.sl-pt-speciali { display: flex; flex-direction: column; gap: .6rem; margin-top: 1rem; }
-.sl-pt-speciale {
-  display: grid; grid-template-columns: 52px 1fr; gap: .8rem; align-items: start;
-  padding: .7rem .8rem; border-radius: .6rem;
+.sl-paytable {
+  padding: .7rem; border-radius: .7rem;
   background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.08);
 }
-.sl-pt-speciale .sl-pt-sym { width: 52px; height: 52px; }
-.sl-pt-speciale .n { margin: 0 0 .2rem; font-weight: 700; font-size: .88rem; color: var(--text); }
-.sl-pt-speciale .d { margin: 0; font-size: .8rem; line-height: 1.5; color: var(--text-3); }
+.sl-pt-tit {
+  margin: 0 0 .3rem; font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: 1rem; color: var(--text);
+}
+.sl-pt-note { margin: 0 0 .45rem; font-size: .7rem; line-height: 1.45; color: var(--text-3); }
+.sl-pt-note b { color: var(--gold-2); }
+
+.sl-pt { display: flex; flex-direction: column; gap: .16rem; }
+.sl-pt-cap, .sl-pt-riga {
+  display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, 40px);
+  align-items: center; gap: .25rem;
+}
+.sl-pt-cap {
+  padding: 0 .4rem .25rem;
+  font-size: .64rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3);
+}
+.sl-pt-cap span:not(:first-child) { text-align: center; }
+.sl-pt-riga {
+  padding: .15rem .4rem; border-radius: .4rem;
+  background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.05);
+}
+.sl-pt-riga.is-alto { background: rgba(243,198,75,.06); border-color: rgba(243,198,75,.16); }
+.sl-pt-chi { display: flex; align-items: center; gap: .45rem; min-width: 0; }
+.sl-pt-sym { display: block; width: 26px; height: 26px; flex: 0 0 auto; }
+.sl-pt-nome {
+  font-size: .76rem; color: var(--text-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sl-pt-v {
+  text-align: center; font-size: .72rem; font-weight: 600; color: var(--gold-2);
+  font-variant-numeric: tabular-nums;
+}
+.sl-pt-v.is-vuoto { color: var(--text-3); font-weight: 400; }
+.sl-pt-fine { margin: .45rem 0 0; font-size: .68rem; line-height: 1.45; color: var(--text-3); }
+.sl-pt-fine b { color: var(--text-2); }
 
 @media (max-width: 560px) {
-  .sl-wrap { padding: 0 .2rem; }
-  .sl-griglia { gap: 3px; padding: 5px; }
-  .sl-col { gap: 3px; }
-  .sl-pt-riga { grid-template-columns: 36px 1fr; row-gap: .3rem; }
-  .sl-pt-sym { width: 36px; height: 36px; }
-  .sl-pt-val { grid-column: 1 / -1; justify-content: flex-start; }
+  .sl-wrap { padding: 0 .1rem; }
+  .sl-griglia { gap: 3px; padding: 4px; max-width: min(680px, calc((100svh - 300px) * 1.25)); }
+  .sl-nastro { gap: 3px; }
+  .sl-pt-cap, .sl-pt-riga { grid-template-columns: minmax(0, 1fr) repeat(4, 34px); }
+  .sl-pt-sym { width: 26px; height: 26px; }
+  .sl-pt-nome { font-size: .72rem; }
+  .sl-bonus { left: 5px; right: 5px; bottom: 5px; padding: .5rem .55rem; }
+  .sl-bonus-sym { width: 28px; height: 28px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-col.is-attesa,
+  .sl-cella.is-vinta,
+  .sl-cella.is-cane,
+  .sl-cella.is-atterra .sl-sym,
+  .sl-bonus { animation: none; }
+  .sl-nastro { transition: none !important; }
+  .sl-col.is-gira .sl-nastro { filter: none; }
 }
 
 /* ===================================================================

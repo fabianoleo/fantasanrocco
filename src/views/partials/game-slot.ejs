@@ -2,11 +2,19 @@
     La griglia la riempie slot5.js col risultato che arriva dal server: qui
     c'è solo l'impalcatura. La matematica sta in src/giochi/slot.js e non
     passa mai dal browser.
+
+    L'impaginazione è a due colonne su schermo largo — tavolo a sinistra,
+    tabella a destra — perché tutto quello che serve per capire il gioco
+    deve stare in una schermata sola. Prima la tabella era sotto e non la
+    vedeva nessuno, e il tavolo da solo era più alto della finestra.
     ───────────────────────────────────────────────────────────────────── %>
 <%
   const S5 = (typeof slot5 !== 'undefined' && slot5) ? slot5 : null;
   // Ordine della tabella: dal più forte al più debole, come si legge.
-  const ORDINE = ['sanrocco', 'fuoco', 'braciola', 'vino', 'percoca', 'asso', 're', 'donna', 'jack', 'dieci'];
+  const ORDINE = ['sanrocco', 'fuoco', 'braciola', 'vino', 'percoca',
+                  'campana', 'luminarie', 'giostra', 'tammorra', 'lumino'];
+  const TUTTI = ['lumino','tammorra','giostra','luminarie','campana',
+                 'percoca','vino','braciola','fuoco','sanrocco','jolly','cane'];
 %>
 
 <% if (!currentUser) { %>
@@ -20,106 +28,156 @@
     </div>
   </div>
 <% } else { %>
-  <div class="cz-balance cz-balance-solo">
-    <%- icon('trophy') %>
-    <b id="czBalance"><%= balance %></b><span>punti disponibili</span>
-  </div>
 
-  <div class="sl-wrap" id="slSlot" data-csrf="<%= csrfToken %>"
-       data-bet="<%= bets[0] %>" data-bet-min="<%= betMin %>" data-bet-max="<%= betMax %>">
+<div class="sl-scena">
 
-    <%# Il pannello del bonus: nascosto finché il cane non parte %>
-    <div class="sl-bonus" id="slBonus" hidden>
-      <span class="sl-bonus-tit">La Corsa del Cane</span>
-      <span class="sl-bonus-mult" id="slBonusMult">×1</span>
+  <%# ── IL TAVOLO ────────────────────────────────────────────────── %>
+  <div class="sl-tavolo">
+    <div class="cz-balance cz-balance-solo">
+      <%- icon('trophy') %>
+      <b id="czBalance"><%= balance %></b><span>punti disponibili</span>
     </div>
 
-    <div class="sl-griglia" id="slGriglia" aria-label="Griglia della slot">
-      <% for (let c = 0; c < (S5 ? S5.colonne : 5); c++) { %>
-        <div class="sl-col" data-col="<%= c %>">
-          <% for (let r = 0; r < (S5 ? S5.righe : 4); r++) { %>
-            <div class="sl-cella" data-col="<%= c %>" data-riga="<%= r %>"><%- simboloSlot(['dieci','jack','donna','re','asso'][(c + r) % 5]) %></div>
+    <div class="sl-wrap" id="slSlot" data-csrf="<%= csrfToken %>"
+         data-bet="<%= bets[0] %>" data-bet-min="<%= betMin %>" data-bet-max="<%= betMax %>">
+
+      <div class="sl-quadro">
+        <div class="sl-griglia" id="slGriglia" aria-label="Griglia della slot">
+          <% for (let c = 0; c < (S5 ? S5.colonne : 5); c++) { %>
+            <div class="sl-col" data-col="<%= c %>">
+              <%# Il nastro è quello che scorre davvero: slot5.js gli infila
+                  celle sopra e lo fa scendere, come il rullo di una slot. %>
+              <div class="sl-nastro">
+                <% for (let r = 0; r < (S5 ? S5.righe : 4); r++) { %>
+                  <div class="sl-cella" data-riga="<%= r %>"><%- simboloSlot(TUTTI[(c + r) % 5]) %></div>
+                <% } %>
+              </div>
+            </div>
           <% } %>
         </div>
-      <% } %>
-    </div>
 
-    <div class="cz-controls">
-      <div class="cz-bets">
-        <span class="cz-bet-lbl">Puntata</span>
-        <% bets.forEach((b, i) => { %>
-          <button type="button" class="cz-bet <%= i === 0 ? 'sel' : '' %>" data-bet="<%= b %>"><%= b %></button>
+        <%# Il pannello del bonus sta SOPRA la griglia e non sopra tutto:
+            durante la corsa si deve continuare a vedere dove sta il cane. %>
+        <div class="sl-bonus" id="slBonus" hidden aria-live="polite">
+          <div class="sl-bonus-testa">
+            <span class="sl-bonus-sym"><%- simboloSlot('cane') %></span>
+            <div>
+              <p class="sl-bonus-tit">La Corsa del Cane</p>
+              <p class="sl-bonus-sub" id="slBonusSub">Il cane cammina verso sinistra e fa da jolly</p>
+            </div>
+          </div>
+          <ol class="sl-scala" id="slScala">
+            <% (S5 ? S5.moltiplicatori : [1,2,2,3,4]).forEach((m, i) => { %>
+              <li class="sl-scala-p" data-passo="<%= i %>">
+                <span class="sl-scala-n"><%= i + 1 %>º</span>
+                <b class="sl-scala-m">×<%= m %></b>
+              </li>
+            <% }) %>
+          </ol>
+          <p class="sl-bonus-punti" id="slBonusPunti"></p>
+        </div>
+      </div>
+
+      <div class="cz-controls">
+        <div class="cz-bets">
+          <span class="cz-bet-lbl">Puntata</span>
+          <% bets.forEach((b, i) => { %>
+            <button type="button" class="cz-bet <%= i === 0 ? 'sel' : '' %>" data-bet="<%= b %>"><%= b %></button>
+          <% }) %>
+        </div>
+        <div class="cz-betcustom">
+          <button type="button" class="cz-betstep" id="czBetMinus" aria-label="Diminuisci la puntata di 5">&minus;</button>
+          <label class="cz-betfield">
+            <span class="sr-only">Puntata in punti (da <%= betMin %> a <%= betMax %>)</span>
+            <input type="number" id="czBetInput" class="cz-betinput" inputmode="numeric" autocomplete="off"
+                   min="<%= betMin %>" max="<%= betMax %>" step="1" value="<%= bets[0] %>">
+            <span class="cz-betunit">pt</span>
+          </label>
+          <button type="button" class="cz-betstep" id="czBetPlus" aria-label="Aumenta la puntata di 5">+</button>
+          <button type="button" class="cz-betmax" id="czBetMax">Max</button>
+        </div>
+        <p class="cz-beterr" id="czBetErr" role="status" aria-live="polite"></p>
+        <button type="button" class="cz-spin" id="czSpin">Gira</button>
+      </div>
+
+      <p class="cz-outcome" id="czOutcome" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <%# ── LE INFORMAZIONI ──────────────────────────────────────────── %>
+  <% if (S5) { %>
+  <aside class="sl-info">
+
+    <%# Il bonus per primo: è la cosa che si capiva meno di tutte. %>
+    <section class="sl-spec sl-spec--cane">
+      <span class="sl-spec-sym"><%- simboloSlot('cane') %></span>
+      <div class="sl-spec-testo">
+        <p class="sl-spec-n">Il Cane <span class="sl-tag sl-tag--bonus">bonus</span></p>
+        <p class="sl-spec-d">
+          Escono <strong><%= S5.bonusMinimo %> cani</strong> e parte la corsa: il cane cammina
+          verso sinistra, una colonna a ogni giro, facendo da jolly dove si trova.
+          Le altre colonne rigirano ogni volta.
+        </p>
+        <p class="sl-spec-lab">A ogni passo la vincita si moltiplica</p>
+        <ol class="sl-scala sl-scala--statica">
+          <% S5.moltiplicatori.forEach((m, i) => { %>
+            <li class="sl-scala-p"><span class="sl-scala-n"><%= i + 1 %>º</span><b class="sl-scala-m">×<%= m %></b></li>
+          <% }) %>
+        </ol>
+      </div>
+    </section>
+
+    <section class="sl-spec">
+      <span class="sl-spec-sym"><%- simboloSlot('jolly') %></span>
+      <div class="sl-spec-testo">
+        <p class="sl-spec-n">La Conchiglia <span class="sl-tag">jolly</span></p>
+        <p class="sl-spec-d">Prende il posto di qualunque simbolo tranne il cane. Da sola paga come San Rocco.</p>
+      </div>
+    </section>
+
+    <section class="sl-paytable">
+      <h3 class="sl-pt-tit">Quanto paga</h3>
+      <p class="sl-pt-note">
+        <b>2 3 4 5</b> = quanti simboli uguali in fila da sinistra.
+        Sotto c'è il <strong>moltiplicatore della linea</strong>.
+      </p>
+
+      <div class="sl-pt" role="table" aria-label="Tabella delle vincite">
+        <div class="sl-pt-cap" role="row">
+          <span role="columnheader">Simbolo</span>
+          <span role="columnheader">2</span><span role="columnheader">3</span>
+          <span role="columnheader">4</span><span role="columnheader">5</span>
+        </div>
+        <% ORDINE.forEach((k) => { const pag = S5.pagamenti[k]; if (!pag) return; %>
+          <div class="sl-pt-riga <%= S5.simboli[k] && S5.simboli[k].alto ? 'is-alto' : '' %>" role="row">
+            <span class="sl-pt-chi">
+              <span class="sl-pt-sym"><%- simboloSlot(k) %></span>
+              <span class="sl-pt-nome"><%= S5.simboli[k] ? S5.simboli[k].label : k %></span>
+            </span>
+            <% [2,3,4,5].forEach((n) => { %>
+              <span class="sl-pt-v <%= pag[n] ? '' : 'is-vuoto' %>" role="cell">
+                <%= pag[n] ? '×' + pag[n] : '—' %>
+              </span>
+            <% }) %>
+          </div>
         <% }) %>
       </div>
-      <div class="cz-betcustom">
-        <button type="button" class="cz-betstep" id="czBetMinus" aria-label="Diminuisci la puntata di 5">&minus;</button>
-        <label class="cz-betfield">
-          <span class="sr-only">Puntata in punti (da <%= betMin %> a <%= betMax %>)</span>
-          <input type="number" id="czBetInput" class="cz-betinput" inputmode="numeric" autocomplete="off"
-                 min="<%= betMin %>" max="<%= betMax %>" step="1" value="<%= bets[0] %>">
-          <span class="cz-betunit">pt</span>
-        </label>
-        <button type="button" class="cz-betstep" id="czBetPlus" aria-label="Aumenta la puntata di 5">+</button>
-        <button type="button" class="cz-betmax" id="czBetMax">Max</button>
-      </div>
-      <p class="cz-beterr" id="czBetErr" role="status" aria-live="polite"></p>
-      <button type="button" class="cz-spin" id="czSpin">Gira</button>
-    </div>
 
-    <p class="cz-outcome" id="czOutcome" aria-live="polite"></p>
-  </div>
+      <p class="sl-pt-fine">
+        <%= S5.linee %> linee, sempre da sinistra. La puntata si divide sulle <%= S5.linee %> linee:
+        una linea da <b>×<%= S5.pagamenti.sanrocco[5] %></b> con <b>20 pt</b> puntati vale
+        <b><%= Math.floor(S5.pagamenti.sanrocco[5] * 20 / S5.linee) %> punti</b>.
+      </p>
+    </section>
+  </aside>
+  <% } %>
+
+</div>
 
   <%# I simboli pronti da clonare: il JS non sa disegnarli, li copia da qui %>
   <div class="sl-magazzino" hidden aria-hidden="true">
-    <% ['dieci','jack','donna','re','asso','percoca','vino','braciola','fuoco','sanrocco','jolly','cane'].forEach((k) => { %>
+    <% TUTTI.forEach((k) => { %>
       <template id="sl-<%= k %>"><%- simboloSlot(k) %></template>
     <% }) %>
   </div>
-<% } %>
-
-<%# ── Tabella dei pagamenti ─────────────────────────────────────────── %>
-<% if (S5) { %>
-<section class="cz-paytable">
-  <h2>Tabella vincite</h2>
-  <p class="cz-pt-note">
-    <%= S5.linee %> linee, si leggono da sinistra partendo dalla prima colonna.
-    I numeri sono in unità di linea: la puntata si divide sulle <%= S5.linee %> linee.
-  </p>
-
-  <div class="sl-pt">
-    <% ORDINE.forEach((k) => { const pag = S5.pagamenti[k]; if (!pag) return; %>
-      <div class="sl-pt-riga <%= S5.simboli[k] && S5.simboli[k].alto ? 'is-alto' : '' %>">
-        <span class="sl-pt-sym"><%- simboloSlot(k) %></span>
-        <span class="sl-pt-nome"><%= S5.simboli[k] ? S5.simboli[k].label : k %></span>
-        <span class="sl-pt-val">
-          <% [2,3,4,5].forEach((n) => { if (!pag[n]) return; %>
-            <span class="sl-pt-q"><b><%= n %></b> <%= pag[n] %></span>
-          <% }) %>
-        </span>
-      </div>
-    <% }) %>
-  </div>
-
-  <div class="sl-pt-speciali">
-    <div class="sl-pt-speciale">
-      <span class="sl-pt-sym"><%- simboloSlot('jolly') %></span>
-      <div>
-        <p class="n">Jolly · la conchiglia</p>
-        <p class="d">Sostituisce ogni simbolo tranne il cane, e da sola paga come San Rocco.</p>
-      </div>
-    </div>
-    <div class="sl-pt-speciale">
-      <span class="sl-pt-sym"><%- simboloSlot('cane') %></span>
-      <div>
-        <p class="n">Il Cane · il bonus</p>
-        <p class="d">
-          <strong><%= S5.bonusMinimo %> cani</strong> in vista e parte <strong>La Corsa del Cane</strong>:
-          il cane si mette sulla colonna più a destra dov'è uscito e cammina verso sinistra,
-          una colonna per volta, facendo da jolly dove si trova. Le altre colonne rigirano a ogni passo
-          e il moltiplicatore sale: <%= S5.moltiplicatori.map((m) => '×' + m).join(' · ') %>.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
 <% } %>
