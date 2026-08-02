@@ -320,6 +320,39 @@ CREATE INDEX IF NOT EXISTS idx_game_runs_gioco  ON game_runs(game, created_at);
 CREATE INDEX IF NOT EXISTS idx_game_runs_utente ON game_runs(user_id);
 `);
 
+// ── Sfide fra amici ────────────────────────────────────────────────────
+// Un duello a due su un mini-gioco: chi lancia mette il punteggio che ha
+// appena fatto, chi riceve ha UNA partita per batterlo. Vive fuori dalla
+// classifica e non dà punti né stelle: e' una cosa fra due persone, e
+// legarla ai punti avrebbe voluto dire farsi le sfide da soli con un
+// secondo account.
+//
+// `sfidato_id` e' NULL finche' chi riceve non apre il link: si puo'
+// invitare anche per email qualcuno che non e' ancora iscritto, e in quel
+// caso l'aggancio all'utente avviene al primo accesso.
+// `punteggio_sfidante` e' una COPIA del punteggio al momento della sfida,
+// non un riferimento alla partita: se poi quello migliora il suo record, la
+// sfida lanciata resta quella che era.
+db.exec(`
+CREATE TABLE IF NOT EXISTS sfide (
+  id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+  token              TEXT    NOT NULL UNIQUE,   -- sta nel link, non si indovina
+  gioco              TEXT    NOT NULL,          -- 'runner' | 'jetpack'
+  sfidante_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  punteggio_sfidante INTEGER NOT NULL,
+  sfidato_id         INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  sfidato_email      TEXT,                      -- se invitato per email
+  sfidato_nome       TEXT,                      -- come l'ha scritto chi invita
+  punteggio_sfidato  INTEGER,                   -- NULL finche' non gioca
+  stato              TEXT    NOT NULL DEFAULT 'aperta',  -- aperta | giocata | scaduta
+  created_at         TEXT    NOT NULL DEFAULT (datetime('now')),
+  scade_il           TEXT    NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sfide_sfidato  ON sfide(sfidato_id, stato);
+CREATE INDEX IF NOT EXISTS idx_sfide_sfidante ON sfide(sfidante_id, stato);
+CREATE INDEX IF NOT EXISTS idx_sfide_email    ON sfide(sfidato_email);
+`);
+
 // Data di scatto letta dall'EXIF al momento del caricamento, PRIMA che il
 // ridimensionamento la cancelli: ricodificare una foto butta via tutti i
 // metadati. Senza questa colonna l'export dei metadati resterebbe a mani

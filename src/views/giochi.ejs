@@ -13,6 +13,51 @@
   </p>
 </section>
 
+<%# ── LE TUE SFIDE ──────────────────────────────────────────────────
+    Compare solo se c'e' qualcosa da mostrare. Le ricevute stanno sopra:
+    sono quelle che chiedono di fare qualcosa. %>
+<% const sf = (typeof sfide !== 'undefined' && sfide) ? sfide : { ricevute: [], lanciate: [] }; %>
+<% const sfG = (typeof sfideGiochi !== 'undefined' && sfideGiochi) ? sfideGiochi : {}; %>
+<% const lanciateAperte = sf.lanciate.filter(function (x) { return x.stato !== 'giocata'; }); %>
+<% const lanciateChiuse = sf.lanciate.filter(function (x) { return x.stato === 'giocata'; }); %>
+<% if (sf.ricevute.length || sf.lanciate.length) { %>
+<section class="sfd-box">
+  <h2 class="sfd-box-tit"><%- icon('bolt') %> Le tue sfide</h2>
+
+  <% sf.ricevute.forEach(function (x) { %>
+    <a class="sfd-riga sfd-riga-attesa" href="<%= sfG[x.gioco] ? sfG[x.gioco].url : '/giochi' %>">
+      <span class="sfd-riga-txt">
+        <strong><%= x.sfidante_nome %></strong> ti sfida a <%= sfG[x.gioco] ? sfG[x.gioco].nome : x.gioco %>
+        <span class="sfd-riga-sub">devi battere <%= x.punteggio_sfidante %> <%= sfG[x.gioco] ? sfG[x.gioco].unita : '' %></span>
+      </span>
+      <span class="sfd-riga-cta">Gioca →</span>
+    </a>
+  <% }) %>
+
+  <% lanciateChiuse.forEach(function (x) { %>
+    <% const persa = x.punteggio_sfidato > x.punteggio_sfidante; %>
+    <div class="sfd-riga <%= persa ? 'sfd-riga-persa' : 'sfd-riga-vinta' %>">
+      <span class="sfd-riga-txt">
+        <strong><%= x.sfidato_nickname || x.sfidato_nome %></strong>
+        <%= persa ? 'ti ha battuto' : 'non ce l’ha fatta' %>
+        a <%= sfG[x.gioco] ? sfG[x.gioco].nome : x.gioco %>
+        <span class="sfd-riga-sub"><%= x.punteggio_sfidato %> contro i tuoi <%= x.punteggio_sfidante %></span>
+      </span>
+    </div>
+  <% }) %>
+
+  <% lanciateAperte.forEach(function (x) { %>
+    <div class="sfd-riga sfd-riga-sospeso">
+      <span class="sfd-riga-txt">
+        Hai sfidato <strong><%= x.sfidato_nickname || x.sfidato_nome %></strong>
+        a <%= sfG[x.gioco] ? sfG[x.gioco].nome : x.gioco %>
+        <span class="sfd-riga-sub">non ha ancora giocato</span>
+      </span>
+    </div>
+  <% }) %>
+</section>
+<% } %>
+
 <%# ── RIGA DELLE 3 SCELTE (nessun tratto orizzontale) ──────────────── %>
 <div class="gx-switch" id="gxSwitch" role="tablist" aria-label="Scegli il gioco">
   <button type="button" class="gx-choice c-runner" role="tab" aria-selected="false"
@@ -76,3 +121,5 @@
 </div>
 
 <script src="/giochi.js?v=1" defer></script>
+
+<script src="/sfida.js?v=1" defer></script>

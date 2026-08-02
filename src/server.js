@@ -1112,9 +1112,17 @@ app.get('/termini', (req, res) => {
 // il resto della sezione resta pubblico.
 app.get('/giochi', (req, res) => {
   const achievements = userGameAchievements(req.currentUser ? req.currentUser.id : null);
+  // Le sfide in sospeso e quelle lanciate. `require` qui dentro e non in cima
+  // perche' il modulo e' definito piu' giu', dopo i mini-giochi.
+  const mieSfide = req.currentUser
+    ? { ricevute: require('./lib/sfide').inAttesaPer(req.currentUser.id),
+        lanciate: require('./lib/sfide').lanciateDa(req.currentUser.id) }
+    : { ricevute: [], lanciate: [] };
   res.render('giochi', {
     title: 'Giochi e Slot',
     achievements,
+    sfide: mieSfide,
+    sfideGiochi: require('./lib/sfide').GIOCHI,
     best: req.currentUser ? (req.currentUser.game_best || 0) : 0,
     plays: req.currentUser ? (req.currentUser.game_plays || 0) : 0,
     // dati della slot (le tabelle sono costanti: informative anche da sloggati)
@@ -1209,7 +1217,9 @@ app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, r
   })();
   const best = Math.max(score, prevBest);
   notifyGameAwards(req.currentUser.id, 'Corri San Rocco', awarded, '/giochi?g=runner');
-  res.json({ ok: true, best, plays, awarded });
+  // Una partita chiude al massimo UNA sfida: vedi chiudiConPartita().
+  const esitoSfida = chiudiSfidaEAvvisa(req.currentUser, 'runner', score);
+  res.json({ ok: true, best, plays, awarded, sfida: esitoSfida });
 });
 
 // =========================================================================
@@ -1443,11 +1453,119 @@ app.post('/jetpack/fine', auth.requireLogin, gameLimiter, verifyCsrf, (req, res)
     out.awarded.map((a) => ({ ...a, title: String(a.title || '').replace('Jetpack · ', '') })),
     '/giochi?g=jetpack',
   );
+  const esitoSfida = chiudiSfidaEAvvisa(req.currentUser, 'jetpack', run.dist);
   res.json({
     ok: true, counted: true,
     best: Math.max(run.dist, prevBest),
     missions: jpMissionsFor(req.currentUser.id),
+    sfida: esitoSfida,
     ...out,
+  });
+});
+
+// =========================================================================
+//  SFIDE FRA AMICI  — un duello a due su un mini-gioco
+//  Sta fuori dalla classifica: nessun punto, nessuna stella, nessuna
+//  missione. Vedi la nota in lib/sfide.js sul perche'.
+// =========================================================================
+const sfide = require('./lib/sfide');
+
+// Avvisa chi e' stato sfidato: notifica nell'app se e' iscritto e ha dato il
+// permesso, email se abbiamo un indirizzo. Le due strade sono indipendenti —
+// chi non ha installato l'app riceve solo la mail, e viceversa.
+function avvisaSfidato({ sfida, link, sfidante, gioco }) {
+  const g = sfide.GIOCHI[gioco];
+  const titolo = `${sfidante.nickname} ti ha sfidato!`;
+  const corpo = `${g.nome}: ha fatto ${sfida.punteggio_sfidante} ${g.unita}. Hai una partita per batterlo.`;
+
+  if (sfida.sfidato_id) {
+    pushToUser(sfida.sfidato_id, { title: '⚔️ ' + titolo, body: corpo, url: `/sfida/${sfida.token}` })
+      .catch((e) => console.error('[SFIDA] push', e.message));
+  }
+
+  const dest = sfida.sfidato_email;
+  if (!dest) return;
+  const transporter = makeMailTransporter();
+  if (!transporter) { console.log(`[SFIDA] nessuna posta configurata — link: ${link}`); return; }
+  transporter.sendMail({
+    from: process.env.SMTP_FROM || process.env.EMAIL_USER || process.env.SMTP_USER,
+    to: dest,
+    subject: `${sfidante.nickname} ti ha sfidato a ${g.nome} — FantaSanRocco`,
+    text: `${titolo}\n\n${corpo}\n\nAccetta qui:\n${link}\n\nLa sfida scade fra ${sfide.GIORNI_VALIDA} giorni.`,
+    html: `<p><strong>${escapeHtml(sfidante.nickname)}</strong> ti ha sfidato a <strong>${escapeHtml(g.nome)}</strong>.</p>
+           <p>Ha fatto <strong>${sfida.punteggio_sfidante} ${escapeHtml(g.unita)}</strong>. Hai <strong>una partita</strong> per batterlo.</p>
+           <p><a href="${link}">Accetta la sfida</a></p>
+           <p>La sfida scade fra ${sfide.GIORNI_VALIDA} giorni.</p>`,
+  }).then(() => console.log(`[SFIDA] invito inviato a ${dest}`))
+    .catch((e) => console.error('[SFIDA] ERRORE invio a', dest, e.message));
+}
+
+// Chiude un duello in sospeso con la partita appena finita e avvisa chi
+// l'aveva lanciata. Torna l'esito per il pannello di fine partita, oppure
+// null se non c'era nessuna sfida da chiudere (il caso normale).
+function chiudiSfidaEAvvisa(utente, gioco, punteggio) {
+  try {
+    const esito = sfide.chiudiConPartita(utente.id, gioco, punteggio);
+    if (!esito) return null;
+    const g = sfide.GIOCHI[gioco];
+    pushToUser(esito.sfidante_id, {
+      title: esito.vinta ? '⚔️ Ti hanno battuto!' : '🛡️ Hai retto la sfida!',
+      body: `${utente.nickname} ha fatto ${punteggio} ${g.unita} su ${g.nome} (tu ${esito.punteggio_sfidante}).`,
+      url: '/giochi',
+    }).catch((e) => console.error('[SFIDA] push esito', e.message));
+    return {
+      vinta: esito.vinta,
+      avversario: esito.sfidante_nome,
+      suo: esito.punteggio_sfidante,
+      mio: punteggio,
+      unita: g.unita,
+    };
+  } catch (e) { console.error('[SFIDA] chiusura', e.message); return null; }
+}
+
+// Lancia una sfida col punteggio dell'ULTIMA partita registrata. Il punteggio
+// non arriva dal browser: verrebbe scritto a mano nella richiesta.
+app.post('/sfida/crea', auth.requireLogin, verifyCsrf, (req, res) => {
+  const gioco = String(req.body.gioco || '');
+  const destinatario = String(req.body.destinatario || '').trim();
+  if (!sfide.giocoValido(gioco)) return res.status(400).json({ ok: false, errore: 'Gioco sconosciuto.' });
+  if (!destinatario) return res.status(400).json({ ok: false, errore: 'Scrivi il nickname o l’email di chi vuoi sfidare.' });
+
+  const punteggio = sfide.ultimoPunteggio(req.currentUser.id, gioco);
+  if (!punteggio) return res.status(400).json({ ok: false, errore: 'Gioca una partita prima di lanciare una sfida.' });
+
+  const u = sfide.trovaDestinatario(destinatario);
+  if (u && u.id === req.currentUser.id) return res.status(400).json({ ok: false, errore: 'Non puoi sfidare te stesso.' });
+  if (!u && !sfide.pareEmail(destinatario)) {
+    return res.status(400).json({ ok: false, errore: 'Nessun iscritto con questo nickname. Prova con la sua email.' });
+  }
+
+  const creata = sfide.crea({ sfidanteId: req.currentUser.id, gioco, punteggio, destinatario });
+  const link = `${publicBaseUrl(req)}/sfida/${creata.token}`;
+  const riga = sfide.perToken(creata.token);
+  avvisaSfidato({ sfida: riga, link, sfidante: req.currentUser, gioco });
+  audit(req, 'sfida.crea', `${gioco} ${punteggio} → ${destinatario}`);
+  res.json({
+    ok: true, link,
+    avvisato: !!(riga.sfidato_id || riga.sfidato_email),
+    nome: u ? u.nickname : destinatario,
+  });
+});
+
+// La pagina della sfida: chi apre il link vede chi lo sfida e con che punteggio.
+app.get('/sfida/:token', (req, res) => {
+  const s = sfide.perToken(req.params.token);
+  if (!s) return res.status(404).render('error', { title: 'Sfida', message: 'Questa sfida non esiste (o e\' stata cancellata).' });
+  // Chi apre il link diventa lo sfidato, se la casella era ancora vuota:
+  // serve agli inviti per email a chi non era iscritto al momento del lancio.
+  if (req.currentUser && !s.sfidato_id && req.currentUser.id !== s.sfidante_id) {
+    sfide.agganciaSfidato(s.id, req.currentUser.id);
+  }
+  res.render('sfida', {
+    title: 'Sfida',
+    sfida: sfide.perToken(req.params.token),
+    gioco: sfide.GIOCHI[s.gioco],
+    scaduta: sfide.scaduta(s),
   });
 });
 

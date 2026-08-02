@@ -1,0 +1,72 @@
+<%# ── Pagina di una sfida ricevuta ─────────────────────────────────────────
+    Ci si arriva dal link nell'email o dalla notifica. Dice chi sfida, con
+    che punteggio, e manda al gioco. Non c'e' un pulsante «accetta»: la
+    sfida si chiude giocando, e un passaggio in piu' sarebbe solo un clic
+    fra la voglia di giocare e il gioco.
+    ───────────────────────────────────────────────────────────────────── %>
+<div class="sfd-wrap">
+  <section class="sfd-card">
+    <p class="lp-kicker">Sfida a due</p>
+
+    <% if (scaduta) { %>
+      <h1 class="sfd-titolo">Sfida scaduta</h1>
+      <p class="sfd-testo">
+        Questa sfida di <strong><%= sfida.sfidante_nome %></strong> non è più valida.
+        Le sfide durano pochi giorni, il tempo della festa.
+      </p>
+      <a class="btn" href="/giochi">Vai ai giochi →</a>
+
+    <% } else if (sfida.stato === 'giocata') { %>
+      <% const vinta = sfida.punteggio_sfidato > sfida.punteggio_sfidante; %>
+      <h1 class="sfd-titolo"><%= vinta ? 'Sfida vinta!' : 'Sfida persa' %></h1>
+      <div class="sfd-duello">
+        <div class="sfd-lato">
+          <span class="sfd-nome"><%= sfida.sfidante_nome %></span>
+          <span class="sfd-punti"><%= sfida.punteggio_sfidante %></span>
+          <span class="sfd-unita"><%= gioco.unita %></span>
+        </div>
+        <span class="sfd-vs">vs</span>
+        <div class="sfd-lato <%= vinta ? 'sfd-vince' : '' %>">
+          <span class="sfd-nome"><%= sfida.sfidato_nickname || 'Sfidato' %></span>
+          <span class="sfd-punti"><%= sfida.punteggio_sfidato %></span>
+          <span class="sfd-unita"><%= gioco.unita %></span>
+        </div>
+      </div>
+      <a class="btn" href="<%= gioco.url %>">Rigioca →</a>
+
+    <% } else if (!currentUser) { %>
+      <h1 class="sfd-titolo"><%= sfida.sfidante_nome %> ti ha sfidato</h1>
+      <p class="sfd-testo">
+        A <strong><%= gioco.nome %></strong> ha fatto
+        <strong><%= sfida.punteggio_sfidante %> <%= gioco.unita %></strong>.
+      </p>
+      <p class="sfd-testo">Accedi o registrati per accettare: ti bastano un minuto e un nickname.</p>
+      <a class="btn" href="/login">Accedi e gioca →</a>
+      <a class="sfd-secondario" href="/registrati">Non ho un account</a>
+
+    <% } else if (currentUser.id === sfida.sfidante_id) { %>
+      <h1 class="sfd-titolo">La tua sfida è partita</h1>
+      <p class="sfd-testo">
+        Hai sfidato <strong><%= sfida.sfidato_nickname || sfida.sfidato_nome %></strong> a
+        <strong><%= gioco.nome %></strong> con <strong><%= sfida.punteggio_sfidante %> <%= gioco.unita %></strong>.
+        Ti avvisiamo appena gioca.
+      </p>
+      <a class="btn" href="/giochi">Torna ai giochi →</a>
+
+    <% } else { %>
+      <h1 class="sfd-titolo"><%= sfida.sfidante_nome %> ti ha sfidato</h1>
+      <p class="sfd-testo">A <strong><%= gioco.nome %></strong>.</p>
+      <div class="sfd-bersaglio">
+        <span class="sfd-bersaglio-lab">Devi battere</span>
+        <span class="sfd-bersaglio-val"><%= sfida.punteggio_sfidante %></span>
+        <span class="sfd-unita"><%= gioco.unita %></span>
+      </div>
+      <p class="sfd-testo sfd-avviso">
+        <%- icon('warning') %> Hai <strong>una partita sola</strong>: la prossima che giochi
+        a <%= gioco.nome %> chiude la sfida, comunque vada.
+      </p>
+      <a class="btn" href="<%= gioco.url %>">Accetta e gioca →</a>
+      <p class="sfd-nota">La sfida non dà punti né stelle: è una cosa fra voi due.</p>
+    <% } %>
+  </section>
+</div>

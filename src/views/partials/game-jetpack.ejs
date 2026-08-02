@@ -31,6 +31,9 @@
       <p class="jp-over-desc" id="jpOverDesc">Vola con la fiammata, schiva i raggi di fuoco, raccogli le monete</p>
       <p class="jp-hint" id="jpHint">Tieni premuto <kbd>SPAZIO</kbd>, tocca lo schermo o il tasto <kbd>SALI</kbd> per volare</p>
       <button type="button" class="jp-play" id="jpPlay">Gioca</button>
+      <% if (currentUser) { %>
+        <button type="button" class="jp-btn2 sfd-lancia" data-sfida="jetpack" hidden>Sfida un amico</button>
+      <% } %>
     </div>
 
     <%# Overlay di pausa %>

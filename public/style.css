@@ -5676,3 +5676,107 @@ a.lb-prize:hover { color: var(--gold-2); }
   max-width: 420px;
 }
 .pg-card-media img { width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover; }
+
+/* ===================================================================
+   SFIDE FRA AMICI — riquadro nei giochi, finestrella, pagina della sfida
+   =================================================================== */
+.sfd-box {
+  max-width: 760px; margin: 0 auto 1.6rem; padding: 1rem 1.1rem 1.1rem;
+  border-radius: 1rem;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+}
+.sfd-box-tit {
+  display: flex; align-items: center; gap: .45rem; margin: 0 0 .8rem;
+  font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: .95rem; letter-spacing: .06em; color: var(--text-2);
+}
+.sfd-box-tit .ico { width: 17px; height: 17px; color: var(--gold-2); }
+.sfd-riga {
+  display: flex; align-items: center; justify-content: space-between; gap: .8rem;
+  padding: .7rem .8rem; margin-bottom: .5rem;
+  border-radius: .6rem; text-decoration: none;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.06);
+  border-left: 3px solid rgba(255,255,255,.12);
+}
+.sfd-riga:last-child { margin-bottom: 0; }
+/* Il bordo a sinistra dice a colpo d'occhio se tocca a te o no. */
+.sfd-riga-attesa  { border-left-color: var(--gold-2); background: rgba(243,198,75,.06); }
+.sfd-riga-vinta   { border-left-color: #3fbf6a; }
+.sfd-riga-persa   { border-left-color: #e05252; }
+.sfd-riga-sospeso { opacity: .72; }
+.sfd-riga-txt { display: flex; flex-direction: column; gap: .15rem; font-size: .86rem; color: var(--text-2); min-width: 0; }
+.sfd-riga-txt strong { color: var(--text); }
+.sfd-riga-sub { font-size: .74rem; color: var(--text-3); }
+.sfd-riga-cta {
+  flex-shrink: 0; font-family: var(--font-heading, 'Cinzel', serif);
+  font-size: .78rem; color: var(--gold-2); white-space: nowrap;
+}
+
+/* ── Finestrella «sfida un amico» ─────────────────────────────────── */
+.sfd-modal { position: fixed; inset: 0; z-index: 800; display: grid; place-items: center; padding: 1.2rem; }
+.sfd-modal[hidden] { display: none; }
+.sfd-modal-fondo { position: absolute; inset: 0; background: rgba(2,2,8,.78); backdrop-filter: blur(4px); }
+.sfd-modal-card {
+  position: relative; width: 100%; max-width: 380px;
+  padding: 1.6rem 1.4rem 1.3rem; border-radius: 1rem; text-align: center;
+  background: var(--bg-card, #12101d);
+  border: 1px solid var(--border-gold);
+  box-shadow: 0 24px 70px rgba(0,0,0,.6);
+}
+.sfd-modal-x {
+  position: absolute; top: .5rem; right: .6rem;
+  width: 30px; height: 30px; padding: 0; cursor: pointer;
+  font-size: 1.3rem; line-height: 1; color: var(--text-3);
+  background: transparent; border: none;
+}
+.sfd-modal-tit { margin: .3rem 0 .5rem; font-family: var(--font-heading, 'Cinzel', serif); font-size: 1.15rem; color: var(--text); }
+.sfd-modal-sub { margin: 0 0 1rem; font-size: .82rem; line-height: 1.5; color: var(--text-3); }
+/* 16px pieni: sotto questa misura iOS ingrandisce la pagina da solo appena
+   si tocca il campo, e in un riquadro cosi' stretto si vede tutto storto.
+   Il selettore e' doppio di proposito: la regola generale del sito e'
+   `input[type=text]`, che come peso batte una classe sola e vinceva lei. */
+.sfd-modal .sfd-modal-inp {
+  width: 100%; padding: .7rem .8rem; margin: 0 0 .7rem;
+  font-size: 16px; color: var(--text);
+  background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.14); border-radius: .5rem;
+}
+.sfd-modal .sfd-modal-inp:focus { outline: none; border-color: var(--gold-2); }
+.sfd-modal-msg { margin: 0 0 .7rem; font-size: .8rem; }
+.sfd-modal-msg.is-no { color: #ff8a8a; }
+.sfd-modal-msg.is-si { color: #7ee0a0; }
+.sfd-modal-invia { width: 100%; justify-content: center; }
+.sfd-modal-nota { margin: .8rem 0 0; font-size: .72rem; color: var(--text-3); }
+
+/* ── Pagina della sfida ───────────────────────────────────────────── */
+.sfd-wrap { display: grid; place-items: center; padding: 3rem 1rem 4rem; }
+.sfd-card {
+  width: 100%; max-width: 460px; text-align: center;
+  padding: 2.2rem 1.6rem 1.8rem; border-radius: 1.1rem;
+  background: var(--bg-card, rgba(16,14,28,.6));
+  border: 1px solid var(--border-gold);
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+}
+.sfd-titolo { margin: .5rem 0 .8rem; font-family: var(--font-heading, 'Cinzel', serif); font-size: 1.6rem; color: var(--text); }
+.sfd-testo { margin: 0 0 1rem; font-size: .9rem; line-height: 1.6; color: var(--text-2); }
+.sfd-avviso { font-size: .82rem; color: var(--text-3); }
+.sfd-avviso .ico { width: 15px; height: 15px; vertical-align: -.15em; color: var(--gold-2); }
+.sfd-nota { margin: 1rem 0 0; font-size: .74rem; color: var(--text-3); }
+.sfd-secondario { display: inline-block; margin-top: .8rem; font-size: .82rem; color: var(--text-3); }
+
+.sfd-bersaglio {
+  display: flex; flex-direction: column; align-items: center; gap: .1rem;
+  margin: 1.2rem 0; padding: 1.1rem;
+  border-radius: .8rem; background: rgba(243,198,75,.07); border: 1px solid var(--border-gold);
+}
+.sfd-bersaglio-lab { font-size: .74rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-3); }
+.sfd-bersaglio-val { font-family: var(--font-heading, 'Cinzel', serif); font-size: 2.6rem; font-weight: 800; line-height: 1; color: var(--gold-2); }
+.sfd-unita { font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+
+.sfd-duello { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1.4rem 0; }
+.sfd-lato { display: flex; flex-direction: column; gap: .15rem; flex: 1; min-width: 0; }
+.sfd-nome { font-size: .84rem; color: var(--text-2); overflow-wrap: anywhere; }
+.sfd-punti { font-family: var(--font-heading, 'Cinzel', serif); font-size: 1.9rem; font-weight: 800; line-height: 1; color: var(--text); }
+.sfd-vs { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+.sfd-vince .sfd-punti { color: var(--gold-2); }

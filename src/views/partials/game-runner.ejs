@@ -35,6 +35,11 @@
             <span>Classifica</span>
           </a>
         </div>
+        <%# Compare solo a partita finita e solo da loggati: lo mostra
+            sfida.js quando c'e' un punteggio da mettere in palio. %>
+        <% if (currentUser) { %>
+          <button class="gm-8btn sfd-lancia" type="button" data-sfida="runner" hidden>Sfida un amico</button>
+        <% } %>
         <p class="gm-hint" id="gmHint"></p>
       </div>
     </div>
