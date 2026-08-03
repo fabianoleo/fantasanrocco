@@ -144,17 +144,15 @@ const MISSIONS = [
   m('Sticker Limited Edition · Chalet', 'Fai una foto al drink con l’adesivo del FantaSanRocco preso al Chalet (se sei riuscito a prenderlo). Attenzione: gli adesivi sono limitati, non barate 😜', 'rara', { day: 13, sponsor: 'chalet.png' }),
   m('Sticker Limited Edition · Revolution', 'Fai una foto al drink con l’adesivo del FantaSanRocco preso al Revolution (se sei riuscito a prenderlo). Attenzione: gli adesivi sono limitati, non barate 😜', 'rara', { day: 14, sponsor: 'revolution.png' }),
   m('Sticker Limited Edition · Bar V. Frasci 2.0', 'Fai una foto al drink con l’adesivo del FantaSanRocco preso al Bar V. Frasci 2.0 (se sei riuscito a prenderlo). Attenzione: gli adesivi sono limitati, non barate 😜', 'rara', { day: 15, sponsor: 'bar-frasci-2-0.png' }),
-  m('Sticker Limited Edition · Zanzibar', 'Fai una foto al drink con l’adesivo del FantaSanRocco preso al Zanzibar (se sei riuscito a prenderlo). Attenzione: gli adesivi sono limitati, non barate 😜', 'rara', { day: 17 }),
+  m('Sticker Limited Edition · Zanzibar', 'Fai una foto al drink con l’adesivo del FantaSanRocco preso al Zanzibar (se sei riuscito a prenderlo). Attenzione: gli adesivi sono limitati, non barate 😜', 'rara', { day: 17, sponsor: 'zio-enrico.png' }),
 
   // ── IL PRONOSTICO SUL PRESENTATORE ───────────────────────────────
-  // Una per sera, dal 14 al 18. Apre alle 18 del giorno prima e CHIUDE alle
-  // 18 della sera stessa: dopo, il colore lo hanno visto tutti e non sarebbe
-  // più un pronostico. Senza foto — la risposta va nella nota per lo staff.
-  // I colori giusti NON stanno qui e non stanno in nessun file: questo
-  // repository è pubblico. Li tiene lo staff e si approva a mano.
-  ...[14, 15, 16, 17, 18].map((g) => m(`«Oltre» i colori · ${g} agosto`,
-    'Indovina di che colore sarà l’outfit del presentatore stasera. Scrivi il colore nella «nota per lo staff»: si invia una volta sola, e si chiude alle 18 — prima che cominci la serata.',
-    'non-comune', { photo: false, win: PRONOSTICO(g) })),
+  // Non è più una missione. Era una foto-missione senza foto, con il colore
+  // scritto a mano nella nota per lo staff: ogni sera qualcuno rispondeva
+  // "verde bottiglia" contro "verde" e toccava decidere a mano.
+  // Ora è un PRONOSTICO vero, come quello del Palio: opzioni fisse, 100
+  // punti a chi indovina, accredito automatico. Sta in src/dati/pronostici.js
+  // e si porta nel database con  node strumenti/patch_pronostici.js
 
   // ── SFIDE GIORNALIERE — 14 AGOSTO ────────────────────────────────
   // ── SFIDE GIORNALIERE — 13 AGOSTO ────────────────────────────────

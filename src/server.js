@@ -1004,7 +1004,12 @@ function predictionsForUser(userId) {
     const mine = db.prepare('SELECT choice, choices FROM prediction_votes WHERE prediction_id = ? AND user_id = ?').get(p.id, userId);
     return {
       id: p.id, title: p.title, description: p.description || '', options: opts, points: p.points, multi: !!p.multi,
-      open: !!p.open && p.winner === null, resolved: p.winner !== null, winner: p.winner,
+      // `open` tiene conto anche dell'orario di chiusura: se no la pagina
+      // mostrava ancora il modulo di voto dopo le 18 e il rifiuto arrivava
+      // solo premendo «conferma».
+      open: !!p.open && p.winner === null
+            && !(p.closes_at && romeStringToDate(p.closes_at).getTime() <= Date.now()),
+      resolved: p.winner !== null, winner: p.winner,
       myChoices: mine ? voteChoices(mine) : [],
     };
   });
@@ -2059,6 +2064,16 @@ app.post('/pronostici/:id/vota', auth.requireLogin, verifyCsrf, (req, res) => {
   const p = db.prepare('SELECT * FROM predictions WHERE id = ? AND archived = 0').get(req.params.id);
   if (!p) { flash(req, 'error', 'Pronostico inesistente.'); return res.redirect('/missioni'); }
   if (!p.open || p.winner !== null) { flash(req, 'error', 'Questo pronostico è chiuso.'); return res.redirect('/missioni'); }
+  // La chiusura a orario si fa RISPETTARE qui, non solo mostrare. Prima
+  // closes_at serviva solo all'avviso «sta per chiudere» e al testo della
+  // pagina: passata l'ora si continuava a votare finché qualcuno non
+  // chiudeva a mano dal pannello. Su un pronostico che chiede di indovinare
+  // com'è vestito il presentatore, votare dopo le 18 vuol dire votare
+  // avendolo già visto.
+  if (p.closes_at && romeStringToDate(p.closes_at).getTime() <= Date.now()) {
+    flash(req, 'error', 'Questo pronostico è chiuso: si votava fino alle ' + String(p.closes_at).slice(11, 16) + '.');
+    return res.redirect('/missioni');
+  }
   const opts = predOptions(p);
   // choice può arrivare come singolo valore o come array (checkbox multiple)
   let raw = req.body.choice;
