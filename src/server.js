@@ -3626,6 +3626,16 @@ app.post('/admin/reset-gioco', auth.requireAdmin, (req, res) => {
     db.prepare(`UPDATE users SET points_adjust = 0, game_best = 0, game_plays = 0,
                 jp_best = 0, jp_plays = 0, jp_stars = 0,
                 streak_day = 0, streak_last_day = NULL, last_wheel_day = NULL`).run();
+    // Registro dei movimenti e bonus di sezione: stessa storia del Jetpack qui
+    // sopra. Per gli utenti cancellati spariscono da soli (ON DELETE CASCADE),
+    // ma gli ADMIN restano — e l'UPDATE qui sopra gli azzera il saldo senza
+    // togliere le righe. Risultato: uno storico che elenca movimenti per punti
+    // che non ci sono piu', un "non spiegato" negativo grosso quanto il vecchio
+    // saldo, e sezioni gia' segnate come completate che non danno piu' il bonus
+    // la seconda volta. Il registro deve dire la verita' sul saldo: se il saldo
+    // riparte da zero, riparte da zero anche lui.
+    db.prepare('DELETE FROM punti_movimenti').run();
+    db.prepare('DELETE FROM section_bonuses').run();
   })();
 
   // Rimuove i file orfani dal disco (best-effort, non blocca la risposta)
@@ -3635,7 +3645,7 @@ app.post('/admin/reset-gioco', auth.requireAdmin, (req, res) => {
   rmFiles(AVATARS_DIR, avatarFiles);
 
   audit(req, 'reset.gioco', `${photoFiles.length} prove, ${storyFiles.length} storie eliminate`);
-  flash(req, 'success', 'Reset completato: utenti, prove, storie e classifica azzerati. Missioni e codici premio mantenuti.');
+  flash(req, 'success', 'Reset completato: utenti, prove, storie, classifica e registro punti azzerati. Missioni e codici premio mantenuti.');
   res.redirect('/admin');
 });
 
