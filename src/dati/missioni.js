@@ -107,7 +107,7 @@ const MISSIONS = [
   // Epica come Pigiama Party: il costume ad agosto te lo devi procurare, e qui
   // in più c'è da offrire da bere. La foto deve mostrare tutte e due le cose,
   // altrimenti resta un travestimento e basta.
-  m('Missione Gnak', 'Vestiti da Babbo Natale, offri un drink a qualcuno e scatta una foto del brindisi.', 'epica', { sec: 'social' }),
+  m('Missione Gnak Gnak', 'Vestiti da Babbo Natale, offri un drink a qualcuno e scatta una foto del brindisi.', 'epica', { sec: 'social' }),
 
   // ── SPORT, TEAM & COMUNITÀ (9) ───────────────────────────────────
   m('Partitella', 'Scatta una foto durante una partita con il pallone in piazza.', 'non-comune', { sec: 'sport' }),
@@ -116,7 +116,7 @@ const MISSIONS = [
   m('Man of the Match', 'Scatta una foto con un calciatore di una delle squadre del paese.', 'non-comune', { rep: true, sec: 'sport' }),
   m('Meet the Team', 'Scatta una foto con uno dei membri del team "Fanta San Rocco".', 'rara', { rep: true, sec: 'sport' }),
   m('Benedizione', 'Scatta una foto con il parroco. Non durante la processione.', 'rara', { sec: 'sport' }),
-  m('Nu Lumin a San Rocc', 'Accendi un lumino in chiesa lasciando un’offerta e scatta una foto.', 'non-comune', { sec: 'sport' }),
+  m('Nu Lumin a Sant Rocc', 'Accendi un lumino in chiesa lasciando un’offerta e scatta una foto.', 'non-comune', { sec: 'sport' }),
   m("Cuore d'Oro", 'Compi un gesto di beneficenza per il Malawi e documentalo con una foto.', 'leggendaria', { sec: 'sport' }),
   m('Musica Maestro', 'Scatta un selfie con la banda musicale. Non durante la processione, mentre stanno suonando.', 'rara', { sec: 'sport' }),
 
