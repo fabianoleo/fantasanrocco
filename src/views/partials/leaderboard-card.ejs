@@ -68,7 +68,7 @@
           <span class="lbc-p-unita"><%= r.unita %></span>
           <% if (r.byline) { %><span class="lbc-p-byline"><%= r.byline %></span><% } %>
           <% if (r.premio) { %>
-            <a class="lb-prize lb-prize-podio" href="/premio" title="<%= r.premio.title %>"><%- icon(r.premio.icona) %><span class="lb-prize-txt"><%= r.premio.nome %></span></a>
+            <a class="lb-prize lb-prize-podio" href="<%= soloIscrizioni && !(currentUser && (currentUser.role === 'admin' || currentUser.role === 'moderator')) ? '/classifica' : '/premio' %>" title="<%= r.premio.title %>"><%- icon(r.premio.icona) %><span class="lb-prize-txt"><%= r.premio.nome %></span></a>
           <% } %>
           <div class="lbc-p-barra"></div>
         </div>
@@ -91,7 +91,7 @@
                 <span class="lbc-r-nome"><%= r.nome %><% if (io) { %> <span class="lb-you">tu</span><% } %></span>
                 <% if (r.byline) { %><span class="lbc-r-byline"><%= r.byline %></span><% } %>
                 <% if (r.premio) { %>
-                  <a class="lb-prize" href="/premio" title="<%= r.premio.title %>"><%- icon(r.premio.icona) %><span class="lb-prize-txt"><%= r.premio.nome %></span></a>
+                  <a class="lb-prize" href="<%= soloIscrizioni && !(currentUser && (currentUser.role === 'admin' || currentUser.role === 'moderator')) ? '/classifica' : '/premio' %>" title="<%= r.premio.title %>"><%- icon(r.premio.icona) %><span class="lb-prize-txt"><%= r.premio.nome %></span></a>
                 <% } %>
               </span>
               <span class="lbc-r-val"><%= r.valore %><small><%= r.unita %></small></span>

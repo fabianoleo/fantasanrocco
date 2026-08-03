@@ -139,6 +139,15 @@
     <span class="adm-tile-badge">beta</span>
   </button>
 
+  <button type="button" class="adm-tile" data-panel="iscrizioni">
+    <span class="adm-tile-ico"><%- icon('lock') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Settimana di sole iscrizioni</span>
+      <span class="adm-tile-desc">Apri e chiudi il resto dell'app</span>
+    </span>
+    <% if (soloIscrizioni) { %><span class="adm-tile-badge">attiva</span><% } %>
+  </button>
+
   <button type="button" class="adm-tile adm-tile-danger" data-panel="reset">
     <span class="adm-tile-ico"><%- icon('bolt') %></span>
     <span class="adm-tile-body">
@@ -814,6 +823,64 @@
         <button class="btn btn-no" type="submit"><%- icon('bolt') %> Reset Gioco</button>
       </div>
     </form>
+  </section>
+</div>
+
+<%# ── SETTIMANA DI SOLE ISCRIZIONI ──────────────────────────────────── %>
+<div class="adm-panel" id="p-iscrizioni" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
+
+  <section class="card">
+    <h2 class="staff-title"><%- icon('lock') %> Settimana di sole iscrizioni</h2>
+
+    <% if (soloIscrizioni) { %>
+      <div class="iscr-stato iscr-stato-on">
+        <%- icon('lock') %> <span><strong>ATTIVA</strong> — i giocatori vedono solo le pagine aperte.</span>
+      </div>
+    <% } else { %>
+      <div class="iscr-stato iscr-stato-off">
+        <%- icon('check') %> <span><strong>SPENTA</strong> — l'app è aperta tutta.</span>
+      </div>
+    <% } %>
+    <% if (iscrizioniQuando) { %>
+      <p class="iscr-quando">Ultimo cambio: <%= iscrizioniQuando %> (UTC)</p>
+    <% } %>
+
+    <p class="muted small">
+      Con l'interruttore acceso restano aperte <strong>solo</strong> queste pagine:
+    </p>
+    <ul class="iscr-elenco">
+      <li>Home, Classifica, Programmazione, Palio dei Fuochi, Galleria, Storia, Profilo</li>
+      <li>Ruota della Fortuna e bonus giornaliero — <strong>i due soli modi di fare punti</strong></li>
+      <li>Iscrizione, accesso, recupero password, privacy e termini</li>
+    </ul>
+    <p class="muted small">
+      Restano chiusi missioni, mini-giochi, slot, sfide fra amici, codici premio e la pagina
+      dei premi. Chi ci prova vede una pagina che dice quando si apre, non un errore.
+      <strong>Lo staff non è mai bloccato</strong>: tu continui a vedere e preparare tutto.
+    </p>
+
+    <p class="muted small">
+      Accendere e spegnere <strong>non tocca niente</strong>: né punti, né iscritti, né
+      classifica. È solo un cancello. Chi si iscrive stanotte e gira la Ruota per una
+      settimana, quando riapri si ritrova esattamente i punti che aveva.
+    </p>
+
+    <% if (soloIscrizioni) { %>
+      <form action="/admin/iscrizioni" method="post"
+            data-confirm="Aprire TUTTA l'app? Missioni, giochi e slot diventano visibili a tutti. I punti già fatti restano.">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="hidden" name="accendi" value="0">
+        <button class="btn" type="submit"><%- icon('check') %> Apri tutta l'app</button>
+      </form>
+    <% } else { %>
+      <form action="/admin/iscrizioni" method="post"
+            data-confirm="Chiudere l'app a tutti tranne le iscrizioni? Missioni, giochi e slot spariscono per i giocatori. Nessun dato viene perso.">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="hidden" name="accendi" value="1">
+        <button class="btn btn-no" type="submit"><%- icon('lock') %> Attiva sole iscrizioni</button>
+      </form>
+    <% } %>
   </section>
 </div>
 

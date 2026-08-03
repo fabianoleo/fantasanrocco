@@ -40,21 +40,40 @@
       ogni giorno la Ruota della Fortuna e tenta la Slot: tutto fa punti per
       la stessa classifica. Basta una registrazione e la voglia di vincere.
     </p>
+    <% const _chiuse = soloIscrizioni && !(currentUser && (currentUser.role === 'admin' || currentUser.role === 'moderator')); %>
+    <%# Settimana di sole iscrizioni: la home resta aperta perche' e' da qui che
+        ci si iscrive, ma sotto mostra premi e mini-giochi che questa settimana
+        non si aprono. Senza una riga che lo dica sembrano rotti — e va detta
+        QUI, attaccata ai pulsanti, non in cima: sopra c'e' l'intro a schermo
+        pieno e un avviso li' dentro non lo legge nessuno. %>
+    <% if (_chiuse) { %>
+      <div class="home-avviso">
+        <%- icon('sparkle') %>
+        <p>
+          <strong>Le iscrizioni sono aperte.</strong> Il gioco vero comincia il <strong>14 agosto</strong>:
+          da qui a lì puoi girare la <a href="/ruota">Ruota della Fortuna</a> una volta al giorno e prendere
+          il bonus giornaliero — <strong>i punti che fai adesso te li tieni tutti</strong>.
+        </p>
+      </div>
+    <% } %>
+
     <div class="cine-cta-actions">
-      <a class="btn-modern-light" href="<%= currentUser ? '/missioni' : '/registrati' %>">
+      <a class="btn-modern-light" href="<%= currentUser ? (_chiuse ? '/ruota' : '/missioni') : '/registrati' %>">
         <%- icon('logo-firework') %>
         <span class="btn-stack">
           <span class="btn-sub">Festa di San Rocco</span>
-          <span class="btn-main"><%= currentUser ? 'Le missioni' : 'Registrati e gioca' %></span>
+          <span class="btn-main"><%= currentUser ? (_chiuse ? 'Gira la Ruota' : 'Le missioni') : 'Registrati e gioca' %></span>
         </span>
       </a>
-      <a class="btn-modern-dark" href="/premio">
-        <%- icon('trophy') %>
-        <span class="btn-stack">
-          <span class="btn-sub">In palio</span>
-          <span class="btn-main"><%= totalePremi %> premi</span>
-        </span>
-      </a>
+      <% if (!_chiuse) { %>
+        <a class="btn-modern-dark" href="/premio">
+          <%- icon('trophy') %>
+          <span class="btn-stack">
+            <span class="btn-sub">In palio</span>
+            <span class="btn-main"><%= totalePremi %> premi</span>
+          </span>
+        </a>
+      <% } %>
     </div>
   </div>
 
@@ -215,7 +234,7 @@
         </div>
       <% }) %>
     </div>
-    <a href="/premio" class="lp-more-link" data-reveal="fade-in">Tutti i <%= totalePremi %> premi →</a>
+    <% if (!_chiuse) { %><a href="/premio" class="lp-more-link" data-reveal="fade-in">Tutti i <%= totalePremi %> premi →</a><% } %>
   </div>
 </section>
 
@@ -289,7 +308,7 @@
         <span class="lp-game-tag">Gioca i tuoi punti</span>
       </a>
     </div>
-    <a href="/giochi" class="lp-more-link" data-reveal="fade-in">Vai a Giochi e Slot →</a>
+    <% if (!_chiuse) { %><a href="/giochi" class="lp-more-link" data-reveal="fade-in">Vai a Giochi e Slot →</a><% } %>
   </div>
 </section>
 
@@ -336,7 +355,7 @@
         Buona fortuna,<br><span class="lp-final-name"><%= currentUser.nickname %></span>.
       </h2>
       <div data-reveal="fade-up" data-delay="1">
-        <a class="btn" href="/missioni">Vai alle missioni →</a>
+        <a class="btn" href="<%= _chiuse ? '/ruota' : '/missioni' %>"><%= _chiuse ? 'Gira la Ruota →' : 'Vai alle missioni →' %></a>
       </div>
     <% } %>
   </div>

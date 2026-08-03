@@ -24,7 +24,7 @@
       per un anno, quindi finché questo numero non cambia chi è già passato
       di qui continua a vedere il foglio di stile vecchio. Si alza di uno a
       ogni modifica di style.css. %>
-  <link rel="stylesheet" href="/style.css?v=136">
+  <link rel="stylesheet" href="/style.css?v=137">
 
   <%# ── PWA (installabile + offline + notifiche) ── %>
   <link rel="manifest" href="/manifest.json">
@@ -97,12 +97,16 @@
               </div>
             </div>
 
+            <%# Nella settimana di sole iscrizioni il pie' di pagina non deve
+                elencare porte chiuse: sarebbe l'ultimo posto dove un link
+                morto passa inosservato. Lo staff continua a vederle tutte. %>
+            <% const _fchiuse = soloIscrizioni && !(currentUser && (currentUser.role === 'admin' || currentUser.role === 'moderator')); %>
             <nav class="foot-group foot-col" aria-label="Gioca">
               <h3>Gioca</h3>
               <ul>
-                <li><a href="/giochi">Giochi e Slot</a></li>
+                <% if (!_fchiuse) { %><li><a href="/giochi">Giochi e Slot</a></li><% } %>
                 <li><a href="/ruota">Ruota della Fortuna</a></li>
-                <li><a href="/missioni">Missioni</a></li>
+                <% if (!_fchiuse) { %><li><a href="/missioni">Missioni</a></li><% } %>
               </ul>
             </nav>
 
@@ -113,7 +117,7 @@
                 <li><a href="/palio">Palio dei Fuochi</a></li>
                 <li><a href="/galleria">Galleria</a></li>
                 <li><a href="/storia">Storia</a></li>
-                <li><a href="/premio">Premi</a></li>
+                <% if (!_fchiuse) { %><li><a href="/premio">Premi</a></li><% } %>
               </ul>
             </nav>
 

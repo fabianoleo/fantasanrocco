@@ -40,6 +40,11 @@ app.set('layout', 'layout');
 
 // Helper icone SVG disponibile in tutte le view: <%- icon('flame') %>
 app.locals.icon = require('./icons').icon;
+// Valore di ripiego per la barra di navigazione: la modalità vera la scrive
+// res.locals a ogni richiesta, ma la pagina d'errore del CSRF viene resa
+// PRIMA di quel middleware, e senza questa riga la barra cercherebbe una
+// variabile che non esiste e farebbe cadere anche la pagina d'errore.
+app.locals.soloIscrizioni = false;
 // Disegni dei simboli della slot: helper globale come icon(), perche' una
 // funzione definita dentro un partial EJS non esce da quel partial.
 app.locals.simboloSlot = require('./giochi/slot-simboli').simboloSlot;
@@ -254,6 +259,27 @@ function verifyCsrf(req, res, next) {
   next();
 }
 app.use(verifyCsrf);
+
+// --- Modalità solo iscrizioni ---------------------------------------------
+// Vedi lib/modalita.js per cosa resta aperto e perché. Il cancello sta QUI,
+// dopo il CSRF e prima di ogni rotta: una sola porta invece di un controllo
+// dentro ognuna delle sessanta rotte, dove prima o poi se ne dimentica una.
+// Dopo il CSRF e non prima perché la pagina di attesa disegna la barra in
+// alto, e quella ha bisogno del token per il pulsante di uscita.
+app.use((req, res, next) => {
+  res.locals.soloIscrizioni = modalita.attiva();
+  if (!res.locals.soloIscrizioni) return next();
+  // Lo staff non è mai bloccato: deve poter preparare le pagine chiuse.
+  if (req.currentUser && (req.currentUser.role === 'admin' || req.currentUser.role === 'moderator')) return next();
+  if (modalita.consentito(req.path)) return next();
+
+  // Le chiamate in JavaScript vogliono una risposta che sappiano leggere:
+  // servirgli una pagina HTML le farebbe fallire con un errore incomprensibile.
+  if (req.method !== 'GET' || req.get('accept')?.includes('application/json')) {
+    return res.status(403).json({ ok: false, errore: 'Non ancora: si comincia il 14 agosto.' });
+  }
+  return res.status(200).render('chiuso', { title: 'Ci vediamo il 14 agosto' });
+});
 
 // --- Utenti online — ping-based (affidabile su mobile + Cloudflare) --------
 // Il client manda GET /api/online/ping?uid=UUID ogni 8s.
@@ -490,6 +516,7 @@ const slot5 = require('./giochi/slot');
 // Ogni movimento di punti passa da qui e lascia la sua riga nel registro:
 // vedi lib/punti.js sul perche'.
 const punti = require('./lib/punti');
+const modalita = require('./lib/modalita');
 const { SPONSOR_LOGHI } = require('./dati/sponsor');
 app.locals.sponsorLoghi = SPONSOR_LOGHI;
 
@@ -759,12 +786,12 @@ app.post('/segnalazioni', segnalaLimiter, verifyCsrf, (req, res) => {
 
 // --- Registrazione aperta --------------------------------------------------
 app.get('/registrati', (req, res) => {
-  if (req.currentUser) return res.redirect('/missioni');
+  if (req.currentUser) return res.redirect(dopoAccesso(null));
   res.render('register', { title: 'Registrati' });
 });
 
 app.post('/registrati', registerLimiter, (req, res) => {
-  if (req.currentUser) return res.redirect('/missioni');
+  if (req.currentUser) return res.redirect(dopoAccesso(null));
 
   const nickname = (req.body.nickname || '').trim();
   const email    = (req.body.email || '').trim().toLowerCase() || null;
@@ -804,6 +831,18 @@ app.post('/registrati', registerLimiter, (req, res) => {
   res.render('register-done', { title: 'Registrazione completata', nickname });
 });
 
+// Dove si atterra dopo il login o l'iscrizione. Normalmente le Missioni,
+// che sono il cuore del gioco — ma nella settimana di sole iscrizioni quella
+// pagina e' chiusa, e mandarci ogni singolo iscritto vorrebbe dire che la
+// prima cosa che vede entrando e' una porta sbarrata. Vale anche per il
+// `returnTo`: se uno era stato rimbalzato al login mentre andava su una
+// pagina che intanto e' chiusa, riportarcelo non serve a niente.
+function dopoAccesso(percorso) {
+  const voluto = (typeof percorso === 'string' && /^\/[A-Za-z0-9]/.test(percorso)) ? percorso : '/missioni';
+  if (modalita.attiva() && !modalita.consentito(voluto)) return '/';
+  return voluto;
+}
+
 app.get('/login', (req, res) => res.render('login', { title: 'Accedi' }));
 
 // Hash sentinella: usato se il nickname non esiste, per mantenere tempo costante
@@ -824,7 +863,7 @@ app.post('/login', loginLimiter, (req, res) => {
   }
   // Destinazione post-login: solo percorsi interni (no host esterni → niente open-redirect)
   const rt = req.session.returnTo;
-  const dest = (typeof rt === 'string' && /^\/[A-Za-z0-9]/.test(rt)) ? rt : '/missioni';
+  const dest = dopoAccesso(rt);
 
   // 2FA attiva → non completare il login: chiedi il codice al passaggio successivo
   if (user.totp_enabled) {
@@ -898,7 +937,7 @@ app.post('/login/2fa', loginLimiter, (req, res) => {
     if (remember) req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 30;
     else req.session.cookie.expires = false;
     req.session.flash = { type: 'success', msg: `Bentornato/a ${user.nickname}!` };
-    res.redirect((typeof dest === 'string' && /^\/[A-Za-z0-9]/.test(dest)) ? dest : '/missioni');
+    res.redirect(dopoAccesso(dest));
   });
 });
 
@@ -3255,6 +3294,7 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
   });
   res.render('admin', { title: 'Admin', missions, gruppiMissioni, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico, predictions,
     sezioni: SECTIONS, notifSubmissions: !!req.currentUser.notif_submissions, soloMissioni,
+    iscrizioniQuando: modalita.quando(),
     segnalazioni });
 });
 
@@ -3524,6 +3564,22 @@ app.post('/admin/missioni/:id/elimina', auth.requireStaff, (req, res) => {
 });
 
 // Reset gioco: cancella tutto tranne gli admin
+// Accende e spegne la settimana di sole iscrizioni (vedi lib/modalita.js).
+// Una riga sola nel database: non tocca punti, iscritti ne' classifica, ed
+// e' il motivo per cui riaprire non fa perdere niente a chi si e' iscritto
+// prima. Niente notifica automatica: quando si riapre lo si annuncia da
+// "Notifiche", scegliendo le parole, invece di far partire un messaggio
+// scritto sei mesi fa.
+app.post('/admin/iscrizioni', auth.requireAdmin, (req, res) => {
+  const accendi = req.body.accendi === '1';
+  modalita.imposta(accendi);
+  audit(req, 'modalita.iscrizioni', accendi ? 'attivata' : 'spenta');
+  flash(req, 'success', accendi
+    ? 'Modalità sole iscrizioni ATTIVA: i giocatori vedono solo le pagine aperte.'
+    : 'App aperta a tutti. I punti già fatti sono rimasti dov\'erano.');
+  res.redirect('/admin');
+});
+
 app.post('/admin/reset-gioco', auth.requireAdmin, (req, res) => {
   if ((req.body.conferma || '').trim().toUpperCase() !== 'RESET') {
     flash(req, 'error', 'Conferma non corretta. Scrivi RESET nel campo per procedere.');

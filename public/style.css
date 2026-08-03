@@ -6373,3 +6373,63 @@ a.lb-prize:hover { color: var(--gold-2); }
   font-family: var(--font-body, sans-serif); font-size: .68rem; font-weight: 600;
   background: rgba(255,255,255,.06); border: 1px solid var(--border); color: var(--text-3);
 }
+
+/* =========================================================================
+   SETTIMANA DI SOLE ISCRIZIONI — la pagina di chi bussa a una porta chiusa
+   (src/lib/modalita.js). Non e' una pagina d'errore e non deve sembrarlo:
+   chi ci finisce e' arrivato prima, non ha sbagliato. Quindi le stesse
+   dorature del resto del sito, non il rosso degli errori.
+   ========================================================================= */
+.chiuso { max-width: 640px; margin: 3rem auto 4rem; padding: 0 1.2rem; text-align: center; }
+.chiuso-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 64px; height: 64px; margin-bottom: 1.1rem;
+  border-radius: 50%; color: var(--gold-2);
+  background: rgba(212,160,26,.09); border: 1px solid var(--border-gold);
+}
+.chiuso-ico .ico { width: 28px; height: 28px; }
+.chiuso-kicker {
+  margin: 0 0 .5rem; font-family: var(--font-heading); font-size: .68rem;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--text-2);
+}
+.chiuso-title { font-family: var(--font-display); font-size: clamp(1.7rem, 6vw, 2.5rem); line-height: 1.15; margin: 0 0 1rem; }
+.chiuso-testo { color: var(--text-2); font-size: .95rem; line-height: 1.65; margin: 0 auto 2rem; max-width: 46ch; }
+.chiuso-testo strong { color: var(--text); }
+
+/* Le porte aperte. Due colonne anche sul telefono: in una sola la lista
+   diventa lunga il doppio dello schermo e l'ultima voce non si vede mai. */
+.chiuso-porte { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-bottom: 2rem; }
+.chiuso-porta {
+  display: flex; flex-direction: column; align-items: center; gap: .25rem;
+  padding: 1rem .7rem; border-radius: var(--r-sm);
+  background: var(--glass); border: 1px solid var(--border);
+  text-decoration: none; color: var(--text);
+  transition: background .25s var(--ease), border-color .25s var(--ease);
+}
+.chiuso-porta:hover { background: var(--glass-hover); border-color: var(--border-gold); }
+.chiuso-porta .ico { width: 20px; height: 20px; color: var(--gold-2); margin-bottom: .15rem; }
+.chiuso-porta span { font-size: .85rem; font-weight: 600; }
+.chiuso-porta small { font-size: .72rem; color: var(--text-3); line-height: 1.3; }
+
+/* Il nastro nel pannello admin: acceso e spento devono distinguersi da
+   lontano, senza leggere l'etichetta. */
+.iscr-stato { display: flex; align-items: center; gap: .6rem; padding: .8rem 1rem; border-radius: var(--r-sm); margin-bottom: .9rem; font-size: .9rem; }
+.iscr-stato-on  { background: rgba(232,134,30,.1);  border: 1px solid rgba(232,134,30,.35); color: var(--amber); }
+.iscr-stato-off { background: rgba(46,204,113,.08); border: 1px solid rgba(46,204,113,.28); color: var(--green); }
+.iscr-stato strong { font-weight: 700; }
+.iscr-quando { color: var(--text-3); font-size: .78rem; margin: -.4rem 0 .9rem; }
+.iscr-elenco { margin: .5rem 0 1rem; padding-left: 1.1rem; color: var(--text-2); font-size: .84rem; line-height: 1.7; }
+
+/* Cartello in cima alla home durante la settimana di sole iscrizioni.
+   Dorato e non rosso: e' un annuncio, non un guasto. */
+.home-avviso {
+  display: flex; align-items: flex-start; gap: .7rem;
+  max-width: 720px; margin: 1rem auto 0; padding: .9rem 1.1rem;
+  border-radius: var(--r-sm);
+  background: rgba(212,160,26,.08); border: 1px solid var(--border-gold);
+  position: relative; z-index: 5;
+}
+.home-avviso .ico { width: 20px; height: 20px; color: var(--gold-2); flex-shrink: 0; margin-top: .1rem; }
+.home-avviso p { margin: 0; font-size: .87rem; line-height: 1.6; color: var(--text-2); }
+.home-avviso strong { color: var(--text); }
+.home-avviso a { color: var(--gold-2); }

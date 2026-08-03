@@ -1,0 +1,42 @@
+<%# ───────────────────────────────────────────────────────────────────
+    La pagina che vede chi bussa a una porta ancora chiusa, durante la
+    settimana di sole iscrizioni (vedi src/lib/modalita.js).
+
+    Non è una pagina d'errore e non deve sembrarlo: chi ci finisce non ha
+    sbagliato niente, è arrivato prima. Quindi niente "accesso negato",
+    ma la data in cui si apre e le porte che intanto sono aperte davvero —
+    altrimenti l'unica strada da qui è il tasto indietro.
+    ─────────────────────────────────────────────────────────────────── %>
+<section class="chiuso">
+  <span class="chiuso-ico"><%- icon('lock') %></span>
+  <p class="chiuso-kicker">Manca poco</p>
+  <h1 class="chiuso-title">Questa parte<br>apre il 14 agosto</h1>
+  <p class="chiuso-testo">
+    Missioni, mini-giochi e slot si accendono con la festa. Intanto le iscrizioni
+    sono aperte: <strong>chi entra adesso comincia a fare punti</strong> con la Ruota
+    della Fortuna e il bonus di ogni giorno, e se li tiene tutti.
+  </p>
+
+  <div class="chiuso-porte">
+    <a class="chiuso-porta" href="/ruota">
+      <%- icon('sparkle') %><span>Ruota della Fortuna</span><small>un giro gratis al giorno</small>
+    </a>
+    <a class="chiuso-porta" href="/classifica">
+      <%- icon('trophy') %><span>Classifica</span><small>chi è già davanti</small>
+    </a>
+    <a class="chiuso-porta" href="/programmazione">
+      <%- icon('clock') %><span>Programmazione</span><small>tutte le serate</small>
+    </a>
+    <a class="chiuso-porta" href="/palio">
+      <%- icon('bolt') %><span>Palio dei Fuochi</span><small>il pronostico</small>
+    </a>
+    <a class="chiuso-porta" href="/galleria">
+      <%- icon('camera') %><span>Galleria</span><small>le foto della festa</small>
+    </a>
+    <a class="chiuso-porta" href="/storia">
+      <%- icon('pilgrim') %><span>Storia</span><small>com'è nata la festa</small>
+    </a>
+  </div>
+
+  <a class="btn" href="/">Torna alla home</a>
+</section>

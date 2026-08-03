@@ -405,6 +405,17 @@ CREATE TABLE IF NOT EXISTS segnalazioni (
 );
 CREATE INDEX IF NOT EXISTS idx_segnalazioni_quando ON segnalazioni(created_at);
 CREATE INDEX IF NOT EXISTS idx_segnalazioni_lette  ON segnalazioni(letta);
+
+-- Interruttori dell'app, uno per riga. Tabella generica e non una colonna
+-- nuova ogni volta: gli interruttori vanno e vengono (la settimana di sole
+-- iscrizioni serve una volta l'anno) e una tabella chiave/valore non chiede
+-- una migrazione a ognuno. Il valore e' TEXT perche' domani potrebbe non
+-- essere piu' un si'/no.
+CREATE TABLE IF NOT EXISTS impostazioni (
+  chiave       TEXT PRIMARY KEY,
+  valore       TEXT NOT NULL,
+  aggiornato_il TEXT NOT NULL DEFAULT (datetime('now'))
+);
 `);
 
 module.exports = { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR };
