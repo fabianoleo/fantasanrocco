@@ -5,9 +5,15 @@
     <h1 class="pz-title">I Premi<br>in Palio</h1>
     <p class="pz-subtitle">Quest'anno si vince fino al <strong><%= ultimaPosizione %>º posto</strong> in classifica,<br>più uno per ciascun mini-gioco e uno per il torneo su Instagram.</p>
     <%# Il valore del primo premio si legge dall'elenco: scritto a mano era
-        rimasto a 250 € quando il cofanetto era già diventato un altro. %>
+        rimasto a 250 € quando il cofanetto era già diventato un altro.
+        Se il primo premio non ha un valore dichiarato la voce sparisce del
+        tutto, invece di lasciare un "· il primo ·" con il buco in mezzo. %>
     <div class="pz-hero-pill">
-      <span><%= totalePremi %></span> premi &nbsp;&middot;&nbsp; <span><%= premiPodio[0].valore %></span> il primo &nbsp;&middot;&nbsp; <span>agosto&nbsp;2026</span>
+      <span><%= totalePremi %></span> premi
+      <% if (premiPodio[0].valore) { %>
+        &nbsp;&middot;&nbsp; <span><%= premiPodio[0].valore %></span> il primo
+      <% } %>
+      &nbsp;&middot;&nbsp; <span>agosto&nbsp;2026</span>
     </div>
   </div>
 </div>

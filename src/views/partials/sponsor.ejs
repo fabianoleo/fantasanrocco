@@ -68,9 +68,12 @@
                     quella larghezza è zero. Con il lazy la barra resterebbe una
                     fila di spazi vuoti fino a quando non ci si scorre sopra.
                     Sono PNG da pochi kB, caricarli subito non costa niente. %>
+                <%# `scala` rimpicciolisce un singolo marchio: vedi il commento
+                    in src/dati/sponsor.js sul perche' non basta l'altezza uguale. %>
                 <img class="spon-logo"
                      src="/sponsor/<%= s.file %>"
                      alt="<%= copia ? '' : s.nome %>"
+                     <% if (s.scala) { %>style="--spon-scala: <%= s.scala %>"<% } %>
                      decoding="async">
               </li>
             <% }) %>

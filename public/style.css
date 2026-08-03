@@ -4888,7 +4888,11 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
 
 .spon-logo {
   display: block;
-  height: var(--spon-h);
+  /* --spon-scala: manopola per SINGOLO logo, impostata dal template quando la
+     voce in src/dati/sponsor.js ce l'ha. Moltiplica altezza E tetto alla
+     larghezza insieme: scalando solo l'altezza, un marchio molto largo
+     resterebbe incollato al tetto e non si rimpicciolirebbe affatto. */
+  height: calc(var(--spon-h) * var(--spon-scala, 1));
   width: auto;
   /* Tetto alla larghezza. La regola della barra e' che i marchi sono tutti
      ALTI uguali, ma un'insegna lunga e bassa (Kursaal e' 9 volte piu' larga
@@ -4897,7 +4901,7 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
      rimpicciolisce in proporzione — piu' bassa degli altri, ma finalmente
      larga come loro. `contain` perche' `cover` la ritaglierebbe, e un
      marchio tagliato non e' piu' quel marchio. */
-  max-width: 168px;
+  max-width: calc(168px * var(--spon-scala, 1));
   object-fit: contain;
   /* ── Effetto grigio → colore: per averli SEMPRE a colori basta cancellare
         le due righe qui sotto e la regola .spon-logo:hover più avanti. ── */

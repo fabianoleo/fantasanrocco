@@ -18,6 +18,15 @@ const path = require('path');
 // L'ordine segue il foglio scritto a mano degli sponsor (prima colonna e poi
 // seconda), così l'elenco si ricontrolla riga per riga contro l'originale.
 // In fondo chi è arrivato dopo, e sul foglio non c'è.
+// `scala` (opzionale) rimpicciolisce UN solo logo rispetto agli altri.
+// Serve perche' "alti uguali" non vuol dire "grandi uguali": un marchio fatto
+// di sole lettere che tocca i bordi del PNG, senza un filo d'aria intorno,
+// dentro la stessa scatola pesa molto piu' di un marchio compatto che il
+// margine ce l'ha gia' dentro. L'occhio legge l'inchiostro, non il riquadro.
+// La strada alternativa era rifare i PNG aggiungendo il margine: si e'
+// scelta questa perche' i file restano quelli mandati dagli sponsor, e la
+// correzione si vede e si cambia da una riga sola.
+// 1 = come tutti gli altri. Sotto 0.7 il marchio non si legge piu'.
 const SPONSOR_ATTIVITA = [
   { file: 'romalba.png',             nome: 'Romalba' },
   { file: 'nemo.png',                nome: 'Nemo Restaurant Food & Wine' },
@@ -53,8 +62,8 @@ const SPONSOR_ATTIVITA = [
   { file: 'barberia-frasci.png',     nome: 'Barberia Frasci' },
   // Sul foglio "Marcello Frasci", ma l'insegna dice "Marcello barber salon":
   // vale il marchio, come per Zanzibar. Il nome del file resta la chiave.
-  { file: 'marcello-frasci.png',     nome: 'Marcello Barber Salon' },
-  { file: 'franzis.png',             nome: "Franzy's" },
+  { file: 'marcello-frasci.png',     nome: 'Marcello Barber Salon', scala: 0.78 },
+  { file: 'franzis.png',             nome: "Franzy's", scala: 0.78 },
   { file: 'pizzeria-walter.png',     nome: 'Pizzeria Walter' },
   { file: 'mauro-parrucchiere.png',  nome: 'Mauro Frasci Il Parrucchiere' },
   { file: 'bc-coffe.png',            nome: 'BC Coffe & More' },
@@ -71,7 +80,7 @@ const SPONSOR_ATTIVITA = [
   // Da non confondere con pizzeria-zio-mauro.png: sono due attivita' diverse.
   { file: 'dimauro.png',             nome: 'Di Mauro Pizza Napoletana' },
   { file: 'atelierfruttaeverdura.png', nome: 'Atelier di Frutta e Verdura' },
-  { file: 'squarciagola.png',        nome: 'Squarciagola' },
+  { file: 'squarciagola.png',        nome: 'Squarciagola', scala: 0.8 },
   { file: 'alfocerrato.png',         nome: 'Alfonso Cerrato' },
   { file: 'nilu.png',                nome: 'Nilù' },
   { file: 'realsianese.png',         nome: 'Real Sianese' },

@@ -37,7 +37,10 @@ const RADICE = path.join(__dirname, '..', '..');
 // da solo il giorno che il PNG arriva, senza rimettere mano a questo elenco.
 const PREMI = [
   {
-    pos: 1, nome: 'SmartBox — Vacanza in Europa', valore: '230 €', icona: 'globe',
+    // Senza `valore`: il cofanetto vale quello che vale, ma scriverlo accanto
+    // a un premio che si vince trasformava la classifica in un listino. Il
+    // valore resta sugli altri premi, dove serve a capire cosa si porta a casa.
+    pos: 1, nome: 'SmartBox — Vacanza in Europa', icona: 'globe',
     tagline: 'Due notti per due, dove volete voi',
     desc: 'Un cofanetto regalo con due notti e colazione per due persone, da scegliere '
         + 'fra 304 hotel a 3 e 4 stelle e B&B di charme in tutta Europa. '
@@ -112,7 +115,7 @@ const PREMI = [
   { gioco: 'runner', nome: 'Buono Cycling Botta', offerto: 'Cycling Botta', valore: '30 €', icona: 'bike',
     nota: 'Vendita e riparazione bici a Siano dal 1923',
     logo: 'cycling-botta.png' },
-  { gioco: 'jetpack', nome: 'Buono panino e bibita', offerto: 'BC Coffe & More', valore: '30 €', icona: 'coffee',
+  { gioco: 'jetpack', nome: 'Buono panino e bibita', offerto: 'BC Coffe & More', icona: 'coffee',
     nota: 'Per due persone', logo: 'bc-coffe.png' },
 
   // E uno non si vince nemmeno giocando qui: è del Torneo delle Missioni su
