@@ -112,8 +112,8 @@ const MISSIONS = [
   // ── SPORT, TEAM & COMUNITÀ (9) ───────────────────────────────────
   m('Partitella', 'Scatta una foto durante una partita con il pallone in piazza.', 'non-comune', { sec: 'sport' }),
   m('Ultras', 'Scatta una foto indossando la maglia di una squadra di calcio del paese.', 'non-comune', { sec: 'sport' }),
-  m('Dirigenza', 'Scatta una foto con un dirigente di una delle squadre di calcio del paese.', 'non-comune', { sec: 'sport' }),
-  m('Man of the Match', 'Scatta una foto con un calciatore di una delle squadre del paese.', 'non-comune', { rep: true, sec: 'sport' }),
+  m('San Rocco in campo', 'Scatta una foto con il presidente della San Rocco Calcio Michele Marino.', 'non-comune', { sec: 'sport', sponsor: 'sanroccocalcio.png' }),
+  m('Man of the Match', 'Scatta una foto con i calciatori delle squadre locali.', 'non-comune', { sec: 'sport' }),
   m('Meet the Team', 'Scatta una foto con uno dei membri del team "Fanta San Rocco".', 'rara', { rep: true, sec: 'sport' }),
   m('Benedizione', 'Scatta una foto con il parroco. Non durante la processione.', 'rara', { sec: 'sport' }),
   m('Nu Lumin a Sant Rocc', 'Accendi un lumino in chiesa lasciando un’offerta e scatta una foto.', 'non-comune', { sec: 'sport' }),
@@ -161,7 +161,6 @@ const MISSIONS = [
   m('Mazzariello', 'Scatta una foto con Mazzariello.', 'rara', { day: 14 }),
   m('Groove Motion', 'Scatta una foto con un membro della Groove Motion Live Band.', 'rara', { day: 14 }),
   m('Arlecchino Rosso', 'Indossa un capo/accessorio rosso e scatta una foto.', 'non-comune', { day: 14 }),
-  m('Fanta SanRocco', 'Seleziona dalla galleria la foto del telo "Fanta SanRocco"… sempre se l’hai fatta!', 'leggendaria', { day: 14 }),
   m('Selfie XXL', 'Flash! Fai entrare almeno 15 persone nello stesso selfie.', 'epica', { flash: true, day: 15 }),
   m('Flash Mob', 'Partecipa e fai una foto al flash mob organizzato dal Comitato San Rocco in collaborazione con il FantaSanRocco.', 'epica', { day: 14 }),
 
