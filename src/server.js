@@ -713,6 +713,25 @@ const wheelLimiter = rateLimit({ windowMs: 60 * 1000, max: 12, standardHeaders: 
 // scrivere), quindi il freno serve. Cinque ogni dieci minuti bastano per
 // segnalare un problema e non per allagare il pannello.
 const segnalaLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false });
+// Sfide: ogni invito fa partire una MAIL a un indirizzo scritto a mano da un
+// utente. Senza freno, un iscritto puo' far spedire centinaia di messaggi a
+// estranei dalla nostra casella: bastano pochi "segnala come spam" perche' il
+// mittente finisca in blacklist e non arrivi piu' nemmeno il reset password.
+// Il conto e' per UTENTE, non per IP: sotto la stessa rete di casa o allo
+// stesso stand della festa gli IP si sovrappongono e si frenerebbe l'innocente.
+const sfidaLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => (req.currentUser ? 'u' + req.currentUser.id : req.ip),
+  // La rotta risponde in JSON e il pannello di fine partita legge `errore`:
+  // il 429 con l'HTML di default lascerebbe l'utente davanti a un errore muto.
+  handler: (req, res) => res.status(429).json({
+    ok: false,
+    errore: 'Hai lanciato troppe sfide di fila. Riprova fra un quarto d’ora.',
+  }),
+});
 app.use(globalLimiter);
 
 // ── Segnalazioni dal footer ───────────────────────────────────────────────
@@ -931,7 +950,7 @@ app.post('/2fa/disattiva', auth.requireLogin, (req, res) => {
 // =========================================================================
 
 // Configurazione della posta in uscita: vedi lib/email.js.
-const { makeMailTransporter } = require('./lib/email');
+const { makeMailTransporter, mittente, rispondiA } = require('./lib/email');
 
 app.get('/programmazione', (req, res) => {
   res.render('programmazione', { title: 'Programmazione', places: placesWithEvents() });
@@ -1443,15 +1462,41 @@ function avvisaSfidato({ sfida, link, sfidante, gioco }) {
   if (!dest) return;
   const transporter = makeMailTransporter();
   if (!transporter) { console.log(`[SFIDA] nessuna posta configurata — link: ${link}`); return; }
+  // Il testo e' piu' lungo di quanto servirebbe, e non per riempire: una mail
+  // fatta di tre righe e un link ha il rapporto link/testo dei messaggi di
+  // phishing, e i filtri la trattano come tale. Qui si dice chi scrive, cosa
+  // e' FantaSanRocco e PERCHE' questo messaggio e' arrivato: e' anche la cosa
+  // corretta da scrivere a qualcuno che non e' iscritto e non ci conosce.
   transporter.sendMail({
-    from: process.env.SMTP_FROM || process.env.EMAIL_USER || process.env.SMTP_USER,
+    from: mittente(),
+    replyTo: rispondiA(),
     to: dest,
     subject: `${sfidante.nickname} ti ha sfidato a ${g.nome} — FantaSanRocco`,
-    text: `${titolo}\n\n${corpo}\n\nAccetta qui:\n${link}\n\nLa sfida scade fra ${sfide.GIORNI_VALIDA} giorni.`,
-    html: `<p><strong>${escapeHtml(sfidante.nickname)}</strong> ti ha sfidato a <strong>${escapeHtml(g.nome)}</strong>.</p>
-           <p>Ha fatto <strong>${sfida.punteggio_sfidante} ${escapeHtml(g.unita)}</strong>. Hai <strong>una partita</strong> per batterlo.</p>
-           <p><a href="${link}">Accetta la sfida</a></p>
-           <p>La sfida scade fra ${sfide.GIORNI_VALIDA} giorni.</p>`,
+    text: `${titolo}\n\n`
+      + `${corpo}\n\n`
+      + `Accetta la sfida qui:\n${link}\n\n`
+      + `La sfida scade fra ${sfide.GIORNI_VALIDA} giorni.\n\n`
+      + `--\n`
+      + `FantaSanRocco e' il gioco della festa di San Rocco a Siano: missioni, `
+      + `classifiche e mini-giochi durante i giorni della festa.\n`
+      + `Hai ricevuto questo messaggio perche' ${sfidante.nickname} ha scritto il tuo `
+      + `indirizzo per sfidarti. Se non lo conosci, ignora pure la mail: senza il link `
+      + `qui sopra non succede niente e non ti scriveremo di nuovo.\n`
+      + `Per qualsiasi cosa puoi rispondere a questa email.`,
+    html: `<p><strong>${escapeHtml(sfidante.nickname)}</strong> ti ha sfidato a <strong>${escapeHtml(g.nome)}</strong>, uno dei mini-giochi di FantaSanRocco.</p>
+           <p>Ha fatto <strong>${sfida.punteggio_sfidante} ${escapeHtml(g.unita)}</strong>. Tu hai <strong>una partita sola</strong> per batterlo.</p>
+           <p><a href="${link}">Accetta la sfida</a><br>
+              <span style="color:#777;font-size:13px">oppure copia questo indirizzo nel browser: ${link}</span></p>
+           <p>La sfida scade fra ${sfide.GIORNI_VALIDA} giorni.</p>
+           <hr>
+           <p style="color:#777;font-size:13px">
+             FantaSanRocco è il gioco della festa di San Rocco a Siano: missioni, classifiche
+             e mini-giochi durante i giorni della festa.<br>
+             Hai ricevuto questo messaggio perché ${escapeHtml(sfidante.nickname)} ha scritto il tuo
+             indirizzo per sfidarti. Se non lo conosci, ignora pure la mail: senza aprire il link
+             non succede niente e non ti scriveremo di nuovo.<br>
+             Per qualsiasi cosa puoi rispondere a questa email.
+           </p>`,
   }).then(() => console.log(`[SFIDA] invito inviato a ${dest}`))
     .catch((e) => console.error('[SFIDA] ERRORE invio a', dest, e.message));
 }
@@ -1481,7 +1526,7 @@ function chiudiSfidaEAvvisa(utente, gioco, punteggio) {
 
 // Lancia una sfida col punteggio dell'ULTIMA partita registrata. Il punteggio
 // non arriva dal browser: verrebbe scritto a mano nella richiesta.
-app.post('/sfida/crea', auth.requireLogin, verifyCsrf, (req, res) => {
+app.post('/sfida/crea', auth.requireLogin, sfidaLimiter, verifyCsrf, (req, res) => {
   const gioco = String(req.body.gioco || '');
   const destinatario = String(req.body.destinatario || '').trim();
   if (!sfide.giocoValido(gioco)) return res.status(400).json({ ok: false, errore: 'Gioco sconosciuto.' });
@@ -1882,14 +1927,30 @@ app.post('/password-dimenticata', resetLimiter, (req, res) => {
   const transporter = makeMailTransporter();
   if (transporter) {
     transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.EMAIL_USER || process.env.SMTP_USER,
+      from: mittente(),
+      replyTo: rispondiA(),
       to: user.email,
-      subject: 'FantaSanRocco – Reset password',
-      text: `Ciao ${user.nickname},\n\nHai richiesto il reset della password.\nClicca qui (scade tra 1 ora):\n${resetLink}\n\nSe non sei stato tu, ignora questa email.`,
+      subject: 'Reimposta la password del tuo account FantaSanRocco',
+      text: `Ciao ${user.nickname},\n\n`
+        + `hai chiesto di reimpostare la password del tuo account FantaSanRocco.\n\n`
+        + `Apri questo indirizzo per sceglierne una nuova (vale 1 ora):\n${resetLink}\n\n`
+        + `Se non sei stato tu, non devi fare niente: la password resta quella di prima `
+        + `e il link scade da solo.\n\n`
+        + `--\n`
+        + `FantaSanRocco, il gioco della festa di San Rocco a Siano.\n`
+        + `Questa email parte solo quando qualcuno chiede il reset dalla pagina di accesso.\n`
+        + `Puoi rispondere a questo messaggio se ti serve una mano.`,
       html: `<p>Ciao <strong>${escapeHtml(user.nickname)}</strong>,</p>
-             <p>Hai richiesto il reset della password.</p>
-             <p><a href="${resetLink}">Clicca qui per impostare una nuova password</a> (link valido 1 ora).</p>
-             <p class="muted">Se non sei stato tu, ignora questa email.</p>`,
+             <p>hai chiesto di reimpostare la password del tuo account FantaSanRocco.</p>
+             <p><a href="${resetLink}">Scegli una nuova password</a> — il link vale <strong>1 ora</strong>.<br>
+                <span style="color:#777;font-size:13px">Se il pulsante non funziona, copia questo indirizzo nel browser: ${resetLink}</span></p>
+             <p>Se non sei stato tu, non devi fare niente: la password resta quella di prima e il link scade da solo.</p>
+             <hr>
+             <p style="color:#777;font-size:13px">
+               FantaSanRocco, il gioco della festa di San Rocco a Siano.<br>
+               Questa email parte solo quando qualcuno chiede il reset dalla pagina di accesso.<br>
+               Puoi rispondere a questo messaggio se ti serve una mano.
+             </p>`,
     }).then((info) => {
       console.log(`[EMAIL] Reset inviato a ${user.email} — messageId: ${info.messageId}`);
     }).catch((err) => {
