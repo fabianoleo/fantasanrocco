@@ -4515,6 +4515,26 @@ textarea:focus-visible,
 .st-rank-bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--gold), var(--gold-2)); }
 .st-rank-val { color: var(--gold-2); font-weight: 700; font-size: .8rem; }
 
+/* Torta "da dove arrivano i punti".
+   La ciambella e' un cerchio solo con stroke-dasharray: senza archi calcolati
+   a mano le fette combaciano sempre. Su mobile la legenda va sotto, perche'
+   affiancata a 375px il grafico si riduce a un bottone. */
+.st-torta-wrap { display: grid; grid-template-columns: 170px 1fr; gap: 1rem; align-items: center; margin-top: .6rem; }
+@media (max-width: 560px) { .st-torta-wrap { grid-template-columns: 1fr; justify-items: center; } }
+.st-torta { width: 100%; max-width: 170px; height: auto; }
+.st-torta-buco { fill: #0c0a17; }
+.st-torta-cifra { fill: var(--gold-2); font-family: var(--font-heading); font-size: 22px; text-anchor: middle; font-weight: 800; }
+.st-torta-nota { fill: var(--text-2); font-size: 9px; text-anchor: middle; letter-spacing: .04em; text-transform: uppercase; }
+.st-torta-leg { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; width: 100%; }
+.st-torta-leg li { display: grid; grid-template-columns: 10px 1fr auto auto; align-items: center; gap: .5rem; font-size: .82rem; }
+.st-torta-bollo { width: 10px; height: 10px; border-radius: 3px; }
+.st-torta-voce { color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-torta-media { color: var(--gold-2); font-weight: 700; }
+.st-torta-perc { color: var(--text-2); font-size: .74rem; min-width: 2.6em; text-align: right; }
+.st-torta-h4 { margin: 1rem 0 .2rem; font-size: .8rem; color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; }
+.st-torta-h4 small { text-transform: none; letter-spacing: 0; opacity: .7; }
+.st-torta-neg { grid-template-columns: 1fr auto; }
+
 /* =========================================================================
    MISSIONI · SEZIONI TEMATICHE (bonus al completamento)
    ========================================================================= */

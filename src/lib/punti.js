@@ -110,4 +110,49 @@ function nonSpiegato(userId) {
   return u.points_adjust - r.s;
 }
 
-module.exports = { muovi, storico, riepilogo, nonSpiegato, etichetta, CAUSE };
+// Da dove arrivano i punti di TUTTI, e quanto ne fa in media un giocatore
+// per ciascuna voce. Serve al grafico a torta del pannello: dice se il gioco
+// gira sulle missioni o se la gente campa di ruota e slot.
+//
+// La MEDIA è per giocatore ISCRITTO, non per giocatore che quella cosa l'ha
+// fatta davvero: se la si dividesse solo fra chi gioca alla slot, la slot
+// sembrerebbe enorme e le missioni piccole. Con lo stesso divisore per tutti
+// le fette sono confrontabili, che è il punto di una torta.
+function riepilogoGlobale() {
+  const g = db.prepare("SELECT COUNT(*) c FROM users WHERE role = 'user'").get().c || 0;
+
+  const voci = [];
+  for (const r of db.prepare(`
+    SELECT causa, SUM(delta) AS totale, COUNT(*) AS quante
+    FROM punti_movimenti
+    JOIN users u ON u.id = punti_movimenti.user_id AND u.role = 'user'
+    GROUP BY causa
+  `).all()) {
+    voci.push({ chiave: r.causa, titolo: etichetta(r.causa), totale: r.totale, quante: r.quante });
+  }
+
+  // Le missioni non stanno nel registro: i loro punti vivono in submissions.
+  // Si separano dai traguardi dei mini-giochi, che sono missioni anche loro
+  // ma non le fa nessuno a mano — mescolarli direbbe una cosa falsa.
+  for (const r of db.prepare(`
+    SELECT CASE WHEN m.game_key IS NULL THEN 'missione' ELSE 'traguardo' END AS chiave,
+           SUM(m.points) AS totale, COUNT(*) AS quante
+    FROM submissions s
+    JOIN missions m ON m.id = s.mission_id
+    JOIN users u ON u.id = s.user_id AND u.role = 'user'
+    WHERE s.status = 'approved' AND m.points > 0
+    GROUP BY chiave
+  `).all()) {
+    voci.push({
+      chiave: r.chiave,
+      titolo: r.chiave === 'missione' ? 'Missioni' : 'Traguardi dei giochi',
+      totale: r.totale, quante: r.quante,
+    });
+  }
+
+  voci.forEach((v) => { v.media = g > 0 ? Math.round(v.totale / g) : 0; });
+  voci.sort((a, b) => b.totale - a.totale);
+  return { giocatori: g, voci };
+}
+
+module.exports = { muovi, storico, riepilogo, riepilogoGlobale, nonSpiegato, etichetta, CAUSE };

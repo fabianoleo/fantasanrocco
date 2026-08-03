@@ -346,26 +346,83 @@
 
 <section class="card">
   <h3 class="staff-title"><%- icon('list') %> Da dove arrivano i punti</h3>
-  <%
-    const fonti = [
-      { label: 'Missioni foto', v: punti.daMissioni },
-      { label: 'Traguardi dei giochi', v: punti.daGiochi },
-      { label: 'Ruota, slot, striscia, codici e correzioni', v: punti.adjust },
-    ];
-    const mxFonti = Math.max(1, ...fonti.map((f) => Math.abs(f.v)));
-  %>
-  <% fonti.forEach((f) => { %>
-    <div class="st-rankrow">
-      <span class="st-rank-name"><%= f.label %></span>
-      <span class="st-rank-bar"><span style="width:<%= Math.round(Math.abs(f.v)/mxFonti*100) %>%"></span></span>
-      <span class="st-rank-val"><%= num(f.v) %></span>
-    </div>
-  <% }) %>
   <p class="muted small">
-    L'ultima riga è <code>points_adjust</code>, un unico numero che accumula ruota, slot,
-    striscia giornaliera, codici premio, bonus sezione e correzioni admin. <strong>Non è
-    scomponibile</strong>: per sapere quanto arriva da ciascuna cosa servirebbe una tabella
-    dei movimenti, che oggi non c'è.
+    Media <strong>per giocatore iscritto</strong> (<%= num(mediaPunti.giocatori) %>), non per
+    chi quella cosa l'ha fatta davvero: con lo stesso divisore per tutti le fette si possono
+    confrontare fra loro. Questo riquadro non segue il filtro del periodo: è sempre tutto.
+  </p>
+
+  <%
+    // Colori delle fette. Fissi e in quest'ordine, non a caso: le voci sono
+    // ordinate per totale, quindi la fetta più grossa prende sempre il primo
+    // colore e da un giorno all'altro il grafico resta riconoscibile.
+    const TINTE = ['#e8b04b', '#d1495b', '#3f8efc', '#4aa96c', '#9b5de5',
+                   '#f07c3e', '#2ec4b6', '#c9a227', '#8d99ae', '#b5838d'];
+    // Una torta non sa disegnare i numeri negativi: la slot toglie punti e uno
+    // storno pure. Le voci in negativo escono dalla torta e restano in elenco
+    // sotto, dove il segno meno si legge per quello che è.
+    const fette = mediaPunti.voci.filter((v) => v.totale > 0);
+    const sotto = mediaPunti.voci.filter((v) => v.totale <= 0);
+    const somma = fette.reduce((a, v) => a + v.totale, 0) || 1;
+
+    // La torta è disegnata con un cerchio solo e stroke-dasharray: niente
+    // archi da calcolare a mano, e i bordi combaciano sempre.
+    const R = 60, C = 2 * Math.PI * R;
+    let scorso = 0;
+  %>
+
+  <% if (!fette.length) { %>
+    <p class="muted small">Ancora nessun punto da spartire.</p>
+  <% } else { %>
+  <div class="st-torta-wrap">
+    <svg class="st-torta" viewBox="0 0 160 160" role="img"
+         aria-label="Ripartizione media dei punti per giocatore">
+      <g transform="rotate(-90 80 80)">
+        <% fette.forEach((v, k) => { %>
+          <%
+            const q = v.totale / somma;
+            const tinta = TINTE[k % TINTE.length];
+          %>
+          <circle cx="80" cy="80" r="<%= R %>" fill="none" stroke="<%= tinta %>"
+                  stroke-width="34"
+                  stroke-dasharray="<%= (q * C).toFixed(2) %> <%= C.toFixed(2) %>"
+                  stroke-dashoffset="<%= (-scorso * C).toFixed(2) %>"><title><%= v.titolo %>: <%= num(v.media) %> pt a testa (<%= quota(v.totale, somma) %>%)</title></circle>
+          <% scorso += q; %>
+        <% }) %>
+      </g>
+      <circle cx="80" cy="80" r="<%= R - 17 %>" class="st-torta-buco"></circle>
+      <text x="80" y="76" class="st-torta-cifra"><%= num(Math.round(somma / (mediaPunti.giocatori || 1))) %></text>
+      <text x="80" y="94" class="st-torta-nota">pt a testa</text>
+    </svg>
+
+    <ul class="st-torta-leg">
+      <% fette.forEach((v, k) => { %>
+        <li>
+          <span class="st-torta-bollo" style="background:<%= TINTE[k % TINTE.length] %>"></span>
+          <span class="st-torta-voce"><%= v.titolo %></span>
+          <span class="st-torta-media"><%= num(v.media) %> pt</span>
+          <span class="st-torta-perc"><%= quota(v.totale, somma) %>%</span>
+        </li>
+      <% }) %>
+    </ul>
+  </div>
+  <% } %>
+
+  <% if (sotto.length) { %>
+    <h4 class="st-torta-h4">Voci in negativo <small>fuori dalla torta</small></h4>
+    <% sotto.forEach((v) => { %>
+      <div class="st-rankrow st-torta-neg">
+        <span class="st-rank-name"><%= v.titolo %></span>
+        <span class="st-rank-val"><%= num(v.media) %> pt a testa</span>
+      </div>
+    <% }) %>
+  <% } %>
+
+  <p class="muted small">
+    Le missioni e i traguardi dei giochi arrivano da <code>submissions</code>; tutto il resto
+    dal registro dei movimenti. La voce <strong>«Prima del registro»</strong>, se c'è, è la
+    parte di <code>points_adjust</code> mossa quando il registro non esisteva ancora: non è
+    scomponibile e non si può inventare da dove venga.
   </p>
 </section>
 
