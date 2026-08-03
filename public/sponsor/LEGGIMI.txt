@@ -189,3 +189,10 @@ SPONSOR_ATTIVITA dentro src/dati/sponsor.js, poi copia qui il suo PNG.
 
 Loghi consigliati: altezza almeno 200 px, sfondo trasparente, marchio
 chiaro.
+
+Ultimi arrivati: San Rocco Calcio (sanroccocalcio.png) e Impiantistica
+La Lucertola (lucertola.png). Il primo era gia' trasparente, il secondo
+arrivava su fondo bianco e da 1,2 MB: passato nello script e' sceso a
+61 kB con il fondo tolto. Ricordarsi che questi PNG si caricano su OGNI
+pagina e senza lazy loading (la larghezza del nastro e' la somma delle
+loro larghezze vere): un file da un mega e' un mega su ogni visita.

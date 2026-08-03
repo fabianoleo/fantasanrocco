@@ -85,6 +85,11 @@ const SPONSOR_ATTIVITA = [
   { file: 'nilu.png',                nome: 'Nilù' },
   { file: 'realsianese.png',         nome: 'Real Sianese' },
   { file: 'trattoria.png',           nome: 'Trattoria da Menà' },
+  { file: 'sanroccocalcio.png',      nome: 'San Rocco Calcio' },
+  // Sul logo: "impiantistica La Lucertola di Marino Michele". Nell'alt sta il
+  // marchio con il mestiere, che dice a chi legge di cosa si tratta; il nome
+  // del titolare e' sul logo e basta.
+  { file: 'lucertola.png',           nome: 'Impiantistica La Lucertola' },
 ];
 
 const SPONSOR_LOGHI = (() => {
