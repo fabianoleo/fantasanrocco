@@ -517,6 +517,24 @@ const slot5 = require('./giochi/slot');
 // vedi lib/punti.js sul perche'.
 const punti = require('./lib/punti');
 const modalita = require('./lib/modalita');
+
+// La tabella `invites` non viene piu' creata da src/db.js: il sistema degli
+// inviti e' stato tolto quando le iscrizioni sono diventate libere. Ma nei
+// database piu' vecchi la tabella e' ancora li', con dentro righe che
+// puntano agli utenti con vincolo NO ACTION: se non si sganciano prima, il
+// DELETE degli utenti fallisce. Quindi non si puo' ne' toccarla sempre (sui
+// database nuovi non esiste e la query esplode) ne' ignorarla sempre (sui
+// vecchi il reset si blocca sul vincolo). Si guarda se c'e'.
+// Il controllo si fa una volta e si ricorda: la tabella non compare da sola.
+let _invitiCiSono = null;
+function invitiCiSono() {
+  if (_invitiCiSono === null) {
+    _invitiCiSono = !!db.prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'invites'"
+    ).get();
+  }
+  return _invitiCiSono;
+}
 const { SPONSOR_LOGHI } = require('./dati/sponsor');
 app.locals.sponsorLoghi = SPONSOR_LOGHI;
 
@@ -2431,8 +2449,10 @@ function purgeUser(u) {
 
   db.transaction(() => {
     // Sgancia i riferimenti con vincolo NO ACTION (altrimenti il DELETE fallisce)
-    db.prepare('UPDATE invites SET used = 0, used_by_user_id = NULL, used_at = NULL WHERE used_by_user_id = ?').run(u.id);
-    db.prepare('UPDATE invites SET created_by = NULL WHERE created_by = ?').run(u.id);
+    if (invitiCiSono()) {
+      db.prepare('UPDATE invites SET used = 0, used_by_user_id = NULL, used_at = NULL WHERE used_by_user_id = ?').run(u.id);
+      db.prepare('UPDATE invites SET created_by = NULL WHERE created_by = ?').run(u.id);
+    }
     db.prepare('UPDATE submissions SET reviewed_by = NULL WHERE reviewed_by = ?').run(u.id);
     // Elimina l'utente: submissions, stories, story_views, push_subscriptions,
     // section_bonuses, prediction_votes e palio_predictions vanno a cascata;
@@ -3603,8 +3623,11 @@ app.post('/admin/reset-gioco', auth.requireAdmin, (req, res) => {
     db.prepare('DELETE FROM stories').run();                       // tutte le storie (story_views a cascata)
     // Sgancia gli inviti dagli utenti (il vincolo è NO ACTION → altrimenti il DELETE
     // fallirebbe) e li rende di nuovo utilizzabili per la nuova registrazione.
-    db.prepare('UPDATE invites SET used = 0, used_by_user_id = NULL, used_at = NULL').run();
-    db.prepare("UPDATE invites SET created_by = NULL WHERE created_by IN (SELECT id FROM users WHERE role != 'admin')").run();
+    // Solo dove la tabella esiste ancora: vedi invitiCiSono().
+    if (invitiCiSono()) {
+      db.prepare('UPDATE invites SET used = 0, used_by_user_id = NULL, used_at = NULL').run();
+      db.prepare("UPDATE invites SET created_by = NULL WHERE created_by IN (SELECT id FROM users WHERE role != 'admin')").run();
+    }
     db.prepare("DELETE FROM users WHERE role != 'admin'").run();   // tutti gli utenti tranne gli admin
     // I codici premio (link/QR) restano, ma tornano TUTTI riscattabili: i QR
     // sono già stampati e appesi, buttarli via a ogni reset non avrebbe senso.
