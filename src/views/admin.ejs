@@ -549,11 +549,32 @@
     <% predictions.forEach((p) => { %>
       <section class="card">
         <h2 class="staff-title"><%- icon('target') %> <%= p.title %>
-          <% if (p.resolved) { %><span class="tag tag-off">chiuso · esito dichiarato</span>
+          <%# «in cantiere» viene prima di tutto: se i giocatori non lo vedono,
+              sapere che è «aperto» non serve a niente. %>
+          <% if (p.archived) { %><span class="tag tag-off">in cantiere · non si vede</span>
+          <% } else if (p.resolved) { %><span class="tag tag-off">chiuso · esito dichiarato</span>
           <% } else if (p.open) { %><span class="tag tag-on">aperto</span>
           <% } else { %><span class="tag tag-off">chiuso</span><% } %>
           <% if (p.multi) { %><span class="tag">più risposte</span><% } %>
         </h2>
+
+        <%# ── Pubblica / rimetti in cantiere ──────────────────────────────
+            La notifica è una SPUNTA, non un automatismo: si pubblica anche
+            per controllare che si veda bene, e di notte non si suona il
+            telefono a tutto il paese. %>
+        <form action="/admin/pronostici/<%= p.id %>/pubblica" method="post" class="prono-pub"
+              data-confirm="<%= p.archived ? 'Pubblicare questo pronostico? Diventa visibile a tutti i giocatori.' : 'Rimettere in cantiere? I giocatori non lo vedranno più.' %>">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="pubblica" value="<%= p.archived ? '1' : '0' %>">
+          <% if (p.archived) { %>
+            <label class="check prono-pub-avvisa">
+              <input type="checkbox" name="notify" value="1"> 🔔 Avvisa tutti quando esce
+            </label>
+            <button class="btn-mini btn-ok" type="submit"><%- icon('bell') %> Pubblica</button>
+          <% } else { %>
+            <button class="btn-mini" type="submit"><%- icon('lock') %> Rimetti in cantiere</button>
+          <% } %>
+        </form>
         <p class="muted small"><strong><%= p.totalVotes %></strong> voti · <%= p.points %> punti in palio<% if (p.multi) { %> · più risposte = metà punti<% } %></p>
 
         <div class="prono-admin-dist">

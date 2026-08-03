@@ -40,8 +40,11 @@ for (const p of PRONOSTICI) {
 
   if (!riga) {
     if (!PROVA) {
-      db.prepare(`INSERT INTO predictions (title, description, options, points, multi, closes_at, open)
-                  VALUES (?, ?, ?, ?, ?, ?, 1)`)
+      // Nascono IN CANTIERE (archived = 1): li pubblica lo staff dal pannello
+      // quando decide. Se nascessero visibili, lanciare lo script vorrebbe dire
+      // far comparire di colpo cinque pronostici, magari giorni prima.
+      db.prepare(`INSERT INTO predictions (title, description, options, points, multi, closes_at, open, archived)
+                  VALUES (?, ?, ?, ?, ?, ?, 1, 1)`)
         .run(vuole.title, vuole.description, vuole.options, vuole.points, vuole.multi, vuole.closes_at);
     }
     console.log(`＋ "${p.title}" · ${p.points}pt · ${p.options.length} opzioni · chiude ${p.closes_at || 'a mano'}`);
@@ -74,6 +77,8 @@ console.log('');
 console.log(`${PROVA ? 'PROVA — non ho scritto niente. ' : ''}`
   + `creati ${creati} · corretti ${corretti} · avvisi ${avvisi}`);
 if (creati || corretti) {
-  console.log('I pronostici nascono APERTI: la risposta giusta la dichiari dal pannello,');
-  console.log('sera per sera, e i punti si accreditano da soli a chi ha indovinato.');
+  console.log('I pronostici nuovi nascono IN CANTIERE: non li vede nessuno finche\' non');
+  console.log('li pubblichi dal pannello (Pronostici → Pubblica). Lì decidi anche se');
+  console.log('mandare la notifica a tutti: e\' una spunta, non parte da sola.');
+  console.log('La risposta giusta la dichiari sempre dal pannello, sera per sera.');
 }

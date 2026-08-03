@@ -3044,8 +3044,26 @@ app.get('/admin/statistiche', auth.requireAdmin, (req, res) => {
   coinvolgimento.vistePerStoria = nStorie
     ? Math.round((one('SELECT COUNT(*) n FROM story_views') / nStorie) * 10) / 10 : 0;
 
+  // ══ 9. DA DOVE ARRIVANO I PUNTI, VOCE PER VOCE ══════════════════════════
+  // Il registro dei movimenti (punti_movimenti) rende scomponibile quello che
+  // prima era un numero solo. `punti` qui dentro è la scheda della pagina e
+  // copre il modulo: il require è la strada per arrivare alla libreria.
+  const mediaPunti = require('./lib/punti').riepilogoGlobale();
+  // Quello che il registro non spiega: saldi mossi prima che il registro
+  // esistesse. Va mostrato, non nascosto, altrimenti le fette non tornano.
+  const primaDelRegistro = punti.adjust
+    - mediaPunti.voci.filter((v) => v.chiave !== 'missione' && v.chiave !== 'traguardo')
+        .reduce((a, v) => a + v.totale, 0);
+  if (primaDelRegistro > 0) {
+    mediaPunti.voci.push({
+      chiave: 'prima', titolo: 'Prima del registro', totale: primaDelRegistro, quante: 0,
+      media: mediaPunti.giocatori ? Math.round(primaDelRegistro / mediaPunti.giocatori) : 0,
+    });
+    mediaPunti.voci.sort((a, b) => b.totale - a.totale);
+  }
+
   res.render('statistiche', {
-    title: 'Statistiche', ranges: RANGES, range,
+    title: 'Statistiche', ranges: RANGES, range, mediaPunti,
     kpi, series, orario, topMissions, topUsers,
     missioniMorte, perRarita, perSezione, missioniTot, missioniViste,
     moderazione, moderatori, motiviRifiuto,
@@ -3670,6 +3688,44 @@ app.post('/admin/pronostici/:id/impostazioni', auth.requireAdmin, (req, res) => 
     .run(open, points, closesAt, reminderSent, p.id);
   audit(req, 'pronostico.impostazioni', `#${p.id} open=${open} punti=${points}${closesAt ? ` chiude=${closesAt}` : ''}`);
   flash(req, 'success', `«${p.title}»: ${open ? 'aperto' : 'chiuso'} · ${points} punti${closesAt ? ` · chiude il ${closesAt}` : ''}.`);
+  res.redirect('/admin');
+});
+
+// Pubblica o rimette in cantiere un pronostico. `archived` e' la leva che
+// decide se i giocatori lo vedono; `open` decide se possono ancora votare.
+// Sono due cose diverse: un pronostico puo' essere in vista ma gia' chiuso.
+//
+// La notifica a tutti NON parte da sola: e' una spunta, e la spunta si puo'
+// togliere. Pubblicare di notte suonando il telefono a tutto il paese e' un
+// modo sicuro di farsi odiare, e capita di dover pubblicare in anticipo per
+// controllare che si veda bene.
+app.post('/admin/pronostici/:id/pubblica', auth.requireAdmin, (req, res) => {
+  const p = db.prepare('SELECT * FROM predictions WHERE id = ?').get(req.params.id);
+  if (!p) { flash(req, 'error', 'Pronostico inesistente.'); return res.redirect('/admin'); }
+
+  const pubblica = req.body.pubblica === '1';
+  const archived = pubblica ? 0 : 1;
+  if (p.archived === archived) {
+    flash(req, 'error', `«${p.title}» era gia' ${pubblica ? 'pubblicato' : 'in cantiere'}.`);
+    return res.redirect('/admin');
+  }
+  db.prepare('UPDATE predictions SET archived = ? WHERE id = ?').run(archived, p.id);
+  audit(req, 'pronostico.pubblica', `#${p.id} «${p.title}» → ${pubblica ? 'pubblicato' : 'in cantiere'}`);
+
+  // Si avvisa solo quando ESCE, e solo se la spunta e' rimasta accesa.
+  const avvisa = pubblica && req.body.notify === '1';
+  if (avvisa) {
+    pushBroadcast({
+      title: '🎯 Nuovo pronostico!',
+      body: p.title,
+      url: '/missioni',
+    }).catch((e) => console.error('[PUSH] pronostico pubblicato', e.message));
+    auditSystem('pronostico.annuncio', `«${p.title}» annunciato a tutti da ${req.currentUser.nickname}`);
+  }
+
+  flash(req, 'success', pubblica
+    ? (avvisa ? `«${p.title}» pubblicato: notifica inviata a tutti.` : `«${p.title}» pubblicato, senza notifica.`)
+    : `«${p.title}» rimesso in cantiere: i giocatori non lo vedono piu'.`);
   res.redirect('/admin');
 });
 
