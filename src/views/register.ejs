@@ -1,10 +1,11 @@
 <section class="card form-card">
   <h1>Registrati</h1>
-  <p class="muted">Scegli un nickname e una password. L'email serve solo per recuperare la password se la dimentichi.</p>
+  <p class="muted">Si partecipa da singoli giocatori: niente squadre, ognuno gioca per sé. Scegli il tuo nickname e una password. L'email serve solo per recuperare la password se la dimentichi.</p>
   <form action="/registrati" method="post" autocomplete="off">
     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-    <label>Nickname / Nome squadra
-      <input type="text" name="nickname" required minlength="2" maxlength="24" placeholder="es. I Lupi di Siano">
+    <label>Nickname
+      <input type="text" name="nickname" required minlength="2" maxlength="24" placeholder="es. Peppe93">
+      <span class="muted small">Il nickname è personale: si gioca da soli, non in squadra.</span>
     </label>
     <label>Email <span style="color:var(--red)">*</span>
       <input type="email" name="email" required placeholder="la tua email">
