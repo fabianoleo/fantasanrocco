@@ -11,7 +11,21 @@ const nodemailer = require('nodemailer');
 // Priorità: se EMAIL_USER è impostato usa Gmail (semplice per Render).
 // Se invece SMTP_HOST è impostato usa configurazione SMTP completa.
 // Altrimenti dev-mode: il link viene stampato in console.
+// Detta una volta sola all'avvio, non a ogni mail: se restano configurate
+// tutte e due le strade, Gmail vince e il passaggio a un mittente serio non
+// ha alcun effetto. E' un errore che non da' segnali — le mail partono, solo
+// dal posto sbagliato — quindi va gridato invece che scoperto fra un mese.
+let avvisoDato = false;
+function avvisaSeDoppiaConfigurazione() {
+  if (avvisoDato || !process.env.EMAIL_USER || !process.env.SMTP_HOST) return;
+  avvisoDato = true;
+  console.warn('[EMAIL] Sono configurati SIA EMAIL_USER SIA SMTP_HOST.'
+    + ` Vince Gmail (${process.env.EMAIL_USER}) e ${process.env.SMTP_HOST} viene ignorato.`
+    + ' Se volevi passare all\'altro servizio, svuota EMAIL_USER e EMAIL_PASS.');
+}
+
 function makeMailTransporter() {
+  avvisaSeDoppiaConfigurazione();
   if (process.env.EMAIL_USER) {
     return nodemailer.createTransport({
       host: 'smtp.gmail.com',
