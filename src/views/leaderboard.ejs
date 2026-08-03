@@ -23,8 +23,17 @@
     return (i > 0 && rows[i - 1].points === pt) || (i < rows.length - 1 && rows[i + 1].points === pt);
   }
 
+  /* Settimana di sole iscrizioni: niente premi accanto ai nomi. La pagina
+     che li descrive e' chiusa, quindi il nome del premio sarebbe una vetrina
+     senza vetrina — e mettere un premio in palio accanto a una classifica che
+     in quella settimana si scala solo con la Ruota darebbe l'idea sbagliata di
+     cosa si sta vincendo. Si spengono QUI, dove le righe nascono: cosi' la
+     scheda della classifica resta esattamente il file di prima, e quando si
+     riapre non c'e' niente da rimettere a posto. */
+  const _chiuse = soloIscrizioni && !(currentUser && (currentUser.role === 'admin' || currentUser.role === 'moderator'));
+
   const righeGenerale = rows.map(function (u, i) {
-    const p = premioPerPosizione[i + 1];
+    const p = _chiuse ? null : premioPerPosizione[i + 1];
     const missioni = u.done + (u.done === 1 ? ' missione' : ' missioni');
     return {
       id: u.id,
@@ -51,7 +60,7 @@
         valore: u.best,
         unita: unita,
         utente: u,
-        premio: (i === 0 && premio) ? { nome: premio.nome, icona: premio.icona, title: premio.nome + ' — a chi vince' } : null,
+        premio: (i === 0 && premio && !_chiuse) ? { nome: premio.nome, icona: premio.icona, title: premio.nome + ' — a chi vince' } : null,
       };
     });
   }
