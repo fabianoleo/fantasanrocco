@@ -190,6 +190,13 @@
 </section>
 
 <%# ── NUMERI ──────────────────────────────────────────────────────── %>
+<%# Settimana di sole iscrizioni: i numeri raccontano una gara che questa
+    settimana non e' ancora cominciata — le missioni sono chiuse e i premi
+    non si svelano prima della festa (stessa scelta della classifica, vedi
+    leaderboard.ejs). Sparisce il blocco intero: togliere solo "premi in
+    palio" lascerebbe "134 missioni" a puntare a una pagina chiusa e un
+    orfano "1 sola estate" a fargli compagnia. %>
+<% if (!_chiuse) { %>
 <section class="lp-numbers lp-full">
   <div class="lp-numbers-inner">
     <div class="lp-num-item" data-reveal="fade-up" data-delay="0">
@@ -206,8 +213,12 @@
     </div>
   </div>
 </section>
+<% } %>
 
 <%# ── PREMI ────────────────────────────────────────────────────────── %>
+<%# Anche qui: finche' ci sono solo le iscrizioni la vetrina dei premi resta
+    chiusa, come la pagina /premio e come la classifica. %>
+<% if (!_chiuse) { %>
 <section class="lp-prizes lp-full">
   <div class="lp-section-inner">
     <p class="lp-kicker" data-reveal="fade-in">In palio</p>
@@ -234,9 +245,10 @@
         </div>
       <% }) %>
     </div>
-    <% if (!_chiuse) { %><a href="/premio" class="lp-more-link" data-reveal="fade-in">Tutti i <%= totalePremi %> premi →</a><% } %>
+    <a href="/premio" class="lp-more-link" data-reveal="fade-in">Tutti i <%= totalePremi %> premi →</a>
   </div>
 </section>
+<% } %>
 
 <%# ── COME FUNZIONA ────────────────────────────────────────────────── %>
 <section class="lp-how lp-full">
