@@ -76,6 +76,45 @@
   <% }) %>
 </div>
 
+<%# ── INVITA UN AMICO ─────────────────────────────────────────────── %>
+<%# Il codice e' uno solo e vale per sempre: si gira a quanti amici si vuole
+    e ognuno che si iscrive vale il suo bonus. Il link e' la strada buona
+    (compila il campo da solo), il codice scritto serve a chi lo detta a voce. %>
+<% if (invito.codice) { %>
+<section class="push-box">
+  <h2 class="pf-section-title">Invita gli amici <span class="pf-badge-pts">+<%= invito.punti %></span></h2>
+  <p class="muted small">Ogni amico che si iscrive col tuo codice ti fa guadagnare
+    <strong>+<%= invito.punti %> punti</strong>. Vale una volta per amico, alla sua prima iscrizione.</p>
+
+  <div class="pf-invito-codice">
+    <span class="pf-invito-label">Il tuo codice</span>
+    <strong class="pf-invito-val"><%= invito.codice %></strong>
+    <button type="button" class="btn btn-ghost copy-btn" data-copy="<%= invito.codice %>">Copia</button>
+  </div>
+
+  <% const linkInvito = invito.base + '/registrati?invito=' + invito.codice; %>
+  <div class="invite-row">
+    <div class="invite-info">
+      <span class="muted small">Oppure manda direttamente il link:</span>
+      <input class="invite-link" type="text" readonly value="<%= linkInvito %>"
+             onclick="this.select()" aria-label="Link di invito">
+    </div>
+    <div class="invite-actions">
+      <button type="button" class="btn copy-btn" data-copy="<%= linkInvito %>">Copia link</button>
+    </div>
+  </div>
+
+  <p class="muted small pf-invito-conto">
+    <% if (invito.quanti) { %>
+      Hai portato <strong><%= invito.quanti %></strong> <%= invito.quanti === 1 ? 'amico' : 'amici' %>,
+      per un totale di <strong><%= invito.guadagnati %> punti</strong>.
+    <% } else { %>
+      Non hai ancora invitato nessuno.
+    <% } %>
+  </p>
+</section>
+<% } %>
+
 <%# ── NOTIFICHE PUSH ──────────────────────────────────────────────── %>
 <section class="push-box">
   <h2 class="pf-section-title">Avvisi della festa <span class="pf-badge-pts">+100</span></h2>
@@ -103,7 +142,7 @@
     <% if (otherPts !== 0) { %>
       <li class="pf-hist-row">
         <span class="pf-hist-pts <%= otherPts > 0 ? 'pos' : 'neg' %>"><%= otherPts > 0 ? '+' : '' %><%= otherPts %></span>
-        <span class="pf-hist-label">Giochi e bonus <span class="muted small">· ruota, slot, premi, avvisi</span></span>
+        <span class="pf-hist-label">Giochi e bonus <span class="muted small">· ruota, slot, premi, avvisi, amici invitati</span></span>
         <span class="pf-hist-date">—</span>
       </li>
     <% } %>

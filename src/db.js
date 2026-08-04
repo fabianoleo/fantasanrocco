@@ -378,6 +378,25 @@ CREATE INDEX IF NOT EXISTS idx_movimenti_utente ON punti_movimenti(user_id, id);
 CREATE INDEX IF NOT EXISTS idx_movimenti_causa  ON punti_movimenti(causa);
 `);
 
+// Inviti. `invite_code` e' il codice personale di ognuno (uno solo, sempre
+// quello, girabile a quanti amici si vuole) e lo si assegna alla prima
+// richiesta, non qui: vedi lib/inviti.js. `invited_by` dice chi ha portato
+// chi ed e' anche la garanzia che il bonus si paghi una volta sola, visto
+// che si scrive alla nascita dell'account e mai piu'.
+//
+// ON DELETE SET NULL e non il vincolo di default: con NO ACTION cancellare
+// un utente che ha invitato qualcuno farebbe fallire il DELETE. E' esattamente
+// l'inciampo della vecchia tabella `invites`, che ancora oggi obbliga il reset
+// a sganciare le righe a mano prima di poter cancellare (vedi server.js).
+try { db.exec('ALTER TABLE users ADD COLUMN invite_code TEXT'); } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN invited_by INTEGER REFERENCES users(id) ON DELETE SET NULL'); } catch {}
+try { db.exec('ALTER TABLE users ADD COLUMN invited_at TEXT'); } catch {}
+// UNIQUE come indice separato: ALTER TABLE ADD COLUMN non sa aggiungere un
+// vincolo UNIQUE. NOCASE perche' il codice si detta a voce e chi lo riscrive
+// non sta a guardare le maiuscole.
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_invite_code ON users(invite_code COLLATE NOCASE)');
+db.exec('CREATE INDEX IF NOT EXISTS idx_users_invited_by ON users(invited_by)');
+
 // Data di scatto letta dall'EXIF al momento del caricamento, PRIMA che il
 // ridimensionamento la cancelli: ricodificare una foto butta via tutti i
 // metadati. Senza questa colonna l'export dei metadati resterebbe a mani

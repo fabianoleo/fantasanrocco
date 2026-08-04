@@ -4116,6 +4116,25 @@ textarea:focus-visible,
 #pushBtn[disabled] { opacity: .6; cursor: default; }
 .push-box { margin-top: 1rem; }
 
+/* ── Invita un amico (profilo) ────────────────────────────────────── */
+/* Il codice si detta a voce e si copia a mano: grande, spaziato e in un
+   riquadro suo, cosi' si legge dallo schermo di un telefono al primo colpo. */
+.pf-invito-codice {
+  display: flex; align-items: center; gap: .7rem; flex-wrap: wrap;
+  margin: .9rem 0 .7rem;
+  padding: .7rem .9rem;
+  background: rgba(212,160,26,.08);
+  border: 1px solid rgba(212,160,26,.22);
+  border-radius: 12px;
+}
+.pf-invito-label { font-size: .78rem; color: var(--text-3); }
+.pf-invito-val {
+  font-family: var(--font-heading);
+  font-size: 1.45rem; letter-spacing: .18em;
+  color: var(--gold); margin-right: auto;
+}
+.pf-invito-conto { margin-top: .6rem; }
+
 /* ── 2FA ─────────────────────────────────────────────────────────── */
 .twofa-qr { background:#fff; padding:10px; border-radius:12px; width:220px; max-width:70%; margin:.9rem 0; }
 .twofa-qr svg { width:100%; height:auto; display:block; }

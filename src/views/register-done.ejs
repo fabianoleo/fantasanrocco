@@ -2,6 +2,12 @@
   <div class="prize-emoji" style="font-size:3rem;color:var(--gold-2);display:inline-flex;margin-bottom:.4rem"><%- icon('party') %></div>
   <h1>Registrazione completata!</h1>
   <p>Benvenuto/a <strong><%= nickname %></strong>, sei ufficialmente in gara.</p>
+  <% if (invitante) { %>
+    <%# Chi ha invitato non riceve nessun avviso: dirlo qui e' l'unico modo
+        perche' qualcuno sappia che il bonus e' stato pagato davvero. %>
+    <p class="muted"><strong><%= invitante %></strong> ti ha invitato e ha appena preso
+      <strong>+<%= puntiInvito %> punti</strong>. Ricambia: nel tuo profilo trovi il codice da girare ai tuoi amici.</p>
+  <% } %>
   <p>D'ora in poi, per giocare ti basta <strong>accedere</strong> con il nickname e la password
     che hai appena scelto. Salva questo link nei preferiti:</p>
   <p class="muted small">Per giocare vai sempre su <strong>/login</strong></p>

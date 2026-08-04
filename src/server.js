@@ -517,6 +517,8 @@ const slot5 = require('./giochi/slot');
 // vedi lib/punti.js sul perche'.
 const punti = require('./lib/punti');
 const modalita = require('./lib/modalita');
+// Codici invito: chi porta un amico che si iscrive incassa il suo bonus.
+const inviti = require('./lib/inviti');
 
 // La tabella `invites` non viene piu' creata da src/db.js: il sistema degli
 // inviti e' stato tolto quando le iscrizioni sono diventate libere. Ma nei
@@ -805,7 +807,14 @@ app.post('/segnalazioni', segnalaLimiter, verifyCsrf, (req, res) => {
 // --- Registrazione aperta --------------------------------------------------
 app.get('/registrati', (req, res) => {
   if (req.currentUser) return res.redirect(dopoAccesso(null));
-  res.render('register', { title: 'Registrati' });
+  // `?invito=CODICE`: e' come arriva chi apre il link di un amico. Il campo
+  // si trova gia' compilato — chiedergli di ricopiare a mano un codice che
+  // sta nell'indirizzo e' il modo piu' sicuro per perdere il bonus.
+  res.render('register', {
+    title: 'Registrati',
+    invito: inviti.normalizza(req.query.invito),
+    puntiInvito: inviti.PUNTI_INVITO,
+  });
 });
 
 app.post('/registrati', registerLimiter, (req, res) => {
@@ -814,39 +823,72 @@ app.post('/registrati', registerLimiter, (req, res) => {
   const nickname = (req.body.nickname || '').trim();
   const email    = (req.body.email || '').trim().toLowerCase() || null;
   const password = req.body.password || '';
+  const invito   = inviti.normalizza(req.body.invito);
+
+  // Ogni ritorno al form si porta dietro il codice invito. Il form perde
+  // tutto il resto a ogni errore (e' cosi' per ogni campo, non solo qui),
+  // ma il codice e' l'unica cosa che l'utente non sa riscrivere a memoria:
+  // se sparisce, sparisce il bonus di chi l'ha invitato e non se ne accorge
+  // nessuno dei due.
+  const tornaAlForm = () => res.redirect('/registrati' + (invito ? '?invito=' + encodeURIComponent(invito) : ''));
 
   if (nickname.length < 2 || nickname.length > 24) {
     flash(req, 'error', 'Il nickname deve avere tra 2 e 24 caratteri.');
-    return res.redirect('/registrati');
+    return tornaAlForm();
   }
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     flash(req, 'error', 'Inserisci un indirizzo email valido.');
-    return res.redirect('/registrati');
+    return tornaAlForm();
   }
   if (password.length < 8) {
     flash(req, 'error', 'La password deve avere almeno 8 caratteri.');
-    return res.redirect('/registrati');
+    return tornaAlForm();
   }
   if (!req.body.privacy_ok || !req.body.age_ok) {
     flash(req, 'error', 'Devi accettare la privacy policy e confermare l\'età per registrarti.');
+    return tornaAlForm();
+  }
+
+  // Un codice sbagliato ferma l'iscrizione invece di essere ignorato in
+  // silenzio: chi l'ha scritto crede di aver premiato un amico, e scoprirlo
+  // dopo non serve piu' a niente — il bonus si paga solo qui.
+  const amico = invito ? inviti.invitante(invito) : null;
+  if (invito && !amico) {
+    flash(req, 'error', 'Codice invito non valido. Controllalo, oppure lascia il campo vuoto per iscriverti senza.');
     return res.redirect('/registrati');
   }
 
   const existsNick = db.prepare('SELECT id FROM users WHERE nickname = ?').get(nickname);
   if (existsNick) {
     flash(req, 'error', 'Nickname già in uso, scegline un altro.');
-    return res.redirect('/registrati');
+    return tornaAlForm();
   }
   const existsEmail = db.prepare('SELECT id FROM users WHERE lower(email) = ?').get(email);
   if (existsEmail) {
     flash(req, 'error', 'Email già registrata. Vai su Accedi o recupera la password.');
-    return res.redirect('/registrati');
+    return tornaAlForm();
   }
 
-  db.prepare("INSERT INTO users (nickname, email, password_hash, privacy_accepted_at) VALUES (?, ?, ?, datetime('now'))")
-    .run(nickname, email, auth.hashPassword(password));
+  // L'hash si calcola PRIMA di aprire la transazione: bcrypt e' lento di
+  // proposito e la transazione tiene il lock di scrittura su tutto il
+  // database, quindi farlo dentro bloccherebbe l'app per ogni iscrizione.
+  const hash = auth.hashPassword(password);
 
-  res.render('register-done', { title: 'Registrazione completata', nickname });
+  // Account e bonus nella stessa transazione: o si iscrive e l'amico incassa,
+  // o non succede niente. A meta' strada resterebbe un iscritto il cui invito
+  // non ha pagato nessuno, e non c'e' un secondo momento in cui rimediare.
+  db.transaction(() => {
+    const r = db.prepare("INSERT INTO users (nickname, email, password_hash, privacy_accepted_at) VALUES (?, ?, ?, datetime('now'))")
+      .run(nickname, email, hash);
+    if (amico) inviti.premia(r.lastInsertRowid, amico.id, nickname);
+  })();
+
+  res.render('register-done', {
+    title: 'Registrazione completata',
+    nickname,
+    invitante: amico ? amico.nickname : null,
+    puntiInvito: inviti.PUNTI_INVITO,
+  });
 });
 
 // Dove si atterra dopo il login o l'iscrizione. Normalmente le Missioni,
@@ -2364,6 +2406,16 @@ app.get('/profilo', auth.requireLogin, (req, res) => {
     level: userLevel(total),
     badges: userGameAchievements(req.currentUser.id),
     streak: streakStatus(req.currentUser),
+    // Il codice nasce qui, la prima volta che qualcuno apre il profilo: gli
+    // account creati prima degli inviti non hanno bisogno di migrazioni.
+    invito: {
+      codice: inviti.codicePer(req.currentUser.id),
+      punti: inviti.PUNTI_INVITO,
+      // publicBaseUrl e non l'header Host cosi' com'e': il link va copiato e
+      // mandato in giro, e un host falsificato manderebbe gli amici altrove.
+      base: publicBaseUrl(req),
+      ...inviti.riepilogo(req.currentUser.id),
+    },
   });
 });
 

@@ -55,11 +55,13 @@ const PREFISSI = [
 ];
 
 // Il criterio, per i casi che verranno: resta aperto ciò che serve a
-// ISCRIVERSI, a INFORMARSI sulla festa, e i due modi di fare punti decisi
-// per questa settimana (Ruota e bonus giornaliero). Resta chiuso tutto ciò
-// che dà punti in altri modi — missioni, mini-giochi, slot, sfide, codici
-// premio — perché a settembre la classifica deve essere spiegabile: in
-// questa settimana i punti potevano arrivare solo da due posti.
+// ISCRIVERSI, a INFORMARSI sulla festa, e i modi di fare punti decisi per
+// questa settimana. Resta chiuso tutto ciò che dà punti in altri modi —
+// missioni, mini-giochi, slot, sfide, codici premio — perché a settembre la
+// classifica deve essere spiegabile: in questa settimana i punti potevano
+// arrivare solo da tre posti, e sono la Ruota, il bonus giornaliero e gli
+// amici invitati. Gli inviti sono nati apposta per questa settimana: è
+// quando serve che la gente si iscriva, e /registrati è aperto comunque.
 function consentito(percorso) {
   if (PERMESSE.has(percorso)) return true;
   return PREFISSI.some((p) => percorso.startsWith(p));

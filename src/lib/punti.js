@@ -30,6 +30,7 @@ const CAUSE = {
   admin:        'Assegnati a mano',
   pronostico:   'Pronostico',
   palio:        'Palio dei Fuochi',
+  invito:       'Amici invitati',
   storno:       'Storno',
 };
 

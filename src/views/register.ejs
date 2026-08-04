@@ -14,6 +14,13 @@
       <input type="password" name="password" required minlength="8" autocomplete="new-password"
              placeholder="almeno 8 caratteri" data-forza>
     </label>
+    <%# Arrivando dal link di un amico il campo e' gia' pieno: chi ha il
+        codice nell'indirizzo non deve ricopiarlo a mano. %>
+    <label>Codice invito <span class="muted small">(facoltativo)</span>
+      <input type="text" name="invito" maxlength="16" value="<%= invito %>"
+             placeholder="es. K7M2QP" style="text-transform:uppercase" autocomplete="off">
+      <span class="muted small">Se un amico ti ha invitato, scrivi qui il suo codice: gli regali <%= puntiInvito %> punti.</span>
+    </label>
     <label class="check">
       <input type="checkbox" name="privacy_ok" required>
       <span>Ho letto e accetto la <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a> e i <a href="/termini" target="_blank" rel="noopener">Termini di servizio</a>.</span>
