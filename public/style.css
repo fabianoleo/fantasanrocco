@@ -721,6 +721,14 @@ label.check {
 }
 label.check input { width: auto; flex-shrink: 0; margin-top: .15rem; }
 label.check span { flex: 1 1 auto; min-width: 0; }
+/* Dentro le righe fitte del pannello admin, accanto ai campi mini. La riga
+   di cancellazione va a capo: la spunta deve stare su una riga sua, o
+   finisce schiacciata fra la password e il pulsante rosso. */
+label.check.check-mini {
+  align-items: center; font-size: .78rem; color: var(--text-2);
+  flex: 1 1 100%; margin: .1rem 0;
+}
+label.check.check-mini input { margin-top: 0; }
 .mission-form button { margin-top: .9rem; }
 
 /* ---------- Missions ------------------------------------------------ */

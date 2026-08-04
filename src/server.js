@@ -519,6 +519,8 @@ const punti = require('./lib/punti');
 const modalita = require('./lib/modalita');
 // Codici invito: chi porta un amico che si iscrive incassa il suo bonus.
 const inviti = require('./lib/inviti');
+// Email a cui e' vietato reiscriversi: vedi lib/blocco-email.js.
+const bloccoEmail = require('./lib/blocco-email');
 // La data d'inizio serve a piu' viste (home, pagina di attesa): sta nei
 // locals una volta sola, cosi' nessun template la riscrive a mano.
 app.locals.inizioGioco = modalita.INIZIO_GIOCO;
@@ -869,6 +871,14 @@ app.post('/registrati', registerLimiter, (req, res) => {
   const existsEmail = db.prepare('SELECT id FROM users WHERE lower(email) = ?').get(email);
   if (existsEmail) {
     flash(req, 'error', 'Email già registrata. Vai su Accedi o recupera la password.');
+    return tornaAlForm();
+  }
+  // Email bloccata quando il suo account e' stato cancellato. Il messaggio
+  // non dice "sei stato bloccato": chi ci finisce per sbaglio (un'email
+  // riciclata, un omonimo) non c'entra niente, e chi invece ci finisce
+  // apposta non ha bisogno di conferme su cosa ha funzionato e cosa no.
+  if (bloccoEmail.bloccata(email)) {
+    flash(req, 'error', 'Non è possibile iscriversi con questa email. Se pensi sia un errore, scrivici da Segnalazioni.');
     return tornaAlForm();
   }
 
@@ -3325,7 +3335,7 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
 
   // Da qui in giù è roba da admin. Per un moderatore restano tutti vuoti:
   // non è una tenda davanti ai dati, è che i dati non vengono letti.
-  let users = [], codes = [], backups = [], auditLog = [], reportedStories = [], classificaInviti = [];
+  let users = [], codes = [], backups = [], auditLog = [], reportedStories = [], classificaInviti = [], emailBloccate = [];
   // Le segnalazioni le legge anche il moderatore: sono il canale con cui gli
   // utenti dicono che qualcosa non va, e chi sta in prima linea a moderare e'
   // proprio quello che deve accorgersene. Non contengono dati riservati —
@@ -3337,6 +3347,7 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
     // Chi guadagna di piu' dagli inviti, con l'elenco di chi ha portato:
     // serve a riconoscere chi si fabbrica gli amici da solo.
     classificaInviti = inviti.classifica(20);
+    emailBloccate = bloccoEmail.elenco();
     const codesRaw = db.prepare(`SELECT c.*, u.nickname AS claimer
       FROM reward_codes c LEFT JOIN users u ON u.id = c.claimed_by
       ORDER BY c.created_at DESC`).all();
@@ -3384,7 +3395,7 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
     };
   });
   res.render('admin', { title: 'Admin', missions, gruppiMissioni, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico, predictions,
-    classificaInviti, puntiInvito: inviti.PUNTI_INVITO,
+    classificaInviti, puntiInvito: inviti.PUNTI_INVITO, emailBloccate,
     sezioni: SECTIONS, notifSubmissions: !!req.currentUser.notif_submissions, soloMissioni,
     iscrizioniQuando: modalita.quando(),
     segnalazioni });
@@ -3781,14 +3792,36 @@ app.post('/admin/utenti/:id/elimina', auth.requireAdmin, (req, res) => {
     return res.redirect('/admin');
   }
   const nickname = target.nickname;
+  // La spunta va letta PRIMA della cancellazione: dopo, l'email non c'e' piu'
+  // da nessuna parte. Non e' spuntata di default — bloccare e' una decisione,
+  // e la cancellazione piu' comune (un utente che lo chiede) non la vuole.
+  const daBloccare = !!req.body.blocca_email && !!target.email;
   const removed = purgeUser(target);
+  if (daBloccare) {
+    bloccoEmail.blocca(target.email, {
+      nickname, motivo: 'Account eliminato dallo staff', da: req.currentUser.nickname,
+    });
+    audit(req, 'email.blocca', `${nickname} (#${target.id}) · ${bloccoEmail.maschera(target.email)}`);
+  }
   // Lo storno dell'invito va detto: e' il senso di ripulire i finti account,
   // e chi cancella deve vedere che i punti sono tornati indietro davvero.
   const storno = removed.puntiStornati
     ? ` · ${removed.puntiStornati}pt tolti a chi l'aveva invitato` : '';
   audit(req, 'utente.elimina', `${nickname} (#${target.id}) · ${removed.foto} foto, ${removed.storie} storie${storno}`);
   flash(req, 'success', `Account di ${nickname} eliminato, insieme a ${removed.foto} foto e ${removed.storie} storie.`
-    + (removed.puntiStornati ? ` Tolti ${removed.puntiStornati} punti a chi l'aveva invitato.` : ''));
+    + (removed.puntiStornati ? ` Tolti ${removed.puntiStornati} punti a chi l'aveva invitato.` : '')
+    + (daBloccare ? ' La sua email non potrà più iscriversi.' : ''));
+  res.redirect('/admin');
+});
+
+// Sblocca un'email: senza questa, una spunta messa per sbaglio sarebbe
+// definitiva e l'unico rimedio sarebbe mettere le mani nel database.
+app.post('/admin/email-bloccate/:id/sblocca', auth.requireAdmin, (req, res) => {
+  const riga = db.prepare('SELECT mascherata FROM email_bloccate WHERE id = ?').get(req.params.id);
+  if (!riga) { flash(req, 'error', 'Blocco inesistente.'); return res.redirect('/admin'); }
+  bloccoEmail.sblocca(req.params.id);
+  audit(req, 'email.sblocca', riga.mascherata);
+  flash(req, 'success', `${riga.mascherata} può iscriversi di nuovo.`);
   res.redirect('/admin');
 });
 

@@ -436,6 +436,28 @@ CREATE TABLE IF NOT EXISTS segnalazioni (
 CREATE INDEX IF NOT EXISTS idx_segnalazioni_quando ON segnalazioni(created_at);
 CREATE INDEX IF NOT EXISTS idx_segnalazioni_lette  ON segnalazioni(letta);
 
+-- Email a cui e' vietato reiscriversi. Si riempie quando si cancella un
+-- account spuntando la casella apposta: senza, chi si fabbrica gli account
+-- ricrea lo stesso profilo con la stessa email un minuto dopo.
+--
+-- L'indirizzo NON si conserva in chiaro. Cancellare un account e' il diritto
+-- all'oblio: tenersi l'email leggibile lo svuoterebbe di senso. Si tiene
+-- l'impronta SHA-256, che basta a rispondere "questa email e' bloccata?"
+-- senza permettere di rileggerla, piu' una versione mascherata perche' chi
+-- amministra la lista deve poter riconoscere una riga per sbloccarla.
+--
+-- L'impronta e' un SHA-256 nudo e non un HMAC con un segreto: un segreto che
+-- ruota (o che si perde cambiando server) porterebbe con se' tutti i blocchi.
+CREATE TABLE IF NOT EXISTS email_bloccate (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  impronta    TEXT NOT NULL UNIQUE,       -- sha256 dell'email normalizzata
+  mascherata  TEXT NOT NULL,              -- "ma***o@gmail.com", per riconoscerla
+  nickname    TEXT,                       -- l'account che e' stato cancellato
+  motivo      TEXT,
+  bloccata_da TEXT,                       -- nickname dell'admin
+  created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- Interruttori dell'app, uno per riga. Tabella generica e non una colonna
 -- nuova ogni volta: gli interruttori vanno e vengono (la settimana di sole
 -- iscrizioni serve una volta l'anno) e una tabella chiave/valore non chiede

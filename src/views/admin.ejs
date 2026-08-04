@@ -690,6 +690,34 @@
     <% } %>
   </section>
 
+  <%# ── EMAIL BLOCCATE ───────────────────────────────────────────────
+      L'indirizzo non c'e' piu' in chiaro da nessuna parte: cancellare un
+      account e' il diritto all'oblio. Qui resta mascherato, quanto basta a
+      riconoscere una riga e a sbloccarla se la spunta e' andata storta. %>
+  <% if (emailBloccate.length) { %>
+    <section class="card">
+      <h2 class="staff-title"><%- icon('lock') %> Email che non possono iscriversi (<%= emailBloccate.length %>)</h2>
+      <p class="muted small">Bloccate cancellando un account con la spunta apposta. L'indirizzo completo non
+        viene conservato: resta l'impronta, che serve solo a riconoscerlo in fase di iscrizione.</p>
+      <ul class="user-list">
+        <% emailBloccate.forEach((b) => { %>
+          <li class="user-row">
+            <div class="user-head">
+              <span class="user-name"><%= b.mascherata %></span>
+              <% if (b.nickname) { %><span class="role-badge role-user">era <%= b.nickname %></span><% } %>
+              <span class="user-pts"><%= (b.created_at || '').slice(0, 10) %><%= b.bloccata_da ? ' · ' + b.bloccata_da : '' %></span>
+              <form action="/admin/email-bloccate/<%= b.id %>/sblocca" method="post"
+                    data-confirm="Permettere di nuovo l'iscrizione a <%= b.mascherata %>?">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button class="btn-mini" type="submit">Sblocca</button>
+              </form>
+            </div>
+          </li>
+        <% }) %>
+      </ul>
+    </section>
+  <% } %>
+
   <section class="card">
     <h2 class="staff-title"><%- icon('people') %> Utenti e ruoli (<%= users.length %>)</h2>
     <p class="muted small">Promuovi i tuoi collaboratori a <strong>moderatore</strong> (validano le prove)
@@ -743,6 +771,15 @@
                   <input type="password" name="admin_password" placeholder="Password" autocomplete="current-password"
                          aria-label="La tua password admin, per confermare l'eliminazione">
                 </label>
+                <%# Non spuntata di default: bloccare e' una decisione, e la
+                    cancellazione piu' comune (un utente che la chiede) non la
+                    vuole. Sparisce se l'account non ha un'email da bloccare. %>
+                <% if (u.email) { %>
+                  <label class="check check-mini">
+                    <input type="checkbox" name="blocca_email" value="1">
+                    <span>Impedisci a questa email di iscriversi di nuovo</span>
+                  </label>
+                <% } %>
                 <button class="btn-mini btn-danger" type="submit"><%- icon('trash') %> Elimina account</button>
               </form>
             <% } %>
