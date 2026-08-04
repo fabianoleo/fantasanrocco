@@ -20,6 +20,21 @@ const { db } = require('../db');
 
 const CHIAVE = 'solo_iscrizioni';
 
+// QUANDO COMINCIA IL GIOCO. Sta qui, in un posto solo, perché la stessa data
+// la dicono la home (conto alla rovescia e avviso), la pagina di attesa, il
+// messaggio JSON delle chiamate respinte e la colonna "scattata prima della
+// festa" dell'export. Era scritta a mano in cinque punti: spostarla di due
+// giorni voleva dire cinque modifiche, e bastava dimenticarne una perché
+// l'app dicesse due date diverse nella stessa schermata.
+//
+// `iso` porta il fuso italiano di proposito: senza, un browser a ovest di
+// Greenwich vedrebbe il conto alla rovescia sfasato di un giorno.
+const INIZIO_GIOCO = {
+  data: '2026-08-12',
+  etichetta: '12 agosto',
+  iso: '2026-08-12T00:00:00+02:00',
+};
+
 // Le pagine che restano aperte. In fondo alla lista il criterio, che serve
 // a decidere i casi nuovi senza riaprire la discussione ogni volta.
 //
@@ -96,4 +111,4 @@ function quando() {
   return r ? r.aggiornato_il : null;
 }
 
-module.exports = { attiva, imposta, quando, consentito, PERMESSE, PREFISSI };
+module.exports = { attiva, imposta, quando, consentito, INIZIO_GIOCO, PERMESSE, PREFISSI };

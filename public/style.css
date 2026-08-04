@@ -4072,6 +4072,28 @@ textarea:focus-visible,
 
 /* ── Admin: punti utente + form bonus punti ─────────────────────── */
 .user-pts { font-size: .72rem; color: var(--gold-2); font-weight: 600; margin-left: auto; }
+/* ── Admin: chi guadagna dagli inviti ───────────────────────────── */
+/* La riga sospetta si tinge di rosso invece di limitarsi al tag: in un
+   elenco di venti, un tag in mezzo alla riga non lo si trova scorrendo. */
+.inv-sospetto { border-color: rgba(231,76,60,.3); background: rgba(231,76,60,.05); }
+.inv-pos {
+  font-family: var(--font-heading); font-size: .78rem; color: var(--text-3);
+  min-width: 1.4em; text-align: right;
+}
+.inv-chi { display: flex; flex-wrap: wrap; gap: .35rem; margin: 0; }
+.inv-amico {
+  display: inline-flex; align-items: baseline; gap: .35rem;
+  padding: .2rem .5rem; border-radius: 980px;
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07);
+  font-size: .76rem; color: var(--text-2);
+}
+.inv-amico small { color: var(--text-3); font-size: .66rem; }
+/* Chi non ha mai giocato: è il dato che si cerca, quindi si vede da lontano. */
+.inv-amico.is-fermo {
+  background: rgba(231,76,60,.12); border-color: rgba(231,76,60,.3); color: var(--red);
+}
+.inv-amico.is-fermo small { color: rgba(231,76,60,.75); }
+
 .user-bonus { display: flex; gap: .4rem; align-items: flex-end; flex-wrap: wrap; flex: 1 1 auto; }
 .user-bonus input[name="points"] { width: 76px; }
 .user-bonus .field-mini input[name="reason"] { width: 100%; }

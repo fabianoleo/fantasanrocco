@@ -120,4 +120,64 @@ function riepilogo(userId) {
   return { quanti, guadagnati };
 }
 
-module.exports = { PUNTI_INVITO, codicePer, invitante, premia, avvisa, riepilogo, normalizza };
+// Chi ha guadagnato di più portando amici, e CHI ha portato. Serve a una
+// cosa sola: accorgersi di chi si fabbrica gli amici da solo.
+//
+// Il numero da guardare non è quanti ne ha portati — chi ha tanti amici veri
+// ne porta tanti — ma quanti di quelli non hanno MAI giocato. Un account
+// creato per regalare 10 punti a chi l'ha creato non gira la Ruota, non manda
+// prove e resta a zero: e' quella la firma, e per vederla bisogna avere
+// l'elenco davanti, non un totale.
+//
+// L'ora di iscrizione c'e' per la stessa ragione: dieci amici arrivati nello
+// stesso minuto sono una cosa diversa da dieci arrivati in tre giorni.
+function classifica(limite = 20) {
+  const righe = db.prepare(`
+    SELECT u.id, u.nickname, u.role,
+           COUNT(a.id) AS quanti,
+           COALESCE((SELECT SUM(delta) FROM punti_movimenti
+                     WHERE user_id = u.id AND causa = 'invito'), 0) AS punti
+    FROM users u
+    JOIN users a ON a.invited_by = u.id
+    GROUP BY u.id
+    ORDER BY punti DESC, quanti DESC, u.nickname
+    LIMIT ?
+  `).all(limite);
+  if (!righe.length) return [];
+
+  // Un'unica lettura per tutti gli invitati, non una per invitante.
+  const ids = righe.map((r) => r.id);
+  const segnaposti = ids.map(() => '?').join(',');
+  const invitati = db.prepare(`
+    SELECT a.invited_by, a.id, a.nickname, a.invited_at, a.points_adjust,
+           (SELECT COUNT(*) FROM submissions WHERE user_id = a.id) AS prove
+    FROM users a
+    WHERE a.invited_by IN (${segnaposti})
+    ORDER BY a.invited_at, a.id
+  `).all(...ids);
+
+  const perInvitante = new Map(righe.map((r) => [r.id, []]));
+  for (const a of invitati) {
+    // "Mai giocato": nessuna prova inviata e saldo intatto. Non prova la
+    // truffa da sola — uno puo' essersi iscritto e non aver ancora fatto
+    // niente — ma cinque cosi' di fila da uno stesso invitante sono
+    // un'altra cosa.
+    perInvitante.get(a.invited_by).push({
+      id: a.id,
+      nickname: a.nickname,
+      quando: a.invited_at,
+      maiGiocato: a.prove === 0 && a.points_adjust === 0,
+    });
+  }
+
+  return righe.map((r) => {
+    const elenco = perInvitante.get(r.id) || [];
+    return {
+      ...r,
+      invitati: elenco,
+      maiGiocatoQuanti: elenco.filter((a) => a.maiGiocato).length,
+    };
+  });
+}
+
+module.exports = { PUNTI_INVITO, codicePer, invitante, premia, avvisa, riepilogo, classifica, normalizza };

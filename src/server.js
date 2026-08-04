@@ -276,9 +276,9 @@ app.use((req, res, next) => {
   // Le chiamate in JavaScript vogliono una risposta che sappiano leggere:
   // servirgli una pagina HTML le farebbe fallire con un errore incomprensibile.
   if (req.method !== 'GET' || req.get('accept')?.includes('application/json')) {
-    return res.status(403).json({ ok: false, errore: 'Non ancora: si comincia il 14 agosto.' });
+    return res.status(403).json({ ok: false, errore: `Non ancora: si comincia il ${modalita.INIZIO_GIOCO.etichetta}.` });
   }
-  return res.status(200).render('chiuso', { title: 'Ci vediamo il 14 agosto' });
+  return res.status(200).render('chiuso', { title: `Ci vediamo il ${modalita.INIZIO_GIOCO.etichetta}` });
 });
 
 // --- Utenti online — ping-based (affidabile su mobile + Cloudflare) --------
@@ -519,6 +519,9 @@ const punti = require('./lib/punti');
 const modalita = require('./lib/modalita');
 // Codici invito: chi porta un amico che si iscrive incassa il suo bonus.
 const inviti = require('./lib/inviti');
+// La data d'inizio serve a piu' viste (home, pagina di attesa): sta nei
+// locals una volta sola, cosi' nessun template la riscrive a mano.
+app.locals.inizioGioco = modalita.INIZIO_GIOCO;
 
 // La tabella `invites` non viene piu' creata da src/db.js: il sistema degli
 // inviti e' stato tolto quando le iscrizioni sono diventate libere. Ma nei
@@ -2938,7 +2941,8 @@ app.get('/admin/prove.csv', auth.requireAdmin, (req, res) => {
   // rompono. Gli altri fogli di calcolo lo ignorano.
   const out = ['﻿' + intestazioni.join(';')];
 
-  const INIZIO_FESTA = new Date('2026-08-14T00:00:00+02:00');
+  // Stessa data d'inizio di tutto il resto: vedi lib/modalita.js.
+  const INIZIO_FESTA = new Date(modalita.INIZIO_GIOCO.iso);
   for (const r of righe) {
     const nome = path.basename(r.photo_path || '');
     // Prima la colonna (foto nuove, gia' rimpicciolite), poi il file (foto
@@ -3313,7 +3317,7 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
 
   // Da qui in giù è roba da admin. Per un moderatore restano tutti vuoti:
   // non è una tenda davanti ai dati, è che i dati non vengono letti.
-  let users = [], codes = [], backups = [], auditLog = [], reportedStories = [];
+  let users = [], codes = [], backups = [], auditLog = [], reportedStories = [], classificaInviti = [];
   // Le segnalazioni le legge anche il moderatore: sono il canale con cui gli
   // utenti dicono che qualcosa non va, e chi sta in prima linea a moderare e'
   // proprio quello che deve accorgersene. Non contengono dati riservati —
@@ -3322,6 +3326,9 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
   if (!soloMissioni) {
     users = db.prepare('SELECT id, nickname, email, role, created_at FROM users ORDER BY role, nickname').all()
       .map((u) => ({ ...u, points: userPoints(u.id) }));
+    // Chi guadagna di piu' dagli inviti, con l'elenco di chi ha portato:
+    // serve a riconoscere chi si fabbrica gli amici da solo.
+    classificaInviti = inviti.classifica(20);
     const codesRaw = db.prepare(`SELECT c.*, u.nickname AS claimer
       FROM reward_codes c LEFT JOIN users u ON u.id = c.claimed_by
       ORDER BY c.created_at DESC`).all();
@@ -3369,6 +3376,7 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
     };
   });
   res.render('admin', { title: 'Admin', missions, gruppiMissioni, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico, predictions,
+    classificaInviti, puntiInvito: inviti.PUNTI_INVITO,
     sezioni: SECTIONS, notifSubmissions: !!req.currentUser.notif_submissions, soloMissioni,
     iscrizioniQuando: modalita.quando(),
     segnalazioni });

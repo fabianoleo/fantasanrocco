@@ -5,8 +5,10 @@
 <%# ── CINEMATIC HERO (ricreazione nativa) ──────────────────────────── %>
 <link rel="stylesheet" href="/cinematic.css?v=8">
 <%
-  // Conto alla rovescia per la festa (14 agosto 2026) — metrica dell'anello
-  const _festa = new Date('2026-08-14T00:00:00');
+  // Conto alla rovescia per l'inizio del gioco — metrica dell'anello.
+  // La data arriva dai locals (lib/modalita.js): scritta qui a mano si
+  // sfasava dall'avviso qui sotto ogni volta che si spostava.
+  const _festa = new Date(inizioGioco.iso);
   const _days  = Math.max(0, Math.ceil((_festa - new Date()) / 86400000));
   const _avatar = currentUser ? initials(currentUser.nickname) : 'FSR';
 %>
@@ -50,7 +52,7 @@
       <div class="home-avviso">
         <%- icon('sparkle') %>
         <p>
-          <strong>Le iscrizioni sono aperte.</strong> Il gioco vero comincia il <strong>14 agosto</strong>:
+          <strong>Le iscrizioni sono aperte.</strong> Il gioco vero comincia il <strong><%= inizioGioco.etichetta %></strong>:
           da qui a lì puoi girare la <a href="/ruota">Ruota della Fortuna</a> una volta al giorno e prendere
           il bonus giornaliero — <strong>i punti che fai adesso te li tieni tutti</strong>.
         </p>

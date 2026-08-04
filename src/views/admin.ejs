@@ -646,6 +646,50 @@
 <div class="adm-panel" id="p-utenti" hidden>
   <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
 
+  <%# ── CHI GUADAGNA DAGLI INVITI ────────────────────────────────────
+      Sta PRIMA dell'elenco utenti perche' e' un controllo, non una scheda:
+      lo si apre per guardare questa, e l'elenco completo e' sotto.
+      Il conteggio che conta e' «mai giocato»: un account creato solo per
+      regalare punti a chi l'ha creato non gira la Ruota e non manda prove. %>
+  <section class="card">
+    <h2 class="staff-title"><%- icon('people') %> Punti dagli inviti · primi <%= classificaInviti.length %></h2>
+    <p class="muted small">Ogni amico portato vale <strong>+<%= puntiInvito %> punti</strong>. Tanti inviti non sono
+      un problema: chi ha tanti amici ne porta tanti. Da guardare e' la colonna
+      <strong>mai giocato</strong> — un account creato per regalare punti a chi l'ha creato resta a zero
+      e non manda prove. Utile anche l'ora: dieci amici arrivati nello stesso minuto sono
+      un'altra cosa da dieci arrivati in tre giorni.</p>
+
+    <% if (!classificaInviti.length) { %>
+      <p class="muted small">Nessuno ha ancora portato amici.</p>
+    <% } else { %>
+      <ul class="user-list">
+        <% classificaInviti.forEach((r, i) => { %>
+          <li class="user-row <%= r.maiGiocatoQuanti ? 'inv-sospetto' : '' %>">
+            <div class="user-head">
+              <span class="inv-pos"><%= i + 1 %></span>
+              <span class="user-name"><%= r.nickname %></span>
+              <span class="role-badge role-<%= r.role %>"><%= r.role %></span>
+              <span class="user-pts"><%= r.punti %> pt · <%= r.quanti %> <%= r.quanti === 1 ? 'amico' : 'amici' %></span>
+              <% if (r.maiGiocatoQuanti) { %>
+                <span class="tag tag-off"><%- icon('warning') %> <%= r.maiGiocatoQuanti %> mai <%= r.maiGiocatoQuanti === 1 ? 'giocato' : 'giocati' %></span>
+              <% } %>
+              <a class="user-storico" href="/admin/punti/<%= r.id %>"><%- icon('list') %> Storico</a>
+            </div>
+            <p class="inv-chi">
+              <% r.invitati.forEach((a) => { %>
+                <span class="inv-amico <%= a.maiGiocato ? 'is-fermo' : '' %>"
+                      title="<%= a.maiGiocato ? 'Nessuna prova inviata e saldo a zero' : 'Ha giocato' %>">
+                  <%= a.nickname %>
+                  <small><%= (a.quando || '').replace('T', ' ').slice(0, 16) %></small>
+                </span>
+              <% }) %>
+            </p>
+          </li>
+        <% }) %>
+      </ul>
+    <% } %>
+  </section>
+
   <section class="card">
     <h2 class="staff-title"><%- icon('people') %> Utenti e ruoli (<%= users.length %>)</h2>
     <p class="muted small">Promuovi i tuoi collaboratori a <strong>moderatore</strong> (validano le prove)
