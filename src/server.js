@@ -2166,10 +2166,17 @@ app.get('/missioni', auth.requireLogin, (req, res) => {
       completedBy: completedCount[m.id] || 0,
       // Il marchio di chi mette la missione. Si risolve qui e non nel
       // template: la card deve solo leggere due stringhe già pronte, e il
-      // nome serve per l'alt dell'immagine. Su una missione ancora bloccata
-      // non si manda: il marchio direbbe di che sfida si tratta.
-      sponsorSrc: (!locked && m.sponsor && NOME_SPONSOR[m.sponsor]) ? `/sponsor/${m.sponsor}` : null,
-      sponsorNome: (!locked && m.sponsor) ? NOME_SPONSOR[m.sponsor] || null : null,
+      // nome serve per l'alt dell'immagine.
+      //
+      // Si manda ANCHE sulle missioni ancora bloccate. Prima no, per non
+      // far capire di che sfida si trattasse — ma le sfide giornaliere
+      // restano coperte fino al loro giorno (12→18 agosto), e con quella
+      // regola il marchio di chi le paga si sarebbe visto per poche ore,
+      // il giorno stesso. Chi mette una missione compra la vetrina della
+      // settimana, non dell'ultimo pomeriggio. Il velo continua a coprire
+      // titolo e descrizione: si sa CHI, non COSA.
+      sponsorSrc: (m.sponsor && NOME_SPONSOR[m.sponsor]) ? `/sponsor/${m.sponsor}` : null,
+      sponsorNome: m.sponsor ? NOME_SPONSOR[m.sponsor] || null : null,
       // Giorno della sfida, per raggrupparle in pagina. La chiave è la data
       // nuda perché si ordina da sola come stringa; l'etichetta è per gli
       // occhi. Senza finestra restano fuori dai gruppi per data: sono le

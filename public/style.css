@@ -4638,6 +4638,16 @@ textarea:focus-visible,
 .mlock-skel span:nth-child(2) { width: 100%; }
 .mlock-skel span:nth-child(3) { width: 54%; }
 .mission-card.is-locked .rar-chip { font-size: .78rem; padding: .3rem .7rem; }
+/* Il marchio dentro una card coperta va tirato su di contrasto. L'opacita'
+   della card (.78) non si puo' annullare da dentro — un figlio non supera
+   mai l'opacita' del padre — quindi si compensa qui, dove invece si puo':
+   sfondo e bordo piu' decisi. Senza, l'unica cosa leggibile della card
+   sarebbe anche la piu' spenta, ed e' quella che lo sponsor ha pagato. */
+.mission-card.is-locked .mission-sponsor {
+  background: rgba(255,255,255,.075);
+  border-color: rgba(255,255,255,.13);
+}
+.mission-card.is-locked .mission-sponsor strong { color: var(--text-1); }
 
 /* ── Le card di progresso sono scorciatoie: portano alla loro sezione ────── */
 a.ms-secprog { text-decoration: none; color: inherit; cursor: pointer; transition: border-color .2s var(--ease), background .2s var(--ease); }

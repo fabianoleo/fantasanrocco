@@ -10,11 +10,21 @@
     ───────────────────────────────────────────────────────────────────── %>
 <% if (m.locked) { %>
   <div class="mission-card is-locked <%= sbircia ? 'ms-sbirciabile' : '' %>"
-       aria-label="Missione bloccata, rarità <%= m.rarity.label %>, <%= m.points %> punti<%= m.unlockLabel ? ', si sblocca il ' + m.unlockLabel : '' %>">
+       aria-label="Missione bloccata<%= m.sponsorNome ? ' di ' + m.sponsorNome : '' %>, rarità <%= m.rarity.label %>, <%= m.points %> punti<%= m.unlockLabel ? ', si sblocca il ' + m.unlockLabel : '' %>">
     <div class="mission-head">
       <span class="rar-chip rar-<%= m.rarity.key %>"><span class="rar-dot" aria-hidden="true"><%= m.rarity.emoji %></span> <%= m.rarity.label %></span>
       <span class="points-badge"><%= m.points %> pt</span>
     </div>
+    <%# Il marchio sta FUORI dal velo, ed è l'unica cosa che si legge di una
+        sfida ancora coperta: chi paga la missione si vede da subito, quello
+        che c'è da fare no. Stessa posizione della card scoperta, così le due
+        versioni della stessa missione non ballano. %>
+    <% if (m.sponsorSrc) { %>
+      <p class="mission-sponsor">
+        <img src="<%= m.sponsorSrc %>" alt="<%= m.sponsorNome %>" loading="lazy">
+        <span>Missione di <strong><%= m.sponsorNome %></strong></span>
+      </p>
+    <% } %>
     <% if (sbircia) { %>
       <%# Il contenuto vero, sotto il velo. Lo vede solo lo staff. %>
       <div class="mlock-vero">
