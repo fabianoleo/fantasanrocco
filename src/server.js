@@ -3169,18 +3169,10 @@ app.get('/admin/statistiche', auth.requireAdmin, (req, res) => {
   // prima era un numero solo. `punti` qui dentro è la scheda della pagina e
   // copre il modulo: il require è la strada per arrivare alla libreria.
   const mediaPunti = require('./lib/punti').riepilogoGlobale();
-  // Quello che il registro non spiega: saldi mossi prima che il registro
-  // esistesse. Va mostrato, non nascosto, altrimenti le fette non tornano.
-  const primaDelRegistro = punti.adjust
-    - mediaPunti.voci.filter((v) => v.chiave !== 'missione' && v.chiave !== 'traguardo')
-        .reduce((a, v) => a + v.totale, 0);
-  if (primaDelRegistro > 0) {
-    mediaPunti.voci.push({
-      chiave: 'prima', titolo: 'Prima del registro', totale: primaDelRegistro, quante: 0,
-      media: mediaPunti.giocatori ? Math.round(primaDelRegistro / mediaPunti.giocatori) : 0,
-    });
-    mediaPunti.voci.sort((a, b) => b.totale - a.totale);
-  }
+  // La torta mostra solo quello che il registro sa spiegare. I saldi mossi
+  // prima che il registro esistesse restano fuori: erano una fetta muta —
+  // nessuna causa, niente da cliccare — che rubava spazio alle voci vere.
+  // Le percentuali si leggono quindi sul totale spiegato, non sul saldo.
 
   res.render('statistiche', {
     title: 'Statistiche', ranges: RANGES, range, mediaPunti,
