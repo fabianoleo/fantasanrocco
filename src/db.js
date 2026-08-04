@@ -378,6 +378,17 @@ CREATE INDEX IF NOT EXISTS idx_movimenti_utente ON punti_movimenti(user_id, id);
 CREATE INDEX IF NOT EXISTS idx_movimenti_causa  ON punti_movimenti(causa);
 `);
 
+// A CHI si riferisce un movimento, quando si riferisce a qualcuno. Serve per
+// gli inviti: cancellando un account bisogna togliere a chi l'ha portato
+// esattamente i punti che quell'invito gli aveva dato, e per trovarli serve
+// un riferimento. Senza, l'unica strada sarebbe riconoscere il movimento dal
+// testo del dettaglio — che si rompe il giorno che si cambia una parola.
+//
+// ON DELETE SET NULL: lo storno avviene PRIMA della cancellazione, quindi
+// dopo il riferimento non serve piu' e non deve impedire il DELETE.
+try { db.exec('ALTER TABLE punti_movimenti ADD COLUMN rif_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL'); } catch {}
+db.exec('CREATE INDEX IF NOT EXISTS idx_movimenti_rif ON punti_movimenti(rif_user_id)');
+
 // Inviti. `invite_code` e' il codice personale di ognuno (uno solo, sempre
 // quello, girabile a quanti amici si vuole) e lo si assegna alla prima
 // richiesta, non qui: vedi lib/inviti.js. `invited_by` dice chi ha portato

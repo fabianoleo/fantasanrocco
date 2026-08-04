@@ -83,7 +83,48 @@ function invitante(grezzo) {
 function premia(nuovoId, invitanteId, nicknameNuovo) {
   db.prepare("UPDATE users SET invited_by = ?, invited_at = datetime('now') WHERE id = ?")
     .run(invitanteId, nuovoId);
-  punti.muovi(invitanteId, PUNTI_INVITO, 'invito', `Iscrizione di ${nicknameNuovo}`);
+  // Il quinto argomento è chi si è iscritto: è quello che permette di
+  // ritrovare questo esatto movimento se un domani l'account sparisce.
+  punti.muovi(invitanteId, PUNTI_INVITO, 'invito', `Iscrizione di ${nicknameNuovo}`, nuovoId);
+}
+
+// Disfa il premio quando l'account invitato viene cancellato. Va chiamata
+// PRIMA del DELETE, dentro la stessa transazione: dopo, il riferimento è
+// già stato azzerato dal vincolo e non c'è più niente da ritrovare.
+//
+// Toglie ESATTAMENTE quello che aveva dato, non i PUNTI_INVITO di oggi: se
+// il premio un domani cambia, un invito vecchio va disfatto per quanto
+// valeva al suo tempo, altrimenti cancellare un account regalerebbe o
+// ruberebbe punti a chi non c'entra.
+//
+// Lo storno è un movimento 'invito' NEGATIVO e non un 'storno' generico:
+// così la classifica degli inviti nel pannello — che somma i movimenti
+// 'invito' — si corregge da sola man mano che si ripulisce, invece di
+// continuare a mostrare i punti di account che non esistono più.
+function storna(invitatoId, nicknameInvitato) {
+  const righe = db.prepare(
+    "SELECT id, user_id, delta FROM punti_movimenti WHERE causa = 'invito' AND rif_user_id = ?"
+  ).all(invitatoId);
+
+  // Gli inviti pagati prima che esistesse rif_user_id non hanno riferimento:
+  // lì l'unico appiglio è il testo, ed è per questo che il dettaglio lo
+  // scrive premia() qui sopra e nessun altro. Righe già stornate (delta
+  // negativo) restano fuori: un secondo storno raddoppierebbe la penalità.
+  const daStornare = righe.length ? righe : db.prepare(`
+    SELECT m.id, m.user_id, m.delta FROM punti_movimenti m
+    JOIN users u ON u.id = ?
+    WHERE m.causa = 'invito' AND m.rif_user_id IS NULL
+      AND m.user_id = u.invited_by AND m.dettaglio = ?
+  `).all(invitatoId, `Iscrizione di ${nicknameInvitato}`);
+
+  let tolti = 0;
+  for (const r of daStornare) {
+    if (r.delta <= 0) continue;
+    punti.muovi(r.user_id, -r.delta, 'invito',
+      `Invito annullato: account di ${nicknameInvitato} eliminato`, null);
+    tolti += r.delta;
+  }
+  return tolti;
 }
 
 // L'avviso a chi ha invitato. Va chiamata DOPO che la transazione ha
@@ -180,4 +221,4 @@ function classifica(limite = 20) {
   });
 }
 
-module.exports = { PUNTI_INVITO, codicePer, invitante, premia, avvisa, riepilogo, classifica, normalizza };
+module.exports = { PUNTI_INVITO, codicePer, invitante, premia, storna, avvisa, riepilogo, classifica, normalizza };

@@ -2514,7 +2514,15 @@ function purgeUser(u) {
   const storyFiles = db.prepare('SELECT media_path FROM stories WHERE user_id = ?').all(u.id).map((r) => r.media_path);
   const avatarFile = u.avatar_path;
 
+  let puntiStornati = 0;
   db.transaction(() => {
+    // Se questo account era arrivato con un invito, chi l'ha portato perde i
+    // punti che ne aveva ricavato. È il motivo per cui cancellare i finti
+    // account serve a qualcosa: senza questo, chi se li fabbrica li perde e
+    // si tiene i punti, e ripulire non toglierebbe niente a nessuno.
+    // Va fatto PRIMA del DELETE: dopo, il riferimento è già stato azzerato.
+    puntiStornati = inviti.storna(u.id, u.nickname);
+
     // Sgancia i riferimenti con vincolo NO ACTION (altrimenti il DELETE fallisce)
     if (invitiCiSono()) {
       db.prepare('UPDATE invites SET used = 0, used_by_user_id = NULL, used_at = NULL WHERE used_by_user_id = ?').run(u.id);
@@ -2532,7 +2540,7 @@ function purgeUser(u) {
   rm(STORIES_DIR, storyFiles);
   if (avatarFile) fs.unlink(path.join(AVATARS_DIR, path.basename(avatarFile)), () => {});
 
-  return { foto: photoFiles.length, storie: storyFiles.length };
+  return { foto: photoFiles.length, storie: storyFiles.length, puntiStornati };
 }
 
 // Cancellazione account (diritto all'oblio GDPR): l'utente elimina sé stesso.
@@ -3774,8 +3782,13 @@ app.post('/admin/utenti/:id/elimina', auth.requireAdmin, (req, res) => {
   }
   const nickname = target.nickname;
   const removed = purgeUser(target);
-  audit(req, 'utente.elimina', `${nickname} (#${target.id}) · ${removed.foto} foto, ${removed.storie} storie`);
-  flash(req, 'success', `Account di ${nickname} eliminato, insieme a ${removed.foto} foto e ${removed.storie} storie.`);
+  // Lo storno dell'invito va detto: e' il senso di ripulire i finti account,
+  // e chi cancella deve vedere che i punti sono tornati indietro davvero.
+  const storno = removed.puntiStornati
+    ? ` · ${removed.puntiStornati}pt tolti a chi l'aveva invitato` : '';
+  audit(req, 'utente.elimina', `${nickname} (#${target.id}) · ${removed.foto} foto, ${removed.storie} storie${storno}`);
+  flash(req, 'success', `Account di ${nickname} eliminato, insieme a ${removed.foto} foto e ${removed.storie} storie.`
+    + (removed.puntiStornati ? ` Tolti ${removed.puntiStornati} punti a chi l'aveva invitato.` : ''));
   res.redirect('/admin');
 });
 

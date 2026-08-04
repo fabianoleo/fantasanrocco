@@ -39,11 +39,16 @@ function etichetta(causa) { return CAUSE[causa] || causa; }
 // Sposta il saldo e lascia la traccia. `delta` può essere negativo.
 // Va chiamata DENTRO la transazione di chi la usa, quando ce n'è una:
 // così o si muovono saldo e registro insieme, o non si muove niente.
-function muovi(userId, delta, causa, dettaglio) {
+//
+// `rifUserId` è l'altra persona coinvolta, quando c'è: chi si è iscritto
+// col mio codice, per esempio. Non serve a leggere il registro — quello lo
+// racconta il dettaglio — ma a ritrovare un movimento preciso quando va
+// disfatto, senza doverlo riconoscere dal testo.
+function muovi(userId, delta, causa, dettaglio, rifUserId) {
   if (!userId || !Number.isFinite(delta) || delta === 0) return;
   db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(delta, userId);
-  db.prepare('INSERT INTO punti_movimenti (user_id, delta, causa, dettaglio) VALUES (?, ?, ?, ?)')
-    .run(userId, delta, causa, dettaglio || null);
+  db.prepare('INSERT INTO punti_movimenti (user_id, delta, causa, dettaglio, rif_user_id) VALUES (?, ?, ?, ?, ?)')
+    .run(userId, delta, causa, dettaglio || null, rifUserId || null);
 }
 
 // Lo storico completo di una persona: i movimenti del registro PIÙ le
