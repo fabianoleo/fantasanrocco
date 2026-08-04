@@ -86,6 +86,28 @@ function premia(nuovoId, invitanteId, nicknameNuovo) {
   punti.muovi(invitanteId, PUNTI_INVITO, 'invito', `Iscrizione di ${nicknameNuovo}`);
 }
 
+// L'avviso a chi ha invitato. Va chiamata DOPO che la transazione ha
+// chiuso, mai dentro: un invio di rete dentro una transazione tiene il
+// lock di scrittura aperto per tutta la durata della chiamata.
+//
+// Non aspetta e non puo' far cadere l'iscrizione: se la push fallisce
+// l'amico si e' iscritto lo stesso e i punti sono gia' pagati. E se le
+// chiavi VAPID non ci sono, pushToUser non fa niente e non e' un errore.
+//
+// Senza questo avviso l'invitante non sapeva niente: il bonus compariva
+// nel profilo e basta, e chi non andava a guardare non scopriva mai che
+// l'amico si era iscritto davvero.
+function avvisa(invitanteId, nicknameNuovo) {
+  const { pushToUser } = require('./notifiche');
+  const { quanti } = riepilogo(invitanteId);
+  return pushToUser(invitanteId, {
+    title: '🎉 Un amico si è iscritto!',
+    body: `${nicknameNuovo} si è iscritto col tuo codice — +${PUNTI_INVITO} punti. `
+        + (quanti === 1 ? 'È il primo che porti.' : `Ne hai portati ${quanti}.`),
+    url: '/profilo',
+  }).catch((e) => console.error('[INVITO] push', e.message));
+}
+
 // Quanti ne ha portati e quanto ci ha guadagnato. I punti si ricalcolano
 // dal conteggio invece di rileggerli dal registro: se un domani il premio
 // cambia, i vecchi inviti restano pagati com'erano al loro tempo — quindi
@@ -98,4 +120,4 @@ function riepilogo(userId) {
   return { quanti, guadagnati };
 }
 
-module.exports = { PUNTI_INVITO, codicePer, invitante, premia, riepilogo, normalizza };
+module.exports = { PUNTI_INVITO, codicePer, invitante, premia, avvisa, riepilogo, normalizza };

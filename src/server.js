@@ -883,6 +883,11 @@ app.post('/registrati', registerLimiter, (req, res) => {
     if (amico) inviti.premia(r.lastInsertRowid, amico.id, nickname);
   })();
 
+  // L'avviso parte a transazione chiusa e non si aspetta: l'iscrizione e'
+  // gia' valida e i punti gia' pagati, una push lenta o fallita non deve
+  // tenere fermo chi si sta registrando.
+  if (amico) inviti.avvisa(amico.id, nickname);
+
   res.render('register-done', {
     title: 'Registrazione completata',
     nickname,
