@@ -5538,8 +5538,12 @@ a.lb-prize:hover { color: var(--gold-2); }
   transition: transform .3s var(--ease, cubic-bezier(.22,1,.36,1));
 }
 .lbc-p:hover { transform: translateY(-3px); }
-/* Il primo più alto degli altri due: è il gradino, non un'enfasi grafica. */
-.lbc-p-primo { padding-top: 1.7rem; }
+/* I tre gradini. Le card poggiano sulla stessa base (align-items:flex-end
+   qui sopra), quindi l'aria in testa le fa crescere verso l'alto: più
+   padding = card più alta. Insieme all'altezza del gradino in fondo
+   (.lbc-p-barra) è questo che fa il primo > secondo > terzo. */
+.lbc-p-primo  { padding-top: 1.7rem; }
+.lbc-p-silver { padding-top: 1.3rem; }
 .lbc-p-gold   { border-color: rgba(245,193,7,.32);  background: linear-gradient(180deg, rgba(212,150,20,.15), rgba(255,255,255,.02) 65%); }
 .lbc-p-silver { border-color: rgba(192,192,220,.22); background: linear-gradient(180deg, rgba(192,192,220,.1), rgba(255,255,255,.02) 65%); }
 .lbc-p-bronze { border-color: rgba(205,127,50,.26);  background: linear-gradient(180deg, rgba(205,127,50,.12), rgba(255,255,255,.02) 65%); }
@@ -5565,10 +5569,20 @@ a.lb-prize:hover { color: var(--gold-2); }
 .lbc-p-silver .lbc-p-medaglia .ico { color: #cfcfe4; }
 .lbc-p-bronze .lbc-p-medaglia .ico { color: #cd7f32; }
 
+/* Il nome occupa SEMPRE due righe, anche quando ne riempie una sola.
+   Non è estetica: le tre card poggiano sulla stessa base e crescono verso
+   l'alto, quindi se un nome lungo al terzo posto andasse a capo e uno corto
+   al primo no, il terzo diventerebbe più alto del primo e il gradino direbbe
+   il contrario della classifica. Con l'altezza fissa a decidere restano solo
+   i gradini. Chi ha un nome da tre righe lo vede troncato: il nome per esteso
+   è nell'attributo title (vedi partials/leaderboard-card.ejs). */
 .lbc-p-nome {
   font-weight: 700; font-size: .88rem; color: var(--text);
   text-align: center; line-height: 1.25;
   max-width: 100%; overflow-wrap: anywhere;
+  height: 2.5em;                    /* 2 righe × line-height */
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 .lbc-p-val {
   margin-top: .4rem;
@@ -5578,10 +5592,22 @@ a.lb-prize:hover { color: var(--gold-2); }
 .lbc-p-unita { font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
 .lbc-p-byline { margin-top: .3rem; font-size: .72rem; color: var(--text-3); }
 /* La barretta in fondo dà l'altezza del gradino senza un div vuoto per lato. */
-.lbc-p-barra { width: 100%; height: 4px; margin-top: .8rem; border-radius: 2px; }
-.lbc-p-gold   .lbc-p-barra { background: linear-gradient(90deg, var(--gold-2), var(--gold)); }
-.lbc-p-silver .lbc-p-barra { background: linear-gradient(90deg, #d8d8ea, #9a9ab4); }
-.lbc-p-bronze .lbc-p-barra { background: linear-gradient(90deg, #e0a469, #a35f22); }
+/* Il gradino vero e proprio: era una riga colorata di 4px uguale per tutti,
+   ora è il blocco che dà l'altezza. Le misure sono le stesse del podio dei
+   premi in home (48/32/18), così i due podi del sito si somigliano invece di
+   essere due invenzioni diverse.
+   La riga colorata di prima resta come bordo superiore del gradino: è quella
+   che separa la card dal suo piedistallo. */
+.lbc-p-barra {
+  width: 100%; margin-top: .8rem; border-radius: 0;
+  border-top: 3px solid transparent;
+}
+.lbc-p-gold   .lbc-p-barra { height: 48px; border-top-color: var(--gold);
+  background: linear-gradient(180deg, rgba(245,193,7,.22), rgba(245,193,7,.04)); }
+.lbc-p-silver .lbc-p-barra { height: 32px; border-top-color: #9a9ab4;
+  background: linear-gradient(180deg, rgba(180,180,220,.16), rgba(180,180,220,.03)); }
+.lbc-p-bronze .lbc-p-barra { height: 18px; border-top-color: #a35f22;
+  background: linear-gradient(180deg, rgba(180,100,50,.16), rgba(180,100,50,.03)); }
 
 /* ── Lista dal quarto in giù ──────────────────────────────────────── */
 .lbc-lista { list-style: none; margin: 0; padding: 0; }
@@ -5646,7 +5672,13 @@ a.lb-prize:hover { color: var(--gold-2); }
   .lbc-head { flex-direction: column; gap: .5rem; }
   .lbc-podio { gap: .35rem; }
   .lbc-p { padding: .8rem .35rem .7rem; }
-  .lbc-p-primo { padding-top: 1.2rem; }
+  /* Su schermo stretto i gradini si accorciano ma restano nell'ordine: tre
+     colonne da 110px con 48px di piedistallo diventerebbero tre torri. */
+  .lbc-p-primo  { padding-top: 1.2rem; }
+  .lbc-p-silver { padding-top: .95rem; }
+  .lbc-p-gold   .lbc-p-barra { height: 32px; }
+  .lbc-p-silver .lbc-p-barra { height: 21px; }
+  .lbc-p-bronze .lbc-p-barra { height: 12px; }
   .lbc-p-avatar, .lbc-p-num { width: 44px; height: 44px; }
   .lbc-p-num { font-size: 1.1rem; }
   .lbc-p-nome { font-size: .76rem; }

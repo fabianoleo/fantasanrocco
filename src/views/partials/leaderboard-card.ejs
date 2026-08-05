@@ -63,7 +63,9 @@
             <% } %>
             <span class="lbc-p-medaglia"><%- icon('medal') %></span>
           </span>
-          <span class="lbc-p-nome"><%= r.nome %><% if (io) { %> <span class="lb-you">tu</span><% } %></span>
+          <%# title: il nome per esteso, per i pochissimi che ne hanno uno da
+              tre righe e sulla card lo vedono troncato (vedi .lbc-p-nome). %>
+          <span class="lbc-p-nome" title="<%= r.nome %>"><%= r.nome %><% if (io) { %> <span class="lb-you">tu</span><% } %></span>
           <span class="lbc-p-val"><%= r.valore %></span>
           <span class="lbc-p-unita"><%= r.unita %></span>
           <% if (r.byline) { %><span class="lbc-p-byline"><%= r.byline %></span><% } %>
