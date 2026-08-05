@@ -720,7 +720,8 @@
 
   <section class="card">
     <h2 class="staff-title"><%- icon('people') %> Utenti e ruoli (<%= users.length %>)</h2>
-    <p class="muted small">Promuovi i tuoi collaboratori a <strong>moderatore</strong> (validano le prove)
+    <p class="muted small">In ordine di iscrizione, <strong>l'ultimo arrivato in cima</strong>.
+      Promuovi i tuoi collaboratori a <strong>moderatore</strong> (validano le prove)
       o <strong>admin</strong> (gestiscono tutto). Solo gli utenti normali compaiono in classifica.</p>
     <ul class="user-list">
       <% users.forEach((u) => { %>
@@ -739,6 +740,9 @@
             <% } else { %>
               <span class="muted"><%- icon('mail') %> nessuna email registrata</span>
             <% } %>
+            <%# La data d'iscrizione rende leggibile l'ordine della lista, e
+                con l'ora si riconoscono gli arrivi in blocco. %>
+            <span class="muted user-iscritto">iscritto il <%= (u.created_at || '').replace('T', ' ').slice(0, 16) %></span>
           </p>
           <div class="user-actions">
             <form action="/admin/utenti/<%= u.id %>/ruolo" method="post" class="user-role-form">

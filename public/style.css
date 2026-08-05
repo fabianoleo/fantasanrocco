@@ -4702,6 +4702,12 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
 .user-email a:hover { color: var(--gold-2); border-bottom-color: var(--gold-2); }
 .user-email svg, .user-email .muted svg { width: 13px; height: 13px; vertical-align: -2px; opacity: .6; }
 .user-email .muted { font-style: italic; }
+/* La data d'iscrizione sta sulla stessa riga dell'email quando ci sta, e va
+   a capo da sola quando non ci sta: e' un'informazione di servizio, non deve
+   spingere fuori l'email. Il corsivo del .muted qui sopra non le serve. */
+.user-email .user-iscritto {
+  font-style: normal; margin-left: .6rem; white-space: nowrap; color: var(--text-3);
+}
 
 /* Azione distruttiva: visivamente separata dal resto, mai accanto per sbaglio */
 .user-danger {

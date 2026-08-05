@@ -3342,7 +3342,13 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
   // nickname e testo, non email.
   const segnalazioni = db.prepare('SELECT * FROM segnalazioni ORDER BY letta ASC, id DESC LIMIT 100').all();
   if (!soloMissioni) {
-    users = db.prepare('SELECT id, nickname, email, role, created_at FROM users ORDER BY role, nickname').all()
+    // Ordine di iscrizione, l'ultimo arrivato in cima. In ordine alfabetico
+    // (com'era prima) chi si e' appena iscritto finiva sepolto in mezzo, e
+    // gli arrivi in blocco — quelli che vale la pena guardare — non si
+    // vedevano affatto. A parita' di secondo decide l'id, che e' l'ordine
+    // vero di iscrizione: created_at ha la precisione del secondo e in una
+    // raffica di registrazioni diverse righe portano la stessa ora.
+    users = db.prepare('SELECT id, nickname, email, role, created_at FROM users ORDER BY created_at DESC, id DESC').all()
       .map((u) => ({ ...u, points: userPoints(u.id) }));
     // Chi guadagna di piu' dagli inviti, con l'elenco di chi ha portato:
     // serve a riconoscere chi si fabbrica gli amici da solo.
