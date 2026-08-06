@@ -149,6 +149,8 @@ const PATHS = {
     '<circle cx="12" cy="12" r="5" fill="currentColor" stroke="none" />',
   list:
     '<path d="M8 6h12M8 12h12M8 18h12" /><path d="M4 6h.01M4 12h.01M4 18h.01" />',
+  search:
+    '<circle cx="11" cy="11" r="6" /><path d="m20 20-4.5-4.5" />',
   save:
     '<path d="M5 4h11l3 3v13H5z" /><path d="M8 4v5h7V4" /><rect x="8" y="13" width="8" height="5" />',
   trash:

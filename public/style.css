@@ -4080,6 +4080,43 @@ textarea:focus-visible,
 
 /* ── Admin: punti utente + form bonus punti ─────────────────────── */
 .user-pts { font-size: .72rem; color: var(--gold-2); font-weight: 600; margin-left: auto; }
+/* ── Admin: barra di ricerca e ordinamento degli utenti ─────────── */
+.ul-barra {
+  display: flex; gap: .5rem; flex-wrap: wrap; align-items: center;
+  margin: .8rem 0 .6rem;
+}
+.ul-cerca {
+  display: flex; align-items: center; gap: .45rem;
+  flex: 1 1 220px; min-width: 0;
+  padding: .4rem .7rem;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.09); border-radius: 980px;
+}
+.ul-cerca .ico { width: 15px; height: 15px; color: var(--text-3); flex-shrink: 0; }
+/* Il campo dentro la pillola non deve portarsi dietro bordo e sfondo del
+   tema dei form, o sarebbe una scatola dentro una scatola. */
+.ul-cerca input {
+  flex: 1 1 auto; min-width: 0;
+  background: none; border: none; padding: 0; margin: 0;
+  color: var(--text); font-size: .82rem;
+}
+.ul-cerca input:focus { outline: none; }
+.ul-cerca:focus-within { border-color: rgba(212,160,26,.4); }
+.ul-cerca input::-webkit-search-cancel-button { filter: invert(.6); }
+
+.ul-ordini { display: flex; gap: .3rem; flex-shrink: 0; }
+.ul-ord {
+  padding: .38rem .8rem; border-radius: 980px;
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  color: var(--text-3); font-size: .76rem; font-weight: 600; cursor: pointer;
+  transition: background .18s, color .18s, border-color .18s;
+}
+.ul-ord:hover { color: var(--text-2); }
+.ul-ord.is-attivo {
+  background: rgba(212,160,26,.16); border-color: rgba(212,160,26,.4); color: var(--gold-2);
+}
+.ul-esito { margin: 0 0 .6rem; }
+
 /* ── Admin: chi guadagna dagli inviti ───────────────────────────── */
 /* La riga sospetta si tinge di rosso invece di limitarsi al tag: in un
    elenco di venti, un tag in mezzo alla riga non lo si trova scorrendo. */
@@ -4747,6 +4784,10 @@ a.ms-secprog:focus-visible { outline: 2px solid var(--gold-2); outline-offset: 3
    sopra (grid) altrimenti vince sulla regola del browser, e l'hub restava
    visibile con il pannello accodato sotto. */
 .adm-hub[hidden], .adm-panel[hidden] { display: none !important; }
+/* Stessa storia per le righe utente: .user-row è display:flex, che vincerebbe
+   sull'[hidden] del browser. Senza questa riga la ricerca contava i risultati
+   giusti ma non nascondeva niente. */
+.user-row[hidden] { display: none !important; }
 
 /* Passaggio hub → dettaglio: il pannello entra da destra come una scheda
    nuova, il ritorno rientra da sinistra. Le classi le mette admin.js solo

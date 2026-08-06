@@ -720,12 +720,35 @@
 
   <section class="card">
     <h2 class="staff-title"><%- icon('people') %> Utenti e ruoli (<%= users.length %>)</h2>
-    <p class="muted small">In ordine di iscrizione, <strong>l'ultimo arrivato in cima</strong>.
-      Promuovi i tuoi collaboratori a <strong>moderatore</strong> (validano le prove)
+    <p class="muted small">Promuovi i tuoi collaboratori a <strong>moderatore</strong> (validano le prove)
       o <strong>admin</strong> (gestiscono tutto). Solo gli utenti normali compaiono in classifica.</p>
-    <ul class="user-list">
-      <% users.forEach((u) => { %>
-        <li class="user-row">
+
+    <%# ── Ricerca e ordinamento ────────────────────────────────────────
+        Tutto lato browser: le righe sono già tutte in pagina, quindi
+        cercare e riordinare non ha motivo di passare dal server — e a
+        ogni giro dal server si perderebbe la posizione nella lista. %>
+    <div class="ul-barra" data-utenti-barra>
+      <label class="ul-cerca">
+        <%- icon('search') %>
+        <input type="search" placeholder="Cerca per nickname o email…" data-utenti-cerca
+               aria-label="Cerca un utente" autocomplete="off">
+      </label>
+      <div class="ul-ordini" role="group" aria-label="Ordina gli utenti">
+        <button type="button" class="ul-ord is-attivo" data-utenti-ordina="iscrizione" aria-pressed="true">Iscrizione</button>
+        <button type="button" class="ul-ord" data-utenti-ordina="alfabetico" aria-pressed="false">A–Z</button>
+      </div>
+    </div>
+    <p class="muted small ul-esito" data-utenti-esito hidden></p>
+
+    <ul class="user-list" data-utenti-lista>
+      <% users.forEach((u, idx) => { %>
+        <%# I dati per cercare e ordinare viaggiano sulla riga: il JS non deve
+            rileggere il testo dentro i tag, che cambia appena si tocca la
+            grafica. `data-i` tiene l'ordine di iscrizione, che e' quello con
+            cui il server le manda: cosi' si torna indietro senza ricaricare. %>
+        <li class="user-row" data-i="<%= idx %>"
+            data-nome="<%= u.nickname.toLowerCase() %>"
+            data-email="<%= (u.email || '').toLowerCase() %>">
           <div class="user-head">
             <span class="user-name"><%= u.nickname %></span>
             <span class="role-badge role-<%= u.role %>"><%= u.role %></span>
@@ -1038,5 +1061,5 @@
   </section>
 </div>
 
-<script src="/admin.js?v=7" defer></script>
+<script src="/admin.js?v=8" defer></script>
 <script src="/jetpack.js?v=11" defer></script>

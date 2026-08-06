@@ -144,3 +144,70 @@
     });
   });
 })();
+
+// ── Utenti: ricerca e ordinamento ──────────────────────────────────
+// Le righe sono già tutte in pagina, quindi si filtra e si riordina qui:
+// passare dal server a ogni ricerca vorrebbe dire ricaricare il pannello e
+// perdere il punto in cui si era arrivati scorrendo.
+//
+// L'ordine di iscrizione non si ricalcola: è quello con cui il server manda
+// le righe, e sta in data-i. Così tornarci è rimettere le righe come stavano,
+// non indovinare di nuovo una data.
+(function () {
+  'use strict';
+  var barra = document.querySelector('[data-utenti-barra]');
+  var lista = document.querySelector('[data-utenti-lista]');
+  if (!barra || !lista) return;
+
+  var campo = barra.querySelector('[data-utenti-cerca]');
+  var bottoni = Array.prototype.slice.call(barra.querySelectorAll('[data-utenti-ordina]'));
+  var esito = document.querySelector('[data-utenti-esito]');
+  var righe = Array.prototype.slice.call(lista.querySelectorAll('.user-row'));
+
+  function ordina(modo) {
+    var ordinate = righe.slice().sort(function (a, b) {
+      if (modo === 'alfabetico') {
+        // localeCompare e non < : senza, "Àlex" finirebbe dopo "Zeno" e i
+        // nomi con accenti o maiuscole si ordinerebbero per codice.
+        return a.dataset.nome.localeCompare(b.dataset.nome, 'it');
+      }
+      return Number(a.dataset.i) - Number(b.dataset.i);
+    });
+    // Un frammento solo: appendere una riga alla volta al DOM vivo farebbe
+    // ricalcolare il layout a ogni giro, e qui le righe sono centinaia.
+    var frammento = document.createDocumentFragment();
+    ordinate.forEach(function (r) { frammento.appendChild(r); });
+    lista.appendChild(frammento);
+  }
+
+  function filtra() {
+    var q = (campo.value || '').trim().toLowerCase();
+    var visibili = 0;
+    righe.forEach(function (r) {
+      var ok = !q || r.dataset.nome.indexOf(q) !== -1 || r.dataset.email.indexOf(q) !== -1;
+      r.hidden = !ok;
+      if (ok) visibili++;
+    });
+    if (!q) { esito.hidden = true; return; }
+    esito.hidden = false;
+    esito.textContent = visibili
+      ? visibili + (visibili === 1 ? ' utente trovato' : ' utenti trovati')
+      : 'Nessun utente per «' + campo.value.trim() + '».';
+  }
+
+  bottoni.forEach(function (b) {
+    b.addEventListener('click', function () {
+      bottoni.forEach(function (x) {
+        var attivo = x === b;
+        x.classList.toggle('is-attivo', attivo);
+        x.setAttribute('aria-pressed', attivo ? 'true' : 'false');
+      });
+      ordina(b.dataset.utentiOrdina);
+    });
+  });
+
+  campo.addEventListener('input', filtra);
+  // La "x" del campo di ricerca su iOS non fa scattare 'input' in tutte le
+  // versioni: senza questo la lista resterebbe filtrata a campo vuoto.
+  campo.addEventListener('search', filtra);
+})();
