@@ -330,7 +330,7 @@
           <div class="sg-riga-top">
             <span class="sg-tag sg-tag-<%= s.tipo %>"><%= s.tipo === 'bug' ? 'Non funziona' : s.tipo === 'idea' ? 'Idea' : 'Altro' %></span>
             <span class="sg-chi"><%= s.nickname || 'anonimo' %></span>
-            <span class="sg-quando"><%= s.created_at %></span>
+            <span class="sg-quando"><%= oraItaliana(s.created_at) %></span>
           </div>
           <p class="sg-testo"><%= s.testo %></p>
           <p class="sg-meta">
@@ -680,7 +680,7 @@
                 <span class="inv-amico <%= a.maiGiocato ? 'is-fermo' : '' %>"
                       title="<%= a.maiGiocato ? 'Nessuna prova inviata e saldo a zero' : 'Ha giocato' %>">
                   <%= a.nickname %>
-                  <small><%= (a.quando || '').replace('T', ' ').slice(0, 16) %></small>
+                  <small><%= oraItaliana(a.quando) %></small>
                 </span>
               <% }) %>
             </p>
@@ -705,7 +705,7 @@
             <div class="user-head">
               <span class="user-name"><%= b.mascherata %></span>
               <% if (b.nickname) { %><span class="role-badge role-user">era <%= b.nickname %></span><% } %>
-              <span class="user-pts"><%= (b.created_at || '').slice(0, 10) %><%= b.bloccata_da ? ' · ' + b.bloccata_da : '' %></span>
+              <span class="user-pts"><%= oraItaliana(b.created_at) %><%= b.bloccata_da ? ' · ' + b.bloccata_da : '' %></span>
               <form action="/admin/email-bloccate/<%= b.id %>/sblocca" method="post"
                     data-confirm="Permettere di nuovo l'iscrizione a <%= b.mascherata %>?">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -765,7 +765,7 @@
             <% } %>
             <%# La data d'iscrizione rende leggibile l'ordine della lista, e
                 con l'ora si riconoscono gli arrivi in blocco. %>
-            <span class="muted user-iscritto">iscritto il <%= (u.created_at || '').replace('T', ' ').slice(0, 16) %></span>
+            <span class="muted user-iscritto">iscritto il <%= oraItaliana(u.created_at, true) %></span>
           </p>
           <div class="user-actions">
             <form action="/admin/utenti/<%= u.id %>/ruolo" method="post" class="user-role-form">
@@ -888,7 +888,7 @@
       <ul class="audit-list">
         <% logRows.forEach((l) => { %>
           <li class="audit-row">
-            <span class="audit-time"><%= l.created_at %></span>
+            <span class="audit-time"><%= oraItaliana(l.created_at) %></span>
             <span class="audit-who"><%= l.nickname %></span>
             <span class="audit-action"><%= l.action %></span>
             <% if (l.details) { %><span class="audit-details"><%= l.details %></span><% } %>

@@ -1730,6 +1730,33 @@ function romeStringToDate(s) {
   const guessUTC = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0));
   return new Date(guessUTC - romeOffsetMs(new Date(guessUTC)));
 }
+// Una data del database, come si legge a Siano.
+//
+// Nel database tutte le date le scrive datetime('now'), che è UTC — giusto
+// così: un istante deve essere lo stesso ovunque, e il fuso si mette solo
+// quando lo si mostra a qualcuno. Il punto è che finora non lo si metteva:
+// le pagine dello staff stampavano la stringa grezza, cioè due ore indietro
+// per tutta l'estate (una d'inverno). Con l'orario dei movimenti sbagliato,
+// nel registro punti non tornava piu' niente.
+//
+// Sta nei locals perché il fuso è una faccenda di come si mostra una data,
+// e riguarda ogni vista che ne mostra una.
+function oraItaliana(quando, conAnno) {
+  if (!quando) return '';
+  const m = String(quando).trim().match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+  // Una data senza ora (o in un formato che non conosciamo) torna com'è:
+  // meglio il dato grezzo di un "Invalid Date".
+  if (!m) return String(quando);
+  const istante = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)));
+  const p = Object.fromEntries(new Intl.DateTimeFormat('it-IT', {
+    timeZone: 'Europe/Rome', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).formatToParts(istante).map((x) => [x.type, x.value]));
+  const giorno = conAnno ? `${p.day}/${p.month}/${p.year}` : `${p.day}/${p.month}`;
+  return `${giorno} ${p.hour === '24' ? '00' : p.hour}:${p.minute}`;
+}
+app.locals.oraItaliana = oraItaliana;
+
 // "Giorno-festa" delle missioni: va dalle 18:00 (ora italiana) del giorno X alle
 // 17:59:59 del giorno X+1. Ritorna l'inizio del giorno-festa CORRENTE come stringa
 // UTC 'YYYY-MM-DD HH:MM:SS', confrontabile con submissions.created_at (UTC).

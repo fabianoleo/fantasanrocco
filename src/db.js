@@ -378,6 +378,24 @@ CREATE INDEX IF NOT EXISTS idx_movimenti_utente ON punti_movimenti(user_id, id);
 CREATE INDEX IF NOT EXISTS idx_movimenti_causa  ON punti_movimenti(causa);
 `);
 
+// Il bonus degli avvisi (+100) e' rimasto fuori dal registro finche' non e'
+// passato per punti.muovi: chi l'aveva preso prima si ritrova i punti nel
+// saldo e nessuna riga che li spieghi, e la pagina dello storico li dava per
+// "movimenti precedenti al registro" — che e' falso, sono questi.
+//
+// La riga si scrive SENZA toccare points_adjust: i punti ci sono gia', qui si
+// sta solo raccontando dove erano finiti. L'ora e' quella della prima
+// iscrizione push, che e' il momento in cui il bonus e' stato preso davvero.
+// Gira a ogni avvio ma inserisce una volta sola: la NOT EXISTS la ferma.
+db.exec(`
+INSERT INTO punti_movimenti (user_id, delta, causa, dettaglio, created_at)
+SELECT u.id, 100, 'notifiche', 'Avvisi attivati',
+       COALESCE((SELECT MIN(created_at) FROM push_subscriptions WHERE user_id = u.id), u.created_at)
+FROM users u
+WHERE u.notif_bonus = 1
+  AND NOT EXISTS (SELECT 1 FROM punti_movimenti m WHERE m.user_id = u.id AND m.causa = 'notifiche')
+`);
+
 // A CHI si riferisce un movimento, quando si riferisce a qualcuno. Serve per
 // gli inviti: cancellando un account bisogna togliere a chi l'ha portato
 // esattamente i punti che quell'invito gli aveva dato, e per trovarli serve

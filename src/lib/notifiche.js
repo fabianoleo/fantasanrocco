@@ -15,6 +15,7 @@
 // ===================================================================
 const webpush = require('web-push');
 const { db } = require('../db');
+const punti = require('./punti');
 
 // ── Web Push (VAPID) ────────────────────────────────────────────────
 const PUSH_ENABLED = !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
@@ -32,6 +33,13 @@ function _subObj(row) { return { endpoint: row.endpoint, keys: { p256dh: row.p25
 // Bonus notifiche: +100 punti finché l'utente ha ALMENO un'iscrizione push.
 // Idempotente: la colonna notif_bonus evita di accreditare due volte, e toglie
 // i punti (anche in negativo) quando non resta nessuna iscrizione attiva.
+//
+// Passa da punti.muovi come tutto il resto. Prima muoveva points_adjust con
+// un UPDATE suo e non lasciava riga nel registro: erano gli unici punti del
+// gioco a non passare di lì, e si vedeva — nello storico di chi aveva
+// attivato gli avvisi comparivano 100 punti "non spiegati", che la pagina
+// attribuiva a movimenti precedenti al registro. Non erano vecchi: erano
+// questi.
 const NOTIF_BONUS = 100;
 function reconcileNotifBonus(userId) {
   if (!userId) return 0;
@@ -39,11 +47,13 @@ function reconcileNotifBonus(userId) {
   if (!u) return 0;
   const hasSub = db.prepare('SELECT 1 FROM push_subscriptions WHERE user_id = ? LIMIT 1').get(userId);
   if (hasSub && !u.notif_bonus) {
-    db.prepare('UPDATE users SET notif_bonus = 1, points_adjust = points_adjust + ? WHERE id = ?').run(NOTIF_BONUS, userId);
+    db.prepare('UPDATE users SET notif_bonus = 1 WHERE id = ?').run(userId);
+    punti.muovi(userId, NOTIF_BONUS, 'notifiche', 'Avvisi attivati');
     return NOTIF_BONUS;
   }
   if (!hasSub && u.notif_bonus) {
-    db.prepare('UPDATE users SET notif_bonus = 0, points_adjust = points_adjust - ? WHERE id = ?').run(NOTIF_BONUS, userId);
+    db.prepare('UPDATE users SET notif_bonus = 0 WHERE id = ?').run(userId);
+    punti.muovi(userId, -NOTIF_BONUS, 'notifiche', 'Avvisi disattivati');
     return -NOTIF_BONUS;
   }
   return 0;

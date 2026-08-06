@@ -26,6 +26,7 @@ const CAUSE = {
   striscia:     'Striscia giornaliera',
   sezione:      'Sezione completata',
   moderazione:  'Bonus dello staff',
+  notifiche:    'Avvisi della festa',
   codice:       'Codice premio',
   admin:        'Assegnati a mano',
   pronostico:   'Pronostico',

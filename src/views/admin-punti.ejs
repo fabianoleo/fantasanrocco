@@ -9,7 +9,7 @@
     <h1 class="sp-nome"><%= utente.nickname %></h1>
     <p class="sp-meta">
       <span class="role-badge role-<%= utente.role %>"><%= utente.role %></span>
-      iscritto il <%= String(utente.created_at).slice(0, 10) %>
+      iscritto il <%= oraItaliana(utente.created_at, true) %>
     </p>
   </div>
   <div class="sp-totale">
@@ -61,7 +61,9 @@
     <ol class="sp-lista">
       <% voci.forEach((v) => { %>
         <li class="sp-voce sp-voce-<%= v.causa %> <%= v.delta < 0 ? 'is-meno' : '' %>">
-          <span class="sp-quando"><%= String(v.quando).replace('T', ' ').slice(0, 16) %></span>
+          <%# oraItaliana e non la stringa grezza: nel database le date sono UTC,
+              e stampate cosi' com'erano davano due ore indietro per tutta l'estate. %>
+          <span class="sp-quando"><%= oraItaliana(v.quando) %></span>
           <span class="sp-cosa">
             <span class="sp-titolo"><%= v.titolo %></span>
             <% if (v.dettaglio) { %><span class="sp-dett"><%= v.dettaglio %></span><% } %>
