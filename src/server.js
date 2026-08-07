@@ -4117,7 +4117,35 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).render('error', { title: 'Errore', message: msg });
 });
 
+// Riporta i bonus invito già pagati sotto la regola dei 350 punti: chi ha
+// incassato per un amico che non ci è arrivato se li vede togliere, con un
+// avviso. Gira UNA volta sola — l'interruttore sta nel database, non in una
+// variabile, o a ogni riavvio del container ripartirebbe e le notifiche
+// arriverebbero di nuovo (senza togliere altri punti, ma sarebbe comunque
+// una brutta figura).
+//
+// Sta all'avvio e non in db.js perché manda notifiche, e db.js è lo strato
+// più in basso: non deve sapere che esistono le push.
+function allineaInvitiUnaVolta() {
+  const CHIAVE = 'inviti_allineati_a_soglia';
+  const fatto = db.prepare('SELECT valore FROM impostazioni WHERE chiave = ?').get(CHIAVE);
+  if (fatto) return;
+  try {
+    const tolti = inviti.allineaAllaSoglia();
+    db.prepare("INSERT INTO impostazioni (chiave, valore) VALUES (?, datetime('now'))").run(CHIAVE);
+    if (!tolti.length) { console.log('[INVITI] nessun bonus da riportare alla soglia.'); return; }
+    const somma = tolti.reduce((a, x) => a + x.punti, 0);
+    console.log(`[INVITI] tolti ${somma} punti a ${tolti.length} persone: amici sotto i ${inviti.SOGLIA_INVITO} punti.`);
+    tolti.forEach((x) => inviti.avvisaAllineamento(x));
+  } catch (e) {
+    // Un errore qui non deve impedire all'app di partire: senza l'interruttore
+    // scritto, il prossimo avvio riprova.
+    console.error('[INVITI] allineamento alla soglia fallito:', e.message);
+  }
+}
+
 app.listen(PORT, () => {
   console.log(`\n🎉 FantaSanRocco è attivo — accessibile via Cloudflare Tunnel.`);
   console.log(`   Dati salvati in: ${DATA_DIR}\n`);
+  allineaInvitiUnaVolta();
 });

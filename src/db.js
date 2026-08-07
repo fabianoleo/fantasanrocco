@@ -435,17 +435,24 @@ try { db.exec('ALTER TABLE users ADD COLUMN invito_pagato INTEGER NOT NULL DEFAU
 // e un invitato di domani che il bonus non l'ha ancora fatto scattare non
 // viene toccato. Il ramo con rif_user_id IS NULL prende i primissimi inviti,
 // pagati quando quella colonna non esisteva ancora.
+//
+// Si guarda il NETTO e non "esiste un pagamento": un bonus può essere stato
+// pagato e poi tolto — perché quell'amico sotto i 350 punti non ci arrivava
+// (vedi allineaAllaSoglia) — e in quel caso la riga del pagamento c'è ancora
+// ma i punti no. Cercando solo i movimenti positivi si rimetterebbe il segno
+// a ogni riavvio, e quell'invito non potrebbe più essere pagato il giorno che
+// l'amico la soglia la raggiunge davvero.
 db.exec(`
 UPDATE users SET invito_pagato = 1
 WHERE invited_by IS NOT NULL AND invito_pagato = 0
-  AND EXISTS (
-    SELECT 1 FROM punti_movimenti m
-    WHERE m.causa = 'invito' AND m.delta > 0
+  AND (
+    SELECT COALESCE(SUM(m.delta), 0) FROM punti_movimenti m
+    WHERE m.causa = 'invito'
       AND (m.rif_user_id = users.id
            OR (m.rif_user_id IS NULL
                AND m.user_id = users.invited_by
                AND m.dettaglio = 'Iscrizione di ' || users.nickname))
-  )
+  ) > 0
 `);
 // UNIQUE come indice separato: ALTER TABLE ADD COLUMN non sa aggiungere un
 // vincolo UNIQUE. NOCASE perche' il codice si detta a voce e chi lo riscrive

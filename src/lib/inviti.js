@@ -3,14 +3,20 @@
 // -------------------------------------------------------------------
 // Ogni giocatore ha UN codice, sempre lo stesso, che può girare a
 // quanti amici vuole. Chi si iscrive lo scrive nel form (o arriva dal
-// link, che lo compila da solo) e in quel momento — e solo in quel
-// momento — chi ha invitato incassa i punti.
+// link, che lo compila da solo), e da quel momento i due sono collegati.
 //
-// Il premio si paga alla NASCITA dell'account, mai dopo. È questo che
-// rende impossibile pagarlo due volte per la stessa persona: non c'è
-// un secondo momento in cui possa succedere. Per la stessa ragione non
-// serve controllare che nessuno usi il proprio codice — chi si iscrive
-// non ha ancora un account, quindi non ha ancora un codice.
+// I punti però NON arrivano lì. Arrivano quando l'amico raggiunge la
+// soglia (350 punti), ed è tutto il senso della cosa: pagare
+// all'iscrizione voleva dire pagare chi si fabbricava gli account, e
+// riconoscerli dopo era una caccia. A 350 punti un account finto non ci
+// arriva — bisogna giocare davvero.
+//
+// Il prezzo di questa scelta è che il pagamento non coincide più con un
+// evento che accade una volta sola per costruzione: serve il segno
+// `invito_pagato`, e ogni strada che tocca i punti deve passare da
+// verificaSoglia. Chi usa il proprio codice invece resta impossibile per
+// conto suo: chi si iscrive non ha ancora un account, quindi non ha
+// ancora un codice.
 //
 // Il codice NON è usa-e-getta come la vecchia tabella `invites` (tolta
 // quando le iscrizioni sono diventate libere): quella serviva a
@@ -138,31 +144,87 @@ function verificaSoglia(utenteId) {
 // così la classifica degli inviti nel pannello — che somma i movimenti
 // 'invito' — si corregge da sola man mano che si ripulisce, invece di
 // continuare a mostrare i punti di account che non esistono più.
-function storna(invitatoId, nicknameInvitato) {
-  const righe = db.prepare(
-    "SELECT id, user_id, delta FROM punti_movimenti WHERE causa = 'invito' AND rif_user_id = ?"
-  ).all(invitatoId);
+// Si ragiona sul NETTO — pagamenti meno storni già fatti — e non riga per
+// riga. Uno stesso invito può ormai essere pagato, disfatto e ripagato:
+// pagato, poi tolto perché l'amico era sotto soglia, poi ripagato quando la
+// soglia l'ha raggiunta. Riga per riga si sarebbero stornati due pagamenti
+// invece di uno, e la penalità sarebbe stata doppia. Sul netto il conto
+// torna in tutti i casi, compreso quello in cui non c'è niente da togliere.
+//
+// Lo storno porta il riferimento all'invitato come il pagamento: è quello
+// che permette di sommarli insieme la volta dopo.
+function storna(invitatoId, nicknameInvitato, motivo) {
+  const conRif = db.prepare(`
+    SELECT user_id, SUM(delta) AS netto FROM punti_movimenti
+    WHERE causa = 'invito' AND rif_user_id = ? GROUP BY user_id
+  `).all(invitatoId);
 
   // Gli inviti pagati prima che esistesse rif_user_id non hanno riferimento:
-  // lì l'unico appiglio è il testo, ed è per questo che il dettaglio lo
-  // negativo) restano fuori: un secondo storno raddoppierebbe la penalità.
-  // Il testo del dettaglio è quello che scriveva la vecchia regola, quando il
-  // bonus si pagava all'iscrizione: sono gli unici movimenti senza riferimento.
-  const daStornare = righe.length ? righe : db.prepare(`
-    SELECT m.id, m.user_id, m.delta FROM punti_movimenti m
+  // lì l'unico appiglio è il testo del dettaglio, che lo scriveva la vecchia
+  // regola — quando il bonus si pagava all'iscrizione — e nessun altro.
+  const daStornare = conRif.length ? conRif : db.prepare(`
+    SELECT m.user_id, SUM(m.delta) AS netto FROM punti_movimenti m
     JOIN users u ON u.id = ?
     WHERE m.causa = 'invito' AND m.rif_user_id IS NULL
       AND m.user_id = u.invited_by AND m.dettaglio = ?
+    GROUP BY m.user_id
   `).all(invitatoId, `Iscrizione di ${nicknameInvitato}`);
 
   let tolti = 0;
   for (const r of daStornare) {
-    if (r.delta <= 0) continue;
-    punti.muovi(r.user_id, -r.delta, 'invito',
-      `Invito annullato: account di ${nicknameInvitato} eliminato`, null);
-    tolti += r.delta;
+    if (r.netto <= 0) continue;
+    punti.muovi(r.user_id, -r.netto, 'invito',
+      motivo || `Invito annullato: account di ${nicknameInvitato} eliminato`, invitatoId);
+    tolti += r.netto;
   }
   return tolti;
+}
+
+// Riporta i vecchi pagamenti sotto la regola nuova: chi ha incassato per un
+// amico che non è (ancora) arrivato a 350 punti se li vede togliere.
+//
+// `invito_pagato` torna a 0, non resta segnato: non è una punizione ma un
+// rinvio: se quell'amico un giorno i 350 punti li fa, il bonus riparte da
+// solo — ed è per questo che la notifica lo dice, altrimenti sembrerebbe
+// una porta chiusa.
+//
+// Torna un elenco per invitante, così chi chiama manda UN avviso a testa
+// invece di uno per ogni amico: tre notifiche di fila per la stessa cosa
+// sarebbero tre volte la stessa brutta notizia.
+function allineaAllaSoglia() {
+  const candidati = db.prepare(`
+    SELECT id, nickname, invited_by FROM users
+    WHERE invited_by IS NOT NULL AND invito_pagato = 1
+  `).all();
+
+  const perInvitante = new Map();
+  db.transaction(() => {
+    for (const a of candidati) {
+      if (userPoints(a.id) >= SOGLIA_INVITO) continue;
+      const tolti = storna(a.id, a.nickname,
+        `${a.nickname} non ha ancora raggiunto ${SOGLIA_INVITO} punti`);
+      if (!tolti) continue;
+      db.prepare('UPDATE users SET invito_pagato = 0 WHERE id = ?').run(a.id);
+      const acc = perInvitante.get(a.invited_by) || { invitanteId: a.invited_by, quanti: 0, punti: 0 };
+      acc.quanti++; acc.punti += tolti;
+      perInvitante.set(a.invited_by, acc);
+    }
+  })();
+
+  return [...perInvitante.values()];
+}
+
+// L'avviso di quei punti tolti. Dice anche che si riprendono, perché è vero
+// e perché senza sembrerebbe una punizione invece di un rinvio.
+function avvisaAllineamento({ invitanteId, quanti, punti: tolti }) {
+  const { pushToUser } = require('./notifiche');
+  return pushToUser(invitanteId, {
+    title: `−${tolti} punti dagli inviti`,
+    body: `${quanti === 1 ? 'Un amico che hai invitato non è' : `${quanti} amici che hai invitato non sono`} `
+        + `ancora ${quanti === 1 ? 'arrivato' : 'arrivati'} a ${SOGLIA_INVITO} punti: ora il bonus si prende solo lì. `
+        + `Li riprendi appena ci ${quanti === 1 ? 'arriva' : 'arrivano'}.`,
+    url: '/profilo',
+  }).catch((e) => console.error('[INVITO] push allineamento', e.message));
 }
 
 // L'avviso a chi ha invitato. Va chiamata DOPO che la transazione ha
@@ -284,5 +346,6 @@ function classifica(limite = 20) {
 module.exports = {
   PUNTI_INVITO, SOGLIA_INVITO,
   codicePer, invitante, collega, verificaSoglia, storna,
+  allineaAllaSoglia, avvisaAllineamento,
   avvisa, riepilogo, classifica, normalizza,
 };
