@@ -50,6 +50,17 @@ function muovi(userId, delta, causa, dettaglio, rifUserId) {
   db.prepare('UPDATE users SET points_adjust = points_adjust + ? WHERE id = ?').run(delta, userId);
   db.prepare('INSERT INTO punti_movimenti (user_id, delta, causa, dettaglio, rif_user_id) VALUES (?, ?, ?, ?, ?)')
     .run(userId, delta, causa, dettaglio || null, rifUserId || null);
+
+  // Il bonus di chi l'ha invitato scatta quando questa persona arriva a 350
+  // punti, e da qui passano TUTTI i movimenti tranne le missioni (che hanno
+  // il loro controllo all'approvazione). Metterlo qui invece che in ognuna
+  // delle dieci rotte che danno punti è l'unico modo per non dimenticarne
+  // una: e una dimenticata sarebbe un bonus che non arriva mai, senza che
+  // nessuno dei due se ne accorga.
+  //
+  // Il require è qui dentro e non in cima perché inviti richiede punti:
+  // caricarsi a vicenda al primo require lascerebbe uno dei due a metà.
+  require('./inviti').verificaSoglia(userId);
 }
 
 // Lo storico completo di una persona: i movimenti del registro PIÙ le

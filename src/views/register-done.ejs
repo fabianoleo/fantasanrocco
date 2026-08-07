@@ -3,10 +3,12 @@
   <h1>Registrazione completata!</h1>
   <p>Benvenuto/a <strong><%= nickname %></strong>, sei ufficialmente in gara.</p>
   <% if (invitante) { %>
-    <%# Chi ha invitato non riceve nessun avviso: dirlo qui e' l'unico modo
-        perche' qualcuno sappia che il bonus e' stato pagato davvero. %>
-    <p class="muted"><strong><%= invitante %></strong> ti ha invitato e ha appena preso
-      <strong>+<%= puntiInvito %> punti</strong>. Ricambia: nel tuo profilo trovi il codice da girare ai tuoi amici.</p>
+    <%# La condizione va detta a chi si iscrive, non solo a chi invita: e'
+        questa persona che deve giocare perche' il bonus scatti, e se non lo
+        sa non ha motivo di farlo. %>
+    <p class="muted"><strong><%= invitante %></strong> ti ha invitato: prenderà
+      <strong>+<%= puntiInvito %> punti</strong> quando arriverai a <strong><%= sogliaInvito %> punti</strong>,
+      quindi gioca. Ricambia: nel tuo profilo trovi il codice da girare ai tuoi amici.</p>
   <% } %>
   <p>D'ora in poi, per giocare ti basta <strong>accedere</strong> con il nickname e la password
     che hai appena scelto. Salva questo link nei preferiti:</p>

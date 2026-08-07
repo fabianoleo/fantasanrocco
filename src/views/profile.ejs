@@ -84,7 +84,15 @@
 <section class="push-box">
   <h2 class="pf-section-title">Invita gli amici <span class="pf-badge-pts">+<%= invito.punti %></span></h2>
   <p class="muted small">Ogni amico che si iscrive col tuo codice ti fa guadagnare
-    <strong>+<%= invito.punti %> punti</strong>. Vale una volta per amico, alla sua prima iscrizione.</p>
+    <strong>+<%= invito.punti %> punti</strong>. Vale una volta per amico.</p>
+  <%# La condizione sta in un riquadro suo e non in mezzo alla riga sopra:
+      e' la cosa che spiega perche' i punti possono non arrivare subito, e
+      dentro un paragrafo grigio non la leggerebbe nessuno. %>
+  <p class="pf-invito-nota">
+    <%- icon('warning') %>
+    <span>I punti arrivano <strong>quando il tuo amico raggiunge <%= invito.soglia %> punti</strong>,
+      non appena si iscrive. Invitare qualcuno che poi non gioca non vale niente.</span>
+  </p>
 
   <div class="pf-invito-codice">
     <span class="pf-invito-label">Il tuo codice</span>
@@ -104,12 +112,25 @@
     </div>
   </div>
 
+  <%# Due numeri separati: quelli che hanno gia' fruttato e quelli che devono
+      ancora arrivare alla soglia. Con un totale solo, chi ha invitato cinque
+      amici e vede zero punti crede che sia rotto. %>
   <p class="muted small pf-invito-conto">
-    <% if (invito.quanti) { %>
-      Hai portato <strong><%= invito.quanti %></strong> <%= invito.quanti === 1 ? 'amico' : 'amici' %>,
-      per un totale di <strong><%= invito.guadagnati %> punti</strong>.
-    <% } else { %>
+    <% if (!invito.portati) { %>
       Non hai ancora invitato nessuno.
+    <% } else { %>
+      <% if (invito.quanti) { %>
+        <strong><%= invito.quanti %></strong> <%= invito.quanti === 1 ? 'amico ti ha fruttato' : 'amici ti hanno fruttato' %>
+        <strong><%= invito.guadagnati %> punti</strong>.
+      <% } else { %>
+        Nessuno dei tuoi amici ha ancora raggiunto i <%= invito.soglia %> punti.
+      <% } %>
+      <% if (invito.inAttesa) { %>
+        <br><%= invito.inAttesa %> <%= invito.inAttesa === 1 ? 'sta ancora giocando' : 'stanno ancora giocando' %>:
+        quando <%= invito.inAttesa === 1 ? 'arriva' : 'arrivano' %> a <%= invito.soglia %> punti
+        <%= invito.inAttesa === 1 ? 'ti fa' : 'ti fanno' %> guadagnare
+        <strong>+<%= invito.inAttesa * invito.punti %></strong>.
+      <% } %>
     <% } %>
   </p>
 </section>

@@ -4133,6 +4133,11 @@ textarea:focus-visible,
   font-size: .76rem; color: var(--text-2);
 }
 .inv-amico small { color: var(--text-3); font-size: .66rem; }
+/* Chi ha gia' fatto scattare il bonus: e' l'unico che ha davvero pagato,
+   quindi si stacca dagli altri invece di sembrare uguale. */
+.inv-amico.is-pagato {
+  background: rgba(212,160,26,.14); border-color: rgba(212,160,26,.32); color: var(--gold-2);
+}
 /* Chi non ha mai giocato: è il dato che si cerca, quindi si vede da lontano. */
 .inv-amico.is-fermo {
   background: rgba(231,76,60,.12); border-color: rgba(231,76,60,.3); color: var(--red);
@@ -4201,6 +4206,17 @@ textarea:focus-visible,
   color: var(--gold); margin-right: auto;
 }
 .pf-invito-conto { margin-top: .6rem; }
+/* La condizione dei 350 punti: riquadro suo, perché è la cosa che spiega
+   perché i punti possono non arrivare subito. */
+.pf-invito-nota {
+  display: flex; gap: .5rem; align-items: flex-start;
+  margin: .7rem 0 0; padding: .55rem .7rem;
+  background: rgba(212,160,26,.07);
+  border: 1px solid rgba(212,160,26,.2);
+  border-radius: 10px;
+  font-size: .78rem; color: var(--text-2); line-height: 1.45;
+}
+.pf-invito-nota .ico { width: 15px; height: 15px; color: var(--gold-2); flex-shrink: 0; margin-top: .1rem; }
 
 /* ── 2FA ─────────────────────────────────────────────────────────── */
 .twofa-qr { background:#fff; padding:10px; border-radius:12px; width:220px; max-width:70%; margin:.9rem 0; }

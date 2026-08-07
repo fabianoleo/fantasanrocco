@@ -420,6 +420,33 @@ db.exec('CREATE INDEX IF NOT EXISTS idx_movimenti_rif ON punti_movimenti(rif_use
 try { db.exec('ALTER TABLE users ADD COLUMN invite_code TEXT'); } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN invited_by INTEGER REFERENCES users(id) ON DELETE SET NULL'); } catch {}
 try { db.exec('ALTER TABLE users ADD COLUMN invited_at TEXT'); } catch {}
+// Il bonus dell'invito non si paga piu' all'iscrizione ma quando l'invitato
+// arriva a 350 punti (vedi lib/inviti.js): serve un segno di "gia' pagato",
+// perche' da qui in poi il momento del pagamento non coincide piu' con un
+// evento che accade una volta sola per costruzione.
+try { db.exec('ALTER TABLE users ADD COLUMN invito_pagato INTEGER NOT NULL DEFAULT 0'); } catch {}
+// Chi era stato invitato PRIMA di questa regola il bonus l'ha gia' incassato
+// all'iscrizione: va segnato, o alla prima volta che supera i 350 punti lo
+// farebbe incassare una seconda volta. Si riconosce dal movimento gia' scritto
+// nel registro, non dalla data: e' il pagamento che conta.
+//
+// La condizione e' "esiste un pagamento per questa persona", non "e' un
+// account vecchio": cosi' la si puo' rieseguire a ogni avvio senza pensarci,
+// e un invitato di domani che il bonus non l'ha ancora fatto scattare non
+// viene toccato. Il ramo con rif_user_id IS NULL prende i primissimi inviti,
+// pagati quando quella colonna non esisteva ancora.
+db.exec(`
+UPDATE users SET invito_pagato = 1
+WHERE invited_by IS NOT NULL AND invito_pagato = 0
+  AND EXISTS (
+    SELECT 1 FROM punti_movimenti m
+    WHERE m.causa = 'invito' AND m.delta > 0
+      AND (m.rif_user_id = users.id
+           OR (m.rif_user_id IS NULL
+               AND m.user_id = users.invited_by
+               AND m.dettaglio = 'Iscrizione di ' || users.nickname))
+  )
+`);
 // UNIQUE come indice separato: ALTER TABLE ADD COLUMN non sa aggiungere un
 // vincolo UNIQUE. NOCASE perche' il codice si detta a voce e chi lo riscrive
 // non sta a guardare le maiuscole.

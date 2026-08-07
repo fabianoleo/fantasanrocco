@@ -819,6 +819,7 @@ app.get('/registrati', (req, res) => {
     title: 'Registrati',
     invito: inviti.normalizza(req.query.invito),
     puntiInvito: inviti.PUNTI_INVITO,
+    sogliaInvito: inviti.SOGLIA_INVITO,
   });
 });
 
@@ -893,12 +894,14 @@ app.post('/registrati', registerLimiter, (req, res) => {
   db.transaction(() => {
     const r = db.prepare("INSERT INTO users (nickname, email, password_hash, privacy_accepted_at) VALUES (?, ?, ?, datetime('now'))")
       .run(nickname, email, hash);
-    if (amico) inviti.premia(r.lastInsertRowid, amico.id, nickname);
+    // Solo il collegamento: i punti a chi ha invitato arrivano quando questa
+    // persona raggiunge la soglia, non adesso.
+    if (amico) inviti.collega(r.lastInsertRowid, amico.id);
   })();
 
   // L'avviso parte a transazione chiusa e non si aspetta: l'iscrizione e'
-  // gia' valida e i punti gia' pagati, una push lenta o fallita non deve
-  // tenere fermo chi si sta registrando.
+  // gia' valida, una push lenta o fallita non deve tenere fermo chi si sta
+  // registrando.
   if (amico) inviti.avvisa(amico.id, nickname);
 
   res.render('register-done', {
@@ -906,6 +909,7 @@ app.post('/registrati', registerLimiter, (req, res) => {
     nickname,
     invitante: amico ? amico.nickname : null,
     puntiInvito: inviti.PUNTI_INVITO,
+    sogliaInvito: inviti.SOGLIA_INVITO,
   });
 });
 
@@ -2463,6 +2467,7 @@ app.get('/profilo', auth.requireLogin, (req, res) => {
     invito: {
       codice: inviti.codicePer(req.currentUser.id),
       punti: inviti.PUNTI_INVITO,
+      soglia: inviti.SOGLIA_INVITO,
       // publicBaseUrl e non l'header Host cosi' com'e': il link va copiato e
       // mandato in giro, e un host falsificato manderebbe gli amici altrove.
       base: publicBaseUrl(req),
@@ -2894,6 +2899,11 @@ app.post('/moderazione/:id/:azione', auth.requireStaff, (req, res) => {
         // Questa approvazione può aver completato una sezione → bonus una tantum
         awardSectionsAndNotify(sub.user_id, req);
         checkLevelUp(sub.user_id);
+        // I punti delle missioni stanno in submissions, non in points_adjust:
+        // sono gli unici che non passano da punti.muovi, quindi la soglia
+        // dell'invito va controllata anche qui — ed è la strada più probabile
+        // per arrivare a 350.
+        inviti.verificaSoglia(sub.user_id);
       }
     } else {
       // Rifiutata: avvisiamo lo stesso, altrimenti l'utente resta ad aspettare
@@ -3428,7 +3438,8 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
     };
   });
   res.render('admin', { title: 'Admin', missions, gruppiMissioni, users, codes, baseUrl, backups, auditLog, reportedStories, pronostico, predictions,
-    classificaInviti, puntiInvito: inviti.PUNTI_INVITO, emailBloccate,
+    classificaInviti, puntiInvito: inviti.PUNTI_INVITO,
+    sogliaInvito: inviti.SOGLIA_INVITO, emailBloccate,
     sezioni: SECTIONS, notifSubmissions: !!req.currentUser.notif_submissions, soloMissioni,
     iscrizioniQuando: modalita.quando(),
     segnalazioni });

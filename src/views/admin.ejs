@@ -653,11 +653,12 @@
       regalare punti a chi l'ha creato non gira la Ruota e non manda prove. %>
   <section class="card">
     <h2 class="staff-title"><%- icon('people') %> Punti dagli inviti · primi <%= classificaInviti.length %></h2>
-    <p class="muted small">Ogni amico portato vale <strong>+<%= puntiInvito %> punti</strong>. Tanti inviti non sono
-      un problema: chi ha tanti amici ne porta tanti. Da guardare e' la colonna
-      <strong>mai giocato</strong> — un account creato per regalare punti a chi l'ha creato resta a zero
-      e non manda prove. Utile anche l'ora: dieci amici arrivati nello stesso minuto sono
-      un'altra cosa da dieci arrivati in tre giorni.</p>
+    <p class="muted small">Ogni amico portato vale <strong>+<%= puntiInvito %> punti</strong>, ma solo quando
+      arriva a <strong><%= sogliaInvito %> punti</strong>: gli amici ancora sotto soglia sono in grigio e non
+      hanno pagato niente. Da guardare restano i <strong>mai giocato</strong> — a un account fabbricato la
+      soglia non la fa arrivare nessuno, ma vederli in fila dice comunque cosa stava provando a fare
+      chi li ha creati. Utile anche l'ora: dieci amici arrivati nello stesso minuto sono un'altra
+      cosa da dieci arrivati in tre giorni.</p>
 
     <% if (!classificaInviti.length) { %>
       <p class="muted small">Nessuno ha ancora portato amici.</p>
@@ -669,7 +670,7 @@
               <span class="inv-pos"><%= i + 1 %></span>
               <span class="user-name"><%= r.nickname %></span>
               <span class="role-badge role-<%= r.role %>"><%= r.role %></span>
-              <span class="user-pts"><%= r.punti %> pt · <%= r.quanti %> <%= r.quanti === 1 ? 'amico' : 'amici' %></span>
+              <span class="user-pts"><%= r.punti %> pt · <%= r.pagati %>/<%= r.quanti %> a segno</span>
               <% if (r.maiGiocatoQuanti) { %>
                 <span class="tag tag-off"><%- icon('warning') %> <%= r.maiGiocatoQuanti %> mai <%= r.maiGiocatoQuanti === 1 ? 'giocato' : 'giocati' %></span>
               <% } %>
@@ -677,8 +678,8 @@
             </div>
             <p class="inv-chi">
               <% r.invitati.forEach((a) => { %>
-                <span class="inv-amico <%= a.maiGiocato ? 'is-fermo' : '' %>"
-                      title="<%= a.maiGiocato ? 'Nessuna prova inviata e saldo a zero' : 'Ha giocato' %>">
+                <span class="inv-amico <%= a.maiGiocato ? 'is-fermo' : '' %> <%= a.pagato ? 'is-pagato' : '' %>"
+                      title="<%= a.pagato ? 'Ha superato la soglia: bonus pagato' : (a.maiGiocato ? 'Nessuna prova inviata e saldo a zero' : 'Sta giocando, soglia non ancora raggiunta') %>">
                   <%= a.nickname %>
                   <small><%= oraItaliana(a.quando) %></small>
                 </span>

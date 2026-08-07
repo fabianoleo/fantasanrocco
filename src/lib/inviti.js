@@ -19,9 +19,19 @@
 // ===================================================================
 const { db } = require('../db');
 const punti = require('./punti');
+// Il punteggio vero di una persona: missioni approvate PIÙ points_adjust.
+// La soglia si misura su quello, non sul solo saldo, o le missioni — che
+// sono il cuore del gioco — non conterebbero.
+const { userPoints } = require('./classifica');
 
-// Quanto vale portare un amico.
+// Quanto vale portare un amico, e quanto deve giocare l'amico perché valga.
+//
+// La soglia è tutto il senso della cosa: senza, bastava fabbricare account
+// per fare punti, e cancellarli a posteriori era una caccia. A 350 punti un
+// account finto non ci arriva — bisogna giocare davvero — quindi il problema
+// si sposta da "riconoscere i furbi dopo" a "non pagarli mai".
 const PUNTI_INVITO = 10;
+const SOGLIA_INVITO = 350;
 
 // Niente 0/O, 1/I/L: il codice si detta a voce e si copia a mano da uno
 // schermo di telefono, e quelle coppie si sbagliano sempre.
@@ -76,16 +86,43 @@ function invitante(grezzo) {
   return db.prepare('SELECT id, nickname FROM users WHERE invite_code = ? COLLATE NOCASE').get(codice) || null;
 }
 
-// Il premio. Va chiamata DENTRO la transazione che crea l'account: o
-// nascono insieme l'iscritto e i punti di chi l'ha portato, o non nasce
-// niente. Un amico iscritto senza il suo bonus sarebbe irrecuperabile —
-// nessuno se ne accorgerebbe mai.
-function premia(nuovoId, invitanteId, nicknameNuovo) {
+// Il collegamento fra chi invita e chi si è iscritto. Qui NON si paga
+// niente: all'iscrizione si sa solo che quella persona è arrivata col
+// codice di un'altra. I punti arrivano dopo, se e quando gioca davvero
+// (vedi verificaSoglia).
+function collega(nuovoId, invitanteId) {
   db.prepare("UPDATE users SET invited_by = ?, invited_at = datetime('now') WHERE id = ?")
     .run(invitanteId, nuovoId);
-  // Il quinto argomento è chi si è iscritto: è quello che permette di
-  // ritrovare questo esatto movimento se un domani l'account sparisce.
-  punti.muovi(invitanteId, PUNTI_INVITO, 'invito', `Iscrizione di ${nicknameNuovo}`, nuovoId);
+}
+
+// Il premio, quando l'invitato arriva alla soglia. Si chiama a ogni
+// movimento di punti (vedi lib/punti.js) e a ogni prova approvata: sono i
+// due soli modi in cui un punteggio cresce.
+//
+// Torna 0 quasi sempre, ed è la ragione per cui può stare su quella strada:
+// due letture su una riga sola, e si ferma alla prima condizione che manca.
+//
+// Una volta pagato resta pagato, anche se poi il punteggio ridiscende sotto
+// i 350 (uno storno, una prova annullata): la soglia dice "questa persona
+// ha giocato davvero", ed è un fatto avvenuto, non uno stato.
+function verificaSoglia(utenteId) {
+  const u = db.prepare('SELECT id, nickname, invited_by, invito_pagato FROM users WHERE id = ?').get(utenteId);
+  if (!u || !u.invited_by || u.invito_pagato) return 0;
+  if (userPoints(u.id) < SOGLIA_INVITO) return 0;
+
+  // Il segno va messo PRIMA di pagare. muovi() richiama questa stessa
+  // funzione per chi incassa — che potrebbe essere a sua volta un invitato
+  // vicino alla soglia — e senza il segno già scritto si rientrerebbe qui
+  // sullo stesso utente.
+  db.prepare('UPDATE users SET invito_pagato = 1 WHERE id = ?').run(u.id);
+  punti.muovi(u.invited_by, PUNTI_INVITO, 'invito',
+    `${u.nickname} ha raggiunto ${SOGLIA_INVITO} punti`, u.id);
+
+  // L'avviso esce dalla transazione in corso: setImmediate lo rimanda al giro
+  // dopo, quando il commit è già passato. Dentro terrebbe aperto il lock di
+  // scrittura per tutta la durata di una chiamata di rete.
+  setImmediate(() => avvisaTraguardo(u.invited_by, u.nickname));
+  return PUNTI_INVITO;
 }
 
 // Disfa il premio quando l'account invitato viene cancellato. Va chiamata
@@ -108,8 +145,9 @@ function storna(invitatoId, nicknameInvitato) {
 
   // Gli inviti pagati prima che esistesse rif_user_id non hanno riferimento:
   // lì l'unico appiglio è il testo, ed è per questo che il dettaglio lo
-  // scrive premia() qui sopra e nessun altro. Righe già stornate (delta
   // negativo) restano fuori: un secondo storno raddoppierebbe la penalità.
+  // Il testo del dettaglio è quello che scriveva la vecchia regola, quando il
+  // bonus si pagava all'iscrizione: sono gli unici movimenti senza riferimento.
   const daStornare = righe.length ? righe : db.prepare(`
     SELECT m.id, m.user_id, m.delta FROM punti_movimenti m
     JOIN users u ON u.id = ?
@@ -140,13 +178,27 @@ function storna(invitatoId, nicknameInvitato) {
 // l'amico si era iscritto davvero.
 function avvisa(invitanteId, nicknameNuovo) {
   const { pushToUser } = require('./notifiche');
-  const { quanti } = riepilogo(invitanteId);
   return pushToUser(invitanteId, {
     title: '🎉 Un amico si è iscritto!',
-    body: `${nicknameNuovo} si è iscritto col tuo codice — +${PUNTI_INVITO} punti. `
-        + (quanti === 1 ? 'È il primo che porti.' : `Ne hai portati ${quanti}.`),
+    body: `${nicknameNuovo} si è iscritto col tuo codice. `
+        + `Prendi +${PUNTI_INVITO} punti quando arriva a ${SOGLIA_INVITO}.`,
     url: '/profilo',
   }).catch((e) => console.error('[INVITO] push', e.message));
+}
+
+// Il secondo avviso: quello che dice che i punti sono arrivati davvero.
+// Sono due momenti diversi e vanno detti tutti e due — chi invita ha visto
+// l'amico iscriversi giorni prima, e senza questo non saprebbe mai che il
+// bonus è scattato.
+function avvisaTraguardo(invitanteId, nicknameInvitato) {
+  const { pushToUser } = require('./notifiche');
+  const { quanti } = riepilogo(invitanteId);
+  return pushToUser(invitanteId, {
+    title: `⭐ +${PUNTI_INVITO} punti dal tuo invito!`,
+    body: `${nicknameInvitato} ha raggiunto ${SOGLIA_INVITO} punti. `
+        + (quanti === 1 ? 'È il primo amico che ti frutta punti.' : `Amici che ti hanno fruttato punti: ${quanti}.`),
+    url: '/profilo',
+  }).catch((e) => console.error('[INVITO] push traguardo', e.message));
 }
 
 // Quanti ne ha portati e quanto ci ha guadagnato. I punti si ricalcolano
@@ -154,11 +206,16 @@ function avvisa(invitanteId, nicknameNuovo) {
 // cambia, i vecchi inviti restano pagati com'erano al loro tempo — quindi
 // il numero giusto da mostrare è quello del registro, non una moltiplicazione.
 function riepilogo(userId) {
-  const quanti = db.prepare('SELECT COUNT(*) c FROM users WHERE invited_by = ?').get(userId).c;
+  // Due numeri diversi da quando c'è la soglia: quanti ne ha portati in tutto
+  // e quanti hanno gia' fruttato. La differenza sono quelli che devono ancora
+  // arrivare a 350, e va mostrata: senza, chi ha invitato cinque amici e non
+  // vede punti crede che il meccanismo sia rotto.
+  const portati = db.prepare('SELECT COUNT(*) c FROM users WHERE invited_by = ?').get(userId).c;
+  const quanti = db.prepare('SELECT COUNT(*) c FROM users WHERE invited_by = ? AND invito_pagato = 1').get(userId).c;
   const guadagnati = db.prepare(
     "SELECT COALESCE(SUM(delta), 0) s FROM punti_movimenti WHERE user_id = ? AND causa = 'invito'"
   ).get(userId).s;
-  return { quanti, guadagnati };
+  return { portati, quanti, inAttesa: portati - quanti, guadagnati };
 }
 
 // Chi ha guadagnato di più portando amici, e CHI ha portato. Serve a una
@@ -176,6 +233,7 @@ function classifica(limite = 20) {
   const righe = db.prepare(`
     SELECT u.id, u.nickname, u.role,
            COUNT(a.id) AS quanti,
+           SUM(a.invito_pagato) AS pagati,
            COALESCE((SELECT SUM(delta) FROM punti_movimenti
                      WHERE user_id = u.id AND causa = 'invito'), 0) AS punti
     FROM users u
@@ -190,7 +248,8 @@ function classifica(limite = 20) {
   const ids = righe.map((r) => r.id);
   const segnaposti = ids.map(() => '?').join(',');
   const invitati = db.prepare(`
-    SELECT a.invited_by, a.id, a.nickname, a.invited_at, a.points_adjust,
+    SELECT a.invited_by, a.id, a.nickname, a.invited_at, a.invito_pagato,
+           a.points_adjust,
            (SELECT COUNT(*) FROM submissions WHERE user_id = a.id) AS prove
     FROM users a
     WHERE a.invited_by IN (${segnaposti})
@@ -207,6 +266,7 @@ function classifica(limite = 20) {
       id: a.id,
       nickname: a.nickname,
       quando: a.invited_at,
+      pagato: !!a.invito_pagato,
       maiGiocato: a.prove === 0 && a.points_adjust === 0,
     });
   }
@@ -221,4 +281,8 @@ function classifica(limite = 20) {
   });
 }
 
-module.exports = { PUNTI_INVITO, codicePer, invitante, premia, storna, avvisa, riepilogo, classifica, normalizza };
+module.exports = {
+  PUNTI_INVITO, SOGLIA_INVITO,
+  codicePer, invitante, collega, verificaSoglia, storna,
+  avvisa, riepilogo, classifica, normalizza,
+};
