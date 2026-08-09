@@ -51,6 +51,11 @@ const PERMESSE = new Set([
   '/ruota/gira',
   '/missioni/pronostico',    // il pronostico del Palio: sta in /palio, non fra le missioni
   '/api/streak/claim',       // l'altro: il bonus giornaliero
+  // Le storie. La barra sta nel layout, quindi si vede su OGNI pagina aperta:
+  // tenendole chiuse si vedeva l'invito a pubblicare e il caricamento falliva
+  // con un errore che parlava del 12 agosto. E non danno punti, quindi non
+  // toccano il criterio qui sotto: la settimana resta spiegabile.
+  '/storie',
   // Entrare, uscire, recuperare la password: senza queste la settimana
   // delle iscrizioni non avrebbe senso.
   '/registrati', '/login', '/logout', '/login/2fa', '/2fa', '/2fa/attiva', '/2fa/disattiva',
@@ -67,11 +72,18 @@ const PREFISSI = [
   '/avatar/',
   '/api/online',
   '/api/push/',
+  // Foto delle storie, eliminazione e segnalazione: senza queste la barra si
+  // aprirebbe ma le storie non si vedrebbero, e non si potrebbe ne' togliere
+  // la propria ne' segnalare quella di un altro.
+  '/storie/',
+  '/api/storie/',
 ];
 
 // Il criterio, per i casi che verranno: resta aperto ciò che serve a
-// ISCRIVERSI, a INFORMARSI sulla festa, e i modi di fare punti decisi per
-// questa settimana. Resta chiuso tutto ciò che dà punti in altri modi —
+// ISCRIVERSI, a INFORMARSI sulla festa, a FARSI VEDERE (le storie: non
+// danno punti, e una settimana di sole iscrizioni senza niente da guardare
+// è una settimana in cui nessuno riapre l'app), e i modi di fare punti
+// decisi per questa settimana. Resta chiuso tutto ciò che dà punti in altri modi —
 // missioni, mini-giochi, slot, sfide, codici premio — perché a settembre la
 // classifica deve essere spiegabile: in questa settimana i punti potevano
 // arrivare solo da tre posti, e sono la Ruota, il bonus giornaliero e gli
