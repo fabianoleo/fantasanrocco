@@ -10,7 +10,8 @@
     "create-admin": "node strumenti/crea_admin.js admin",
     "prova": "node strumenti/fumo.js && node strumenti/prova_azioni.js",
     "prova:pagine": "node strumenti/fumo.js",
-    "prova:azioni": "node strumenti/prova_azioni.js"
+    "prova:azioni": "node strumenti/prova_azioni.js",
+    "loghi": "node strumenti/ottimizza_loghi.js"
   },
   "license": "MIT",
   "dependencies": {
@@ -36,6 +37,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "sharp": "^0.35.3"
   }
 }
