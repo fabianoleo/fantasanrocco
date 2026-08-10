@@ -15,14 +15,14 @@
 // invece di virare al blu come farebbe un negativo. Serve per i marchi
 // disegnati per la carta bianca, che su fondo scuro sparirebbero.
 //
-//   node strumenti/prepara_loghi.js --schiarisci loghi-png/x.png:x.png
+//   node strumenti/prepara_loghi.js --schiarisci sorgenti/loghi-sponsor/x.png:x.png
 //
 // Con --schiarisci-scuri, invece, si schiariscono SOLO i neri e i grigi e i
 // colori del marchio restano quelli. Serve ai loghi a due facce: un simbolo
 // già acceso più una scritta nera sotto. Schiarendo tutto si salverebbe la
 // scritta ma si spegnerebbe il simbolo.
 //
-//   node strumenti/prepara_loghi.js --schiarisci-scuri loghi-png/x.png:x.png
+//   node strumenti/prepara_loghi.js --schiarisci-scuri sorgenti/loghi-sponsor/x.png:x.png
 // ===================================================================
 const { Jimp } = require('jimp');
 
