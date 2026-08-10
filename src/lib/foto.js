@@ -129,6 +129,12 @@ function datiScatto(fileAssoluto) {
 const LATO_MAX = 1600;
 const QUALITA = 80;
 const STORIA = { latoMax: 1920, qualita: 85 };
+// L'avatar si vede come un cerchio da 44-56px, ma sta nella barra in alto,
+// nella barra storie, sul podio e in classifica: si scarica su OGNI pagina e
+// per OGNI persona visibile, e non scade mai. 512px sono comunque il doppio
+// di quanto serva sugli schermi a densita' tripla, e bastano se un domani lo
+// si vorra' mostrare piu' grande.
+const AVATAR = { latoMax: 512, qualita: 82 };
 
 async function ridimensiona(cartella, nomeFile, opzioni = {}) {
   const latoMax = opzioni.latoMax || LATO_MAX;
@@ -169,5 +175,5 @@ async function ridimensiona(cartella, nomeFile, opzioni = {}) {
 
 module.exports = {
   PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes,
-  ALLOWED_MIME, MIME_TO_EXT, datiScatto, ridimensiona, LATO_MAX, STORIA,
+  ALLOWED_MIME, MIME_TO_EXT, datiScatto, ridimensiona, LATO_MAX, STORIA, AVATAR,
 };

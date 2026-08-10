@@ -21,7 +21,7 @@ const nodemailer = require('nodemailer');
 
 // Impronte delle foto e controllo dei primi byte: vedi lib/foto.js.
 const { PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes, ALLOWED_MIME, MIME_TO_EXT,
-        datiScatto, ridimensiona, STORIA: FOTO_STORIA } = require('./lib/foto');
+        datiScatto, ridimensiona, STORIA: FOTO_STORIA, AVATAR: FOTO_AVATAR } = require('./lib/foto');
 
 const { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR } = require('./db');
 const { placesWithEvents } = require('./dati/luoghi');
@@ -2503,7 +2503,7 @@ app.post('/profilo/cambia-password', auth.requireLogin, (req, res) => {
 
 // Foto profilo (avatar): carica una nuova immagine. Se assente → iniziali.
 app.post('/profilo/avatar', auth.requireLogin, (req, res) => {
-  avatarUpload.single('avatar')(req, res, (err) => {
+  avatarUpload.single('avatar')(req, res, async (err) => {
     if (err) {
       flash(req, 'error', err.message || 'Errore nel caricamento della foto.');
       return res.redirect('/profilo');
@@ -2527,8 +2527,16 @@ app.post('/profilo/avatar', auth.requireLogin, (req, res) => {
     }
     // Rinomina con l'estensione corretta derivata dal contenuto reale
     const correctExt = MIME_TO_EXT[mime] || '.jpg';
-    const safeName = req.file.filename.replace(/\.[^.]+$/, correctExt);
+    let safeName = req.file.filename.replace(/\.[^.]+$/, correctExt);
     try { fs.renameSync(path.join(AVATARS_DIR, req.file.filename), path.join(AVATARS_DIR, safeName)); } catch {}
+
+    // L'avatar si vede in un cerchio da 44-56px ma arriva dal telefono a
+    // 4000px: 512 bastano e avanzano. Va PRIMA dell'UPDATE perche'
+    // ricodificare cambia l'estensione, e salvare il nome vecchio lascerebbe
+    // la riga a puntare a un file che non c'e' piu'.
+    const rid = await ridimensiona(AVATARS_DIR, safeName, FOTO_AVATAR);
+    if (rid) safeName = rid.nomeFile;
+
     // Rimuovi la vecchia foto profilo, se presente
     const old = req.currentUser.avatar_path;
     if (old) fs.unlink(path.join(AVATARS_DIR, path.basename(old)), () => {});
@@ -4155,8 +4163,44 @@ function allineaInvitiUnaVolta() {
   }
 }
 
+// Rimpicciolisce gli avatar già caricati, che sono ancora quelli pieni usciti
+// dal telefono. Gira una volta sola: l'interruttore sta nel database.
+//
+// Uno alla volta e con un respiro fra uno e l'altro: jimp decodifica in
+// memoria un'immagine da 4000px per volta, e farne cento tutte insieme
+// all'avvio metterebbe in ginocchio il server proprio mentre la gente entra.
+// Nessuna fretta — è roba che si fa una volta nella vita dell'app.
+async function rimpiccioliscAvatarUnaVolta() {
+  const CHIAVE = 'avatar_rimpiccioliti';
+  if (db.prepare('SELECT 1 FROM impostazioni WHERE chiave = ?').get(CHIAVE)) return;
+  try {
+    const righe = db.prepare("SELECT id, avatar_path FROM users WHERE avatar_path IS NOT NULL AND avatar_path <> ''").all();
+    let fatti = 0, risparmio = 0;
+    for (const u of righe) {
+      const nome = path.basename(u.avatar_path);
+      if (!fs.existsSync(path.join(AVATARS_DIR, nome))) continue;
+      const rid = await ridimensiona(AVATARS_DIR, nome, FOTO_AVATAR);
+      if (!rid) continue;                       // già piccolo, o formato indigesto
+      if (rid.nomeFile !== nome) {
+        db.prepare('UPDATE users SET avatar_path = ? WHERE id = ?').run(rid.nomeFile, u.id);
+      }
+      fatti++; risparmio += rid.prima - rid.dopo;
+      await new Promise((r) => setTimeout(r, 50));
+    }
+    db.prepare("INSERT INTO impostazioni (chiave, valore) VALUES (?, datetime('now'))").run(CHIAVE);
+    console.log(fatti
+      ? `[AVATAR] rimpiccioliti ${fatti} avatar su ${righe.length}: ${(risparmio / 1024 / 1024).toFixed(1)} MB in meno.`
+      : '[AVATAR] nessun avatar da rimpicciolire.');
+  } catch (e) {
+    // Senza interruttore scritto, il prossimo avvio riprova. E comunque un
+    // avatar grande non impedisce a nessuno di giocare.
+    console.error('[AVATAR] rimpicciolimento fallito:', e.message);
+  }
+}
+
 app.listen(PORT, () => {
   console.log(`\n🎉 FantaSanRocco è attivo — accessibile via Cloudflare Tunnel.`);
   console.log(`   Dati salvati in: ${DATA_DIR}\n`);
   allineaInvitiUnaVolta();
+  rimpiccioliscAvatarUnaVolta();
 });
