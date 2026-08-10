@@ -11,7 +11,7 @@
     "prova": "node strumenti/fumo.js && node strumenti/prova_azioni.js",
     "prova:pagine": "node strumenti/fumo.js",
     "prova:azioni": "node strumenti/prova_azioni.js",
-    "loghi": "node strumenti/ottimizza_loghi.js"
+    "immagini": "node strumenti/ottimizza_immagini.js"
   },
   "license": "MIT",
   "dependencies": {
