@@ -21,7 +21,7 @@ const nodemailer = require('nodemailer');
 
 // Impronte delle foto e controllo dei primi byte: vedi lib/foto.js.
 const { PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes, ALLOWED_MIME, MIME_TO_EXT,
-        datiScatto, ridimensiona } = require('./lib/foto');
+        datiScatto, ridimensiona, STORIA: FOTO_STORIA } = require('./lib/foto');
 
 const { db, DATA_DIR, UPLOADS_DIR, AVATARS_DIR, STORIES_DIR, BACKUPS_DIR } = require('./db');
 const { placesWithEvents } = require('./dati/luoghi');
@@ -2701,7 +2701,7 @@ function activeStoriesGrouped(currentUser) {
 
 // Pubblica una storia (foto). Multipart → CSRF verificato a mano (come l'avatar).
 app.post('/storie', auth.requireLogin, (req, res) => {
-  storyUpload.single('foto')(req, res, (err) => {
+  storyUpload.single('foto')(req, res, async (err) => {
     const back = safeBack(req);
     if (err) { flash(req, 'error', err.message || 'Errore nel caricamento.'); return res.redirect(back); }
     const csrfToken = req.body._csrf || '';
@@ -2717,8 +2717,19 @@ app.post('/storie', auth.requireLogin, (req, res) => {
       return res.redirect(back);
     }
     const correctExt = MIME_TO_EXT[mime] || '.jpg';
-    const safeName = req.file.filename.replace(/\.[^.]+$/, correctExt);
+    let safeName = req.file.filename.replace(/\.[^.]+$/, correctExt);
     try { fs.renameSync(path.join(STORIES_DIR, req.file.filename), path.join(STORIES_DIR, safeName)); } catch {}
+
+    // Rimpicciolimento, PRIMA di scrivere il nome nel database: ricodificare
+    // cambia l'estensione in .jpg, e registrare il nome vecchio lascerebbe la
+    // riga a puntare a un file che non c'è più. Dal telefono arrivano 3-4000px
+    // e 2 MB, e durante la festa si carica e si guarda tutto da rete mobile:
+    // ogni persona che apre una storia se la scarica intera.
+    // Se il ridimensionamento non riesce torna null e resta l'originale: una
+    // storia grande è meglio di una storia persa.
+    const rid = await ridimensiona(STORIES_DIR, safeName, FOTO_STORIA);
+    if (rid) safeName = rid.nomeFile;
+
     db.prepare("INSERT INTO stories (user_id, media_path, expires_at) VALUES (?, ?, datetime('now','+1 day'))")
       .run(req.currentUser.id, safeName);
     flash(req, 'success', 'Storia pubblicata! Resta visibile 24 ore.');

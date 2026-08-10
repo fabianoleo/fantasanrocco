@@ -120,10 +120,19 @@ function datiScatto(fileAssoluto) {
 //
 // Regola di fondo: se qualcosa va storto la foto originale resta dov'è.
 // Nessuna ottimizzazione vale la perdita di una prova.
+// Le misure sono due perché le due foto si guardano in modo diverso. Una
+// prova la controlla un moderatore dentro un riquadro, e 1600px sono già
+// più del necessario. Una storia la si guarda a SCHERMO PIENO sul telefono,
+// dove il ritaglio si nota: lì si tiene più larghi, 1920 e qualità più alta.
+// Restano comunque cinque o sei volte più leggere dell'originale, che è il
+// punto — durante la festa si carica e si guarda tutto da rete mobile.
 const LATO_MAX = 1600;
 const QUALITA = 80;
+const STORIA = { latoMax: 1920, qualita: 85 };
 
-async function ridimensiona(cartella, nomeFile) {
+async function ridimensiona(cartella, nomeFile, opzioni = {}) {
+  const latoMax = opzioni.latoMax || LATO_MAX;
+  const qualita = opzioni.qualita || QUALITA;
   const path = require('path');
   const originale = path.join(cartella, nomeFile);
   try {
@@ -132,11 +141,11 @@ async function ridimensiona(cartella, nomeFile) {
     const img = await Jimp.read(originale);          // applica già l'orientamento
 
     const lato = Math.max(img.bitmap.width, img.bitmap.height);
-    if (lato > LATO_MAX) {
-      if (img.bitmap.width >= img.bitmap.height) img.resize({ w: LATO_MAX });
-      else img.resize({ h: LATO_MAX });
+    if (lato > latoMax) {
+      if (img.bitmap.width >= img.bitmap.height) img.resize({ w: latoMax });
+      else img.resize({ h: latoMax });
     }
-    const buf = await img.getBuffer('image/jpeg', { quality: QUALITA });
+    const buf = await img.getBuffer('image/jpeg', { quality: qualita });
 
     // Se il risultato non è più piccolo non si tocca niente: capita con le
     // foto già ottimizzate, e riscriverle a vuoto peggiorerebbe la qualità.
@@ -160,5 +169,5 @@ async function ridimensiona(cartella, nomeFile) {
 
 module.exports = {
   PHASH_SOGLIA, photoHash, phashDistanza, checkImageMagicBytes,
-  ALLOWED_MIME, MIME_TO_EXT, datiScatto, ridimensiona, LATO_MAX,
+  ALLOWED_MIME, MIME_TO_EXT, datiScatto, ridimensiona, LATO_MAX, STORIA,
 };
