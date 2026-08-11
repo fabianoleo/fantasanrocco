@@ -1596,6 +1596,30 @@ body { overflow-x: clip; }
 }
 .online-pill.oc-flash { animation: oc-pill-flash .75s ease-out forwards; }
 
+/* ── Pulsante Aggiorna ───────────────────────────────────────────── */
+/* Discreto: è un attrezzo, non una cosa da fare. Stessa misura del tocco
+   minima degli altri comandi della barra (36px) anche se il disegno è più
+   piccolo, o su un telefono lo si manca. */
+.nav-refresh {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; flex-shrink: 0;
+  padding: 0; border: none; border-radius: 10px;
+  background: none; color: var(--text-3); cursor: pointer;
+  transition: color .2s var(--ease), background .2s var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.nav-refresh .ico { width: 17px; height: 17px; }
+.nav-refresh:hover { color: var(--gold-2); background: var(--glass); }
+.nav-refresh:active { color: var(--gold-2); }
+/* Mentre ricarica gira: senza, su una rete lenta si preme due o tre volte
+   perché non è successo niente di visibile. */
+.nav-refresh.is-loading { color: var(--gold-2); pointer-events: none; }
+.nav-refresh.is-loading .ico { animation: nav-refresh-spin .8s linear infinite; }
+@keyframes nav-refresh-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .nav-refresh.is-loading .ico { animation: none; opacity: .5; }
+}
+
 .online-dot {
   width: 6px; height: 6px;
   border-radius: 50%;

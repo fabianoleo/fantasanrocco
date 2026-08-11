@@ -23,11 +23,23 @@
     </a>
   <% } %>
 
-  <%# Online ora — subito a sinistra del pulsante menu %>
+  <%# Online ora — in coda al gruppo di sinistra %>
   <div class="online-pill" id="onlinePill" title="Online ora">
     <span class="online-dot"></span>
     <div class="oc-wrap"><span class="oc-val" id="onlineCount">—</span></div>
   </div>
+
+  <%# Ricarica la pagina. Nell'app installata NON c'e' la barra del browser:
+      niente indirizzo, niente pulsante ricarica, niente "tira giu' per
+      aggiornare" — quelli sono di Safari e Chrome, non della pagina. Senza
+      questo pulsante l'unico modo di vedere le storie nuove era chiudere e
+      riaprire l'app, e infatti sembrava bloccata.
+      Sta qui e non nel menu perche' un pulsante che si vede e' l'unica cosa
+      che dice a qualcuno CHE si puo' aggiornare. %>
+  <button type="button" class="nav-refresh" id="navRefresh"
+          title="Aggiorna la pagina" aria-label="Aggiorna la pagina">
+    <%- icon('aggiorna') %>
+  </button>
 
   <%# Desktop nav → Mega-menu a tendina con anteprima immagini (hover) %>
   <%

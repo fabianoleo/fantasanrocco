@@ -539,3 +539,26 @@ document.addEventListener('click', (e) => {
   window.addEventListener('resize', onScroll);
   update();
 })();
+
+// ── Pulsante Aggiorna ───────────────────────────────────────────────
+// Nell'app installata non c'è la barra del browser, quindi non esiste né il
+// pulsante di ricarica né il "tira giù per aggiornare": senza questo, per
+// vedere le storie nuove bisognava chiudere e riaprire l'app.
+//
+// location.reload() basta e avanza: il service worker serve le pagine SEMPRE
+// dalla rete (vedi il commento in sw.js), quindi quello che torna è fresco.
+// Gli statici restano dalla cache, ed è giusto — cambiano solo col ?v=.
+(function () {
+  'use strict';
+  var btn = document.getElementById('navRefresh');
+  if (!btn) return;
+  btn.addEventListener('click', function () {
+    btn.classList.add('is-loading');
+    // La rotellina deve fare in tempo a comparire: senza un giro di rendering
+    // il reload parte prima che il browser abbia disegnato qualcosa, e chi
+    // preme non vede nessuna reazione.
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { window.location.reload(); });
+    });
+  });
+})();

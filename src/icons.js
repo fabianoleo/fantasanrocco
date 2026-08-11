@@ -151,6 +151,12 @@ const PATHS = {
     '<path d="M8 6h12M8 12h12M8 18h12" /><path d="M4 6h.01M4 12h.01M4 18h.01" />',
   search:
     '<circle cx="11" cy="11" r="6" /><path d="m20 20-4.5-4.5" />',
+  // Freccia circolare: la classica "ricarica". Non si riusa `repeat`, che
+  // sono due frecce affiancate e vuol dire "si puo' rifare" — sulle missioni
+  // ripetibili significa gia' quello, e due sensi diversi per lo stesso
+  // disegno confondono.
+  aggiorna:
+    '<path d="M20 12a8 8 0 1 1-2.34-5.66" /><path d="M20 4v5h-5" />',
   save:
     '<path d="M5 4h11l3 3v13H5z" /><path d="M8 4v5h7V4" /><rect x="8" y="13" width="8" height="5" />',
   trash:
