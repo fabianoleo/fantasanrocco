@@ -51,6 +51,7 @@ const PLACES = [
 // Eventi: rispecchiano la pagina /programmazione (stessi titoli, orari, luogo).
 // "location" = testo del luogo mostrato sul sito; serve a collegare l'evento al luogo.
 const EVENTS = [
+  { title: 'Squarciagola in Tour',                 day: 'Gio 13', time: '22:00', location: 'Le Chalet, Siano', image: '/images/artisti/squarciagola-chalet.jpg' },
   { title: 'Mazzariello — DJ Set',                 day: 'Ven 14', time: '23:30', location: 'Piazza San Rocco, Siano' },
   { title: 'Groove Motion Live Band',              day: 'Ven 14', time: '21:30', location: 'Siano' },
   { title: 'Napoliitudine con Sal Esposito',       day: 'Sab 15', time: '21:30', location: 'Piazza San Rocco, Siano', image: '/images/artisti/napoliitudine.jpg' },
