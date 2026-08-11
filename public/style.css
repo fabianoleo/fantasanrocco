@@ -3320,9 +3320,14 @@ textarea:focus-visible,
 /* ===================================================================
    MEGA-MENU desktop — tendina con anteprima immagini (hover slideshow)
    =================================================================== */
-/* Posizione: il menu è l'ultimo a destra, l'online-pill subito a sinistra */
-.megamenu { margin-left: 0; }
-.topbar .online-pill { margin-left: auto; }
+/* Posizione nella barra. UN SOLO elemento può avere margin-left:auto, ed è
+   il pulsante del menu: con l'auto anche sulla pillola degli online lo
+   spazio libero si divideva in parti uguali fra i due, e la pillola restava
+   sospesa in mezzo al vuoto, agganciata a niente. Così invece resta
+   attaccata al gruppo di sinistra — marchio, ruota, punti, online: tutto
+   quello che dice come sta l'app — e a destra c'è solo il menu. */
+.megamenu { margin-left: auto; }
+.topbar .online-pill { margin-left: 0; }
 
 /* Pulsante menu — icona hamburger curata */
 .mm-trigger {
