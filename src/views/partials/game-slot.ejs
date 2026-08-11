@@ -97,7 +97,22 @@
           <button type="button" class="cz-betmax" id="czBetMax">Max</button>
         </div>
         <p class="cz-beterr" id="czBetErr" role="status" aria-live="polite"></p>
-        <button type="button" class="cz-spin" id="czSpin">Gira</button>
+        <div class="cz-play">
+          <button type="button" class="cz-spin" id="czSpin">Gira</button>
+          <%# Auto a giocate CONTATE, non all'infinito: la slot rende l'87,6%,
+              e un auto lasciato acceso mentre si guarda altrove svuoterebbe il
+              saldo. Il numero si sceglie prima, e mentre gira il pulsante
+              diventa «Ferma» col conto alla rovescia. %>
+          <div class="cz-auto">
+            <label class="sr-only" for="czAutoN">Quante giocate automatiche</label>
+            <select class="cz-auton" id="czAutoN">
+              <option value="10">10×</option>
+              <option value="25">25×</option>
+              <option value="50">50×</option>
+            </select>
+            <button type="button" class="cz-autobtn" id="czAuto" aria-label="Gioca automaticamente">Auto</button>
+          </div>
+        </div>
       </div>
 
       <p class="cz-outcome" id="czOutcome" aria-live="polite"></p>

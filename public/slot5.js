@@ -356,11 +356,12 @@
   // imprevisto lasciava la slot bloccata e l'unico rimedio era ricaricare
   // la pagina — col saldo già scalato dal server.
   async function giocata() {
-    if (gira) return;
+    if (gira) return false;
     gira = true;
     spin.disabled = true;
+    let riuscita = false;
     try {
-      await giocataVera();
+      riuscita = await giocataVera();
     } catch (e) {
       errEl.textContent = 'Qualcosa è andato storto. Riprova.';
     } finally {
@@ -370,6 +371,7 @@
       gira = false;
       spin.disabled = false;
     }
+    return riuscita;
   }
 
   async function giocataVera() {
@@ -393,12 +395,12 @@
       d = await r.json();
     } catch (e) {
       errEl.textContent = 'Connessione persa. Riprova.';
-      return;
+      return false;
     }
     if (!d.ok) {
       errEl.textContent = d.message || 'Giocata non riuscita.';
       if (s && !s.isMuted()) s.error();
-      return;
+      return false;
     }
 
     // se la scheda e' nascosta i timer si fermano: il tetto evita che la
@@ -439,9 +441,71 @@
       esitoEl.className = 'cz-outcome';
     }
     saldoEl.textContent = d.balance;
+    return true;
   }
 
-  spin.addEventListener('click', giocata);
+  spin.addEventListener('click', () => { fermaAuto(); giocata(); });
+
+  // ── Auto ─────────────────────────────────────────────────────────
+  // Gira da sola per un numero FISSO di giocate, non all'infinito. La slot
+  // rende l'87,6% (misurato con strumenti/slot_rtp.js): un auto senza fine
+  // lasciato acceso mentre si guarda altrove svuota il saldo, e non e'
+  // quello che uno intende premendo un pulsante.
+  //
+  // Si ferma da sola anche quando: il saldo non copre piu' la puntata, una
+  // giocata fallisce (rete caduta, puntata rifiutata), o si cambia scheda.
+  // Senza il primo controllo continuerebbe a chiedere giocate che il server
+  // rifiuta; senza il secondo martellerebbe su un errore che non passa.
+  const autoBtn = document.getElementById('czAuto');
+  const autoSel = document.getElementById('czAutoN');
+  let autoRimaste = 0;
+
+  function autoAggiorna() {
+    if (!autoBtn) return;
+    const attivo = autoRimaste > 0;
+    autoBtn.classList.toggle('is-on', attivo);
+    autoBtn.textContent = attivo ? 'Ferma (' + autoRimaste + ')' : 'Auto';
+    autoBtn.setAttribute('aria-label', attivo ? 'Ferma le giocate automatiche' : 'Gioca automaticamente');
+    if (autoSel) autoSel.disabled = attivo;
+  }
+
+  function fermaAuto() {
+    if (!autoRimaste) return;
+    autoRimaste = 0;
+    autoAggiorna();
+  }
+
+  async function autoCiclo() {
+    while (autoRimaste > 0) {
+      const bet = leggiPuntata();
+      const saldo = parseInt(saldoEl.textContent, 10) || 0;
+      if (saldo < bet) {
+        errEl.textContent = 'Punti finiti: l\u2019auto si ferma qui.';
+        break;
+      }
+      autoRimaste--;
+      autoAggiorna();
+      const ok = await giocata();
+      if (!ok) break;            // errore: fermarsi, non insistere
+      if (autoRimaste > 0) await attesa(700);   // un respiro fra una e l'altra
+    }
+    autoRimaste = 0;
+    autoAggiorna();
+  }
+
+  if (autoBtn) {
+    autoBtn.addEventListener('click', () => {
+      if (autoRimaste > 0) { fermaAuto(); return; }
+      autoRimaste = parseInt(autoSel && autoSel.value, 10) || 10;
+      autoAggiorna();
+      autoCiclo();
+    });
+  }
+
+  // Scheda nascosta: le animazioni si fermano e le giocate resterebbero
+  // appese al tetto di tempo. Meglio smettere che scoprire dieci giocate
+  // fatte mentre si era altrove.
+  document.addEventListener('visibilitychange', () => { if (document.hidden) fermaAuto(); });
 
   // ── Puntata ──────────────────────────────────────────────────────
   document.querySelectorAll('.cz-bet').forEach((b) => b.addEventListener('click', () => {
