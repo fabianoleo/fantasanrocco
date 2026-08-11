@@ -17,3 +17,7 @@ _da-sistemare/
 /Meshy_AI_Fanta_San_Rocco_*.glb
 # Sorgenti audio (i file serviti sono in public/radio/)
 /canzoni/
+
+# Targhetta della build: la scrive il Dockerfile dentro l immagine,
+# non deve stare nel repo (vedi /health).
+build-info.json

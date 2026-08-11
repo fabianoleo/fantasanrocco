@@ -7,6 +7,9 @@
 #    • Domain -> Container Port 3000 (HTTPS Let's Encrypt)
 #    • Volume Mount persistente -> /app/data   (DB SQLite + foto: NON perderlo!)
 #    • Env: NODE_ENV, SECURE_COOKIES=true, SESSION_SECRET, APP_URL, DATA_DIR, PORT
+#    • Build Arg (facoltativo): GIT_SHA -> finisce in /health insieme alla data
+#      di build, così da fuori si vede quale versione sta girando. Se non lo si
+#      passa resta vuoto: la data da sola dice comunque se la build è fresca.
 # =============================================================================
 
 # ---- Stage 1: builder — dipendenze + toolchain per i moduli nativi ----------
@@ -41,6 +44,19 @@ WORKDIR /app
 # Dipendenze già risolte dal builder + codice applicativo.
 COPY --from=builder /app/node_modules ./node_modules
 COPY . .
+
+# Targhetta della build, per sapere COSA sta girando davvero.
+# Serve a rispondere in due secondi alla domanda "quello che ho pushato è
+# online?": si apre /health dal telefono e c'è scritto. Senza, l'unico modo
+# era leggere il sorgente della pagina, e una build fallita in silenzio non
+# si distingueva da un cambiamento che non si vede.
+#
+# La data la mette la build stessa, quindi c'è sempre. Il commit invece è un
+# ARG: .git non entra nell'immagine (è in .dockerignore), quindi da dentro
+# non è ricavabile. Se Dokploy non lo passa resta vuoto e amen — la data da
+# sola basta a capire se la build è fresca.
+ARG GIT_SHA=""
+RUN printf '{"commit":"%s","build":"%s"}\n' "$GIT_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /app/build-info.json
 
 # Cartella dati persistente (DB + foto): creata e assegnata all'utente non-root.
 # Su Dokploy va montato qui un Volume: un named volume nuovo eredita questi

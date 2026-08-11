@@ -17,3 +17,4 @@ docs/
 IMG_*.JPG
 Dockerfile
 docker-compose.yml
+build-info.json

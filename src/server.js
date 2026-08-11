@@ -471,10 +471,29 @@ function missionUnlockLabel(m) {
 
 // Healthcheck: usato da Docker/monitoraggio esterno per sapere se il server
 // è vivo E il database risponde davvero (non solo "il processo esiste").
+// Targhetta della build: la scrive il Dockerfile in build-info.json (vedi lì
+// il perché). Si legge UNA volta all'avvio — /health lo chiama l'healthcheck
+// ogni pochi secondi, e un accesso al disco a ogni giro sarebbe sprecato.
+// In sviluppo il file non c'è e resta null: si sta guardando il codice sul
+// proprio computer, la domanda "quale versione è online" non si pone.
+const BUILD_INFO = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'build-info.json'), 'utf8'));
+  } catch (e) { return null; }
+})();
+
+// Dice se l'app è viva E cosa sta girando. La seconda parte serve a rispondere
+// in due secondi a "quello che ho appena messo online c'è davvero?" — prima
+// l'unico modo era leggere il sorgente della pagina dal telefono, e una build
+// fallita in silenzio non si distingueva da una modifica che non si nota.
 app.get('/health', (req, res) => {
   try {
     db.prepare('SELECT 1').get();
-    res.status(200).json({ ok: true });
+    res.status(200).json({
+      ok: true,
+      commit: BUILD_INFO && BUILD_INFO.commit ? BUILD_INFO.commit.slice(0, 7) : null,
+      build: BUILD_INFO ? BUILD_INFO.build : null,
+    });
   } catch (e) {
     res.status(503).json({ ok: false });
   }
