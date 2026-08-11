@@ -38,6 +38,13 @@ const REGOLE = [
     lato: 'width',  bersaglio: 840, nota: 'card programmazione, larghe 420px' },
   { nome: 'premi',    cartella: path.join(PUB, 'images', 'premi'),
     lato: 'width',  bersaglio: 968, nota: 'schede premio, larghe 484px' },
+  // I due marchi del pie' di pagina. `file` li prende uno per uno perche'
+  // stanno nella stessa cartella ma si vedono a misure diverse, e sono
+  // disegni e non fotografie: vanno in tavolozza come i loghi sponsor.
+  { nome: 'logo',     cartella: path.join(PUB, 'images'), file: 'logo.png',
+    lato: 'width',  bersaglio: 252, tavolozza: true, nota: 'marchio nel pie\' di pagina, largo 84px' },
+  { nome: 'comitato', cartella: path.join(PUB, 'images'), file: 'comitato-festa.png',
+    lato: 'height', bersaglio: 168, tavolozza: true, nota: 'marchio del comitato, alto 56px' },
 ];
 
 // Ogni formato si riscrive come sé stesso. I loghi vanno in tavolozza —
@@ -60,7 +67,10 @@ const kb = (b) => (b / 1024).toFixed(0).padStart(4);
   for (const r of REGOLE) {
     if (filtro && r.nome !== filtro) continue;
     if (!fs.existsSync(r.cartella)) continue;
-    const files = fs.readdirSync(r.cartella).filter((f) => /\.(png|jpe?g|webp|avif)$/i.test(f)).sort();
+    const files = (r.file ? [r.file] : fs.readdirSync(r.cartella))
+      .filter((f) => /\.(png|jpe?g|webp|avif)$/i.test(f))
+      .filter((f) => fs.existsSync(path.join(r.cartella, f)))
+      .sort();
     console.log(`\n══ ${r.nome} — ${r.nota} → ${r.lato} ${r.bersaglio}px ══`);
     let prima = 0, dopo = 0, toccati = 0;
 
@@ -74,7 +84,7 @@ const kb = (b) => (b / 1024).toFixed(0).padStart(4);
         const formato = meta.format === 'heif' ? 'avif' : meta.format;
         const pipe = sharp(p);
         if (meta[r.lato] > r.bersaglio) pipe.resize({ [r.lato]: r.bersaglio });
-        const buf = await scrivi(pipe, formato, r.nome === 'sponsor').toBuffer();
+        const buf = await scrivi(pipe, formato, r.nome === 'sponsor' || r.tavolozza).toBuffer();
 
         if (buf.length >= pesoPrima) {
           dopo += pesoPrima;

@@ -562,9 +562,12 @@ function sponsorValido(v) {
 // Stemma del Comitato Festa accanto alla riga legale del footer. Stessa
 // regola dei loghi sponsor: se il file non c'è la riga resta di solo testo,
 // invece di mostrare l'icona di immagine rotta in fondo a ogni pagina.
+// Il ?v= serve come per style.css: le immagini restano in cache un giorno,
+// e senza questo chi e' gia' passato di qui continuerebbe a scaricare la
+// versione vecchia e pesante fino a domani.
 app.locals.logoComitato =
   fs.existsSync(path.join(__dirname, '..', 'public', 'images', 'comitato-festa.png'))
-    ? '/images/comitato-festa.png'
+    ? '/images/comitato-festa.png?v=2'
     : null;
 
 app.get('/premio', (req, res) => {
