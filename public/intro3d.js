@@ -11,6 +11,13 @@
   const canvas = document.getElementById('introCanvas');
   const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // Velocità di rotazione (radianti a fotogramma) sul davanti e sul retro.
+  // Il davanti resta com'era: è la parte che si deve guardare con calma.
+  // Il retro va quattro volte più svelto, così il marchio torna a farsi
+  // vedere prima invece di far aspettare davanti a una placca scura.
+  const GIRO_LENTO = 0.005;
+  const GIRO_VELOCE = 0.02;
+
   function fallback() { screen.classList.add('is-fallback'); }
 
   // Niente Three.js o niente WebGL → fallback elegante
@@ -88,7 +95,17 @@
     const t = (now - t0) / 1000;
     let floatY = 0;
     if (!prefersReduced) {
-      pivot.rotation.y += 0.005;                 // rotazione lenta e continua su Y
+      // Il logo è una placca: di dietro non c'è niente da guardare, e con una
+      // velocità costante si passavano diversi secondi a fissare il retro
+      // scuro. Quindi la rotazione RALLENTA sul davanti e ACCELERA dietro.
+      //
+      // cos(y) vale 1 quando il marchio guarda in camera e -1 quando gli dà le
+      // spalle (verificato: a rotazione zero il logo è dritto verso di noi),
+      // quindi (1 - cos y) / 2 va da 0 davanti a 1 dietro. Interpolando fra le
+      // due velocità con quella curva il cambio di passo è graduale: nessuno
+      // scatto, perché la curva e la sua pendenza sono continue.
+      const dietro = (1 - Math.cos(pivot.rotation.y)) / 2;
+      pivot.rotation.y += GIRO_LENTO + (GIRO_VELOCE - GIRO_LENTO) * dietro;
       floatY = Math.sin(t * 1.1) * 0.08;         // leggera oscillazione verticale (floating)
     }
     const p = scrollProg;                        // 0 in cima → 1 dopo ~una schermata
