@@ -27,7 +27,7 @@
   const scala      = document.getElementById('slScala');
   const csrf       = root.dataset.csrf;
   const MIN = Number(root.dataset.betMin) || 5;
-  const MAX = Number(root.dataset.betMax) || 500;
+  const MAX = Number(root.dataset.betMax) || 50;
 
   const suono = () => window.SlotSound || null;
   const calmo = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -427,8 +427,12 @@
 
     if (d.payout > 0) {
       esitoEl.className = 'cz-outcome is-win';
+      // Quando il tetto giornaliero taglia, il saldo sale meno della vincita:
+      // va detto sulla stessa riga, subito. Un numero grande e un saldo che
+      // non lo segue, senza spiegazione, sembra un errore dell'app.
       esitoEl.innerHTML = 'Hai vinto <b class="cz-cifra" id="czCifra">0</b> punti'
-        + (d.bonus ? ` <span class="cz-di-cui">di cui ${d.bonus.punti} dalla corsa</span>` : '');
+        + (d.bonus ? ` <span class="cz-di-cui">di cui ${d.bonus.punti} dalla corsa</span>` : '')
+        + (d.tagliato ? ` <span class="cz-di-cui">massimo ${d.tettoGiorno} al giorno: ne entrano ${d.accreditato}</span>` : '');
       const cifra = document.getElementById('czCifra');
       if (s && !s.isMuted()) { d.payout >= bet * 10 ? s.jackpot() : s.win(); }
       await Promise.all([

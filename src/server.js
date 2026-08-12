@@ -1983,23 +1983,54 @@ const SLOT_PAIR   = { ciliegia: 0, percoca: 1, vino: 1.5, braciola: 3, fuoco: 8,
 // Scorciatoie in alto, ma la puntata è libera fra MIN e MAX (interi).
 //
 // ⚠️ Il ×188 qui sopra è della slot a 3 rulli, che NON si gioca più: queste
-// tre costanti le usa la 5×4 di giochi/slot.js, che paga tutt'altro. Il tetto
-// alla puntata NON basta più a tenere buona la classifica, e conviene sapere
-// perché prima di alzarlo:
+// costanti le usa la 5×4 di giochi/slot.js, che paga tutt'altro.
 //
-//   moltiplicatore massimo misurato su 20 milioni di giocate   ×1551
-//   una vincita ≥ ×500                                         1 su 1.330.000
-//   una vincita ≥ ×100                                         1 su 11.000
+// PERCHÉ IL MASSIMO È 50 E NON 500. Il 12 agosto la classifica era decisa
+// dalla slot: su 81 giocatori 71 avevano perso (−21.788 punti) e 10 vinto
+// (+9.369), e i primi due posti erano fatti per il 70% di vincite alla slot.
+// Misurato su 20 milioni di giocate:
 //
-// Con SLOT_BET_MAX = 500 il colpo grosso vale quindi centinaia di migliaia di
-// punti, mentre TUTTE e 97 le missioni della settimana insieme ne valgono
-// 11.950. Il massimo teorico è ancora più alto (~×16.000: venti linee di San
-// Rocco ripetute a ogni passo della Corsa del Cane), ma è irraggiungibile.
+//   moltiplicatore massimo               ×1551
+//   una vincita ≥ ×100                   1 su 11.000
 //
-// Se il tetto va rimisurato: strumenti/slot_rtp.js.
-const SLOT_BETS    = [10, 20, 50, 100];
+// Con puntata 500 il colpo grosso valeva centinaia di migliaia di punti,
+// mentre TUTTE e 97 le missioni insieme ne valgono 11.950.
+//
+// PERCHÉ IL MINIMO RESTA 5. punti() arrotonda per difetto, quindi con
+// puntate piccole le vincite minori spariscono. Misurato:
+//
+//   puntata  1 → ritorno 77,7%  (il 35% delle vincite si azzera)
+//   puntata  5 → ritorno 85,8%  (4,3%)
+//   puntata 10 → ritorno 87,2%  (0,1%)
+//   puntata 50 → ritorno 87,6%  (0%)
+//
+// Abbassare anche il minimo avrebbe reso la slot dieci punti più tirchia
+// senza che nessuno capisse perché. Si è abbassato il tetto, non il pavimento.
+//
+// Il tetto alla puntata da solo NON basta comunque: ×1551 su 50 fa ancora
+// 77.550 punti. Il freno vero è SLOT_TETTO_GIORNO qui sotto.
+//
+// Se va rimisurato: strumenti/slot_rtp.js.
+const SLOT_BETS    = [5, 10, 25, 50];
 const SLOT_BET_MIN = 5;
-const SLOT_BET_MAX = 500;
+const SLOT_BET_MAX = 50;
+
+// Quanto puo' far GUADAGNARE la slot in una giornata. Le perdite non hanno
+// tetto: senza rischio non e' piu' una scommessa, e chi punta deve poterci
+// rimettere. Il giorno e' quello del calendario italiano, non il giorno-festa
+// che parte alle 18: la regola detta ai giocatori dice "al giorno" e deve
+// voler dire quello che sembra.
+const SLOT_TETTO_GIORNO = 250;
+const GIORNO_SLOT = "date(created_at, '+2 hours')";   // UTC → ora italiana
+
+// Quanto ha gia' guadagnato (o perso) oggi alla slot.
+function slotNettoOggi(userId) {
+  const r = db.prepare(`
+    SELECT COALESCE(SUM(delta), 0) AS n FROM punti_movimenti
+    WHERE user_id = ? AND causa = 'slot' AND ${GIORNO_SLOT} = date('now', '+2 hours')
+  `).get(userId);
+  return r ? r.n : 0;
+}
 
 // Valuta una giocata (3 simboli) → moltiplicatore sulla puntata + descrizione.
 function evalSlot(reels) {
@@ -2047,8 +2078,19 @@ app.post('/slot/gira', auth.requireLogin, slotLimiter, (req, res) => {
     const g = slot5.gioca(cryptoRandom);
     const payout = slot5.punti(g.unita, bet);
     const net = payout - bet;
-    punti.muovi(req.currentUser.id, net, 'slot',
-      `Puntata ${bet}, vinti ${payout}` + (g.bonus ? ' (con la Corsa del Cane)' : ''));
+    // Il tetto morde solo quando si e' in guadagno sulla giornata. Si taglia
+    // qui, non a fine giornata, perche' il saldo mostrato deve essere gia'
+    // quello vero: un numero che sale e poi viene ritoccato dopo sarebbe
+    // peggio del tetto stesso.
+    let accreditato = net, tagliato = 0;
+    if (net > 0) {
+      const spazio = Math.max(0, SLOT_TETTO_GIORNO - slotNettoOggi(req.currentUser.id));
+      if (net > spazio) { accreditato = spazio; tagliato = net - spazio; }
+    }
+    punti.muovi(req.currentUser.id, accreditato, 'slot',
+      `Puntata ${bet}, vinti ${payout}`
+      + (g.bonus ? ' (con la Corsa del Cane)' : '')
+      + (tagliato ? ` — tetto giornaliero: ${tagliato} non accreditati` : ''));
     out = {
       griglia: g.griglia,
       vincite: g.vincite,
@@ -2059,11 +2101,14 @@ app.post('/slot/gira', auth.requireLogin, slotLimiter, (req, res) => {
         punti: slot5.punti(g.bonus.totale, bet),
       } : null,
       payout, net, win: payout > 0,
+      // Al browser servono per dire la verita' sul perche' il saldo e' salito
+      // meno della vincita: senza, il giocatore vede 5.000 e ne riceve 40.
+      accreditato, tagliato, tettoGiorno: SLOT_TETTO_GIORNO,
     };
     return true;
   })();
   if (!ok) return res.status(400).json({ ok: false, error: 'funds', message: 'Punti insufficienti per questa puntata.' });
-  if (out.net > 0) checkLevelUp(req.currentUser.id);
+  if (out.accreditato > 0) checkLevelUp(req.currentUser.id);
   res.json({ ok: true, bet, ...out, balance: userPoints(req.currentUser.id) });
 });
 
