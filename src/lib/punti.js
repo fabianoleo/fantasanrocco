@@ -33,6 +33,11 @@ const CAUSE = {
   palio:        'Palio dei Fuochi',
   invito:       'Amici invitati',
   storno:       'Storno',
+  // Il riequilibrio della slot del 12 agosto: causa sua invece di 'storno'
+  // perche' nello storico di ognuno deve leggersi cos'e' stato, non un
+  // generico aggiustamento. Chi guarda i propri punti trova una riga che
+  // spiega da sola perche' il numero e' cambiato.
+  riequilibrio: 'Riequilibrio slot',
 };
 
 function etichetta(causa) { return CAUSE[causa] || causa; }
