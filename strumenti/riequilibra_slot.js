@@ -26,10 +26,16 @@
 // viene saltato: lanciarlo due volte, senza questo controllo, taglierebbe
 // due volte gli stessi punti.
 //
-// NESSUNO VA SOTTO ZERO, ed è dimostrabile: il saldo di ognuno è
-// (altro + nettoSlot) e diventa (altro + nettoSlot/10). Se il netto slot
-// è negativo il saldo SALE; se è positivo resta positivo perché `altro`
+// NESSUNO VA SOTTO ZERO, ed è dimostrabile: i punti di ognuno sono
+// (altro + nettoSlot) e diventano (altro + nettoSlot/10). Se il netto slot
+// è negativo i punti SALGONO; se è positivo restano positivi perché `altro`
 // non è mai negativo. Lo script lo verifica comunque prima di scrivere.
+//
+// Il controllo guarda i PUNTI (missioni + points_adjust), non points_adjust
+// da solo: quello può essere legittimamente negativo. Chi ha perso alla slot
+// più di quanto avesse preso da ruota e traguardi ha i movimenti sotto zero
+// e i punti sopra, perché le missioni non passano da lì. Guardando solo i
+// movimenti si bloccherebbe proprio chi la correzione sta aiutando.
 // ===================================================================
 const { db } = require('../src/db');
 const punti = require('../src/lib/punti');
@@ -71,14 +77,23 @@ const salgono = daFare.filter((r) => r.correzione > 0);
 console.log(`   perdono punti: ${scendono.length} (${num(scendono.reduce((a, r) => a + r.correzione, 0))})`);
 console.log(`   ne riprendono: ${salgono.length} (+${num(salgono.reduce((a, r) => a + r.correzione, 0))})`);
 
-// Controllo di sicurezza: nessun saldo deve poter finire sotto zero.
-const saldi = new Map(db.prepare("SELECT id, points_adjust FROM users").all().map((u) => [u.id, u.points_adjust]));
+// Controllo di sicurezza: nessuno deve poter finire sotto zero. Stessa
+// formula della classifica (src/lib/classifica.js), altrimenti si misura
+// una cosa diversa da quella che la gente vede.
+const saldi = new Map(db.prepare(`
+  SELECT u.id,
+         COALESCE(SUM(CASE WHEN s.status='approved' THEN m.points ELSE 0 END), 0) + u.points_adjust AS punti
+  FROM users u
+  LEFT JOIN submissions s ON s.user_id = u.id
+  LEFT JOIN missions m    ON m.id = s.mission_id
+  GROUP BY u.id
+`).all().map((u) => [u.id, u.punti]));
 const rischio = daFare.filter((r) => (saldi.get(r.user_id) || 0) + r.correzione < 0);
 if (rischio.length) {
   console.log('');
   console.log(`⛔ ${rischio.length} giocatori andrebbero sotto zero. NON procedo.`);
   for (const r of rischio.slice(0, 10)) {
-    console.log(`   ${r.nickname}: saldo ${num(saldi.get(r.user_id))} ${r.correzione > 0 ? '+' : ''}${num(r.correzione)}`);
+    console.log(`   ${r.nickname}: punti ${num(saldi.get(r.user_id))} ${r.correzione > 0 ? '+' : ''}${num(r.correzione)}`);
   }
   process.exit(1);
 }
