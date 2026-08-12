@@ -413,24 +413,53 @@ document.addEventListener('click', (e) => {
 // fragile — lo scroll "fantasma" che ScrollTrigger genera all'init lo
 // faceva sparire subito. Ora resta visibile a riposo e svanisce scrollando.
 
-// ── Bottom nav: hide on scroll down, show on scroll up ──────────────
+// ── Barra in basso: sta ferma, incollata al fondo di quello che si vede ──
+// Prima si nascondeva scorrendo giù e riappariva scorrendo su. Sul telefono
+// era un disastro: bastava un tremolio del dito di quattro pixel — misurato —
+// perché `y > lastY` diventasse vero, la barra scivolasse fuori e NON tornasse
+// finché non si scorreva su di proposito. La navigazione principale del
+// telefono spariva mentre si stava solo leggendo la classifica.
+//
+// Adesso non si muove più allo scroll. Resta solo il problema per cui è nata:
+// su iOS `position: fixed; bottom: 0` si aggancia al viewport di LAYOUT, che
+// non coincide col pezzo di schermo davvero visibile quando la barra degli
+// indirizzi si apre o si chiude. Il risultato è la barra che si stacca dal
+// fondo e galleggia in mezzo al contenuto. Qui la riagganciamo al viewport
+// VISUALE, che è l'unico che sa dove finisce lo schermo per davvero.
 (function () {
   const nav = document.getElementById('bottomNav');
   if (!nav) return;
-  let lastY = window.scrollY;
 
-  window.addEventListener('scroll', () => {
-    const y = window.scrollY;
-    if (y > lastY && y > 80) {
-      // +28px: il cerchio GIOCO sporge 24px sopra la barra (più l'ombra),
-      // col solo 100% il suo arco restava a spuntare dal bordo dello schermo
-      nav.style.transform = 'translateY(calc(100% + 28px))';
-      nav.style.transition = 'transform .3s var(--ease)';
-    } else {
-      nav.style.transform = 'translateY(0)';
-    }
-    lastY = y;
-  }, { passive: true });
+  const vv = window.visualViewport;
+  if (!vv) return;            // senza, `bottom: 0` del CSS va già benissimo
+
+  // Oltre questo scarto non è più la barra del browser che si apre: è la
+  // tastiera. Lì la barra deve restare dov'è (sotto la tastiera, fuori dai
+  // piedi) invece di salire a coprire il campo in cui si sta scrivendo.
+  const TASTIERA = 120;
+
+  let inCoda = false;
+
+  function ancora() {
+    inCoda = false;
+    const fondoVisibile = vv.offsetTop + vv.height;
+    const fondoLayout = document.documentElement.clientHeight;
+    const scarto = fondoVisibile - fondoLayout;
+    // Sotto il pixel non vale la pena scrivere nulla: eviterebbe solo di
+    // sporcare lo stile inline a ogni evento di scroll.
+    if (Math.abs(scarto) < 1 || scarto < -TASTIERA) nav.style.transform = '';
+    else nav.style.transform = 'translateY(' + Math.round(scarto) + 'px)';
+  }
+
+  function programma() {
+    if (inCoda) return;
+    inCoda = true;
+    requestAnimationFrame(ancora);
+  }
+
+  vv.addEventListener('resize', programma);
+  vv.addEventListener('scroll', programma);
+  ancora();
 })();
 
 // ── Banner prudenza (una volta per sessione) ─────────────────────
