@@ -22,14 +22,40 @@ const EMOJI = { comune: '⚪', 'non-comune': '🟢', rara: '🔵', epica: '🟣'
 
 // Finestre "giorno festa" per le sfide giornaliere (ora italiana; il server le
 // interpreta come Europe/Rome). Ogni sfida è visibile solo nel suo giorno.
+// LE SFIDE GIORNALIERE SI ACCENDONO ALLE 18:00 della loro sera e si spengono
+// alle 18:00 del giorno dopo. Ventiquattro ore che cominciano quando comincia
+// la serata, non a mezzanotte: la sfida esce insieme alla festa, e chi torna a
+// casa alle tre del mattino ha ancora tutto il giorno dopo per mandare la prova.
+//
+// Il 12 fa eccezione perche' era gia' partito a mezzanotte: si chiude alle 18
+// del 13 come annunciato, ma l'inizio resta quello vero.
 const DAY = {
-  12: ['2026-08-12 00:00:00', '2026-08-12 23:59:59'],
-  13: ['2026-08-13 00:00:00', '2026-08-13 23:59:59'],
-  14: ['2026-08-14 00:00:00', '2026-08-14 23:59:59'],
-  15: ['2026-08-15 00:00:00', '2026-08-15 23:59:59'],
-  16: ['2026-08-16 00:00:00', '2026-08-16 23:59:59'],
-  17: ['2026-08-17 00:00:00', '2026-08-17 23:59:59'],
-  18: ['2026-08-18 00:00:00', '2026-08-18 23:59:59'],
+  12: ['2026-08-12 00:00:00', '2026-08-13 18:00:00'],
+  13: ['2026-08-13 18:00:00', '2026-08-14 18:00:00'],
+  14: ['2026-08-14 18:00:00', '2026-08-15 18:00:00'],
+  15: ['2026-08-15 18:00:00', '2026-08-16 18:00:00'],
+  16: ['2026-08-16 18:00:00', '2026-08-17 18:00:00'],
+  17: ['2026-08-17 18:00:00', '2026-08-18 18:00:00'],
+  18: ['2026-08-18 18:00:00', '2026-08-19 18:00:00'],
+};
+
+// GIORNATA PIENA: apre a mezzanotte invece che alle 18. La usano SOLO le
+// missioni FLASH, e non e' una preferenza sull'orario: quelle le accende lo
+// staff nel momento in cui la cosa succede, e una finestra che parte alle 18
+// terrebbe nascosta la missione anche dopo che qualcuno ha premuto il
+// pulsante. Peppe Tap Tap passa quando passa, non alle 18 in punto.
+//
+// Le altre missioni del giorno si accendono tutte alle 18, comprese quelle
+// che si fanno di giorno: la prova si puo' mandare anche dopo, nessun
+// controllo rifiuta una foto scattata prima dell'apertura.
+const DAY_PIENO = {
+  12: ['2026-08-12 00:00:00', '2026-08-13 18:00:00'],
+  13: ['2026-08-13 00:00:00', '2026-08-14 18:00:00'],
+  14: ['2026-08-14 00:00:00', '2026-08-15 18:00:00'],
+  15: ['2026-08-15 00:00:00', '2026-08-16 18:00:00'],
+  16: ['2026-08-16 00:00:00', '2026-08-17 18:00:00'],
+  17: ['2026-08-17 00:00:00', '2026-08-18 18:00:00'],
+  18: ['2026-08-18 00:00:00', '2026-08-19 18:00:00'],
 };
 
 // Finestra di un PRONOSTICO: apre alle 18 del giorno prima e chiude alle 18
@@ -42,7 +68,9 @@ const PRONOSTICO = (n) => [
 ];
 
 // Finestra che copre più giorni, per le missioni che non stanno in uno solo.
-const DAL_AL = (da, a) => [`2026-08-${da} 00:00:00`, `2026-08-${a} 23:59:59`];
+// Finestra su misura, stessa regola del DAY qui sopra: si chiude alle 18:00
+// del giorno dopo l'ultimo, non a mezzanotte.
+const DAL_AL = (da, a) => [`2026-08-${da} 00:00:00`, `2026-08-${String(Number(a) + 1).padStart(2, '0')} 18:00:00`];
 
 // m(nome, descrizione, rarità, opzioni)
 // opzioni: { rep: ripetibile più volte al giorno, day: N sfida giornaliera,
@@ -76,7 +104,7 @@ const MISSIONS = [
   m("A' Machina Zozzosa", 'Scatta una foto ad un’auto impolverata sulla quale sia stata scritta la parola "FantaSanRocco".', 'rara', { sec: 'paese' }),
   m('A Per', 'Spostati con un mezzo alternativo e scatta una foto.', 'rara', { sec: 'paese' }),
   m('Tradizione', 'Impara una tradizione da un anziano e documentalo con una foto.', 'rara', { sec: 'paese' }),
-  m('È sempre San Valentino da Romalba', 'Scatta una foto del mazzo di fiori comprato da Romalba per il/la tuo/a partner.', 'rara', { sec: 'paese' }),
+  m('È sempre San Valentino da Romalba', 'Scatta una foto del mazzo di fiori comprato da Romalba per il/la tuo/a partner.', 'rara', { sec: 'paese', sponsor: 'romalba.png' }),
 
   // ── FOOD & DRINK (8) ─────────────────────────────────────────────
   m('Leccucci', 'Scatta una foto con il sacchetto di caramelle comprato alle bancarelle.', 'comune', { sec: 'food' }),
@@ -86,7 +114,7 @@ const MISSIONS = [
   m("O' Mast", 'Scatta una foto mentre bevi con il proprietario di un bar.', 'rara', { sec: 'food' }),
   m("Ngopp o' Pont", 'Scatta una foto con il paninaro di "ngopp o’ pont".', 'rara', { sec: 'food' }),
   m('Fila Infinita', 'Scatta una foto mentre sei in una lunga fila al bar.', 'non-comune', { sec: 'food' }),
-  m('Vittoria', 'Scatta una foto della colazione o dell’aperitivo al bar Vittoria.', 'non-comune', { sec: 'food' }),
+  m('Vittoria', 'Scatta una foto della colazione o dell’aperitivo al bar Vittoria.', 'non-comune', { sec: 'food', sponsor: 'bar-vittoria.png' }),
 
   // ── SOCIAL & PARTY (16) ──────────────────────────────────────────
   m('Rocco', 'Scatta una foto con una persona di nome Rocco.', 'non-comune', { rep: true, sec: 'social' }),
@@ -112,7 +140,7 @@ const MISSIONS = [
   // ── SPORT, TEAM & COMUNITÀ (9) ───────────────────────────────────
   m('Partitella', 'Scatta una foto durante una partita con il pallone in piazza.', 'non-comune', { sec: 'sport' }),
   m('Ultras', 'Scatta una foto indossando la maglia di una squadra di calcio del paese.', 'non-comune', { sec: 'sport' }),
-  m('San Rocco in campo', 'Scatta una foto con il presidente della San Rocco Calcio Michele Marino.', 'non-comune', { sec: 'sport', sponsor: 'sanroccocalcio.png' }),
+  m('San Rocco in campo', 'Fai una foto con il presidente della San Rocco Calcio Michele Marino.', 'non-comune', { sec: 'sport', sponsor: 'sanroccocalcio.png' }),
   m('Man of the Match', 'Scatta una foto con i calciatori delle squadre locali.', 'non-comune', { sec: 'sport' }),
   m('Meet the Team', 'Scatta una foto con uno dei membri del team "Fanta San Rocco".', 'rara', { rep: true, sec: 'sport' }),
   m('Benedizione', 'Scatta una foto con il parroco. Non durante la processione.', 'rara', { sec: 'sport' }),
@@ -128,9 +156,15 @@ const MISSIONS = [
   m('Green days', 'Fai una foto mentre ripulisci le strade (+10 punti bonus se pulisci con uno spazzino).', 'comune', { sec: 'sport' }),
   m('Ps. : I love me', 'Fai una foto mentre compri dei fiori per te stessa/o da Vastola.', 'rara', { sec: 'paese', sponsor: 'vastola.png' }),
   m('Piazza deserta', 'Fai una foto della piazza principale del paese completamente vuota durante la settimana di festa.', 'non-comune', { sec: 'paese' }),
-  m('Missione Banana Giò', 'Fai una foto con Giovanni Riccio e la banana gonfiabile all’Atelier di frutta e verdura.', 'rara', { sec: 'paese', sponsor: 'atelierfruttaeverdura.png' }),
+  m('Banana Giò', 'Fai una foto con Giovanni Riccio e la banana gonfiabile all’Atelier di frutta e verdura.', 'rara', { sec: 'paese', sponsor: 'atelierfruttaeverdura.png' }),
   m('Spesa folle', 'Fai una foto mentre fai la spesa in abiti "folli" (elegante, in costume, maschera e boccaglio ecc.).', 'epica', { sec: 'food' }),
   m('Babbà House', 'Fai una foto a una Peroni con il campanile sullo sfondo.', 'non-comune', { sec: 'food', sponsor: 'babba-house.png' }),
+  // Creata dal pannello durante la festa e riportata qui, altrimenti la patch
+  // la considerava "non in elenco" e la nascondeva — con cinque prove gia'
+  // fatte. Lo spazio davanti al nome NON e' un errore di battitura: il titolo
+  // nel database e' "🟢  ‘nda kalu" con due spazi, e il nome deve ricostruirlo
+  // esatto, altrimenti la patch ne crea una nuova e archivia questa.
+  m(' ‘nda kalu', 'Fai una foto mentre brindi da kalù', 'non-comune', { sec: 'food', sponsor: 'kalu.png' }),
   // Il bonus dei +10 punti lo aggiunge lo staff in moderazione: qui si dice
   // solo che c'è, perché è la descrizione a fare la promessa.
   m('Moltiplicatore di Rocchi', 'Fai una foto con almeno 7 persone di nome "Rocco" (+10 punti bonus se c’è un cane).', 'leggendaria', { sec: 'social' }),
@@ -175,7 +209,7 @@ const MISSIONS = [
   m('Skin', 'Scatta una foto indossando un outfit dello stesso colore del sindaco.', 'epica', { day: 16 }),
   m('Alfo & Mike', 'Scatta una foto con Alfo V. o con Mike Carotenuto in consolle.', 'rara', { day: 16 }),
   m('Momento Solenne', 'Riprendi l’entrata/uscita di San Rocco dalla chiesa durante la processione.', 'non-comune', { day: 16 }),
-  m('Compleanno Leggendario', 'Scatta una foto con chi compie gli anni a San Rocco (ancora meglio se si chiama Rocco).', 'leggendaria', { day: 16 }),
+  m('Compleanno Leggendario', 'Scatta una foto con chi compie gli anni a San Rocco (+50 punti se si chiama Rocco).', 'leggendaria', { day: 16 }),
   m("Spalla d'Onore", 'Scatta una foto mentre porti San Rocco durante la processione.', 'epica', { day: 16 }),
   m('Il Portatore', 'Scatta una foto mentre si porta un santo durante la processione.', 'rara', { day: 16 }),
   m('In Cammino', 'Scatta una foto mentre partecipi alla processione.', 'comune', { day: 16 }),
@@ -212,4 +246,4 @@ const MISSIONS = [
   // Vale il 13, 14, 15 e 17, ma NON il 16: la finestra fa da recinto esterno
   // e `giorni` ne ritaglia il buco.
 ];
-module.exports = { MISSIONI: MISSIONS, PTS, EMOJI, DAY, DAL_AL, PRONOSTICO, m };
+module.exports = { MISSIONI: MISSIONS, PTS, EMOJI, DAY, DAY_PIENO, DAL_AL, PRONOSTICO, m };

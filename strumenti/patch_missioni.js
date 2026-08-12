@@ -35,7 +35,7 @@
 //                                                          quelle di troppo
 // ===================================================================
 const { db } = require('../src/db');
-const { MISSIONI, PTS, EMOJI, DAY } = require('../src/dati/missioni');
+const { MISSIONI, PTS, EMOJI, DAY, DAY_PIENO } = require('../src/dati/missioni');
 
 const PROVA   = process.argv.includes('--prova');
 const ELIMINA = process.argv.includes('--elimina');
@@ -47,7 +47,10 @@ const nudo = (t) => String(t || '').replace(/^[^\p{L}\p{N}"'«(]+/u, '').trim();
 
 // Da una voce dell'elenco alla riga che il database dovrebbe avere.
 function attesa(x) {
-  const win = x.win || (x.day ? DAY[x.day] : [null, null]);
+  // Le FLASH prendono la giornata piena: le accende lo staff quando succede la
+  // cosa, e una finestra che parte alle 18 combatterebbe con chi preme il
+  // pulsante (Peppe Tap Tap passa quando passa).
+  const win = x.win || (x.day ? ((x.flash ? DAY_PIENO : DAY)[x.day]) : [null, null]);
   return {
     title: `${EMOJI[x.rar]} ${x.name}`,
     description: x.desc,
