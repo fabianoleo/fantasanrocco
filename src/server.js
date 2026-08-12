@@ -1981,8 +1981,22 @@ const SLOT_SYMBOLS = [
 const SLOT_TRIPLE = { ciliegia: 3, percoca: 6, vino: 12, braciola: 25, fuoco: 55, sanrocco: 188 };
 const SLOT_PAIR   = { ciliegia: 0, percoca: 1, vino: 1.5, braciola: 3, fuoco: 8, sanrocco: 12 };
 // Scorciatoie in alto, ma la puntata è libera fra MIN e MAX (interi).
-// Il tetto serve a non far esplodere la classifica: un tris di San Rocco paga
-// ×188, quindi la vincita massima possibile è SLOT_BET_MAX × 188.
+//
+// ⚠️ Il ×188 qui sopra è della slot a 3 rulli, che NON si gioca più: queste
+// tre costanti le usa la 5×4 di giochi/slot.js, che paga tutt'altro. Il tetto
+// alla puntata NON basta più a tenere buona la classifica, e conviene sapere
+// perché prima di alzarlo:
+//
+//   moltiplicatore massimo misurato su 20 milioni di giocate   ×1551
+//   una vincita ≥ ×500                                         1 su 1.330.000
+//   una vincita ≥ ×100                                         1 su 11.000
+//
+// Con SLOT_BET_MAX = 500 il colpo grosso vale quindi centinaia di migliaia di
+// punti, mentre TUTTE e 97 le missioni della settimana insieme ne valgono
+// 11.950. Il massimo teorico è ancora più alto (~×16.000: venti linee di San
+// Rocco ripetute a ogni passo della Corsa del Cane), ma è irraggiungibile.
+//
+// Se il tetto va rimisurato: strumenti/slot_rtp.js.
 const SLOT_BETS    = [10, 20, 50, 100];
 const SLOT_BET_MIN = 5;
 const SLOT_BET_MAX = 500;
