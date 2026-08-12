@@ -38,8 +38,12 @@
     return {
       id: u.id,
       nome: u.nickname,
+      /* In parita' si mostra il numero che decide davvero l'ordine: i punti
+         fatti con le missioni. Prima si mostravano i record dei mini-giochi,
+         che ora sono il secondo spareggio e non il primo: chi leggeva vedeva
+         un numero che non spiegava piu' perche' uno stesse sopra all'altro. */
       byline: inParita(i)
-        ? missioni + ' · ' + Number(u.spareggio || 0).toLocaleString('it-IT') + ' nei giochi'
+        ? missioni + ' · ' + Number(u.puntiMissioni || 0).toLocaleString('it-IT') + ' pt dalle missioni'
         : missioni,
       valore: u.points,
       unita: 'pt',

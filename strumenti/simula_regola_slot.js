@@ -42,6 +42,7 @@ const QUANTI = 20;
 const righe = db.prepare(`
   SELECT u.id, u.nickname,
          COALESCE(SUM(CASE WHEN s.status='approved' THEN m.points ELSE 0 END), 0) + u.points_adjust AS punti,
+         COALESCE(SUM(CASE WHEN s.status='approved' THEN m.points ELSE 0 END), 0) AS puntiMissioni,
          (u.game_best + u.jp_best) AS spareggio,
          u.created_at
   FROM users u
@@ -63,8 +64,12 @@ for (const r of db.prepare(`
   perGiorno.get(r.user_id).push(r);
 }
 
-const ordina = (a, b) => (b.punti - a.punti) || (b.spareggio - a.spareggio)
-  || (a.created_at < b.created_at ? -1 : 1);
+// Stesso ordine di src/lib/classifica.js: a pari punti passa avanti chi ne
+// ha fatti di piu' con le missioni, poi i record dei mini-giochi, poi
+// l'iscrizione. Se qui fosse diverso, le posizioni stampate non sarebbero
+// quelle che la gente vede sul sito.
+const ordina = (a, b) => (b.punti - a.punti) || (b.puntiMissioni - a.puntiMissioni)
+  || (b.spareggio - a.spareggio) || (a.created_at < b.created_at ? -1 : 1);
 const prima = righe.map((r) => ({ ...r })).sort(ordina);
 const posPrima = new Map(prima.map((r, i) => [r.id, i + 1]));
 
