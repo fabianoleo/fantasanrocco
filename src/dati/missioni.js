@@ -170,6 +170,19 @@ const MISSIONS = [
   m('Moltiplicatore di Rocchi', 'Fai una foto con almeno 7 persone di nome "Rocco" (+10 punti bonus se c’è un cane).', 'leggendaria', { sec: 'social' }),
   m('Gemelli diversi', 'Fai una foto con un tuo omonimo (che ha il tuo stesso nome e cognome).', 'epica', { sec: 'social' }),
   // Senza foto: la prova è il link, e si incolla nella nota per lo staff.
+  // ── AGGIUNTE DEL 13 AGOSTO ───────────────────────────────────────
+  // Tutte generali (valgono tutti i giorni) e NON ripetibili: una al giorno,
+  // come le altre. I bonus in coda alla descrizione li aggiunge lo staff in
+  // moderazione, come per Green days e Moltiplicatore di Rocchi.
+  m('Tamberi', 'Fatti una foto davanti alla chiesa con la barba fatta a metà, come Gianmarco Tamberi.', 'epica', { sec: 'social' }),
+  m('Mezzo e Mezzo', 'Tingiti i capelli metà di un colore e metà di un altro, poi scatta la foto. +50 punti bonus se uno dei due colori è il verde o l’oro del FantaSanRocco.', 'leggendaria', { sec: 'social' }),
+  m('Sempre Pronti', 'Fatti una foto con un volontario della Protezione Civile di Siano in divisa. +10 punti bonus se la divisa è blu.', 'non-comune', { sec: 'sport' }),
+  m('Brindisi col Team', 'Bevi qualcosa insieme a un membro del team FantaSanRocco e scatta la foto del brindisi.', 'rara', { sec: 'food' }),
+  // Apostrofo dritto e minuscola come le altre in napoletano del file
+  // ("A' Machina Zozzosa", "Ngopp a' Cappell"): il nome e' quello che si dice
+  // in paese, non la sua traduzione.
+  m("'o melon e fuoc", 'Fatti un selfie con almeno 5 persone calve, tutte nella stessa foto.', 'epica', { sec: 'social' }),
+
   m('Corri su TikTok', 'Realizza un TikTok con il suono «Corri San Rocco» e incolla il link nella «nota per lo staff». Attenzione: il profilo deve essere pubblico e ricordati di taggare @fantasanrocco.', 'epica', { sec: 'social', photo: false }),
 
   // ── L'ADESIVO, UNA SERA PER OGNI BAR ─────────────────────────────
@@ -230,6 +243,21 @@ const MISSIONS = [
   m('Prima Fila', 'Scatta una foto mentre prendi posto a Piazza Mercato.', 'non-comune', { day: 18 }),
   m('Tutti Pronti', 'Scatta una foto della spesa per i fuochi.', 'non-comune', { day: 18 }),
   m('Tutti in Cerchio', 'Flash! Prendetevi per mano e formate un cerchio. Ricorda di scattare la foto!', 'epica', { flash: true, day: 18 }),
+
+  // ── LA PAROLA UMANA — una parola diversa ogni sera ───────────────
+  // Si fa in gruppo: i corpi formano le lettere. Vale per TUTTI quelli che
+  // compaiono nella foto, non solo per chi la manda — ed e' il motivo per cui
+  // la descrizione chiede i nomi utente nella nota: senza quelli lo staff
+  // vede una foto di dieci persone e non sa a chi accreditare i punti.
+  // La parola della sera esce con la sfida, cioe' alle 18: scriverla qui non
+  // la rivela in anticipo, perche' le missioni del giorno non ancora aperto
+  // non arrivano proprio nell'HTML di chi gioca.
+  m('La Parola Umana · LOVE', 'Formate con i vostri corpi la parola LOVE e scattate la foto. Nella nota per lo staff scrivete i nomi utente di TUTTI quelli che compaiono nella foto: così i punti li prendono tutti, non solo chi la manda.', 'epica', { day: 13 }),
+  m('La Parola Umana · CANE', 'Formate con i vostri corpi la parola CANE e scattate la foto. Nella nota per lo staff scrivete i nomi utente di TUTTI quelli che compaiono nella foto: così i punti li prendono tutti, non solo chi la manda.', 'epica', { day: 14 }),
+  m('La Parola Umana · SOLE', 'Formate con i vostri corpi la parola SOLE e scattate la foto. Nella nota per lo staff scrivete i nomi utente di TUTTI quelli che compaiono nella foto: così i punti li prendono tutti, non solo chi la manda.', 'epica', { day: 15 }),
+  m('La Parola Umana · ROCCO', 'Formate con i vostri corpi la parola ROCCO e scattate la foto. Nella nota per lo staff scrivete i nomi utente di TUTTI quelli che compaiono nella foto: così i punti li prendono tutti, non solo chi la manda.', 'epica', { day: 16 }),
+  m('La Parola Umana · FUOCHI', 'Formate con i vostri corpi la parola FUOCHI e scattate la foto. Nella nota per lo staff scrivete i nomi utente di TUTTI quelli che compaiono nella foto: così i punti li prendono tutti, non solo chi la manda.', 'epica', { day: 17 }),
+  m('La Parola Umana · SIANO', 'Formate con i vostri corpi la parola SIANO e scattate la foto. Nella nota per lo staff scrivete i nomi utente di TUTTI quelli che compaiono nella foto: così i punti li prendono tutti, non solo chi la manda.', 'epica', { day: 18 }),
 
   // ── FLASH SENZA GIORNO FISSO ─────────────────────────────────────
   // Peppe Tap Tap non si sa quando passa: la missione la sblocca lo staff

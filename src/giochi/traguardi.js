@@ -59,6 +59,16 @@ const GAME_ACHIEVEMENTS = [
   { key: 'g-10000', metric: 'score', threshold: 16500, points: 355,  title: 'Santo tra i santi',           desc: 'Raggiungi 16.500 punti in una partita.' },
   { key: 'g-12500', metric: 'score', threshold: 20500, points: 440,  title: 'Eterno camminatore',          desc: 'Raggiungi 20.500 punti in una partita.' },
   { key: 'g-15000', metric: 'score', threshold: 25000, points: 575, title: 'Mito di San Rocco',           desc: 'Raggiungi 25.000 punti in una partita.' },
+  // Aggiunte il 13 agosto: 25.000 non bastava piu'. Il migliore era gia' a
+  // 21.000 dopo due giorni, e un traguardo che il piu' bravo ha quasi
+  // raggiunto smette di essere un traguardo. Il gioco fa ~25 punti al secondo
+  // (49 con la reliquia), quindi 30.000 sono una ventina di minuti buoni e
+  // 36.000 quasi mezz'ora: difficili, non impossibili.
+  // ATTENZIONE: c'e' un tetto assoluto al punteggio in server.js
+  // (MAX_PLAUSIBLE_SCORE). Chi alza queste soglie deve alzare anche quello,
+  // altrimenti il traguardo resta irraggiungibile per costruzione.
+  { key: 'g-18000', metric: 'score', threshold: 30000, points: 700, title: 'Il cammino non finisce',      desc: 'Raggiungi 30.000 punti in una partita.' },
+  { key: 'g-22000', metric: 'score', threshold: 36000, points: 900, title: 'Oltre i fuochi',              desc: 'Raggiungi 36.000 punti in una partita.' },
   // ── Partite giocate (più giochi, più punti) ─────────────────────
   { key: 'gp-3',    metric: 'plays', threshold: 5,     points: 8,   title: 'Ci ho preso gusto',           desc: 'Gioca 5 partite a «Corri San Rocco».' },
   { key: 'gp-8',    metric: 'plays', threshold: 15,     points: 12,   title: 'Habitué del cortile',         desc: 'Gioca 15 partite.' },
@@ -66,6 +76,7 @@ const GAME_ACHIEVEMENTS = [
   { key: 'gp-40',   metric: 'plays', threshold: 70,    points: 34,   title: 'Veterano del distributore',   desc: 'Gioca 70 partite.' },
   { key: 'gp-75',   metric: 'plays', threshold: 130,    points: 52,  title: 'Mai una pausa',               desc: 'Gioca 130 partite.' },
   { key: 'gp-150',  metric: 'plays', threshold: 250,   points: 82,  title: 'Inchiodato allo schermo',     desc: 'Gioca 250 partite. Ma quanto giochi?' },
+  { key: 'gp-400',  metric: 'plays', threshold: 400,   points: 120, title: 'Ancora una e smetto',         desc: 'Gioca 400 partite.' },
 ];
 
 // Crea/aggiorna le missioni del gioco allo startup (idempotente).

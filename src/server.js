@@ -1297,7 +1297,7 @@ app.post('/gioco/inizio', auth.requireLogin, gameLimiter, verifyCsrf, (req, res)
 // Report del punteggio di fine partita: aggiorna il record e assegna i
 // traguardi non ancora conquistati (solo loggati). Idempotente.
 app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, res) => {
-  const MAX_PLAUSIBLE_SCORE = 26000;  // cap assoluto (traguardo massimo 25.000)
+  const MAX_PLAUSIBLE_SCORE = 38000;  // cap assoluto: sta sopra il traguardo piu' alto (36.000)
   const MAX_DELTA_PER_GAME  = 3000;   // fallback senza ticket valido
   const MIN_GAME_SEC        = 3;      // durata minima perché la partita "conti"
   const BASE_ALLOWANCE      = 400;    // margine iniziale (bonus presi subito)
@@ -1382,6 +1382,10 @@ const JP_MISSIONS = [
   { key: 'jp-d400',  kind: 'run', metric: 'dist',       goal: 400,  text: 'Arriva a 400 m in una partita' },
   { key: 'jp-d700',  kind: 'run', metric: 'dist',       goal: 700,  text: 'Arriva a 700 m in una partita' },
   { key: 'jp-d1000', kind: 'run', metric: 'dist',       goal: 1000, text: 'Arriva a 1000 m in una partita' },
+  // Aggiunte il 13 agosto: 1.000 m non erano piu' un traguardo, il record
+  // era gia' a 16.000. Queste due restano dure ma raggiungibili.
+  { key: 'jp-d3000', kind: 'run', metric: 'dist',       goal: 3000, text: 'Arriva a 3.000 m in una partita' },
+  { key: 'jp-d8000', kind: 'run', metric: 'dist',       goal: 8000, text: 'Arriva a 8.000 m in una partita' },
   { key: 'jp-t2',    kind: 'run', metric: 'transforms', goal: 2,    text: 'Usa 2 mezzi in una partita' },
   { key: 'jp-t3',    kind: 'run', metric: 'transforms', goal: 3,    text: 'Usa 3 mezzi in una partita' },
   { key: 'jp-k12',   kind: 'run', metric: 'knocked',    goal: 12,   text: 'Travolgi 12 fedeli in una partita' },
