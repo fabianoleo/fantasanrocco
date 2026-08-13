@@ -705,7 +705,15 @@
       if (typeof lastReport.stars === 'number') {
         parts.push('Stelle: <b>' + lastReport.stars + '</b>' + (lastReport.rank ? ' · ' + esc(lastReport.rank) : ''));
       }
-      if (lastReport.counted === false) parts.push('Partita troppo breve: non conta per le missioni.');
+      // Due motivi diversi, e per chi gioca non sono la stessa cosa: "hai
+      // chiuso subito" è colpa sua, "il ticket non c'è più" è colpa nostra —
+      // il server è stato riavviato durante la partita. Dire "troppo breve"
+      // dopo dieci minuti di volo fa sembrare il gioco rotto.
+      if (lastReport.counted === false) {
+        parts.push(lastReport.motivo === 'ticket'
+          ? 'Questa partita non è stata registrata: il server si è riavviato mentre giocavi. I punti fatti prima restano, ma questa corsa non conta. Riprova.'
+          : 'Partita troppo breve: non conta per le missioni.');
+      }
       if (parts.length) html += '<br><span class="jp-missions">' + parts.join('<br>') + '</span>';
     } else if (!logged) {
       html += '<br><span class="jp-missions">Accedi per far valere le missioni e guadagnare punti in classifica.</span>';

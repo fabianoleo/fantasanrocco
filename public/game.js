@@ -688,6 +688,14 @@
       if (!data) return;
       if (typeof data.best === 'number') { best = Math.max(best, data.best); elBest.textContent = 'record ' + best; }
       if (data.awarded && data.awarded.length) { showToast(data.awarded); data.awarded.forEach((a) => markAchievement(a.title)); }
+      // Se il server ha contato meno di quello che hai fatto, lo dice. Senza,
+      // il record resta più basso del punteggio appena visto a schermo e
+      // sembra che il gioco rubi i punti.
+      if (data.tagliato) {
+        elBest.textContent = 'record ' + best + (data.tagliato.motivo === 'ticket'
+          ? ' · partita non registrata (riavvio del server), contati ' + data.tagliato.contato
+          : ' · contati ' + data.tagliato.contato);
+      }
     }).catch(() => {});
   }
 

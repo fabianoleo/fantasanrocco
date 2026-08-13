@@ -1285,13 +1285,13 @@ app.get('/giochi', (req, res) => {
 app.get('/gioco', (req, res) => res.redirect(301, '/giochi?g=runner'));
 
 // Ticket anti-cheat delle partite: vedi giochi/anticheat.js.
-const { gameSessions, newGameSession } = require('./giochi/anticheat');
+const { newGameSession, takeGameSession } = require('./giochi/anticheat');
 // Traguardi del runner e loro trasformazione in missioni: giochi/traguardi.js.
 const { GAME_ACHIEVEMENTS, ensureGameMissions, gameMissionId, userGameAchievements } = require('./giochi/traguardi');
 
 // Inizio partita → rilascia un ticket col timestamp del server.
 app.post('/gioco/inizio', auth.requireLogin, gameLimiter, verifyCsrf, (req, res) => {
-  res.json({ ok: true, token: newGameSession(req.currentUser.id) });
+  res.json({ ok: true, token: newGameSession(req, 'runner') });
 });
 
 // Report del punteggio di fine partita: aggiorna il record e assegna i
@@ -1308,11 +1308,10 @@ app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, r
   const prevBest = req.currentUser.game_best || 0;
 
   // Ticket monouso: lega il punteggio al tempo reale trascorso.
-  const token = req.body.token;
-  const sess = token ? gameSessions.get(token) : null;
-  const validSession = !!(sess && sess.userId === req.currentUser.id);
+  const sess = takeGameSession(req, 'runner', req.body.token);
+  const validSession = !!sess;
   let elapsedSec = 0;
-  if (validSession) { elapsedSec = (Date.now() - sess.startMs) / 1000; gameSessions.delete(token); }
+  if (validSession) elapsedSec = (Date.now() - sess.startMs) / 1000;
 
   let score, countsAsPlay;
   if (validSession) {
@@ -1358,7 +1357,13 @@ app.post('/gioco/punteggio', auth.requireLogin, gameLimiter, verifyCsrf, (req, r
   notifyGameAwards(req.currentUser.id, 'Corri San Rocco', awarded, '/giochi?g=runner');
   // Una partita chiude al massimo UNA sfida: vedi chiudiConPartita().
   const esitoSfida = chiudiSfidaEAvvisa(req.currentUser, 'runner', score);
-  res.json({ ok: true, best, plays, awarded, sfida: esitoSfida });
+  // `tagliato` dice al browser che il punteggio mandato NON e' quello contato.
+  // Senza, il giocatore vede un record piu' basso di quello che ha appena
+  // fatto e non sa perche': sembra che il gioco rubi i punti.
+  res.json({
+    ok: true, best, plays, awarded, sfida: esitoSfida,
+    tagliato: score < rawScore ? { fatto: rawScore, contato: score, motivo: validSession ? 'ritmo' : 'ticket' } : null,
+  });
 });
 
 // =========================================================================
@@ -1523,7 +1528,7 @@ function jpApplyRun(userId, run) {
 
 // Inizio partita jetpack → ticket col timestamp del server (come il runner)
 app.post('/jetpack/inizio', auth.requireLogin, gameLimiter, verifyCsrf, (req, res) => {
-  res.json({ ok: true, token: newGameSession(req.currentUser.id) });
+  res.json({ ok: true, token: newGameSession(req, 'jetpack') });
 });
 
 // Fine partita: il client NON è fidato, ogni valore è limitato dal tempo
@@ -1561,15 +1566,21 @@ app.post('/jetpack/fine', auth.requireLogin, gameLimiter, verifyCsrf, (req, res)
     knocked:    { base: 0, perSec: 2 },       // max reale ~1,3 fedeli/s
     halos:      { base: 0, perSec: 1 / 5 },   // una ogni ~6 s
   };
-  const token = req.body.token;
-  const sess = token ? gameSessions.get(token) : null;
-  const valid = !!(sess && sess.userId === req.currentUser.id);
+  const sess = takeGameSession(req, 'jetpack', req.body.token);
+  const valid = !!sess;
   let elapsed = 0;
-  if (valid) { elapsed = (Date.now() - sess.startMs) / 1000; gameSessions.delete(token); }
+  if (valid) elapsed = (Date.now() - sess.startMs) / 1000;
 
   // Senza ticket valido la partita non conta: niente stelle né punti.
+  // `motivo` distingue i due casi, che per chi gioca sono cose diverse:
+  // "hai chiuso subito" è colpa sua, "il ticket non c'è più" è colpa nostra
+  // (un riavvio del server) e dirgli "partita troppo breve" dopo dieci minuti
+  // di gioco è una bugia che fa sembrare il gioco rotto.
   if (!valid || elapsed < MIN_GAME_SEC) {
-    return res.json({ ok: true, counted: false, done: [], awarded: [], stars: (req.currentUser.jp_stars || 0) });
+    return res.json({
+      ok: true, counted: false, motivo: valid ? 'breve' : 'ticket',
+      done: [], awarded: [], stars: (req.currentUser.jp_stars || 0),
+    });
   }
   const run = {};
   for (const k in CAPS) {
