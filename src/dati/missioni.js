@@ -124,7 +124,7 @@ const MISSIONS = [
   m('Trash Royale', 'Pubblica una storia Instagram volutamente trash sul tuo profilo pubblico taggando "Fanta SanRocco". Come prova invia lo screenshot della storia.', 'rara', { sec: 'social' }),
   m('Maracaibo', 'Entra in un trenino umano che balla e scatta una foto.', 'non-comune', { sec: 'social' }),
   m('Mangiata', 'Scatta un selfie durante una mangiata sulla terra.', 'epica', { sec: 'social' }),
-  m('On Air', 'Fatti intervistare da chi fa riprese/interviste ufficiali dell’evento.', 'epica', { sec: 'social' }),
+  m('On Air', 'Fatti intervistare dal team del FantaSanRocco. Valgono solo le interviste fatte da noi: le riprese di altri non contano.', 'epica', { sec: 'social' }),
   m('Pigiama Party', 'Scatta una foto in pigiama davanti la chiesa.', 'epica', { sec: 'social' }),
   m('Cover', 'Ricrea una famosa foto di gruppo (es. "L’Ultima Cena" o una copertina iconica) con gli amici.', 'rara', { sec: 'social' }),
   m('Glitch', 'Trova due persone vestite uguali e fai una foto con entrambe.', 'rara', { sec: 'social' }),
