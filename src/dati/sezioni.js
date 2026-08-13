@@ -19,7 +19,15 @@
 const SECTIONS = [
   { key: 'paese',  label: 'Paese & Tradizione',     color: 'gold',   bonus: 125 },
   { key: 'food',   label: 'Food & Drink',           color: 'green',  bonus: 75 },
-  { key: 'social', label: 'Social & Party',         color: 'purple', bonus: 125 },
+  // 150 e non 125: il 13 agosto la sezione e' passata da 19 a 23 missioni, e
+  // le quattro entrate sono fra le piu' impegnative del gioco (tingersi i
+  // capelli, mezza barba, cinque calvi, un video di gruppo immobile in
+  // piazza). Il bonus si prende completando TUTTA la sezione: lasciandolo a
+  // 125 sarebbe diventata la piu' dura da chiudere e la meno pagata.
+  // Chi l'aveva gia' preso ha incassato 125: il bonus si da' una volta sola e
+  // non si ricalcola: non si tolgono punti a nessuno, e i 25 di differenza
+  // non valgono un giro di storni.
+  { key: 'social', label: 'Social & Party',         color: 'purple', bonus: 150 },
   { key: 'sport',  label: 'Sport, Team & Comunità', color: 'blue',   bonus: 100 },
 ];
 
