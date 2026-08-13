@@ -188,6 +188,7 @@ const MISSIONS = [
   // e' un video di gruppo, se il moderatore la rifiuta senza che fosse detto
   // prima si rifa' tutto da capo con dieci persone.
   m('Ritorna al Passato', 'Fatti un selfie con un orologio da taschino.', 'rara', { sec: 'paese' }),
+  m('Motori del Passato', 'Fatti una foto all’interno di una macchina d’epoca.', 'rara', { sec: 'paese' }),
   m('Mannequin Challenge', 'Fate la mannequin challenge davanti alla chiesa: tutti immobili e la ripresa deve prendere tutta la piazza. Basta una persona o un oggetto in movimento e la prova non vale. Pubblica il video nelle storie taggando @fanta_sanrocco con il tag ben visibile, e come prova invia lo screenshot della storia.', 'epica', { sec: 'social' }),
 
   // ATTENZIONE: su TikTok il nome e' @fantasanrocco, senza trattino basso —
