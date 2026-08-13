@@ -12,7 +12,7 @@
 // Uso (in produzione, dentro il container):  node strumenti/seed_missioni_2026.js
 // ===================================================================
 const { db } = require('../src/db');
-const { MISSIONI, PTS, EMOJI, DAY } = require('../src/dati/missioni');
+const { MISSIONI, PTS, EMOJI, DAY, DAY_PIENO } = require('../src/dati/missioni');
 
 
 const insert = db.prepare(`INSERT INTO missions
@@ -25,7 +25,10 @@ const run = db.transaction(() => {
   for (const x of MISSIONI) {
     const title = `${EMOJI[x.rar]} ${x.name}`;
     const points = PTS[x.rar];
-    const win = x.win || (x.day ? DAY[x.day] : [null, null]);
+    // Le FLASH prendono la giornata piena, come in patch_missioni.js: le
+    // accende lo staff quando la cosa succede, e una finestra che parte
+    // alle 18 combatterebbe con chi preme il pulsante.
+    const win = x.win || (x.day ? ((x.flash ? DAY_PIENO : DAY)[x.day]) : [null, null]);
     insert.run(
       title,
       x.desc,
