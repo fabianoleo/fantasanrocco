@@ -121,7 +121,7 @@ const MISSIONS = [
   m('Kiss Kiss', 'Scatta una foto mentre dai baci durante la festa.', 'comune', { rep: true, sec: 'social' }),
   m('Spia', 'Scatta una foto mentre qualcuno compie uno dei tre malus: bere acqua, piangere o litigare.', 'epica', { rep: true, sec: 'social' }),
   m("Miettc a' Man Toji", 'Scatta un selfie in chiesa con la statua di un Santo.', 'non-comune', { sec: 'social' }),
-  m('Trash Royale', 'Pubblica una storia Instagram volutamente trash sul tuo profilo pubblico taggando "Fanta SanRocco". Come prova invia lo screenshot della storia.', 'rara', { sec: 'social' }),
+  m('Trash Royale', 'Pubblica una storia Instagram volutamente trash sul tuo profilo pubblico taggando @fanta_sanrocco. Come prova invia lo screenshot della storia.', 'rara', { sec: 'social' }),
   m('Maracaibo', 'Entra in un trenino umano che balla e scatta una foto.', 'non-comune', { sec: 'social' }),
   m('Mangiata', 'Scatta un selfie durante una mangiata sulla terra.', 'epica', { sec: 'social' }),
   m('On Air', 'Fatti intervistare dal team del FantaSanRocco. Valgono solo le interviste fatte da noi: le riprese di altri non contano.', 'epica', { sec: 'social' }),
@@ -187,8 +187,11 @@ const MISSIONS = [
   // Le due condizioni che la fanno fallire stanno scritte, e per una ragione:
   // e' un video di gruppo, se il moderatore la rifiuta senza che fosse detto
   // prima si rifa' tutto da capo con dieci persone.
-  m('Mannequin Challenge', 'Fate la mannequin challenge davanti alla chiesa: tutti immobili e la ripresa deve prendere tutta la piazza. Basta una persona o un oggetto in movimento e la prova non vale. Pubblica il video nelle storie taggando @fantasanrocco con il tag ben visibile, e come prova invia lo screenshot della storia.', 'epica', { sec: 'social' }),
+  m('Mannequin Challenge', 'Fate la mannequin challenge davanti alla chiesa: tutti immobili e la ripresa deve prendere tutta la piazza. Basta una persona o un oggetto in movimento e la prova non vale. Pubblica il video nelle storie taggando @fanta_sanrocco con il tag ben visibile, e come prova invia lo screenshot della storia.', 'epica', { sec: 'social' }),
 
+  // ATTENZIONE: su TikTok il nome e' @fantasanrocco, senza trattino basso —
+  // su Instagram invece e' @fanta_sanrocco. Sono due profili diversi, non e'
+  // un refuso: vedi il pie' di pagina in views/layout.ejs.
   m('Corri su TikTok', 'Realizza un TikTok con il suono «Corri San Rocco» e incolla il link nella «nota per lo staff». Attenzione: il profilo deve essere pubblico e ricordati di taggare @fantasanrocco.', 'epica', { sec: 'social', photo: false }),
 
   // ── L'ADESIVO, UNA SERA PER OGNI BAR ─────────────────────────────
