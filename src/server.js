@@ -68,6 +68,27 @@ function missionParts(title) {
 }
 app.locals.missionParts = missionParts;
 
+// I testi delle missioni sono scritti a mano e possono contenere un indirizzo
+// (la donazione per il Malawi, per esempio). Renderlo cliccabile evita che
+// qualcuno debba ricopiarselo a mano dal telefono.
+//
+// Si ESCAPA PRIMA e si cercano i link DOPO, mai il contrario: la descrizione
+// arriva dal pannello admin, e con l'ordine invertito basterebbe scriverci
+// dentro un tag per farlo eseguire a tutti quelli che aprono la pagina.
+// Per lo stesso motivo qui si costruisce solo <a href>, e niente altro.
+//
+// La punteggiatura finale resta fuori dal link: "vai su https://x.it." non
+// deve produrre un indirizzo che finisce col punto, che poi non si apre.
+app.locals.testoConLink = (testo) => escapeHtml(testo || '').replace(
+  /(https?:\/\/[^\s<]+)/g,
+  (url) => {
+    const coda = url.match(/[.,;:!?)\]]+$/);
+    const pulito = coda ? url.slice(0, -coda[0].length) : url;
+    return `<a href="${pulito}" target="_blank" rel="noopener noreferrer">${pulito}</a>`
+      + (coda ? coda[0] : '');
+  },
+);
+
 // Helper iniziali: dal nome/nickname ricava 1-2 lettere per l'avatar fallback
 app.locals.initials = (name) => {
   const parts = String(name || '').trim().split(/\s+/).filter(Boolean);

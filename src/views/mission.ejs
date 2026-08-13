@@ -6,7 +6,12 @@
     <h1><span class="m-bonus big">BONUS</span> <span class="m-name"><%= r.name %></span></h1>
     <span class="points-badge big"><%= m.points %> pt</span>
   </div>
-  <p><%= m.description %></p>
+  <%# Gli indirizzi nel testo diventano cliccabili: qui si puo', perche' il
+      testo sta in un <p> normale. Sulla CARD invece no, ed e' il motivo per
+      cui li' resta testo semplice: la card e' tutta un <a>, e un link dentro
+      un link il browser lo spezza. Chi vuole aprire il collegamento tocca la
+      missione e lo trova qui. %>
+  <p><%- testoConLink(m.description) %></p>
 
   <div class="mission-meta">
     <% if (r.label) { %><span class="rar-chip rar-<%= r.key %>"><span class="rar-dot" aria-hidden="true"><%= r.emoji %></span> <%= r.label %></span><% } %>

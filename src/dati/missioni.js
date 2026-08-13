@@ -145,7 +145,7 @@ const MISSIONS = [
   m('Meet the Team', 'Scatta una foto con uno dei membri del team "Fanta San Rocco".', 'rara', { rep: true, sec: 'sport' }),
   m('Benedizione', 'Scatta una foto con il parroco. Non durante la processione.', 'rara', { sec: 'sport' }),
   m('Nu Lumin a Sant Rocc', 'Accendi un lumino in chiesa lasciando un’offerta e scatta una foto.', 'non-comune', { sec: 'sport' }),
-  m("Cuore d'Oro", 'Compi un gesto di beneficenza per il Malawi e documentalo con una foto.', 'leggendaria', { sec: 'sport' }),
+  m("Cuore d'Oro", 'Compi un gesto di beneficenza per il Malawi e documentalo con una foto. Puoi donare qui: https://www.orizzontemalawi.org/', 'leggendaria', { sec: 'sport' }),
   m('Musica Maestro', 'Scatta un selfie con la banda musicale. Non durante la processione, mentre stanno suonando.', 'rara', { sec: 'sport' }),
 
   // ── AGGIUNTE DEL 1º E 3 AGOSTO 2026 ──────────────────────────────
