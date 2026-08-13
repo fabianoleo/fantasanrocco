@@ -27,6 +27,27 @@ const JP_RANKS = [
   { key: 'jpr-6', grade: 6, stars: 36, points: 470, title: 'Jetpack · Volo glorioso',  desc: 'Completa 36 missioni di carriera su «San Rocco Jetpack».' },
   { key: 'jpr-7', grade: 7, stars: 48, points: 640, title: 'Jetpack · Leggenda alata', desc: 'Completa 48 missioni di carriera su «San Rocco Jetpack».' },
   { key: 'jpr-8', grade: 8, stars: 62, points: 865, title: 'Jetpack · Santo in cielo', desc: 'Completa 62 missioni di carriera su «San Rocco Jetpack».' },
+  // Aggiunti il 13 agosto insieme alle soglie del runner: 62 stelle erano il
+  // tetto, e chi ci arrivava non aveva piu' niente davanti. Le missioni di
+  // carriera si ripescano dopo essere state completate (il sorteggio esclude
+  // solo quelle attive in quel momento), quindi le stelle non si esauriscono
+  // e questi due gradi sono raggiungibili: solo lunghi.
+  // I passi seguono la curva di prima — 3, 4, 5, 6, 8, 10, 12, 14 stelle — e
+  // quindi 16 e 18.
+  //
+  // I PUNTI (900 e 1.050) sono un compromesso, e vale la pena sapere fra cosa.
+  // Controllato prima di scegliere: quattro persone erano ferme esatte a 62
+  // stelle — non avevano piu' niente davanti — e una era gia' a 78, quindi il
+  // grado 9 le scatta addosso nel momento del deploy, senza giocare un'altra
+  // partita. Seguendo la curva sarebbero stati 1.100 e 1.400, ma sarebbe stato
+  // quasi un raddoppio del suo punteggio deciso da noi una sera; scendendo a
+  // 550 il grado 9 avrebbe pagato MENO dell'8 (865), e un traguardo piu' duro
+  // che rende meno del precedente la gente lo nota. 900 e 1.050 tengono la
+  // curva in salita senza raddoppiare niente. I mini-giochi arrivano al 61%
+  // del valore delle missioni: la festa si vince ancora uscendo di casa, ma
+  // il margine si e' ristretto e chi aggiunge la prossima soglia lo sappia.
+  { key: 'jpr-9', grade: 9, stars: 78, points: 900, title: 'Jetpack · Custode dei cieli', desc: 'Completa 78 missioni di carriera su «San Rocco Jetpack».' },
+  { key: 'jpr-10', grade: 10, stars: 96, points: 1050, title: 'Jetpack · Gloria eterna', desc: 'Completa 96 missioni di carriera su «San Rocco Jetpack».' },
 ];
 
 // =========================================================================
@@ -80,6 +101,15 @@ const GAME_ACHIEVEMENTS = [
 ];
 
 // Crea/aggiorna le missioni del gioco allo startup (idempotente).
+// ⚠️ CAMBIARE I `points` DI UN TRAGUARDO GIA' ESISTENTE E' RETROATTIVO.
+// Qui sotto c'e' una UPDATE: i traguardi sono missioni, e il punteggio in
+// classifica si ricalcola ogni volta dal valore ATTUALE della missione. Se si
+// abbassa un traguardo da 865 a 400, chi lo aveva gia' conquistato si ritrova
+// 465 punti in meno senza che nessuno glielo dica — verificato, non e' una
+// supposizione.
+// Quindi: si AGGIUNGONO soglie nuove, non si ritoccano quelle vecchie. Se un
+// valore va proprio corretto, si decide prima cosa fare con chi lo ha gia'
+// preso, e lo si dice a chi gioca.
 function ensureGameMissions() {
   const get = db.prepare('SELECT id FROM missions WHERE game_key = ?');
   const ins = db.prepare(`INSERT INTO missions (title, description, points, requires_photo, repeatable, archived, game_key)
