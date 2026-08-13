@@ -174,14 +174,20 @@ const MISSIONS = [
   // Tutte generali (valgono tutti i giorni) e NON ripetibili: una al giorno,
   // come le altre. I bonus in coda alla descrizione li aggiunge lo staff in
   // moderazione, come per Green days e Moltiplicatore di Rocchi.
-  m('Tamberi', 'Fatti una foto davanti alla chiesa con la barba fatta a metà, come Gianmarco Tamberi.', 'epica', { sec: 'social' }),
-  m('Mezzo e Mezzo', 'Tingiti i capelli metà di un colore e metà di un altro, poi scatta la foto. Serve qualche centimetro di capelli perché i due colori si vedano: mezza testa rasata non vale. +50 punti bonus se uno dei due colori è il verde o l’oro del FantaSanRocco.', 'leggendaria', { sec: 'social' }),
+  m('Tamberi', 'Fatti una foto davanti alla chiesa con la barba fatta a metà, come Gianmarco Tamberi. Per le donne, e per chi la barba non ce l’ha: taglia qualche centimetro di capelli da un lato solo, ma che si veda.', 'epica', { sec: 'social' }),
+  m('Mezzo e Mezzo', 'Tingiti i capelli metà di un colore e metà di un altro, poi scatta la foto. +50 punti bonus se uno dei due colori è il verde o l’oro del FantaSanRocco.', 'leggendaria', { sec: 'social' }),
   m('Sempre Pronti', 'Fatti una foto con un volontario della Protezione Civile di Siano in divisa. +10 punti bonus se la divisa è blu.', 'non-comune', { sec: 'sport' }),
   m('Brindisi col Team', 'Bevi qualcosa insieme a un membro del team FantaSanRocco e scatta la foto del brindisi.', 'rara', { sec: 'food' }),
   // Apostrofo dritto e minuscola come le altre in napoletano del file
   // ("A' Machina Zozzosa", "Ngopp a' Cappell"): il nome e' quello che si dice
   // in paese, non la sua traduzione.
   m("'o melon e fuoc", 'Fatti un selfie con almeno 5 persone calve, tutte nella stessa foto.', 'epica', { sec: 'social' }),
+  // La prova e' lo screenshot della storia, come per Trash Royale e Corri su
+  // TikTok: la foto in se' non direbbe se e' stata pubblicata davvero.
+  // Le due condizioni che la fanno fallire stanno scritte, e per una ragione:
+  // e' un video di gruppo, se il moderatore la rifiuta senza che fosse detto
+  // prima si rifa' tutto da capo con dieci persone.
+  m('Mannequin Challenge', 'Fate la mannequin challenge davanti alla chiesa: tutti immobili e la ripresa deve prendere tutta la piazza. Basta una persona o un oggetto in movimento e la prova non vale. Pubblica il video nelle storie taggando @fantasanrocco con il tag ben visibile, e come prova invia lo screenshot della storia.', 'epica', { sec: 'social' }),
 
   m('Corri su TikTok', 'Realizza un TikTok con il suono «Corri San Rocco» e incolla il link nella «nota per lo staff». Attenzione: il profilo deve essere pubblico e ricordati di taggare @fantasanrocco.', 'epica', { sec: 'social', photo: false }),
 
