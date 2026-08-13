@@ -1179,6 +1179,35 @@ function predVoteCounts(predId, nOpts) {
   }
   return counts;
 }
+// «Stasera» o «domani sera»? Lo decide l'orologio, non il testo salvato.
+//
+// Il pronostico della sera N si apre alle 18 del giorno PRIMA. Fra le 18 e
+// mezzanotte «stasera» è semplicemente falso: la serata è quella dopo, e chi
+// legge non capisce per quale sera sta scegliendo il colore. A mezzanotte la
+// parola cambia da sola.
+//
+// La serata è il giorno in cui il pronostico CHIUDE (chiude alle 18 della
+// sera stessa), non quello in cui si apre.
+function seraDelPronostico(closesAt) {
+  if (!closesAt) return 'stasera';
+  const serata = String(closesAt).slice(0, 10);
+  const oggi = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Rome' }).format(new Date());
+  const giorni = Math.round((Date.parse(serata + 'T00:00:00Z') - Date.parse(oggi + 'T00:00:00Z')) / 86400000);
+  if (giorni === 0) return 'stasera';
+  if (giorni === 1) return 'domani sera';
+  return `la sera del ${Number(serata.slice(8, 10))} agosto`;
+}
+
+// La descrizione come va mostrata adesso. Il segnaposto {SERA} è la via
+// pulita; la sostituzione di «stasera» scritto a mano serve ai pronostici
+// già in produzione, che quella parola ce l'hanno dentro fissa.
+function testoPronostico(p) {
+  const parola = seraDelPronostico(p.closes_at);
+  return String(p.description || '')
+    .replace(/\{SERA\}/gi, parola)
+    .replace(/\bstasera\b/gi, parola);
+}
+
 // Pronostici visibili al giocatore (non archiviati): con le sue scelte.
 function predictionsForUser(userId) {
   const rows = db.prepare('SELECT * FROM predictions WHERE archived = 0 ORDER BY (winner IS NOT NULL), id DESC').all();
@@ -1186,7 +1215,7 @@ function predictionsForUser(userId) {
     const opts = predOptions(p);
     const mine = db.prepare('SELECT choice, choices FROM prediction_votes WHERE prediction_id = ? AND user_id = ?').get(p.id, userId);
     return {
-      id: p.id, title: p.title, description: p.description || '', options: opts, points: p.points, multi: !!p.multi,
+      id: p.id, title: p.title, description: testoPronostico(p), options: opts, points: p.points, multi: !!p.multi,
       // `open` tiene conto anche dell'orario di chiusura: se no la pagina
       // mostrava ancora il modulo di voto dopo le 18 e il rifiuto arrivava
       // solo premendo «conferma».

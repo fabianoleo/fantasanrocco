@@ -42,11 +42,15 @@ const PRONOSTICI = [14, 15, 16, 17, 18].map((g) => ({
   // Il titolo è la chiave con cui lo script ritrova il pronostico nel
   // database: cambiarlo crea un doppione invece di correggere quello che c'è.
   title: `«Oltre» i colori · ${g} agosto`,
+  // {SERA} lo sostituisce il server quando mostra la pagina: fra le 18 e
+  // mezzanotte diventa «domani sera», da mezzanotte in poi «stasera». Il
+  // pronostico apre la sera prima, e senza questo non si capiva per quale
+  // serata si stesse scegliendo il colore.
   description:
-    'Di che colore sarà l’outfit di Alfonso Leo stasera? Scegli un colore: '
+    'Di che colore sarà l’outfit di Alfonso Leo {SERA}? Scegli un colore: '
     + 'si chiude alle 18, prima che cominci la serata. Chi indovina prende i punti.',
   options: COLORI,
-  points: 100,
+  points: 250,
   multi: 0,          // una risposta sola: con più risposte i punti si dimezzano
   closes_at: CHIUDE(g),
 }));
