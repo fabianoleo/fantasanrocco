@@ -17,6 +17,8 @@
 //                               finestra, sezione, sponsor, ripetibile)
 //   c'è nel database ma non
 //   nell'elenco               → la NASCONDE e lo dice
+//   l'hai eliminata dal
+//   pannello                  → NON la ricrea, e te lo scrive
 //
 // COSA NON TOCCA MAI, e perché:
 //   · le missioni dei mini-giochi (game_key): le gestisce il gioco;
@@ -80,7 +82,15 @@ const quando = (r) => {
 const inDb = db.prepare('SELECT * FROM missions WHERE game_key IS NULL').all();
 const perNome = new Map(inDb.map((r) => [nudo(r.title), r]));
 
-let creati = 0, corretti = 0, nascosti = 0, tolti = 0, avvisi = 0;
+// Le missioni cancellate a mano dal pannello. Senza questo elenco, questo
+// script le riportava in vita al primo lancio: vedeva che stavano nell'elenco
+// e mancavano dal database, e le ricreava. Chi le aveva tolte se le ritrovava
+// davanti senza aver fatto niente.
+const rimosse = new Map(
+  db.prepare('SELECT nome, quando FROM missioni_rimosse').all().map((r) => [r.nome, r.quando])
+);
+
+let creati = 0, corretti = 0, nascosti = 0, tolti = 0, avvisi = 0, saltati = 0;
 const visti = new Set();
 
 const lavoro = db.transaction(() => {
@@ -90,6 +100,13 @@ const lavoro = db.transaction(() => {
     const chiave = nudo(vuole.title);
     visti.add(chiave);
     const riga = perNome.get(chiave);
+
+    if (!riga && rimosse.has(chiave)) {
+      console.log(`↩︎ "${vuole.title}" NON ricreata: l'hai eliminata dal pannello`
+        + ` il ${rimosse.get(chiave).slice(0, 10)}.`);
+      saltati++;
+      continue;
+    }
 
     if (!riga) {
       if (!PROVA) {
@@ -101,6 +118,7 @@ const lavoro = db.transaction(() => {
             vuole.repeatable, vuole.active_from, vuole.active_to, x.flash ? 1 : 0,
             vuole.section, vuole.giorni_attivi, vuole.sponsor);
       }
+      if (!PROVA) db.prepare('DELETE FROM missioni_rimosse WHERE nome = ?').run(chiave);
       console.log(`＋ "${vuole.title}" · ${vuole.points}pt · ${quando(vuole)}`
         + (x.flash ? ' · FLASH (nasce nascosta)' : '')
         + (vuole.requires_photo ? '' : ' · senza foto'));
@@ -151,9 +169,14 @@ const lavoro = db.transaction(() => {
 
 lavoro();
 
+const coda = saltati ? ` · ${saltati} NON ricreate perché eliminate a mano` : '';
 console.log(PROVA
-  ? `\nPROVA: niente è stato scritto. ${creati} da creare, ${corretti} da correggere, ${nascosti} da nascondere, ${tolti} da eliminare, ${avvisi} avvisi.`
-  : `\nFatto: ${creati} create, ${corretti} corrette, ${nascosti} nascoste, ${tolti} eliminate, ${avvisi} avvisi.`);
+  ? `\nPROVA: niente è stato scritto. ${creati} da creare, ${corretti} da correggere, ${nascosti} da nascondere, ${tolti} da eliminare, ${avvisi} avvisi${coda}.`
+  : `\nFatto: ${creati} create, ${corretti} corrette, ${nascosti} nascoste, ${tolti} eliminate, ${avvisi} avvisi${coda}.`);
+if (saltati) {
+  console.log('Per riaverne una: toglila da missioni_rimosse e rilancia —');
+  console.log("  node -e \"require('./src/db').db.prepare('DELETE FROM missioni_rimosse WHERE nome = ?').run('Nome Missione')\"");
+}
 
 const sez = db.prepare("SELECT section s, COUNT(*) n FROM missions WHERE section IS NOT NULL AND archived = 0 GROUP BY s ORDER BY s").all();
 console.log('Sezioni ora: ' + (sez.map((r) => `${r.s}=${r.n}`).join(' · ') || 'nessuna'));

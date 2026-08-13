@@ -474,6 +474,17 @@ try { db.exec('ALTER TABLE submissions ADD COLUMN shot_at TEXT'); } catch {}
 // `pagina` e `agente` li mette il browser: senza sapere da dove arriva la
 // segnalazione e con che telefono, metà dei bug non si riproducono.
 db.exec(`
+-- Missioni cancellate a mano dal pannello. Serve a patch_missioni.js: quello
+-- ricrea tutto ciò che sta nell'elenco e manca dal database, e senza questa
+-- lapide riporterebbe in vita al primo lancio una missione appena eliminata.
+-- Il nome è quello «nudo», senza l'emoji della rarità: se cambia rarità
+-- cambia l'emoji ma non il nome, e la lapide deve reggere lo stesso.
+CREATE TABLE IF NOT EXISTS missioni_rimosse (
+  nome    TEXT PRIMARY KEY,
+  titolo  TEXT,
+  quando  TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS segnalazioni (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id    INTEGER,

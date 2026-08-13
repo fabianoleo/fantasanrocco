@@ -216,7 +216,6 @@ const MISSIONS = [
 
   // ── SFIDE GIORNALIERE — 14 AGOSTO ────────────────────────────────
   // ── SFIDE GIORNALIERE — 13 AGOSTO ────────────────────────────────
-  m('Canta a squarciagola', 'Fai una foto al neon con il logo «Squarciagola».', 'comune', { day: 13, sponsor: 'squarciagola.png' }),
 
   m('Mazzariello', 'Scatta una foto con Mazzariello.', 'rara', { day: 14 }),
   m('Groove Motion', 'Scatta una foto con un membro della Groove Motion Live Band.', 'rara', { day: 14 }),
@@ -227,7 +226,6 @@ const MISSIONS = [
   // ── SFIDE GIORNALIERE — 15 AGOSTO ────────────────────────────────
   m('Napoliitudine', 'Scatta una foto con un membro della band "Napoliitudine".', 'epica', { day: 15 }),
   m('Arlecchino Arancione', 'Indossa un capo/accessorio arancione e scatta una foto.', 'non-comune', { day: 15 }),
-  m('Il Tesoro Perduto', 'Flash! Completa la Caccia al Tesoro seguendo gli indizi dello staff.', 'leggendaria', { flash: true, day: 14 }),
 
   // ── SFIDE GIORNALIERE — 16 AGOSTO ────────────────────────────────
   m('Arlecchino Verde', 'Indossa un capo/accessorio verde e scatta una foto.', 'non-comune', { day: 16 }),

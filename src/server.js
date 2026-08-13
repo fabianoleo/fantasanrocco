@@ -3841,6 +3841,13 @@ app.post('/admin/missioni/:id/modifica', auth.requireStaff, (req, res) => {
 app.post('/admin/missioni/:id/elimina', auth.requireStaff, (req, res) => {
   const m = db.prepare('SELECT title FROM missions WHERE id = ?').get(req.params.id);
   db.prepare('DELETE FROM missions WHERE id = ?').run(req.params.id);
+  // Si segna che è stata tolta a mano, se no patch_missioni.js la ricrea al
+  // primo lancio: quello guarda l'elenco e rimette tutto ciò che manca, e
+  // senza questa riga una missione cancellata apposta tornava da sola.
+  if (m) {
+    const nudo = String(m.title).replace(/^[^\p{L}\p{N}"'«(]+/u, '').trim();
+    db.prepare('INSERT OR REPLACE INTO missioni_rimosse (nome, titolo) VALUES (?, ?)').run(nudo, m.title);
+  }
   audit(req, 'missione.elimina', `#${req.params.id} ${m ? m.title : ''}`);
   flash(req, 'success', 'Missione eliminata.');
   res.redirect('/admin');
