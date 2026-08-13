@@ -175,7 +175,7 @@ const MISSIONS = [
   // come le altre. I bonus in coda alla descrizione li aggiunge lo staff in
   // moderazione, come per Green days e Moltiplicatore di Rocchi.
   m('Tamberi', 'Fatti una foto davanti alla chiesa con la barba fatta a metà, come Gianmarco Tamberi.', 'epica', { sec: 'social' }),
-  m('Mezzo e Mezzo', 'Tingiti i capelli metà di un colore e metà di un altro, poi scatta la foto. +50 punti bonus se uno dei due colori è il verde o l’oro del FantaSanRocco.', 'leggendaria', { sec: 'social' }),
+  m('Mezzo e Mezzo', 'Tingiti i capelli metà di un colore e metà di un altro, poi scatta la foto. Serve qualche centimetro di capelli perché i due colori si vedano: mezza testa rasata non vale. +50 punti bonus se uno dei due colori è il verde o l’oro del FantaSanRocco.', 'leggendaria', { sec: 'social' }),
   m('Sempre Pronti', 'Fatti una foto con un volontario della Protezione Civile di Siano in divisa. +10 punti bonus se la divisa è blu.', 'non-comune', { sec: 'sport' }),
   m('Brindisi col Team', 'Bevi qualcosa insieme a un membro del team FantaSanRocco e scatta la foto del brindisi.', 'rara', { sec: 'food' }),
   // Apostrofo dritto e minuscola come le altre in napoletano del file
