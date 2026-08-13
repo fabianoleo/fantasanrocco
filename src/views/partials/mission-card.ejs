@@ -39,7 +39,13 @@
     </div>
   </div>
 <% } else { %>
-  <a class="mission-card <%= m.activeNow ? '' : 'inactive' %>" href="/missioni/<%= m.id %>">
+  <%# `data-cerca` porta titolo e descrizione gia' in minuscolo: la ricerca non
+      deve rileggere il testo dentro i tag, che cambia appena si tocca la
+      grafica. Sulle card COPERTE non c'e' e non ci deve essere: il testo di una
+      sfida non ancora uscita non arriva nell'HTML, e cercarlo non deve
+      rivelarlo. %>
+  <a class="mission-card <%= m.activeNow ? '' : 'inactive' %>" href="/missioni/<%= m.id %>"
+     data-cerca="<%= ((m.rarity.name || '') + ' ' + (m.description || '') + ' ' + (m.sponsorNome || '')).toLowerCase() %>">
     <div class="mission-head">
       <h3><span class="m-bonus">BONUS</span> <span class="m-name"><%= m.rarity.name %></span></h3>
       <span class="points-badge"><%= m.points %> pt</span>

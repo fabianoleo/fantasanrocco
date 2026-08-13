@@ -3974,7 +3974,15 @@ app.post('/admin/email-bloccate/:id/sblocca', auth.requireAdmin, (req, res) => {
 app.post('/admin/utenti/:id/bonus', auth.requireAdmin, (req, res) => {
   const target = auth.getUserById(req.params.id);
   if (!target) { flash(req, 'error', 'Utente inesistente.'); return res.redirect('/admin'); }
-  const pts = parseInt(req.body.points, 10);
+  // Il segno lo decide il PULSANTE, non quello che si scrive nel campo: si
+  // digita sempre un numero positivo e si sceglie "Dai" o "Togli". Il valore
+  // assoluto serve proprio a questo — chi scrive "-500" e preme "Dai" voleva
+  // dare 500, non toglierne altri 500.
+  // Senza `verso` (una pagina vecchia rimasta aperta) vale il segno scritto,
+  // che era il comportamento di prima: cosi' non si rompe a meta' festa.
+  const grezzi = parseInt(req.body.points, 10);
+  const verso = req.body.verso === '-1' ? -1 : (req.body.verso === '1' ? 1 : 0);
+  const pts = verso === 0 ? grezzi : Math.abs(grezzi) * verso;
   if (!Number.isFinite(pts) || pts === 0) { flash(req, 'error', 'Inserisci un numero di punti valido (diverso da 0).'); return res.redirect('/admin'); }
   const reason = (req.body.reason || '').trim().slice(0, 120);
   punti.muovi(target.id, pts, 'admin', `${req.currentUser.nickname}` + (reason ? ': ' + reason : ''));

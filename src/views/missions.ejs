@@ -119,6 +119,20 @@
   }
   const staffPuoSbirciare = (typeof staff !== 'undefined' && staff);
 %>
+<%# ── Ricerca fra le missioni ───────────────────────────────────────────
+    Tutto nel browser: le card sono gia' tutte in pagina, quindi cercare non
+    ha motivo di passare dal server. Le missioni ancora coperte non entrano
+    nella ricerca — il loro testo non e' nell'HTML — e restano al loro posto,
+    perche' farle sparire mentre si cerca direbbe quante ne mancano. %>
+<div class="ms-cerca-barra" data-ms-barra>
+  <label class="ms-cerca">
+    <%- icon('search') %>
+    <input type="search" placeholder="Cerca una missione…" data-ms-cerca
+           aria-label="Cerca fra le missioni" autocomplete="off">
+  </label>
+  <p class="ms-cerca-esito" data-ms-esito hidden></p>
+</div>
+
 <% groups.forEach((g) => { %>
   <% if (g.sec) { %>
     <div class="ms-sechead ms-sec-<%= g.sec.color %> <%= g.sec.completed ? 'is-done' : '' %>" id="sez-<%= g.sec.key %>">
@@ -191,4 +205,4 @@
   <p class="muted">Nessuna missione disponibile al momento. Torna più tardi!</p>
 <% } %>
 
-<script src="/missioni.js?v=1" defer></script>
+<script src="/missioni.js?v=3" defer></script>

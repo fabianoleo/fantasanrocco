@@ -6616,3 +6616,45 @@ a.lb-prize:hover { color: var(--gold-2); }
 .home-avviso p { margin: 0; font-size: .87rem; line-height: 1.6; color: var(--text-2); }
 .home-avviso strong { color: var(--text); }
 .home-avviso a { color: var(--gold-2); }
+
+/* ── Ricerca fra le missioni ────────────────────────────────────────────
+   Stessa forma della barra utenti nel pannello: chi conosce una conosce
+   l'altra. Sticky sotto la barra in alto, perche' scorrendo trecento card
+   il campo per correggere la ricerca deve restare a portata di pollice. */
+.ms-cerca-barra { position: sticky; top: 64px; z-index: 20; margin: 0 0 1rem; padding: .5rem 0; background: linear-gradient(180deg, var(--bg) 60%, transparent); }
+.ms-cerca {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .55rem .8rem; border-radius: 999px;
+  background: var(--glass); border: 1px solid var(--border);
+}
+.ms-cerca:focus-within { border-color: var(--border-gold); background: var(--glass-hover); }
+.ms-cerca .ico { width: 16px; height: 16px; color: var(--text-3); flex-shrink: 0; }
+/* Il selettore doppio serve: input[type=search] (0,1,1) batterebbe la sola
+   classe (0,1,0) e il font tornerebbe quello di sistema. */
+.ms-cerca .ms-cerca-inp,
+.ms-cerca input[type="search"] {
+  flex: 1; min-width: 0; border: 0; background: none; outline: none;
+  color: var(--text); font-family: var(--font-body); font-size: .92rem;
+}
+.ms-cerca input::placeholder { color: var(--text-3); }
+.ms-cerca-esito { margin: .5rem 0 0; font-size: .8rem; color: var(--text-2); text-align: center; }
+/* `hidden` e' una regola dell'UA a specificita' zero: senza questa, una card
+   con display:flex resterebbe visibile nonostante hidden. */
+.mission-card[hidden], .mission-grid[hidden],
+.ms-sechead[hidden], .ms-giorno[hidden] { display: none !important; }
+
+/* ── Liste lunghe del pannello admin ────────────────────────────────────
+   Con 400 iscritti la pagina admin arriva a 36.000 elementi e 369.000 pixel
+   di altezza: ogni ricalcolo di layout li attraversa tutti. Su telefono
+   basta toccare il campo di ricerca — la tastiera che si apre cambia
+   l'altezza della finestra e fa ricalcolare tutto — per vedere l'app
+   inchiodarsi.
+   `content-visibility` dice al browser di saltare layout e disegno di quello
+   che sta fuori schermo. Misurato: ricalcolo -40%, pagina da 369.000 a
+   69.000 pixel. `contain-intrinsic-size` e' l'altezza STIMATA di una riga
+   chiusa: senza, la barra di scorrimento salterebbe mentre si scorre. */
+/* Solo le righe dell'elenco iscritti. Sia .user-row sia .user-list le usano
+   anche altre cinque liste del pannello (inviti, backup, segnalazioni), che
+   contano una manciata di righe e non hanno bisogno di niente: si aggancia
+   all'attributo che identifica quella lunga, e solo a quella. */
+[data-utenti-lista] .user-row { content-visibility: auto; contain-intrinsic-size: auto 140px; }

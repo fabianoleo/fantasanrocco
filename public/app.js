@@ -511,6 +511,18 @@ document.addEventListener('click', (e) => {
       if (!window.confirm(f.getAttribute('data-confirm'))) e.preventDefault();
     });
   });
+  // Anche sul singolo PULSANTE: serve ai form con due invii che fanno cose
+  // opposte — dare o togliere punti — dove la domanda giusta dipende da quale
+  // dei due si preme, e una sola sul form non potrebbe dirlo.
+  // Si annulla il click e non l'invio, perche' e' il click a scegliere: e non
+  // si reinvia mai il form da codice, altrimenti il name/value del pulsante
+  // premuto non arriverebbe al server e "Togli" darebbe punti invece di
+  // toglierli.
+  document.querySelectorAll('button[data-confirm]').forEach(function (b) {
+    b.addEventListener('click', function (e) {
+      if (!window.confirm(b.getAttribute('data-confirm'))) e.preventDefault();
+    });
+  });
 })();
 
 // ── Pronostico Palio: evidenzia la scelta attuale e "sbiadisce" la precedente ──

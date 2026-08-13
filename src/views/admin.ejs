@@ -780,16 +780,24 @@
               </label>
               <button class="btn-mini" type="submit">Aggiorna</button>
             </form>
-            <form action="/admin/utenti/<%= u.id %>/bonus" method="post" class="user-bonus"
-                  data-confirm="Assegnare i punti bonus a questo utente?">
+            <%# Due pulsanti invece di uno: il numero si scrive sempre positivo e
+                il segno lo decide il bottone. Prima si potevano togliere punti
+                scrivendo "-500", ma non lo sapeva nessuno — e uno che scriveva
+                "-500" per sbaglio credendo di darli si accorgeva del contrario
+                solo dopo. `verso` rende l'intenzione esplicita. %>
+            <form action="/admin/utenti/<%= u.id %>/bonus" method="post" class="user-bonus">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <label class="field-mini">Punti
-                <input type="number" name="points" value="500" step="1" aria-label="Punti bonus" title="Punti bonus (negativi per correggere)">
+                <input type="number" name="points" value="500" step="1" min="1"
+                       aria-label="Quanti punti" title="Quanti punti dare o togliere">
               </label>
               <label class="field-mini field-grow">Motivo
                 <input type="text" name="reason" placeholder="es. Contest Instagram" aria-label="Motivo" maxlength="120">
               </label>
-              <button class="btn-mini" type="submit">+ Bonus</button>
+              <button class="btn-mini btn-ok" type="submit" name="verso" value="1"
+                      data-confirm="Dare i punti a <%= u.nickname %>?">+ Dai</button>
+              <button class="btn-mini btn-no" type="submit" name="verso" value="-1"
+                      data-confirm="TOGLIERE i punti a <%= u.nickname %>?">− Togli</button>
             </form>
             <% if (u.role !== 'admin' && u.id !== currentUser.id) { %>
               <form action="/admin/utenti/<%= u.id %>/elimina" method="post" class="user-danger"
