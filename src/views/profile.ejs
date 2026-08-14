@@ -157,7 +157,7 @@
       <li class="pf-hist-row">
         <span class="pf-hist-pts pos">+<%= s.points %></span>
         <span class="pf-hist-label"><%= s.title %></span>
-        <span class="pf-hist-date"><%= (s.reviewed_at || s.created_at || '').slice(0, 10) %></span>
+        <span class="pf-hist-date"><%= oraItaliana(s.reviewed_at || s.created_at, true).slice(0, 10) %></span>
       </li>
     <% }) %>
     <% if (otherPts !== 0) { %>
@@ -197,7 +197,7 @@
         <span class="pf-sub-icon"><%- icon(iconName) %></span>
         <div class="pf-sub-body">
           <span class="pf-sub-title"><%= s.title %></span>
-          <span class="pf-sub-meta"><%= s.points %> pt &nbsp;·&nbsp; <%= s.created_at %></span>
+          <span class="pf-sub-meta"><%= s.points %> pt &nbsp;·&nbsp; <%= oraItaliana(s.created_at, true) %></span>
           <% if (s.status === 'rejected' && s.review_note) { %>
             <div class="pf-sub-note">Motivo: <%= s.review_note %></div>
           <% } %>
