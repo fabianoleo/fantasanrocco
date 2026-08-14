@@ -28,7 +28,12 @@ const SECTIONS = [
   // chiusa nessuno, quindi 150 lo prendono tutti pieno e non resta in giro
   // nessuno pagato 125. Se un domani si rialza a stagione avviata, il conto va
   // rifatto: il bonus si assegna una volta sola e non si ricalcola.
-  { key: 'social', label: 'Social & Party',         color: 'purple', bonus: 150 },
+  //
+  // 175 dal 14 agosto: sono entrate altre tre tappe (Tap Tap, Missione Cosplay
+  // e la leggendaria dei dieci elementi) e la sezione e' arrivata a 26, contro
+  // le 13 di Sport pagate 100. A 26 tappe resta la piu' lunga del gioco: 175
+  // la riallinea alle altre invece di renderla la piu' dura e la meno pagata.
+  { key: 'social', label: 'Social & Party',         color: 'purple', bonus: 175 },
   { key: 'sport',  label: 'Sport, Team & Comunità', color: 'blue',   bonus: 100 },
 ];
 

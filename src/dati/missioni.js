@@ -133,11 +133,11 @@ const MISSIONS = [
   m('Pigiama Party', 'Scatta una foto in pigiama davanti la chiesa.', 'epica', { sec: 'social' }),
   m('Cover', 'Ricrea una famosa foto di gruppo (es. "L’Ultima Cena" o una copertina iconica) con gli amici.', 'rara', { sec: 'social' }),
   m('Glitch', 'Trova due persone vestite uguali e fai una foto con entrambe.', 'rara', { sec: 'social' }),
-  // Nasce NASCOSTA (flash) perché gli elementi da fotografare li decide il team
-  // e si annunciano al momento. Nessun `day`: una volta sbloccata resta aperta
-  // fino a fine festa, altrimenti chi non era in piazza in quel momento non
-  // potrebbe più chiudere la sezione Social e perderebbe il bonus.
-  m('La Foto che Non Dovrebbe Esistere', 'Create una foto in cui compaiano almeno 10 elementi specifici scelti dal team. Gli elementi vengono comunicati solo quando parte la missione.', 'leggendaria', { flash: true, sec: 'social' }),
+  // Visibile da subito e senza `day`: la missione si vede, e quello che arriva
+  // al momento è solo l'elenco dei dieci elementi. Tenerla nascosta l'avrebbe
+  // resa impossibile per chi non era in piazza quando partiva, e con lei
+  // sarebbe saltata la chiusura della sezione Social.
+  m('La Foto che Non Dovrebbe Esistere', 'Create una foto in cui compaiano almeno 10 elementi specifici scelti dal team. Gli elementi vengono comunicati solo quando parte la missione.', 'leggendaria', { sec: 'social' }),
   m('Facciamo i Seri', 'Scatta una foto in cui NESSUNO ride.', 'comune', { sec: 'social' }),
   m('Calici in Alto', 'Scatta una foto in cui tutti alzano i bicchieri.', 'comune', { sec: 'social' }),
   m('Cecchino', 'Scatta una foto con il pupazzo vinto sparando alle lattine.', 'non-comune', { sec: 'social' }),
@@ -146,6 +146,10 @@ const MISSIONS = [
   // in più c'è da offrire da bere. La foto deve mostrare tutte e due le cose,
   // altrimenti resta un travestimento e basta.
   m('Missione Gnak Gnak', 'Vestiti da Babbo Natale, offri un drink a qualcuno e scatta una foto del brindisi.', 'epica', { sec: 'social' }),
+  // Stessa fascia di Gnak Gnak e Pigiama Party: il costume vale l'epica, e il
+  // posto è vincolato come per il pigiama — davanti alla chiesa, altrimenti è
+  // una foto in maschera qualunque.
+  m('Missione Cosplay', 'Vestiti da supereroe o da un personaggio dei fumetti o dei cartoni animati e scatta una foto davanti alla chiesa.', 'epica', { sec: 'social' }),
 
   // ── SPORT, TEAM & COMUNITÀ (9) ───────────────────────────────────
   m('Partitella', 'Scatta una foto durante una partita con il pallone in piazza.', 'non-comune', { sec: 'sport' }),
@@ -229,16 +233,16 @@ const MISSIONS = [
 
   m('Mazzariello', 'Scatta una foto con Mazzariello.', 'rara', { day: 14 }),
   m('Groove Motion', 'Scatta una foto con un membro della Groove Motion Live Band.', 'rara', { day: 14 }),
-  m('Arlecchino Rosso', 'Indossa un capo/accessorio rosso e scatta una foto.', 'non-comune', { day: 14 }),
+  m('Arlecchino Rosso', 'Indossa un capo/accessorio rosso e scatta una foto davanti alla chiesa.', 'non-comune', { day: 14 }),
   m('Selfie XXL', 'Flash! Fai entrare almeno 15 persone nello stesso selfie.', 'epica', { flash: true, day: 15 }),
   m('Flash Mob', 'Partecipa e fai una foto al flash mob organizzato dal Comitato San Rocco in collaborazione con il FantaSanRocco.', 'epica', { day: 14 }),
 
   // ── SFIDE GIORNALIERE — 15 AGOSTO ────────────────────────────────
   m('Napoliitudine', 'Scatta una foto con un membro della band "Napoliitudine".', 'epica', { day: 15 }),
-  m('Arlecchino Arancione', 'Indossa un capo/accessorio arancione e scatta una foto.', 'non-comune', { day: 15 }),
+  m('Arlecchino Arancione', 'Indossa un capo/accessorio arancione e scatta una foto davanti alla chiesa.', 'non-comune', { day: 15 }),
 
   // ── SFIDE GIORNALIERE — 16 AGOSTO ────────────────────────────────
-  m('Arlecchino Verde', 'Indossa un capo/accessorio verde e scatta una foto.', 'non-comune', { day: 16 }),
+  m('Arlecchino Verde', 'Indossa un capo/accessorio verde e scatta una foto davanti alla chiesa.', 'non-comune', { day: 16 }),
   m('Festa dei Folli', 'Immortala un’esibizione "pazza"!', 'epica', { day: 16 }),
   m('Skin', 'Scatta una foto indossando un outfit dello stesso colore del sindaco.', 'epica', { day: 16 }),
   m('Alfo & Mike', 'Scatta una foto con Alfo V. o con Mike Carotenuto in consolle.', 'rara', { day: 16 }),
@@ -250,7 +254,7 @@ const MISSIONS = [
   m('Limited Edition', 'Scatta un selfie con Rocco Botta mentre indossa la sua maglietta personalizzata.', 'epica', { day: 16 }),
 
   // ── SFIDE GIORNALIERE — 17 AGOSTO ────────────────────────────────
-  m('Arlecchino Giallo', 'Indossa un capo/accessorio giallo e scatta una foto.', 'non-comune', { day: 17 }),
+  m('Arlecchino Giallo', 'Indossa un capo/accessorio giallo e scatta una foto davanti alla chiesa.', 'non-comune', { day: 17 }),
   m('LDA & Aka 7even', 'Scatta una foto con LDA o con Aka 7even.', 'epica', { day: 17 }),
   m('Disco Inferno', 'Scatta una foto con uno dei Disco Inferno.', 'rara', { day: 17 }),
   m('Alfonso Leo', 'Scatta una foto di Alfonso Leo che presenta i cantanti.', 'non-comune', { day: 17 }),
