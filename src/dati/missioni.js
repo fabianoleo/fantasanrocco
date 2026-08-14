@@ -119,7 +119,8 @@ const MISSIONS = [
   // ── SOCIAL & PARTY (16) ──────────────────────────────────────────
   m('Rocco', 'Scatta una foto con una persona di nome Rocco.', 'non-comune', { rep: true, sec: 'social' }),
   m('Kiss Kiss', 'Scatta una foto mentre dai baci durante la festa.', 'comune', { rep: true, sec: 'social' }),
-  m('Spia', 'Scatta una foto mentre qualcuno compie uno dei tre malus: bere acqua, piangere o litigare.', 'epica', { rep: true, sec: 'social' }),
+  m('Spia', 'Scatta una foto mentre qualcuno compie uno dei tre malus: bere acqua, piangere o litigare.\n'
+    + 'Nota: le foto devono essere fatte a sorpresa e non in posa', 'epica', { rep: true, sec: 'social' }),
   m("Miettc a' Man Toji", 'Scatta un selfie in chiesa con la statua di un Santo.', 'non-comune', { sec: 'social' }),
   m('Trash Royale', 'Pubblica una storia Instagram volutamente trash sul tuo profilo pubblico taggando @fanta_sanrocco. Come prova invia lo screenshot della storia.', 'rara', { sec: 'social' }),
   m('Maracaibo', 'Entra in un trenino umano che balla e scatta una foto.', 'non-comune', { sec: 'social' }),
@@ -175,7 +176,7 @@ const MISSIONS = [
   // come le altre. I bonus in coda alla descrizione li aggiunge lo staff in
   // moderazione, come per Green days e Moltiplicatore di Rocchi.
   m('Tamberi', 'Fatti una foto davanti alla chiesa con la barba fatta a metà, come Gianmarco Tamberi. Per le donne, e per chi la barba non ce l’ha: taglia qualche centimetro di capelli da un lato solo, ma che si veda.', 'epica', { sec: 'social' }),
-  m('Mezzo e Mezzo', 'Tingiti i capelli metà di un colore e metà di un altro, poi scatta la foto. +50 punti bonus se uno dei due colori è il verde o l’oro del FantaSanRocco.', 'leggendaria', { sec: 'social' }),
+  m('Mezzo e Mezzo', 'Tingiti i capelli metà di un colore e metà di un altro, poi scatta la foto davanti la chiesa. +50 punti bonus se uno dei due colori è il verde o l’oro del FantaSanRocco.', 'leggendaria', { sec: 'social' }),
   m('Sempre Pronti', 'Fatti una foto con un volontario della Protezione Civile di Siano in divisa. +10 punti bonus se la divisa è blu.', 'non-comune', { sec: 'sport' }),
   m('Brindisi col Team', 'Bevi qualcosa insieme a un membro del team FantaSanRocco e scatta la foto del brindisi.', 'rara', { sec: 'food' }),
   // Apostrofo dritto e minuscola come le altre in napoletano del file
