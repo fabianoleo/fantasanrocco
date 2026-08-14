@@ -27,7 +27,7 @@
           <span class="mod-user-count"><%= pending.filter(x => x.nickname === s.nickname).length %> in attesa</span>
         </div>
       <% } %>
-      <section class="card mod-card">
+      <section class="card mod-card" id="prova-<%= s.id %>">
         <div class="mod-top">
           <div>
             <strong><%= s.nickname %></strong> → <%= s.title %>
@@ -110,6 +110,7 @@
               zero (il caso normale) non succede niente. %>
           <form action="/moderazione/<%= s.id %>/approva" method="post" class="inline mod-approva">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="p" value="<%= pag %>">
             <label class="mod-bonus">
               <span class="mod-bonus-lab">bonus</span>
               <input type="number" name="bonus" value="0" step="5" min="-500" max="500"
@@ -120,6 +121,7 @@
           </form>
           <form action="/moderazione/<%= s.id %>/rifiuta" method="post" class="inline reject-form">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="p" value="<%= pag %>">
             <input type="text" name="review_note" placeholder="motivo (facoltativo)" maxlength="200">
             <button class="btn btn-no" type="submit"><%- icon('x') %> Rifiuta</button>
           </form>

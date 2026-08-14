@@ -799,7 +799,25 @@ const loginLimiter = rateLimit({
 });
 const resetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5,  standardHeaders: true, legacyHeaders: false });
 const registerLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
-const globalLimiter = rateLimit({ windowMs: 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false });
+// Il tetto generale contro gli abusi. Vale sulle rotte che FANNO qualcosa;
+// non deve valere sulle immagini, ed è un errore che è costato caro.
+//
+// Le foto delle prove e gli avatar sono serviti da due rotte normali, quindi
+// finivano nel conteggio come una qualsiasi richiesta. Ma una pagina di
+// moderazione carica ventiquattro foto in un colpo, e la classifica un
+// centinaio di avatar: bastavano una decina di approvazioni di fila per
+// arrivare a 300 in un minuto. Il moderatore si vedeva rispondere «too many
+// requests» — una pagina bianca con una riga di testo — nel bel mezzo del
+// lavoro, e sembrava che il sito fosse rotto.
+//
+// Le due rotte esentate non sono un buco: /uploads sta dietro requireStaff, e
+// /avatar serve file già pubblici. Chi vuole fare danni lo fa sulle rotte che
+// scrivono, e quelle restano tutte sotto il tetto.
+const STATICHE = /^\/(uploads|avatar)\//;
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false,
+  skip: (req) => STATICHE.test(req.path),
+});
 const gameLimiter = rateLimit({ windowMs: 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false });
 const slotLimiter = rateLimit({ windowMs: 60 * 1000, max: 60, standardHeaders: true, legacyHeaders: false });
 const wheelLimiter = rateLimit({ windowMs: 60 * 1000, max: 12, standardHeaders: true, legacyHeaders: false });
@@ -3100,7 +3118,14 @@ app.post('/moderazione/:id/:azione', auth.requireStaff, (req, res) => {
       }
     }
   }
-  res.redirect('/moderazione');
+  // Torna alla PAGINA da cui si è approvato, non alla prima. Il form manda il
+  // numero in `p`: senza, un moderatore a pagina 19 si ritrovava a pagina 1 a
+  // ogni approvazione, e per riprendere doveva riscendere ogni volta.
+  // Si valida come intero: `p` arriva dal browser e non ci si fida mai. La
+  // rotta GET riporta comunque nei limiti se la pagina nel frattempo non
+  // esiste più (l'ultima prova approvata può averla svuotata).
+  const pag = parseInt(req.body.p, 10);
+  res.redirect(Number.isInteger(pag) && pag > 1 ? `/moderazione?p=${pag}` : '/moderazione');
 });
 
 // =========================================================================
