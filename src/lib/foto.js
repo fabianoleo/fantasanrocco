@@ -26,6 +26,19 @@ const fs = require('fs');
 const PHASH_SOGLIA = 5;
 
 async function photoHash(filePath) {
+  const suSquadra = suThread('impronta', { filePath });
+  if (suSquadra) {
+    try { return await suSquadra; } catch (e) {
+      // Formato che jimp non digerisce: niente impronta, la prova passa
+      // comunque. Non è un motivo per bloccare l'invio di qualcuno.
+      console.error('[PHASH]', e.message);
+      return null;
+    }
+  }
+  return photoHashOra(filePath);
+}
+
+async function photoHashOra(filePath) {
   try {
     const { Jimp } = require('jimp');
     const img = await Jimp.read(filePath);
@@ -47,7 +60,6 @@ async function photoHash(filePath) {
   }
 }
 
-// Quanti bit differiscono fra due impronte (distanza di Hamming)
 // Quanti bit differiscono fra due impronte (distanza di Hamming).
 //
 // Sembra una funzione da niente e invece è il collo di bottiglia del sito: la
@@ -156,7 +168,104 @@ const STORIA = { latoMax: 1920, qualita: 85 };
 // si vorra' mostrare piu' grande.
 const AVATAR = { latoMax: 512, qualita: 82 };
 
+// ── La squadra di thread che lavora le foto ─────────────────────────
+//
+// jimp è JavaScript puro: macina i pixel sul thread da cui lo chiami. Una foto
+// da telefono blocca quel thread per quasi un secondo, e finché dura il server
+// non risponde a nessuno — misurato: dieci foto insieme lasciano il thread
+// sordo nove volte, a blocchi di 700 ms. Il proxy davanti non riceve risposta
+// ai suoi controlli, dichiara il sito morto, e chi sta caricando vede
+// «bad gateway».
+//
+// Il lavoro va quindi su thread separati (vedi foto-worker.js). Due, come i
+// processori della macchina: di più non finirebbero prima, si contenderebbero
+// la stessa CPU. Le foto ci mettono lo stesso tempo; il sito però resta in
+// piedi mentre le lavora.
+//
+// Se per qualsiasi motivo un thread non parte, si torna a lavorare sul posto:
+// meglio un sito lento che un invio rifiutato.
+const { Worker } = require('worker_threads');
+const N_THREAD = 2;
+const squadra = [];
+const codaLavori = [];
+let prossimoId = 1;
+const inVolo = new Map();
+
+function creaThread() {
+  let w;
+  try {
+    w = new Worker(require('path').join(__dirname, 'foto-worker.js'));
+  } catch (e) {
+    console.error('[FOTO] thread non avviato:', e.message);
+    return null;
+  }
+  const posto = { w, libero: true };
+  w.on('message', (m) => {
+    const richiesta = inVolo.get(m.id);
+    inVolo.delete(m.id);
+    posto.libero = true;
+    if (!inVolo.size && !codaLavori.length) squadra.forEach((p) => p.w.unref());
+    if (richiesta) (m.ok ? richiesta.risolvi(m.valore) : richiesta.rifiuta(new Error(m.errore)));
+    smista();
+  });
+  w.on('error', (e) => {
+    console.error('[FOTO] thread caduto:', e.message);
+    // Le richieste che erano su questo thread non torneranno mai: vanno
+    // chiuse subito, se no la pagina di chi sta caricando resta appesa.
+    for (const [id, r] of inVolo) if (r.posto === posto) { inVolo.delete(id); r.rifiuta(e); }
+    const i = squadra.indexOf(posto);
+    if (i >= 0) squadra.splice(i, 1);
+    const sostituto = creaThread();
+    if (sostituto) squadra.push(sostituto);
+    smista();
+  });
+  // Il thread NON deve tenere in vita il processo quando non ha niente da
+  // fare, se no uno script che importa questo file non finirebbe mai. Ma
+  // mentre una foto è in lavorazione deve tenerlo, altrimenti Node si spegne
+  // prima che il risultato torni indietro — ed è successo davvero in prova:
+  // l'impronta non arrivava mai.
+  w.unref();
+  return posto;
+}
+
+function smista() {
+  while (codaLavori.length) {
+    const posto = squadra.find((p) => p.libero);
+    if (!posto) return;
+    const lavoro = codaLavori.shift();
+    posto.libero = false;
+    posto.w.ref();                    // c'è lavoro: il processo deve restare vivo
+    lavoro.posto = posto;
+    inVolo.set(lavoro.msg.id, lavoro);
+    posto.w.postMessage(lavoro.msg);
+  }
+}
+
+function suThread(azione, dati) {
+  if (!squadra.length) {
+    for (let i = 0; i < N_THREAD; i++) { const p = creaThread(); if (p) squadra.push(p); }
+  }
+  if (!squadra.length) return null;          // niente thread: si fa sul posto
+  return new Promise((risolvi, rifiuta) => {
+    codaLavori.push({ msg: { id: prossimoId++, azione, ...dati }, risolvi, rifiuta });
+    smista();
+  });
+}
+
 async function ridimensiona(cartella, nomeFile, opzioni = {}) {
+  const latoMax = opzioni.latoMax || LATO_MAX;
+  const qualita = opzioni.qualita || QUALITA;
+  const suSquadra = suThread('ridimensiona', { cartella, nomeFile, latoMax, qualita });
+  if (suSquadra) {
+    try { return await suSquadra; } catch (e) {
+      console.error('[RESIZE]', e.message);
+      return null;                            // resta l'originale, l'invio prosegue
+    }
+  }
+  return ridimensionaOra(cartella, nomeFile, opzioni);
+}
+
+async function ridimensionaOra(cartella, nomeFile, opzioni = {}) {
   const latoMax = opzioni.latoMax || LATO_MAX;
   const qualita = opzioni.qualita || QUALITA;
   const path = require('path');
