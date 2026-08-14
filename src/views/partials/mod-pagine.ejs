@@ -1,0 +1,15 @@
+<%# Le frecce fra le pagine delle prove da moderare.
+    Sta in un partial perché compare DUE volte, sopra e sotto l'elenco: chi
+    modera scorre in giù, approva, e si ritrova in fondo — ma quando torna su
+    per rileggere una prova vuole poter cambiare pagina da lì, senza rifare
+    tutta la strada al contrario.
+    Chi lo include passa `pag` e `pagTot`. %>
+<nav class="mod-pagine" aria-label="Pagine delle prove da moderare">
+  <% if (pag > 1) { %>
+    <a class="btn-mini" href="/moderazione?p=<%= pag - 1 %>">← Indietro</a>
+  <% } %>
+  <span class="mod-pagine-stato">Pagina <%= pag %> di <%= pagTot %></span>
+  <% if (pag < pagTot) { %>
+    <a class="btn-mini" href="/moderazione?p=<%= pag + 1 %>">Avanti →</a>
+  <% } %>
+</nav>

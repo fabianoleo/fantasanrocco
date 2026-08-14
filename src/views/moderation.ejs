@@ -14,6 +14,10 @@
 <% if (pending.length === 0) { %>
   <p class="muted">Nessuna prova in attesa. Tutto sotto controllo! <span style="color:var(--green)"><%- icon('check') %></span></p>
 <% } else { %>
+  <% if (pagTot > 1) { %>
+    <%- include('partials/mod-pagine', { pag, pagTot }) %>
+  <% } %>
+
   <div class="mod-list">
     <% let modCurrentUser = null; %>
     <% pending.forEach((s) => { %>
@@ -32,7 +36,7 @@
               <span class="mod-dup-badge"><%- icon('warning') %> Già vista</span>
             <% } %>
           </div>
-          <span class="muted small"><%= s.created_at %></span>
+          <span class="muted small"><%= oraItaliana(s.created_at, true) %></span>
         </div>
 
         <%# La consegna della missione, sotto al titolo: senza, per decidere se
@@ -75,7 +79,7 @@
                   </a>
                   <figcaption>
                     <%= d.stessoUtente ? 'Stesso utente' : d.nickname %> · <%= d.missione %><br>
-                    <span class="muted"><%= d.stato %> · <%= d.quando %></span>
+                    <span class="muted"><%= d.stato %> · <%= oraItaliana(d.quando, true) %></span>
                   </figcaption>
                 </figure>
               </div>
@@ -125,15 +129,7 @@
   </div>
 
   <% if (pagTot > 1) { %>
-    <nav class="mod-pagine" aria-label="Pagine delle prove da moderare">
-      <% if (pag > 1) { %>
-        <a class="btn-mini" href="/moderazione?p=<%= pag - 1 %>">← Indietro</a>
-      <% } %>
-      <span class="mod-pagine-stato">Pagina <%= pag %> di <%= pagTot %></span>
-      <% if (pag < pagTot) { %>
-        <a class="btn-mini" href="/moderazione?p=<%= pag + 1 %>">Avanti →</a>
-      <% } %>
-    </nav>
+    <%- include('partials/mod-pagine', { pag, pagTot }) %>
     <p class="muted small mod-pagine-nota">
       Man mano che approvi o rifiuti, le prove escono dall'elenco e quelle
       dietro avanzano: se torni su questa pagina la trovi già ripopolata.

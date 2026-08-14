@@ -6666,3 +6666,8 @@ a.lb-prize:hover { color: var(--gold-2); }
 }
 .mod-pagine-stato { font-size: .82rem; color: var(--text-2); }
 .mod-pagine-nota { text-align: center; margin: 0 0 1rem; }
+
+/* Le frecce in cima stanno più strette: sotto l'elenco chiudono la pagina,
+   sopra devono solo far posto senza allontanare la prima prova. */
+.mod-list + .mod-pagine { margin-top: 1.4rem; }
+.mod-pagine:first-of-type { margin: .2rem 0 1rem; }
