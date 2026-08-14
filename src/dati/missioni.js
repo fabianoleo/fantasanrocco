@@ -123,12 +123,21 @@ const MISSIONS = [
     + 'Nota: le foto devono essere fatte a sorpresa e non in posa', 'epica', { rep: true, sec: 'social' }),
   m("Miettc a' Man Toji", 'Scatta un selfie in chiesa con la statua di un Santo.', 'non-comune', { sec: 'social' }),
   m('Trash Royale', 'Pubblica una storia Instagram volutamente trash sul tuo profilo pubblico taggando @fanta_sanrocco. Come prova invia lo screenshot della storia.', 'rara', { sec: 'social' }),
+  // Era una flash del 13 ("selfie con Peppe quando passa"): ora è una missione
+  // normale di Social & Party e non dipende più dal momento in cui passa lui,
+  // perché la prova è la storia e non l'incontro.
+  m('Tap Tap', 'Pubblica una storia con Peppe Tap Tap taggando in modo ben visibile sia lui sia @fanta_sanrocco. Come prova invia lo screenshot della storia.', 'non-comune', { sec: 'social' }),
   m('Maracaibo', 'Entra in un trenino umano che balla e scatta una foto.', 'non-comune', { sec: 'social' }),
   m('Mangiata', 'Scatta un selfie durante una mangiata sulla terra.', 'epica', { sec: 'social' }),
   m('On Air', 'Fatti intervistare dal team del FantaSanRocco. Valgono solo le interviste fatte da noi: le riprese di altri non contano.', 'epica', { sec: 'social' }),
   m('Pigiama Party', 'Scatta una foto in pigiama davanti la chiesa.', 'epica', { sec: 'social' }),
   m('Cover', 'Ricrea una famosa foto di gruppo (es. "L’Ultima Cena" o una copertina iconica) con gli amici.', 'rara', { sec: 'social' }),
   m('Glitch', 'Trova due persone vestite uguali e fai una foto con entrambe.', 'rara', { sec: 'social' }),
+  // Nasce NASCOSTA (flash) perché gli elementi da fotografare li decide il team
+  // e si annunciano al momento. Nessun `day`: una volta sbloccata resta aperta
+  // fino a fine festa, altrimenti chi non era in piazza in quel momento non
+  // potrebbe più chiudere la sezione Social e perderebbe il bonus.
+  m('La Foto che Non Dovrebbe Esistere', 'Create una foto in cui compaiano almeno 10 elementi specifici scelti dal team. Gli elementi vengono comunicati solo quando parte la missione.', 'leggendaria', { flash: true, sec: 'social' }),
   m('Facciamo i Seri', 'Scatta una foto in cui NESSUNO ride.', 'comune', { sec: 'social' }),
   m('Calici in Alto', 'Scatta una foto in cui tutti alzano i bicchieri.', 'comune', { sec: 'social' }),
   m('Cecchino', 'Scatta una foto con il pupazzo vinto sparando alle lattine.', 'non-comune', { sec: 'social' }),
@@ -270,11 +279,6 @@ const MISSIONS = [
   m('La Parola Umana · ROCCO', 'Formate con i vostri corpi la parola ROCCO e scattate la foto. Nella nota per lo staff scrivete i nomi utente di TUTTI quelli che compaiono nella foto: così i punti li prendono tutti, non solo chi la manda.', 'epica', { day: 16 }),
   m('La Parola Umana · FUOCHI', 'Formate con i vostri corpi la parola FUOCHI e scattate la foto. Nella nota per lo staff scrivete i nomi utente di TUTTI quelli che compaiono nella foto: così i punti li prendono tutti, non solo chi la manda.', 'epica', { day: 17 }),
   m('La Parola Umana · SIANO', 'Formate con i vostri corpi la parola SIANO e scattate la foto. Nella nota per lo staff scrivete i nomi utente di TUTTI quelli che compaiono nella foto: così i punti li prendono tutti, non solo chi la manda.', 'epica', { day: 18 }),
-
-  // ── FLASH SENZA GIORNO FISSO ─────────────────────────────────────
-  // Peppe Tap Tap non si sa quando passa: la missione la sblocca lo staff
-  // quando lo vede in giro, non un orario deciso a tavolino.
-  m('Tap Tap', 'Flash! Scatta un selfie con Peppe Tap Tap.', 'non-comune', { flash: true, day: 13 }),
 
   // Le batterie sulla provinciale verso Bracigliano le montano la mattina del
   // 18, quindi vale solo quel giorno.
