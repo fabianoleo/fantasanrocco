@@ -20,12 +20,17 @@
 //   l'hai eliminata dal
 //   pannello                  → NON la ricrea, e te lo scrive
 //
+// LA VISIBILITÀ, che è il punto delicato:
+//   · nascosta ma nell'elenco è una missione NORMALE → la sblocca lui.
+//     Se non è più una flash deve stare in mezzo alle altre, e farlo a
+//     mano dal pannello voleva dire dimenticarsene e lasciarla invisibile;
+//   · visibile ma nell'elenco è una FLASH → la lascia stare e avvisa.
+//     Questa è la direzione pericolosa: richiuderebbe una flash appena
+//     aperta, magari mentre la gente la sta giocando. Quella resta una
+//     leva dello staff.
+//
 // COSA NON TOCCA MAI, e perché:
 //   · le missioni dei mini-giochi (game_key): le gestisce il gioco;
-//   · se una missione è nascosta o visibile. È una leva dello STAFF —
-//     una flash si sblocca a mano quando il momento arriva — e se questo
-//     script la risistemasse a ogni lancio, rimetterebbe il coperchio
-//     su una flash appena aperta. Le differenze le segnala e basta;
 //   · non cancella NIENTE da solo. Le missioni di troppo le archivia,
 //     che è reversibile con un clic. Per cancellarle davvero serve
 //     --elimina, e comunque mai quelle con delle prove già inviate.
@@ -90,7 +95,7 @@ const rimosse = new Map(
   db.prepare('SELECT nome, quando FROM missioni_rimosse').all().map((r) => [r.nome, r.quando])
 );
 
-let creati = 0, corretti = 0, nascosti = 0, tolti = 0, avvisi = 0, saltati = 0;
+let creati = 0, corretti = 0, nascosti = 0, tolti = 0, avvisi = 0, saltati = 0, sbloccati = 0;
 const visti = new Set();
 
 const lavoro = db.transaction(() => {
@@ -136,14 +141,23 @@ const lavoro = db.transaction(() => {
       corretti++;
     }
 
-    // La visibilità non la tocchiamo, ma se non combacia va detto: una
-    // flash che nell'elenco non è più flash resta nascosta finché non la
-    // sblocca qualcuno, e senza questo avviso nessuno se ne accorge.
-    const dovrebbeEssereNascosta = x.flash ? 1 : 0;
-    if (riga.archived !== dovrebbeEssereNascosta) {
-      console.log(`⚠️  #${riga.id} "${vuole.title}" è ${riga.archived ? 'NASCOSTA' : 'visibile'}`
-        + ` ma nell'elenco è ${dovrebbeEssereNascosta ? 'una flash' : 'una missione normale'}`
-        + ' — decidilo tu dal pannello (spunta «Archivia»).');
+    // Visibilità: una sola delle due direzioni è automatica.
+    //
+    // NASCOSTA ma nell'elenco è una missione NORMALE → la sblocca lo script.
+    // Non c'è niente da proteggere: se nell'elenco non è più una flash, vuol
+    // dire che deve stare in mezzo alle altre. Prima toccava farlo a mano dal
+    // pannello e ci si dimenticava, lasciando la missione invisibile a tutti.
+    //
+    // VISIBILE ma nell'elenco è una FLASH → NON si tocca, si avvisa e basta.
+    // Questa è la direzione pericolosa: rimetterebbe il coperchio su una flash
+    // che lo staff ha appena aperto, magari mentre la gente la sta giocando.
+    if (!x.flash && riga.archived === 1) {
+      if (!PROVA) db.prepare('UPDATE missions SET archived = 0 WHERE id = ?').run(riga.id);
+      console.log(`🔓 #${riga.id} "${vuole.title}" SBLOCCATA: nell'elenco è una missione normale`);
+      sbloccati++;
+    } else if (x.flash && riga.archived === 0) {
+      console.log(`⚠️  #${riga.id} "${vuole.title}" è visibile ma nell'elenco è una flash`
+        + ' — se va richiusa fallo tu dal pannello (spunta «Archivia»).');
       avvisi++;
     }
   }
@@ -171,8 +185,8 @@ lavoro();
 
 const coda = saltati ? ` · ${saltati} NON ricreate perché eliminate a mano` : '';
 console.log(PROVA
-  ? `\nPROVA: niente è stato scritto. ${creati} da creare, ${corretti} da correggere, ${nascosti} da nascondere, ${tolti} da eliminare, ${avvisi} avvisi${coda}.`
-  : `\nFatto: ${creati} create, ${corretti} corrette, ${nascosti} nascoste, ${tolti} eliminate, ${avvisi} avvisi${coda}.`);
+  ? `\nPROVA: niente è stato scritto. ${creati} da creare, ${corretti} da correggere, ${sbloccati} da sbloccare, ${nascosti} da nascondere, ${tolti} da eliminare, ${avvisi} avvisi${coda}.`
+  : `\nFatto: ${creati} create, ${corretti} corrette, ${sbloccati} sbloccate, ${nascosti} nascoste, ${tolti} eliminate, ${avvisi} avvisi${coda}.`);
 if (saltati) {
   console.log('Per riaverne una: toglila da missioni_rimosse e rilancia —');
   console.log("  node -e \"require('./src/db').db.prepare('DELETE FROM missioni_rimosse WHERE nome = ?').run('Nome Missione')\"");
