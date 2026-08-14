@@ -6658,3 +6658,11 @@ a.lb-prize:hover { color: var(--gold-2); }
    contano una manciata di righe e non hanno bisogno di niente: si aggancia
    all'attributo che identifica quella lunga, e solo a quella. */
 [data-utenti-lista] .user-row { content-visibility: auto; contain-intrinsic-size: auto 140px; }
+
+/* Pagine delle prove da moderare */
+.mod-pagine {
+  display: flex; align-items: center; justify-content: center; gap: .8rem;
+  margin: 1.4rem 0 .4rem;
+}
+.mod-pagine-stato { font-size: .82rem; color: var(--text-2); }
+.mod-pagine-nota { text-align: center; margin: 0 0 1rem; }

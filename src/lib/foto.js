@@ -48,13 +48,33 @@ async function photoHash(filePath) {
 }
 
 // Quanti bit differiscono fra due impronte (distanza di Hamming)
+// Quanti bit differiscono fra due impronte (distanza di Hamming).
+//
+// Sembra una funzione da niente e invece è il collo di bottiglia del sito: la
+// pagina di moderazione confronta OGNI prova in attesa con OGNI prova mai
+// caricata, quindi qui si passa centinaia di migliaia di volte per un solo
+// caricamento di pagina. Node ha un thread solo: finché questo ciclo gira,
+// nessuno riesce ad aprire nessuna pagina, moderatori e giocatori insieme.
+//
+// La versione di prima costruiva due BigInt e contava i bit uno alla volta.
+// Questa lavora su due metà da 32 bit con il conteggio parallelo classico:
+// stesso risultato, un ordine di grandezza più veloce.
+function contaBit(v) {
+  v = v - ((v >> 1) & 0x55555555);
+  v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
+  v = (v + (v >> 4)) & 0x0f0f0f0f;
+  return (v * 0x01010101) >> 24;
+}
 function phashDistanza(a, b) {
-  try {
-    let x = BigInt('0x' + a) ^ BigInt('0x' + b);
-    let n = 0;
-    while (x) { n += Number(x & 1n); x >>= 1n; }
-    return n;
-  } catch (e) { return 64; }
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return 64;
+  let n = 0;
+  for (let i = 0; i < a.length; i += 8) {
+    const x = parseInt(a.slice(i, i + 8), 16);
+    const y = parseInt(b.slice(i, i + 8), 16);
+    if (Number.isNaN(x) || Number.isNaN(y)) return 64;   // impronta malformata
+    n += contaBit((x ^ y) >>> 0);
+  }
+  return n;
 }
 
 // Magic bytes check sincrono — no dipendenze esterne, no CVE, no loop infinito

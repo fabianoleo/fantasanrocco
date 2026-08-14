@@ -2967,7 +2967,18 @@ setInterval(purgeExpiredStories, 30 * 60 * 1000).unref?.();
 // =========================================================================
 //  MODERAZIONE (moderatori + admin)
 // =========================================================================
+// Quante prove per pagina. Non è una scelta estetica: sotto si confronta ogni
+// prova mostrata con ogni prova mai caricata, quindi il numero qui decide
+// quanto a lungo il server resta fermo a ogni apertura della pagina. Con
+// tutte insieme, a festa avviata, erano secondi di sito bloccato PER TUTTI —
+// Node ha un thread solo, e mentre gira quel ciclo non risponde a nessuno.
+const MOD_PER_PAGINA = 24;
+
 app.get('/moderazione', auth.requireStaff, (req, res) => {
+  const totale = db.prepare("SELECT COUNT(*) c FROM submissions WHERE status = 'pending'").get().c;
+  const pagine = Math.max(1, Math.ceil(totale / MOD_PER_PAGINA));
+  const pagina = Math.min(pagine, Math.max(1, parseInt(req.query.p, 10) || 1));
+
   const pending = db.prepare(`
     SELECT s.*, u.nickname, m.title, m.points, m.requires_photo,
            m.description AS mission_desc
@@ -2976,7 +2987,8 @@ app.get('/moderazione', auth.requireStaff, (req, res) => {
     JOIN missions m ON m.id = s.mission_id
     WHERE s.status = 'pending'
     ORDER BY u.nickname ASC, s.created_at ASC
-  `).all();
+    LIMIT ? OFFSET ?
+  `).all(MOD_PER_PAGINA, (pagina - 1) * MOD_PER_PAGINA);
 
   // Controllo duplicati: per ogni prova in attesa cerchiamo un'altra prova con
   // impronta quasi identica. Il confronto è su TUTTE le prove, di chiunque e
@@ -3015,7 +3027,7 @@ app.get('/moderazione', auth.requireStaff, (req, res) => {
     p.duplicati.sort((a, b) => a.distanza - b.distanza || b.id - a.id);
   }
 
-  res.render('moderation', { title: 'Moderazione', pending });
+  res.render('moderation', { title: 'Moderazione', pending, totale, pagina, pagine });
 });
 
 // Approva / Rifiuta. L'UPDATE con "WHERE status='pending'" è la garanzia
