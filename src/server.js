@@ -1916,7 +1916,21 @@ function sectionProgress(userId) {
 }
 // Accredita il bonus per le sezioni appena completate (idempotente). Ritorna le
 // sezioni premiate ora.
+// Il bonus di sezione è SOSPESO il 15 e il 16 agosto.
+//
+// In quei due giorni trentaquattro missioni sono nascoste per alleggerire
+// l'elenco, che era diventato illeggibile. Ma il conteggio di una sezione
+// ignora le missioni nascoste: Sport passa da 13 tappe a 6, Paese da 22 a 8.
+// Senza questa sospensione, chiunque avesse fatto quelle poche rimaste
+// incasserebbe stanotte un bonus che non ha guadagnato — e il bonus si paga
+// UNA VOLTA SOLA e non si storna, quindi pagarlo per sbaglio non si disfa.
+//
+// Il 17, quando le missioni tornano, lo strumento che le rimette fa anche un
+// giro di recupero: chi il bonus lo aveva maturato davvero lo riceve allora.
+const SEZIONI_SOSPESE = new Set(['2026-08-15', '2026-08-16']);
+
 function checkAndAwardSections(userId) {
+  if (SEZIONI_SOSPESE.has(todayStr())) return [];
   const prog = sectionProgress(userId);
   const awarded = [];
   for (const s of SECTIONS) {
@@ -4406,9 +4420,41 @@ async function rimpiccioliscAvatarUnaVolta() {
   }
 }
 
+// Recupero dei bonus di sezione sospesi il 15 e il 16 agosto.
+//
+// In quei due giorni l'assegnazione è ferma (vedi SEZIONI_SOSPESE): con
+// trentaquattro missioni nascoste le sezioni erano accorciate, e pagare
+// sarebbe stato un regalo. Ma chi una sezione l'aveva completata DAVVERO,
+// tutte le tappe comprese quelle nascoste, quel bonus lo ha guadagnato.
+//
+// Lo strumento che rimette le missioni (nascondi_missioni.js --mostra) lascia
+// qui un biglietto; al primo riavvio si fa un giro su tutti e si paga chi ha
+// diritto. Una volta sola: l'interruttore sta nel database, se no a ogni
+// riavvio ripartirebbe.
+function recuperaBonusSezioneUnaVolta() {
+  const CHIAVE = 'recupero_bonus_sezione';
+  const richiesto = db.prepare('SELECT valore FROM impostazioni WHERE chiave = ?').get(CHIAVE);
+  if (!richiesto || richiesto.valore === 'fatto') return;
+  try {
+    const utenti = db.prepare("SELECT id FROM users WHERE role = 'user'").all();
+    let quanti = 0, punti = 0;
+    for (const u of utenti) {
+      for (const s of awardSectionsAndNotify(u.id, null)) { quanti++; punti += sectionBonus(s.key); }
+    }
+    db.prepare("UPDATE impostazioni SET valore = 'fatto' WHERE chiave = ?").run(CHIAVE);
+    console.log(quanti
+      ? `[SEZIONI] recupero: ${quanti} bonus assegnati (${punti} punti) a festa riaperta.`
+      : '[SEZIONI] recupero: nessun bonus da assegnare.');
+  } catch (e) {
+    // Se va storto non si scrive l'interruttore: il prossimo riavvio riprova.
+    console.error('[SEZIONI] recupero fallito:', e.message);
+  }
+}
+
 app.listen(PORT, () => {
   console.log(`\n🎉 FantaSanRocco è attivo — accessibile via Cloudflare Tunnel.`);
   console.log(`   Dati salvati in: ${DATA_DIR}\n`);
   allineaInvitiUnaVolta();
   rimpiccioliscAvatarUnaVolta();
+  recuperaBonusSezioneUnaVolta();
 });

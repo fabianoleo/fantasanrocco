@@ -96,7 +96,7 @@ const MISSIONS = [
   m('Fuori Orario', 'Scatta un selfie davanti a un bar dopo la chiusura. Deve vedersi la tua faccia, non solo il bar.', 'comune', { sec: 'paese' }),
   m("E' Tiemp Bell...", 'Pubblica una foto anni ’80 sul gruppo Facebook del paese (Sei di Siano se…). Come prova invia lo screenshot del post.', 'non-comune', { sec: 'paese' }),
   m("Ngopp a' Cappell", 'Scatta una foto panoramica del paese.', 'non-comune', { sec: 'paese' }),
-  m("Annanz' a Chies", 'Scatta una foto sulle scale della chiesa.', 'comune', { sec: 'paese' }),
+  m("Annanz' a Chies", 'Scatta una foto di gruppo sulle scale della chiesa, almeno 5 persone, tutte con i bicchieri in alto.', 'comune', { sec: 'paese' }),
   m('Benvenuti a Siano', 'Scatta una foto davanti alla scritta con una posa creativa.', 'non-comune', { sec: 'paese' }),
   m('Colazione dei Campioni', 'Fai colazione FUORI CASA — al bar o comunque in giro — con i vestiti della sera prima, e scatta una foto.', 'non-comune', { sec: 'paese' }),
   m('Quattro Frecce', 'Scatta una foto di un parcheggio creativo (targa oscurata).', 'comune', { sec: 'paese' }),
@@ -108,37 +108,35 @@ const MISSIONS = [
 
   // ── FOOD & DRINK (8) ─────────────────────────────────────────────
   m('Leccucci', 'Scatta una foto con il sacchetto di caramelle comprato alle bancarelle.', 'comune', { sec: 'food' }),
-  m("A' Braciol e' Capr", 'Scatta una foto del piatto tipico sianese.', 'comune', { sec: 'food' }),
-  m("O' Vin ca Percoc e Nu…", 'Scatta una foto del famoso "vino con la percoca".', 'comune', { sec: 'food' }),
+  m("A' Braciol e' Capr", 'Scatta un selfie mentre mangi il piatto tipico sianese (+10 punti bonus se sei sporco di sugo).', 'comune', { sec: 'food' }),
+  m("O' Vin ca Percoc e Nu…", 'Scatta un selfie mentre bevi il famoso "vino con la percoca" (+10 punti bonus se sei sporco di vino).', 'comune', { sec: 'food' }),
   m('Lo Zio di Siano', 'Scatta una foto mentre bevi con Zio Max.', 'rara', { sec: 'food' }),
   m("O' Mast", 'Scatta una foto mentre bevi con il proprietario di un bar.', 'rara', { sec: 'food' }),
-  m("Ngopp o' Pont", 'Scatta una foto con il paninaro di "ngopp o’ pont".', 'rara', { sec: 'food' }),
+  m("Ngopp o' Pont", 'Scatta un selfie mentre "fai colazione" dal paninaro ngopp’ o pont.', 'rara', { sec: 'food' }),
   m('Fila Infinita', 'Scatta una foto mentre sei in una lunga fila al bar.', 'non-comune', { sec: 'food' }),
   m('Vittoria', 'Scatta una foto della colazione o dell’aperitivo al bar Vittoria.', 'non-comune', { sec: 'food', sponsor: 'bar-vittoria.png' }),
 
   // ── SOCIAL & PARTY (16) ──────────────────────────────────────────
   m('Rocco', 'Scatta una foto con una persona di nome Rocco.', 'non-comune', { rep: true, sec: 'social' }),
   m('Kiss Kiss', 'Scatta una foto mentre dai baci durante la festa.', 'comune', { rep: true, sec: 'social' }),
-  m('Spia', 'Scatta una foto mentre qualcuno compie uno dei tre malus: bere acqua, piangere o litigare.\n'
-    + 'Nota: le foto devono essere fatte a sorpresa e non in posa', 'epica', { rep: true, sec: 'social' }),
   m("Miettc a' Man Toji", 'Scatta un selfie in chiesa con la statua di un Santo.', 'non-comune', { sec: 'social' }),
   m('Trash Royale', 'Pubblica una storia Instagram volutamente trash sul tuo profilo pubblico taggando @fanta_sanrocco. Come prova invia lo screenshot della storia.', 'rara', { sec: 'social' }),
   // Era una flash del 13 ("selfie con Peppe quando passa"): ora è una missione
   // normale di Social & Party e non dipende più dal momento in cui passa lui,
   // perché la prova è la storia e non l'incontro.
   m('Tap Tap', 'Pubblica una storia con Peppe Tap Tap taggando in modo ben visibile sia lui sia @fanta_sanrocco. Come prova invia lo screenshot della storia.', 'non-comune', { sec: 'social' }),
-  m('Maracaibo', 'Entra in un trenino umano che balla e scatta una foto.', 'non-comune', { sec: 'social' }),
+  m('Maracaibo', 'Entra in un trenino umano che balla DI SERA davanti alla chiesa, minimo 10 persone, e scatta una foto.', 'non-comune', { sec: 'social' }),
   m('Mangiata', 'Scatta un selfie durante una mangiata sulla terra.', 'epica', { sec: 'social' }),
   m('On Air', 'Fatti intervistare dal team del FantaSanRocco. Valgono solo le interviste fatte da noi: le riprese di altri non contano.', 'epica', { sec: 'social' }),
   m('Pigiama Party', 'Scatta una foto in pigiama davanti la chiesa.', 'epica', { sec: 'social' }),
-  m('Cover', 'Ricrea una famosa foto di gruppo (es. "L’Ultima Cena" o una copertina iconica) con gli amici.', 'rara', { sec: 'social' }),
+  m('Cover', 'Ricrea una famosa foto di gruppo (es. "L’Ultima Cena" o una copertina iconica) in almeno 5 persone. Invia anche la foto originale da cui avete preso ispirazione.', 'rara', { sec: 'social' }),
   m('Glitch', 'Trova due persone vestite uguali e fai una foto con entrambe.', 'rara', { sec: 'social' }),
   // Visibile da subito e senza `day`: la missione si vede, e quello che arriva
   // al momento è solo l'elenco dei dieci elementi. Tenerla nascosta l'avrebbe
   // resa impossibile per chi non era in piazza quando partiva, e con lei
   // sarebbe saltata la chiusura della sezione Social.
   m('La Foto che Non Dovrebbe Esistere', 'Create una foto in cui compaiano almeno 10 elementi specifici scelti dal team. Gli elementi vengono comunicati solo quando parte la missione.', 'leggendaria', { sec: 'social' }),
-  m('Facciamo i Seri', 'Scatta una foto in cui NESSUNO ride.', 'comune', { sec: 'social' }),
+  m('Facciamo i Seri', 'Scatta una foto con minimo 10 persone in cui NESSUNO ride.', 'comune', { sec: 'social' }),
   m('Calici in Alto', 'Scatta una foto in cui tutti alzano i bicchieri.', 'comune', { sec: 'social' }),
   m('Cecchino', 'Scatta una foto con il pupazzo vinto sparando alle lattine.', 'non-comune', { sec: 'social' }),
   m("Nu Gir Ngopp a Giostr", 'Scatta una foto mentre fai un giro su una giostra presente alla festa.', 'comune', { sec: 'social' }),
@@ -156,7 +154,7 @@ const MISSIONS = [
   m('Ultras', 'Scatta una foto indossando la maglia di una squadra di calcio del paese.', 'non-comune', { sec: 'sport' }),
   m('San Rocco in campo', 'Fai una foto con il presidente della San Rocco Calcio Michele Marino.', 'non-comune', { sec: 'sport', sponsor: 'sanroccocalcio.png' }),
   m('Man of the Match', 'Scatta una foto con i calciatori delle squadre locali.', 'non-comune', { sec: 'sport' }),
-  m('Meet the Team', 'Scatta una foto con uno dei membri del team "Fanta San Rocco".', 'rara', { rep: true, sec: 'sport' }),
+  m('Meet the Team', 'Scatta una foto con TUTTO il team "Fanta San Rocco": devono esserci tutti e 10 i membri.', 'leggendaria', { sec: 'sport' }),
   m('Benedizione', 'Scatta una foto con il parroco. Non durante la processione.', 'rara', { sec: 'sport' }),
   m('Nu Lumin a Sant Rocc', 'Accendi un lumino in chiesa lasciando un’offerta e scatta una foto.', 'non-comune', { sec: 'sport' }),
   m("Cuore d'Oro", 'Compi un gesto di beneficenza per il Malawi e documentalo con una foto. Puoi donare qui: https://www.orizzontemalawi.org/', 'leggendaria', { sec: 'sport' }),
@@ -195,7 +193,9 @@ const MISSIONS = [
   // Apostrofo dritto e minuscola come le altre in napoletano del file
   // ("A' Machina Zozzosa", "Ngopp a' Cappell"): il nome e' quello che si dice
   // in paese, non la sua traduzione.
-  m("'o melon e fuoc", 'Fatti un selfie con almeno 5 persone calve, tutte nella stessa foto.', 'epica', { sec: 'social' }),
+  m("'o melon e fuoc", 'Fatti un selfie con almeno 7 persone pelate, tutte nella stessa foto. '
+    + '+25 punti bonus per ogni calvo che si chiama Rocco (scrivi i nomi nella nota per lo staff), '
+    + '+100 punti se nella foto c’è anche un’anguria.', 'leggendaria', { sec: 'social' }),
   // La prova e' lo screenshot della storia, come per Trash Royale e Corri su
   // TikTok: la foto in se' non direbbe se e' stata pubblicata davvero.
   // Le due condizioni che la fanno fallire stanno scritte, e per una ragione:
@@ -205,7 +205,7 @@ const MISSIONS = [
   m('Motori del Passato', 'Fatti una foto all’interno di una macchina d’epoca.', 'rara', { sec: 'paese' }),
   m('Tre Ruote', 'Fatti una foto a bordo di un apecar.', 'rara', { sec: 'paese' }),
   m('In Vespa', 'Fatti una foto in sella a una Vespa.', 'rara', { sec: 'paese' }),
-  m('Mannequin Challenge', 'Fate la mannequin challenge davanti alla chiesa: tutti immobili e la ripresa deve prendere tutta la piazza. Basta una persona o un oggetto in movimento e la prova non vale. Pubblica il video nelle storie taggando @fanta_sanrocco con il tag ben visibile, e come prova invia lo screenshot della storia.', 'epica', { sec: 'social' }),
+  m('Mannequin Challenge', 'Fate la mannequin challenge DI SERA davanti alla chiesa, almeno 7 persone nel video: tutti immobili e la ripresa deve prendere tutta la piazza. Basta una persona o un oggetto in movimento e la prova non vale. Pubblica il video nelle storie taggando @fanta_sanrocco con il tag ben visibile, e come prova invia lo screenshot della storia.', 'epica', { sec: 'social' }),
 
   // ATTENZIONE: su TikTok il nome e' @fantasanrocco, senza trattino basso —
   // su Instagram invece e' @fanta_sanrocco. Sono due profili diversi, non e'
@@ -229,12 +229,35 @@ const MISSIONS = [
   // e si porta nel database con  node strumenti/patch_pronostici.js
 
   // ── SFIDE GIORNALIERE — 14 AGOSTO ────────────────────────────────
+  // ── NUOVE MISSIONI (7) ───────────────────────────────────────────
+  // Nata il 15 agosto insieme all'alleggerimento dell'elenco. Sono tutte
+  // sfide DI GRUPPO: nessuna si fa da soli, e la piu' piccola chiede cinque
+  // persone. Tre arrivavano da una singola serata (Festa dei Folli, Skin e
+  // la parola segreta) e qui diventano buone per tutta la festa; Selfie XXL
+  // smette di essere una flash da sbloccare e resta sempre in elenco.
+  m('Festa dei Folli', 'Immortala un’esibizione "pazza" e pubblicala nelle storie taggando @fanta_sanrocco. Come prova invia lo screenshot della storia.', 'epica', { sec: 'nuove' }),
+  m('Skin', 'Scatta una foto indossando un outfit dello stesso colore del sindaco.', 'epica', { sec: 'nuove' }),
+  m('Shh… non dirlo a nessuno!', 'Individua uno dei membri del team e scrivi qui nella nota la parola segreta che ti forniranno.', 'epica', { sec: 'nuove', photo: false }),
+  m('Selfie XXL', 'Fai un selfie con almeno 15 persone: devono essere consapevoli e in posa, non passanti presi di sfuggita.', 'epica', { sec: 'nuove' }),
+  m('Dream Team', 'Scatta una foto con altre 10 persone — 11 in tutto — in posa come una squadra di calcio.', 'epica', { sec: 'nuove' }),
+  // Il bonus dei venti lo aggiunge lo staff in moderazione: qui si dice solo
+  // che c'e', perche' e' la descrizione a fare la promessa.
+  m('Viking Row', 'Mettetevi in fila davanti alla chiesa come i vichinghi al remo, minimo 10 persone. '
+    + '+250 punti bonus se siete almeno in 20, +50 se qualcuno indossa il caschetto da vichingo con le corna.', 'epica', { sec: 'nuove' }),
+  m('Bicchiere in testa', 'Fai una foto con un bicchiere pieno FINO ALL’ORLO in equilibrio sulla testa '
+    + '(+25 punti bonus se il bicchiere ha l’adesivo del FantaSanRocco).', 'rara', { sec: 'nuove' }),
+  // Rara e non epica: e' l'unica della sezione che si fa da soli, quindi
+  // costa molto meno delle altre.
+  m('Raffaella Carrà', 'Scatta una foto mentre indossi una parrucca davanti alla chiesa.', 'rara', { sec: 'nuove' }),
+  m('In fila indiana', 'Dopo l’esibizione dei cantanti mettete almeno 20 sedie in fila indiana, con una persona seduta su ognuna, e scattate la foto.', 'rara', { sec: 'nuove' }),
+  m('Yoga', 'Improvvisa una lezione di meditazione sul palco e fatti fotografare '
+    + '(+50 punti bonus se coinvolgi altre 7 persone che seguono la tua lezione).', 'non-comune', { sec: 'nuove' }),
+
   // ── SFIDE GIORNALIERE — 13 AGOSTO ────────────────────────────────
 
   m('Mazzariello', 'Scatta una foto con Mazzariello.', 'rara', { day: 14 }),
   m('Groove Motion', 'Scatta una foto con un membro della Groove Motion Live Band.', 'rara', { day: 14 }),
   m('Arlecchino Rosso', 'Indossa un capo/accessorio rosso e scatta una foto davanti alla chiesa.', 'non-comune', { day: 14 }),
-  m('Selfie XXL', 'Flash! Fai entrare almeno 15 persone nello stesso selfie.', 'epica', { flash: true, day: 15 }),
   m('Flash Mob', 'Partecipa e fai una foto al flash mob organizzato dal Comitato San Rocco in collaborazione con il FantaSanRocco.', 'epica', { day: 14 }),
 
   // ── SFIDE GIORNALIERE — 15 AGOSTO ────────────────────────────────
@@ -243,8 +266,6 @@ const MISSIONS = [
 
   // ── SFIDE GIORNALIERE — 16 AGOSTO ────────────────────────────────
   m('Arlecchino Verde', 'Indossa un capo/accessorio verde e scatta una foto davanti alla chiesa.', 'non-comune', { day: 16 }),
-  m('Festa dei Folli', 'Immortala un’esibizione "pazza"!', 'epica', { day: 16 }),
-  m('Skin', 'Scatta una foto indossando un outfit dello stesso colore del sindaco.', 'epica', { day: 16 }),
   m('Alfo & Mike', 'Scatta una foto con Alfo V. o con Mike Carotenuto in consolle.', 'rara', { day: 16 }),
   m('Momento Solenne', 'Riprendi l’entrata/uscita di San Rocco dalla chiesa durante la processione.', 'non-comune', { day: 16 }),
   m('Compleanno Leggendario', 'Scatta una foto con chi compie gli anni a San Rocco (+50 punti se si chiama Rocco).', 'leggendaria', { day: 16 }),
@@ -258,7 +279,6 @@ const MISSIONS = [
   m('LDA & Aka 7even', 'Scatta una foto con LDA o con Aka 7even.', 'epica', { day: 17 }),
   m('Disco Inferno', 'Scatta una foto con uno dei Disco Inferno.', 'rara', { day: 17 }),
   m('Alfonso Leo', 'Scatta una foto di Alfonso Leo che presenta i cantanti.', 'non-comune', { day: 17 }),
-  m('Shh… non dirlo a nessuno!', 'Individua uno dei membri del team e scrivi qui nella nota la parola segreta che ti forniranno.', 'epica', { day: 17, photo: false }),
   m('In Bilico', 'Flash! Tutti in posa, ma su una sola gamba!', 'epica', { flash: true, day: 17 }),
 
   // ── SFIDE GIORNALIERE — 18 AGOSTO ────────────────────────────────

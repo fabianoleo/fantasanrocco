@@ -35,6 +35,13 @@ const SECTIONS = [
   // la riallinea alle altre invece di renderla la piu' dura e la meno pagata.
   { key: 'social', label: 'Social & Party',         color: 'purple', bonus: 175 },
   { key: 'sport',  label: 'Sport, Team & Comunità', color: 'blue',   bonus: 100 },
+  // Nata il 15 agosto, quando le missioni in elenco erano troppe e ne sono
+  // state nascoste trentaquattro per alleggerire la pagina. Raccoglie le
+  // sfide di GRUPPO: sette tappe, ma tutte da fare con altre persone —
+  // undici in posa da squadra, quindici in un selfie, venti davanti alla
+  // chiesa. Poche di numero e pesanti di sostanza, per questo 100 e non 50:
+  // il bonus segue quanto costa chiudere la sezione, non quante righe ha.
+  { key: 'nuove',  label: 'Nuove Missioni',         color: 'red',    bonus: 100 },
 ];
 
 // Quanto vale finire una sezione. Si passa la CHIAVE, non l'oggetto: chi
