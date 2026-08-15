@@ -1227,8 +1227,18 @@ function testoPronostico(p) {
 }
 
 // Pronostici visibili al giocatore (non archiviati): con le sue scelte.
+//
+// Quelli GIÀ DICHIARATI spariscono dall'elenco. Il giocatore l'esito lo ha
+// saputo dalla notifica nel momento in cui è arrivato, e i punti li vede
+// nello storico del profilo: tenerli qui vuol dire solo allungare la pagina
+// di serate finite, e a fine festa sarebbero cinque schede morte sopra
+// l'unica che si può ancora giocare.
+//
+// Restano quindi due cose sole: il pronostico aperto e quelli chiusi ma
+// ANCORA SENZA esito — che è giusto vedere, perché aspetti la risposta.
+// (Nel pannello dello staff continuano a esserci tutti: lì servono.)
 function predictionsForUser(userId) {
-  const rows = db.prepare('SELECT * FROM predictions WHERE archived = 0 ORDER BY (winner IS NOT NULL), id DESC').all();
+  const rows = db.prepare('SELECT * FROM predictions WHERE archived = 0 AND winner IS NULL ORDER BY id DESC').all();
   return rows.map((p) => {
     const opts = predOptions(p);
     const mine = db.prepare('SELECT choice, choices FROM prediction_votes WHERE prediction_id = ? AND user_id = ?').get(p.id, userId);
