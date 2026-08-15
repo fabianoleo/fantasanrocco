@@ -31,6 +31,8 @@
 //
 // COSA NON TOCCA MAI, e perché:
 //   · le missioni dei mini-giochi (game_key): le gestisce il gioco;
+//   · le missioni messe in pausa da nascondi_missioni.js: quelle sono
+//     nascoste apposta, e lo sblocco automatico qui sopra le salta;
 //   · non cancella NIENTE da solo. Le missioni di troppo le archivia,
 //     che è reversibile con un clic. Per cancellarle davvero serve
 //     --elimina, e comunque mai quelle con delle prove già inviate.
@@ -95,7 +97,19 @@ const rimosse = new Map(
   db.prepare('SELECT nome, quando FROM missioni_rimosse').all().map((r) => [r.nome, r.quando])
 );
 
-let creati = 0, corretti = 0, nascosti = 0, tolti = 0, avvisi = 0, saltati = 0, sbloccati = 0;
+// Le missioni messe in pausa da strumenti/nascondi_missioni.js.
+//
+// Quelle sono nascoste APPOSTA e per pochi giorni, ma nell'elenco restano
+// missioni normali: senza questa lista lo sblocco automatico qui sotto le
+// rimetterebbe tutte in vista al primo lancio. È successo davvero — trentasei
+// missioni riapparse in un colpo mentre dovevano stare da parte.
+const inPausa = (() => {
+  const r = db.prepare("SELECT valore FROM impostazioni WHERE chiave = 'missioni_nascoste_15_16'").get();
+  if (!r) return new Set();
+  try { return new Set(JSON.parse(r.valore) || []); } catch { return new Set(); }
+})();
+
+let creati = 0, corretti = 0, nascosti = 0, tolti = 0, avvisi = 0, saltati = 0, sbloccati = 0, inPausaTrovate = 0;
 const visti = new Set();
 
 const lavoro = db.transaction(() => {
@@ -151,7 +165,10 @@ const lavoro = db.transaction(() => {
     // VISIBILE ma nell'elenco è una FLASH → NON si tocca, si avvisa e basta.
     // Questa è la direzione pericolosa: rimetterebbe il coperchio su una flash
     // che lo staff ha appena aperto, magari mentre la gente la sta giocando.
-    if (!x.flash && riga.archived === 1) {
+    if (!x.flash && riga.archived === 1 && inPausa.has(riga.id)) {
+      // Nascosta apposta da nascondi_missioni.js: si lascia dov'è.
+      inPausaTrovate++;
+    } else if (!x.flash && riga.archived === 1) {
       if (!PROVA) db.prepare('UPDATE missions SET archived = 0 WHERE id = ?').run(riga.id);
       console.log(`🔓 #${riga.id} "${vuole.title}" SBLOCCATA: nell'elenco è una missione normale`);
       sbloccati++;
@@ -189,7 +206,8 @@ const lavoro = db.transaction(() => {
 
 lavoro();
 
-const coda = saltati ? ` · ${saltati} NON ricreate perché eliminate a mano` : '';
+const coda = (saltati ? ` · ${saltati} NON ricreate perché eliminate a mano` : '')
+  + (inPausaTrovate ? ` · ${inPausaTrovate} lasciate nascoste (in pausa da nascondi_missioni.js)` : '');
 console.log(PROVA
   ? `\nPROVA: niente è stato scritto. ${creati} da creare, ${corretti} da correggere, ${sbloccati} da sbloccare, ${nascosti} da nascondere, ${tolti} da eliminare, ${avvisi} avvisi${coda}.`
   : `\nFatto: ${creati} create, ${corretti} corrette, ${sbloccati} sbloccate, ${nascosti} nascoste, ${tolti} eliminate, ${avvisi} avvisi${coda}.`);

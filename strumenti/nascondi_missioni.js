@@ -85,9 +85,13 @@ if (MOSTRA) {
 }
 
 // ── NASCONDERLE ─────────────────────────────────────────────────────
-if (leggiSegnate().length) {
-  console.log('Risultano già nascoste da un lancio precedente: usa --mostra per rimetterle.');
-  process.exit(1);
+// Rilanciarlo non è un errore: è il modo di RIMETTERE IN PAUSA quelle che
+// nel frattempo qualcosa ha riaperto. Prima si rifiutava di ripartire, e
+// quando patch_missioni le ha sbloccate tutte non c'era modo di richiuderle
+// se non a mano, una per una.
+const giaSegnate = leggiSegnate();
+if (giaSegnate.length) {
+  console.log(`Risultano già in pausa ${giaSegnate.length} missioni: controllo che siano ancora nascoste.\n`);
 }
 
 const ids = [];
@@ -103,12 +107,14 @@ for (const nome of DA_NASCONDERE) {
     console.log(`↓ ${r.title}`);
   }
 }
-if (!PROVA && ids.length) {
+const tutti = [...new Set([...giaSegnate, ...ids])];
+if (!PROVA && tutti.length) {
   db.prepare(`INSERT INTO impostazioni (chiave, valore) VALUES (?, ?)
               ON CONFLICT(chiave) DO UPDATE SET valore = excluded.valore`)
-    .run(CHIAVE, JSON.stringify(ids));
+    .run(CHIAVE, JSON.stringify(tutti));
 }
-console.log(`\n${PROVA ? 'PROVA: ' : ''}${ids.length} missioni nascoste`
+console.log(`\n${PROVA ? 'PROVA: ' : ''}${ids.length} missioni nascoste ora`
+  + (giaSegnate.length ? `, ${tutti.length} in pausa in tutto` : '')
   + (mancanti ? `, ${mancanti} NON trovate (guarda sopra)` : '') + '.');
 
 const sez = db.prepare(`SELECT section s, COUNT(*) n FROM missions
