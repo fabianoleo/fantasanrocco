@@ -144,10 +144,31 @@ try {
       + ` ${String(u.prima).padStart(5)} → ${String(u.dopo).padStart(5)}  (+${u.dopo - u.prima})`
       + (posPrima === i + 1 ? '' : `   era ${posPrima}º`));
   });
-  const scambi = dopo.slice(0, 10).filter((u, i) => cl.findIndex((x) => x.nickname === u.nick) !== i).length;
-  console.log(`\n  Posizioni cambiate nei primi dieci: ${scambi}`);
-  if (scambi === 0) console.log('  → la regola non ribalta niente: è un condimento.');
-  else if (scambi > 4) console.log('  → attenzione: così la classifica la decidono i mini-giochi, non le missioni.');
+  // Chi cambia posizione in cima è poco: quello che dice se la regola è
+  // giusta o no è CHI SCALA DI PIÙ in tutta la classifica. Se qualcuno passa
+  // dal cinquantesimo al decimo giocando, vuol dire che i mini-giochi valgono
+  // più delle missioni — e non si vede guardando solo i primi dieci.
+  const salti = dopo.map((u, i) => ({
+    nick: u.nick, da: cl.findIndex((x) => x.nickname === u.nick) + 1, a: i + 1,
+    punti: u.dopo - u.prima,
+  })).filter((x) => x.da > 0);
+
+  const vincePrima = cl[0] ? cl[0].nickname : null;
+  const vinceDopo = dopo[0] ? dopo[0].nick : null;
+  console.log(`\n  Primo in classifica: ${vincePrima === vinceDopo
+    ? vincePrima + ' — non cambia' : vincePrima + ' → ' + vinceDopo + '  ⚠️ CAMBIA IL VINCITORE'}`);
+
+  const scalate = salti.filter((x) => x.da - x.a > 0).sort((a2, b2) => (b2.da - b2.a) - (a2.da - a2.a));
+  console.log('\n  CHI SCALA DI PIÙ (in tutta la classifica, non solo in cima)');
+  scalate.slice(0, 8).forEach((x) => console.log(
+    `    ${(x.nick + '                    ').slice(0, 20)} ${String(x.da).padStart(3)}º → ${String(x.a).padStart(3)}º`
+    + `   ${String('+' + x.punti).padStart(6)} punti   (${x.da - x.a} posizioni)`));
+  const salto = scalate.length ? scalate[0].da - scalate[0].a : 0;
+  console.log(salto > 20
+    ? `\n  → qualcuno guadagna ${salto} posizioni: i mini-giochi pesano più delle missioni.`
+    : salto > 8
+      ? `\n  → il salto più grande è di ${salto} posizioni: sposta, ma non stravolge.`
+      : `\n  → il salto più grande è di ${salto} posizioni: è un condimento.`);
 } catch (e) {
   console.log('\n(classifica non calcolabile: ' + e.message + ')');
 }
