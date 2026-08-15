@@ -5,8 +5,16 @@
 // delle partite diventa punti di classifica, con un tetto giornaliero.
 // Non scrive NIENTE: legge e basta.
 //
-//   node strumenti/simula_punti_giochi.js            1% · tetto 500
-//   node strumenti/simula_punti_giochi.js 0.5 300    mezzo per cento, tetto 300
+//   node strumenti/simula_punti_giochi.js                1% e 1% · tetto 500
+//   node strumenti/simula_punti_giochi.js 1 0.4 500      runner 1%, jetpack 0.4%
+//   node strumenti/simula_punti_giochi.js 0.5 300        stessa % per tutti e due
+//
+// LE DUE PERCENTUALI SONO SEPARATE, E NON È UN VEZZO
+// In game_runs la colonna `score` non è la stessa cosa per i due giochi:
+// per il runner sono PUNTI, per il jetpack sono METRI (vedi db.js). Un volo
+// medio fa 1118 metri, una partita media al runner 471 punti: applicando la
+// stessa percentuale a tutti e due, il jetpack si prende l'82% del bonus
+// solo perché i suoi numeri sono più grandi. Non perché sia più difficile.
 //
 // PERCHÉ SUL PUNTEGGIO E NON SULLE MONETE
 // Le monete non esistono per il server: il browser manda solo il
@@ -22,18 +30,34 @@
 // ===================================================================
 const { db } = require('../src/db');
 
-const PERC  = Number(process.argv[2] || 1);
-const TETTO = Number(process.argv[3] || 500);
-if (!Number.isFinite(PERC) || PERC <= 0 || !Number.isFinite(TETTO) || TETTO <= 0) {
-  console.error('Uso: node strumenti/simula_punti_giochi.js [percentuale] [tetto giornaliero]');
+const arg = process.argv.slice(2).map(Number);
+// Tre numeri = runner, jetpack, tetto. Due = stessa percentuale per entrambi.
+const [P_RUNNER, P_JETPACK, TETTO] = arg.length >= 3
+  ? [arg[0], arg[1], arg[2]]
+  : arg.length === 2 ? [arg[0], arg[0], arg[1]]
+  : [1, 1, 500];
+const PERC = { runner: P_RUNNER, jetpack: P_JETPACK };
+if (![P_RUNNER, P_JETPACK, TETTO].every((n) => Number.isFinite(n) && n > 0)) {
+  console.error('Uso: node strumenti/simula_punti_giochi.js [%runner] [%jetpack] [tetto giornaliero]');
   process.exit(1);
 }
 
-// Un giorno per giocatore: è l'unità su cui morde il tetto.
-const giorni = db.prepare(`
-  SELECT user_id, date(created_at) AS g, SUM(score) AS s, COUNT(*) AS partite
-  FROM game_runs GROUP BY user_id, date(created_at)
+const righe = db.prepare(`
+  SELECT user_id, date(created_at) AS g, game, SUM(score) AS s, COUNT(*) AS partite
+  FROM game_runs GROUP BY user_id, date(created_at), game
 `).all();
+// Un giorno per giocatore: è l'unità su cui morde il tetto, e ci confluiscono
+// tutti e due i giochi — ognuno con la SUA percentuale.
+const mappa = new Map();
+for (const r of righe) {
+  const k = r.user_id + '|' + r.g;
+  const v = mappa.get(k) || { user_id: r.user_id, g: r.g, grezzo: 0, perGioco: {} };
+  const p = Math.floor(r.s * (PERC[r.game] || 0) / 100);
+  v.grezzo += p;
+  v.perGioco[r.game] = (v.perGioco[r.game] || 0) + p;
+  mappa.set(k, v);
+}
+const giorni = [...mappa.values()];
 
 if (!giorni.length) {
   console.log('Nessuna partita registrata: non c\'è niente da simulare.');
@@ -41,13 +65,17 @@ if (!giorni.length) {
 }
 
 const per = {};
+const daGioco = {};
 let totale = 0, tagliati = 0, persiDalTetto = 0;
 for (const x of giorni) {
-  const grezzo = Math.floor(x.s * PERC / 100);
-  const dato = Math.min(grezzo, TETTO);
-  if (grezzo > TETTO) { tagliati++; persiDalTetto += grezzo - dato; }
+  const dato = Math.min(x.grezzo, TETTO);
+  if (x.grezzo > TETTO) { tagliati++; persiDalTetto += x.grezzo - dato; }
   per[x.user_id] = (per[x.user_id] || 0) + dato;
   totale += dato;
+  // Quota di ogni gioco sul grezzo, per dire da dove arriva il bonus.
+  for (const [g, v] of Object.entries(x.perGioco)) {
+    daGioco[g] = (daGioco[g] || 0) + (x.grezzo ? Math.round(dato * v / x.grezzo) : 0);
+  }
 }
 
 const nomi = Object.fromEntries(
@@ -59,16 +87,24 @@ const perGioco = db.prepare(`
   FROM game_runs GROUP BY game
 `).all();
 
-console.log(`REGOLA SIMULATA: ${PERC}% del punteggio · tetto ${TETTO} punti al giorno`);
+console.log(`REGOLA SIMULATA: runner ${P_RUNNER}% · jetpack ${P_JETPACK}% · tetto ${TETTO} punti al giorno`);
+if (P_RUNNER === P_JETPACK) {
+  console.log('⚠️  Stessa percentuale per tutti e due, ma il punteggio del jetpack sono METRI');
+  console.log('    e quello del runner sono PUNTI: numeri più grandi, bonus più grande.');
+}
 console.log(`Partite dal ${periodo.a} al ${periodo.b}\n`);
 
 console.log('LE PARTITE FINORA');
 perGioco.forEach((g) => console.log(
   `  ${(g.game + '        ').slice(0, 8)} ${String(g.n).padStart(5)} partite · `
-  + `totale ${g.tot} · media ${g.media} · record ${g.record}`));
+  + `${g.game === 'jetpack' ? 'metri' : 'punti'} in tutto ${g.tot} · media ${g.media} · record ${g.record}`
+  + `  →  una partita media vale ${(g.media * (PERC[g.game] || 0) / 100).toFixed(1)} punti`));
 
 console.log('\nQUANTO DISTRIBUIREBBE');
 console.log(`  punti in tutto            ${totale}`);
+const somma = Object.values(daGioco).reduce((a, b) => a + b, 0) || 1;
+Object.entries(daGioco).sort((a, b) => b[1] - a[1]).forEach(([g, v]) =>
+  console.log(`    di cui da ${(g + '        ').slice(0, 8)} ${String(v).padStart(6)}  (${Math.round(v / somma * 100)}%)`));
 console.log(`  giorni-giocatore          ${giorni.length}`);
 console.log(`  giorni tagliati dal tetto ${tagliati}`
   + (tagliati ? `  (${Math.round(tagliati / giorni.length * 100)}% — persi ${persiDalTetto} punti)` : ''));
