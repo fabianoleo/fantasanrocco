@@ -4699,15 +4699,21 @@ textarea:focus-visible,
 .ms-sec-green  .ms-secprog-bar span { background: linear-gradient(90deg, #2f9e5e, #4ade80); }
 .ms-sec-purple .ms-secprog-bar span { background: linear-gradient(90deg, #6d3fc4, #a78bfa); }
 .ms-sec-blue   .ms-secprog-bar span { background: linear-gradient(90deg, #1d6fd0, #60a5fa); }
+/* La quinta sezione, nata il 15 agosto. Senza queste righe l'intestazione
+   restava senza sfondo e senza colore: scritta scura su fondo scuro, e non
+   si leggeva. Il rosso e' l'unico che non collideva con gli altri quattro. */
+.ms-sec-red    .ms-secprog-bar span { background: linear-gradient(90deg, #b3261e, #f26d5b); }
 .ms-sechead.ms-sec-gold   { background: linear-gradient(135deg, var(--gold), var(--gold-2)); }
 .ms-sechead.ms-sec-green  { background: linear-gradient(135deg, #2f9e5e, #4ade80); }
 .ms-sechead.ms-sec-purple { background: linear-gradient(135deg, #6d3fc4, #a78bfa); color: #fff; }
 .ms-sechead.ms-sec-blue   { background: linear-gradient(135deg, #1d6fd0, #60a5fa); color: #fff; }
+.ms-sechead.ms-sec-red    { background: linear-gradient(135deg, #b3261e, #f26d5b); color: #fff; }
 .ms-sechead.ms-sec-other  { background: rgba(255,255,255,.06); color: var(--text-2); border: 1px solid rgba(255,255,255,.1); }
 .ms-secprog.ms-sec-gold   .ms-secprog-name { color: var(--gold-2); }
 .ms-secprog.ms-sec-green  .ms-secprog-name { color: #4ade80; }
 .ms-secprog.ms-sec-purple .ms-secprog-name { color: #a78bfa; }
 .ms-secprog.ms-sec-blue   .ms-secprog-name { color: #60a5fa; }
+.ms-secprog.ms-sec-red    .ms-secprog-name { color: #f26d5b; }
 
 /* =========================================================================
    MISSIONI · etichetta BONUS, chip rarità e card bloccate

@@ -250,6 +250,16 @@ const MISSIONS = [
   // costa molto meno delle altre.
   m('Raffaella Carrà', 'Scatta una foto mentre indossi una parrucca davanti alla chiesa.', 'rara', { sec: 'nuove' }),
   m('In fila indiana', 'Dopo l’esibizione dei cantanti mettete almeno 20 sedie in fila indiana, con una persona seduta su ognuna, e scattate la foto.', 'rara', { sec: 'nuove' }),
+  // Creata dal pannello durante la festa, quindi non era in questo elenco: al
+  // primo allineamento e' stata nascosta come roba vecchia, con 15 prove gia'
+  // inviate. Peggio: nell'archiviarla lo strumento le azzerava anche la
+  // sezione, quindi il dato era andato — ripescato dai backup, che sono
+  // trenta e concordi: social.
+  m('Lo Zibaldone', 'Create una foto in cui compaiano almeno 10 elementi specifici scelti dal team. Gli elementi sono: \n'
+    + '1. bastone\n2. marsupio\n3. occhiali da sole\n4. cappello\n5. libro\n6. pipa\n7. sciarpa \n'
+    + '8. pattini \n9. cane\n10. ombrello\n11. maschera con boccaglio\n12. boa di piume \n'
+    + '13. mazzo di fiori \n14. zaino\n15. guanti in lattice', 'leggendaria', { sec: 'social' }),
+
   m('Yoga', 'Improvvisa una lezione di meditazione sul palco e fatti fotografare '
     + '(+50 punti bonus se coinvolgi altre 7 persone che seguono la tua lezione).', 'non-comune', { sec: 'nuove' }),
 

@@ -173,8 +173,14 @@ const lavoro = db.transaction(() => {
       tolti++;
       continue;
     }
-    if (riga.archived === 1 && riga.section === null) continue;   // già fuori gioco
-    if (!PROVA) db.prepare('UPDATE missions SET archived = 1, section = NULL WHERE id = ?').run(riga.id);
+    if (riga.archived === 1) continue;                            // già fuori gioco
+    // Si archivia e basta: la sezione NON si tocca. Azzerarla sembrava
+    // pulizia — una missione ritirata non sta in nessuna sezione — ma è
+    // distruttivo, e il conteggio delle sezioni salta già le archiviate
+    // (WHERE archived = 0). È costato il ripristino di una missione creata
+    // dal pannello: rimessa in elenco, la sua sezione era sparita e non
+    // c'era più modo di sapere quale fosse se non da un backup.
+    if (!PROVA) db.prepare('UPDATE missions SET archived = 1 WHERE id = ?').run(riga.id);
     console.log(`✖ #${riga.id} "${riga.title}" NASCOSTA: non è nell'elenco`
       + (prove ? ` · ha ${prove} prove, quindi non si cancella` : ' · usa --elimina per toglierla del tutto'));
     nascosti++;
