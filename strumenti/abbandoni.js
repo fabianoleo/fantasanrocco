@@ -123,19 +123,27 @@ if (disponibili && mediana) {
 // ── 5. LE MISSIONI CHE NON FA NESSUNO ───────────────────────────────
 // Una missione che in cinque giorni non ha completato nessuno o quasi
 // è scritta male, è troppo difficile, o chiede una cosa che non capita.
+// Si contano SOLO quelle aperte da almeno un giorno. Senza questo filtro
+// l'elenco si riempiva di missioni delle serate che devono ancora venire —
+// undici su dodici, in una prova — e uno perdeva tempo a chiedersi cosa
+// c'era di sbagliato in una missione che semplicemente non è ancora il suo
+// turno.
 const morte = db.prepare(`
-  SELECT m.title, m.points,
+  SELECT m.title, m.points, m.active_from,
          (SELECT COUNT(DISTINCT s.user_id) FROM submissions s
           WHERE s.mission_id = m.id AND s.status = 'approved') AS fatte
   FROM missions m
   WHERE m.archived = 0 AND m.game_key IS NULL
+    AND (m.active_from IS NULL OR m.active_from <= datetime('now', '-1 day'))
   ORDER BY fatte ASC, m.points DESC LIMIT 12
 `).all();
 console.log('\nLE MISSIONI CHE QUASI NESSUNO COMPLETA');
-morte.forEach((r) => console.log(`  ${String(r.fatte).padStart(3)} persone · ${String(r.points).padStart(3)}pt · ${r.title}`));
-console.log('  → Zero o quasi dopo giorni di festa vuol dire una di tre cose:');
-console.log('    è scritta in modo poco chiaro, è troppo difficile, o chiede');
-console.log('    una cosa che non capita. Vale la pena rileggerle.');
+console.log('  (solo quelle aperte da almeno un giorno: le serate future non contano)');
+morte.forEach((r) => console.log(`  ${String(r.fatte).padStart(3)} persone · ${String(r.points).padStart(3)}pt · ${r.title}`
+  + (r.active_from ? '   (dal ' + r.active_from.slice(5, 10) + ')' : '')));
+console.log('  → Zero o quasi su una missione già aperta da un giorno vuol dire');
+console.log('    una di tre cose: è scritta in modo poco chiaro, è troppo');
+console.log('    difficile, o chiede una cosa che non capita.');
 
 // ── 6. QUANTI SI SONO ISCRITTI E NON HANNO MAI GIOCATO ──────────────
 const iscritti = db.prepare("SELECT COUNT(*) n FROM users WHERE role = 'user'").get().n;
@@ -143,8 +151,10 @@ const maiGiocato = iscritti - conPr;
 console.log('\nISCRITTI CHE NON HANNO MAI MANDATO UNA PROVA');
 console.log(`  ${maiGiocato} su ${iscritti}  (${perc(maiGiocato, iscritti)}%)`);
 if (perc(maiGiocato, iscritti) >= 30) {
-  console.log('  → Quasi un iscritto su tre non ha mai cominciato. Qui non c\'entra');
-  console.log('    la lunghezza: o non hanno capito come si gioca, o si sono');
-  console.log('    iscritti e basta. È il gruppo su cui si recupera di più.');
+  const q = perc(maiGiocato, iscritti);
+  console.log(`  → ${q > 50 ? 'PIÙ DELLA METÀ' : 'Quasi un terzo'} degli iscritti non ha mai cominciato.`);
+  console.log('    Qui non c\'entra la lunghezza del gioco: o non hanno capito come');
+  console.log('    si gioca, o si sono iscritti e basta. È il gruppo più grande su');
+  console.log('    cui si può ancora recuperare, e non serve cambiare le missioni.');
 }
 console.log(`\n(dati al ${oggi}, ora italiana)`);
