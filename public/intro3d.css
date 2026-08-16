@@ -129,6 +129,22 @@
 .intro-screen.is-loaded .intro3d-loader,
 .intro-screen.is-fallback .intro3d-loader { opacity: 0; visibility: hidden; }
 
+/* ...e SMETTE DI GIRARE, che non è la stessa cosa.
+   `visibility: hidden` toglie una cosa dalla vista ma la lascia viva: le sue
+   animazioni continuano a girare esattamente come prima. Qui dentro sono
+   cinquantasei elementi — sette cubi per otto pezzi l'uno — e non animano
+   robetta: `ld-color` cambia il colore di fondo, `ld-edge` cambia l'ombra,
+   `ld-glow` cambia un `drop-shadow`. Nessuna delle tre la scheda grafica la
+   sa fare da sola: ognuna obbliga il telefono a RIDISEGNARE l'elemento.
+   Il risultato era che il caricamento finiva, il velo spariva, e cinquantasei
+   pezzi invisibili continuavano a ridipingersi in loop da 1.8s finché uno non
+   cambiava pagina. Sulla schermata d'ingresso, cioè la prima che apre chiunque.
+   È la seconda voce della batteria dopo la grana, e non si vedeva nemmeno.
+   `animation: none` sui figli e non `display: none` sul padre: così la
+   dissolvenza da mezzo secondo continua a funzionare com'era. */
+.intro-screen.is-loaded .intro3d-loader *,
+.intro-screen.is-fallback .intro3d-loader * { animation: none !important; }
+
 .ld-grid {
   --s: 26px;
   display: flex; gap: 7px;

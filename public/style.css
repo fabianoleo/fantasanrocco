@@ -82,13 +82,6 @@
   0%, 100% { box-shadow: 0 2px 14px rgba(212, 160, 26, 0.28); }
   50%       { box-shadow: 0 2px 28px rgba(212, 160, 26, 0.58); }
 }
-@keyframes grain-drift {
-  0%  { transform: translate(0, 0); }
-  20% { transform: translate(-3px, 2px); }
-  40% { transform: translate(2px, -3px); }
-  60% { transform: translate(3px, 2px); }
-  80% { transform: translate(-2px, 3px); }
-}
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(24px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -163,17 +156,27 @@ body::before {
   animation: orb-drift 22s ease-in-out infinite;
 }
 
-/* Film grain overlay */
+/* Film grain overlay — FERMO, e c'è un motivo grosso.
+   Prima tremolava: `grain-drift 0.28s steps(1) infinite`, cioè cinque scatti
+   ogni 0.28s — diciotto cambi al secondo, per sempre, su ogni pagina del sito.
+   Da solo un transform costa poco. Il guaio è `mix-blend-mode: overlay`: ogni
+   volta che questo strato si sposta, la GPU deve rifondere il velo con TUTTO
+   quello che ha sotto, e non può tenersi il risultato in cache. Con `inset: -50%`
+   la superficie da rifondere era quattro volte lo schermo.
+   Risultato: lavoro grafico continuo anche a pagina ferma, con nessuno che
+   tocca niente — ed è la ragione per cui gli utenti si lamentavano della
+   batteria. Il tremolio, a opacità 0.024, non lo vedeva nessuno.
+   Fermo, il velo viene composto una volta e poi costa zero. La grana si vede
+   uguale. `inset: 0` perché senza spostamento non serve il bordo in più. */
 body::after {
   content: '';
-  position: fixed; inset: -50%; z-index: 9998;
+  position: fixed; inset: 0; z-index: 9998;
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.78' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 300px 300px;
   background-repeat: repeat;
   opacity: 0.024;
   mix-blend-mode: overlay;
-  animation: grain-drift 0.28s steps(1) infinite;
 }
 
 /* ---------- Links --------------------------------------------------- */
@@ -6677,3 +6680,46 @@ a.lb-prize:hover { color: var(--gold-2); }
    sopra devono solo far posto senza allontanare la prima prova. */
 .mod-list + .mod-pagine { margin-top: 1.4rem; }
 .mod-pagine:first-of-type { margin: .2rem 0 1rem; }
+
+/* ---------- Batteria: chi ha chiesto meno movimento, lo ottiene ------- */
+/* Gli utenti si lamentavano che il sito scarica il telefono. La voce più
+   grossa era il velo di grana, ed è già ferma qui sopra. Questa è la seconda:
+   una ventina di animazioni «infinite» decorative — brillii, aloni che
+   respirano, cerchi che vagano nello sfondo — che girano finché la pagina
+   è aperta, anche se nessuno le sta guardando.
+
+   Le più care sono quelle che animano `background-position` (i titoli che
+   brillano): quella proprietà la GPU non la sa muovere da sola, quindi il
+   telefono ridisegna l'elemento sessanta volte al secondo per un riflesso
+   che passa una volta ogni nove secondi.
+
+   Qui si spengono per chi ha chiesto meno animazioni nelle impostazioni del
+   telefono — iOS: Accessibilità › Movimento › Riduci movimento; Android:
+   Accessibilità › Rimuovi animazioni. Chi non l'ha chiesto vede il sito
+   esattamente com'era. Non si tocca il movimento che SERVE a capire cosa
+   succede (i caricamenti che girano, la slot, i giochi): quello resta, o
+   uno non sa più se la pagina sta lavorando. */
+   Si spegne tutto in blocco invece di elencare i selettori a mano. Elencarli
+   voleva dire tenere aggiornata una lista di venti nomi che nessuno si
+   ricorderà di aggiornare: si aggiunge un alone nuovo fra un mese e la regola
+   non lo copre, senza che nessuno se ne accorga. Così invece vale anche per
+   quello che non è ancora stato scritto. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* L'ECCEZIONE: il movimento che dice qualcosa resta.
+     Una rotella di caricamento ferma non è «meno movimento», è un sito
+     rotto — uno resta a fissare un cerchio immobile senza sapere se sta
+     succedendo qualcosa o se si è impallato. Vale per le rotelle e per
+     tutto quello che è in stato di caricamento. */
+  [class*="spin"], [class*="loading"], [class*="is-loading"] *,
+  .sv-spin, .sia3d-spin {
+    animation-duration: revert !important;
+    animation-iteration-count: infinite !important;
+  }
+}

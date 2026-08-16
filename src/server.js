@@ -303,11 +303,17 @@ app.use((req, res, next) => {
 });
 
 // --- Utenti online — ping-based (affidabile su mobile + Cloudflare) --------
-// Il client manda GET /api/online/ping?uid=UUID ogni 8s.
+// Il client manda GET /api/online/ping?uid=UUID ogni 20s (vedi app.js).
 // UUID generato in localStorage: stabile attraverso login/logout/refresh.
 const _lastPing = new Map(); // uid → timestamp
 const _sseClients = new Set();
-const PING_TTL = 18_000; // 3 ping mancati = offline
+// 3 ping mancati = offline. Il margine di tre giri non è prudenza: un telefono
+// che passa dal wifi al 4G, o che si blocca un attimo, salta un ping senza
+// essere andato via davvero — con un margine stretto la pallina lo dava per
+// uscito e poi rientrato, e il numero ballava da solo.
+// VA TENUTO IN PARI con l'intervallo in app.js: se là si accorcia e qui no,
+// la gente risulta offline mentre sta guardando la pagina.
+const PING_TTL = 60_000;
 const MAX_ONLINE_ENTRIES = 5000;
 
 function _onlineCount() {
@@ -320,7 +326,7 @@ function _broadcastCount() {
   for (const r of _sseClients) { try { r.write(msg); } catch {} }
 }
 
-// Ping: il client manda il suo UUID stabile (localStorage) ogni 8s
+// Ping: il client manda il suo UUID stabile (localStorage) ogni 20s
 app.get('/api/online/ping', (req, res) => {
   const uid = typeof req.query.uid === 'string' ? req.query.uid.slice(0, 64) : null;
   if (uid) {

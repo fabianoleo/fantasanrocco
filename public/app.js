@@ -302,7 +302,17 @@ document.addEventListener('click', (e) => {
   }, { passive: true });
 })();
 
-// ── Utenti online — ping ogni 15s + SSE per aggiornamenti ───────────
+// ── Utenti online — ping ogni 20s + SSE per aggiornamenti ───────────
+// Era ogni 6 secondi (e il commento diceva 15: nessuno dei due era vero).
+// Seicento chiamate all'ora, per una pallina che dice quanta gente c'è.
+// Sul telefono il costo non sono i byte — sono pochissimi — è L'ANTENNA: ogni
+// richiesta sveglia il ricetrasmettitore, e un'antenna che non riesce mai a
+// riaddormentarsi è una delle voci più grosse sulla batteria. A 20 secondi le
+// chiamate diventano centottanta e la pallina si comporta uguale.
+// Chi la guarda non aspetta comunque il ping: il conteggio arriva dallo
+// stream SSE appena cambia. Il ping serve solo a dire «ci sono ancora».
+// SE CAMBI QUESTO NUMERO cambia anche PING_TTL in server.js: là si conta
+// offline chi non si fa sentire, e il margine deve restare di tre giri.
 (function () {
   const pill = document.getElementById('onlinePill');
   const wrap = pill && pill.querySelector('.oc-wrap');
@@ -327,7 +337,7 @@ document.addEventListener('click', (e) => {
     fetch('/api/online/ping?uid=' + _uid).catch(() => {});
   }
   sendPing();
-  setInterval(sendPing, 6_000);
+  setInterval(sendPing, 20_000);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') sendPing();
   });
@@ -368,16 +378,22 @@ document.addEventListener('click', (e) => {
     };
   }
 
-  // Fallback: polling ogni 4s se SSE non funziona
+  // Fallback: si interroga il server solo se lo stream SSE non parte.
+  // Era ogni 4 secondi, e senza guardare se la pagina fosse davanti: novecento
+  // chiamate all'ora, in sottofondo, per chi aveva la sfortuna di stare dietro
+  // a una rete che blocca gli stream. Era il caso peggiore per la batteria e
+  // toccava proprio quelli che non potevano farci niente.
+  // Ora venti secondi come il ping, e ferma quando la pagina non si vede.
   function startPolling() {
     if (pollTimer) return;
     pollTimer = setInterval(async () => {
+      if (document.visibilityState === 'hidden') return;
       try {
         const r = await fetch('/api/online');
         const { count } = await r.json();
         setCount(count);
       } catch {}
-    }, 4000);
+    }, 20000);
     // Prima lettura immediata
     fetch('/api/online').then(r => r.json()).then(({ count }) => setCount(count)).catch(() => {});
   }
