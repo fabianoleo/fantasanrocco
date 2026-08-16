@@ -135,7 +135,6 @@ const MISSIONS = [
   // al momento è solo l'elenco dei dieci elementi. Tenerla nascosta l'avrebbe
   // resa impossibile per chi non era in piazza quando partiva, e con lei
   // sarebbe saltata la chiusura della sezione Social.
-  m('La Foto che Non Dovrebbe Esistere', 'Create una foto in cui compaiano almeno 10 elementi specifici scelti dal team. Gli elementi vengono comunicati solo quando parte la missione.', 'leggendaria', { sec: 'social' }),
   m('Facciamo i Seri', 'Scatta una foto con minimo 10 persone in cui NESSUNO ride.', 'comune', { sec: 'social' }),
   m('Calici in Alto', 'Scatta una foto in cui tutti alzano i bicchieri.', 'comune', { sec: 'social' }),
   m('Cecchino', 'Scatta una foto con il pupazzo vinto sparando alle lattine.', 'non-comune', { sec: 'social' }),
