@@ -157,4 +157,29 @@ if (perc(maiGiocato, iscritti) >= 30) {
   console.log('    si gioca, o si sono iscritti e basta. È il gruppo più grande su');
   console.log('    cui si può ancora recuperare, e non serve cambiare le missioni.');
 }
+// ── 7. COME SI POSSONO RAGGIUNGERE DAVVERO ──────────────────────────
+// La domanda che viene subito dopo: «mandiamogli una notifica». Solo che
+// la push arriva SOLO a chi l'ha attivata, e chi non ha mai giocato quasi
+// mai l'ha fatto. Senza questo conto si prepara un messaggio per
+// duecento persone e ne raggiunge sei.
+const raggiungibili = db.prepare(`
+  SELECT
+    COUNT(*) AS tutti,
+    SUM(CASE WHEN EXISTS(SELECT 1 FROM push_subscriptions p WHERE p.user_id = u.id)
+             THEN 1 ELSE 0 END) AS conPush,
+    SUM(CASE WHEN u.email IS NOT NULL AND u.email <> '' THEN 1 ELSE 0 END) AS conEmail
+  FROM users u
+  WHERE u.role = 'user'
+    AND NOT EXISTS(SELECT 1 FROM submissions s WHERE s.user_id = u.id)
+`).get();
+
+console.log('\nCHI NON HA MAI GIOCATO: COME LO SI RAGGIUNGE');
+console.log(`  sono in tutto                    ${String(raggiungibili.tutti).padStart(4)}`);
+console.log(`  con le notifiche push attive     ${String(raggiungibili.conPush).padStart(4)}  ${perc(raggiungibili.conPush, raggiungibili.tutti)}%`);
+console.log(`  con un indirizzo email           ${String(raggiungibili.conEmail).padStart(4)}  ${perc(raggiungibili.conEmail, raggiungibili.tutti)}%`);
+if (raggiungibili.conPush < raggiungibili.tutti / 4) {
+  console.log('  → La push non è la strada: la maggior parte non ce l\'ha. L\'email');
+  console.log('    invece ce l\'hanno tutti, perché è obbligatoria all\'iscrizione.');
+}
+
 console.log(`\n(dati al ${oggi}, ora italiana)`);
