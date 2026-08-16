@@ -204,17 +204,13 @@ const PATHS = {
   'volume-off':
     '<path d="M4 9v6h4l5 4V5L8 9z" fill="currentColor" stroke="none" />' +
     '<path d="M16 9.5 21 14.5" /><path d="M21 9.5 16 14.5" />',
-  // Controlli player
+  // Triangolino "play". Nasce coi comandi della radio, che non c'è più: adesso
+  // vive perché la pagina statistiche lo usa per il riquadro delle partite
+  // giocate. Restava anche `pause`, e insieme a lui l'icona `radio` con le onde
+  // in diretta: quelli servivano solo al lettore, non li chiamava più nessuno e
+  // sono andati via con la radio.
   play:
     '<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" />',
-  pause:
-    '<rect x="7" y="5" width="3.3" height="14" rx="1" fill="currentColor" stroke="none" />' +
-    '<rect x="13.7" y="5" width="3.3" height="14" rx="1" fill="currentColor" stroke="none" />',
-  // Radio / onde in diretta
-  radio:
-    '<circle cx="12" cy="13" r="2.1" />' +
-    '<path d="M8.6 9.6a5 5 0 0 0 0 6.8M15.4 9.6a5 5 0 0 1 0 6.8" />' +
-    '<path d="M6.2 7.2a8.2 8.2 0 0 0 0 11.6M17.8 7.2a8.2 8.2 0 0 1 0 11.6" />',
 };
 
 function icon(name, extraClass = '') {
