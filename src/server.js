@@ -1922,21 +1922,30 @@ function sectionProgress(userId) {
 }
 // Accredita il bonus per le sezioni appena completate (idempotente). Ritorna le
 // sezioni premiate ora.
-// Il bonus di sezione è SOSPESO il 15 e il 16 agosto.
 //
-// In quei due giorni trentaquattro missioni sono nascoste per alleggerire
-// l'elenco, che era diventato illeggibile. Ma il conteggio di una sezione
-// ignora le missioni nascoste: Sport passa da 13 tappe a 6, Paese da 22 a 8.
-// Senza questa sospensione, chiunque avesse fatto quelle poche rimaste
-// incasserebbe stanotte un bonus che non ha guadagnato — e il bonus si paga
-// UNA VOLTA SOLA e non si storna, quindi pagarlo per sbaglio non si disfa.
+// IL BONUS È SOSPESO FINCHÉ CI SONO MISSIONI IN PAUSA.
 //
-// Il 17, quando le missioni tornano, lo strumento che le rimette fa anche un
-// giro di recupero: chi il bonus lo aveva maturato davvero lo riceve allora.
-const SEZIONI_SOSPESE = new Set(['2026-08-15', '2026-08-16']);
+// Il conteggio di una sezione ignora le missioni nascoste (sectionProgress
+// filtra su archived = 0). Con delle missioni in pausa Sport passa da 13 tappe
+// a 6 e Paese da 22 a 8: chi ha fatto quelle poche rimaste incasserebbe un
+// bonus che non ha guadagnato. E il bonus si paga UNA VOLTA SOLA e non si
+// storna, quindi pagarlo per sbaglio non si disfa più.
+//
+// Prima qui c'erano due date scritte a mano, il 15 e il 16. Ha smesso di
+// funzionare il 17: le missioni in pausa erano ancora trentacinque, ma il
+// calendario diceva che si poteva pagare. Una condizione scritta col
+// calendario risponde alla domanda sbagliata — non conta CHE GIORNO È, conta
+// SE LE SEZIONI SONO INTERE. Adesso lo chiede a chi lo sa davvero, cioè alla
+// lista che tiene strumenti/nascondi_missioni.js, e si riaccende da sola
+// quando l'ultima missione torna in elenco. Non c'è più una data da ricordare.
+function sezioniSospese() {
+  const r = db.prepare("SELECT valore FROM impostazioni WHERE chiave = 'missioni_nascoste_15_16'").get();
+  if (!r) return 0;
+  try { return (JSON.parse(r.valore) || []).length; } catch { return 0; }
+}
 
 function checkAndAwardSections(userId) {
-  if (SEZIONI_SOSPESE.has(todayStr())) return [];
+  if (sezioniSospese()) return [];
   const prog = sectionProgress(userId);
   const awarded = [];
   for (const s of SECTIONS) {
@@ -4426,12 +4435,12 @@ async function rimpiccioliscAvatarUnaVolta() {
   }
 }
 
-// Recupero dei bonus di sezione sospesi il 15 e il 16 agosto.
+// Recupero dei bonus di sezione rimasti sospesi.
 //
-// In quei due giorni l'assegnazione è ferma (vedi SEZIONI_SOSPESE): con
-// trentaquattro missioni nascoste le sezioni erano accorciate, e pagare
-// sarebbe stato un regalo. Ma chi una sezione l'aveva completata DAVVERO,
-// tutte le tappe comprese quelle nascoste, quel bonus lo ha guadagnato.
+// Finché delle missioni sono in pausa l'assegnazione è ferma (vedi
+// sezioniSospese): le sezioni sono accorciate e pagare sarebbe un regalo. Ma
+// chi una sezione l'aveva completata DAVVERO, tutte le tappe comprese quelle
+// nascoste, quel bonus lo ha guadagnato.
 //
 // Lo strumento che rimette le missioni (nascondi_missioni.js --mostra) lascia
 // qui un biglietto; al primo riavvio si fa un giro su tutti e si paga chi ha
