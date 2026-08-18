@@ -3943,17 +3943,46 @@ app.post('/admin/missioni/:id/modifica', auth.requireStaff, (req, res) => {
   res.redirect('/admin');
 });
 
+// ELIMINARE UNA MISSIONE CON DELLE PROVE DENTRO NON SI PUO'.
+//
+// Nel database le prove pendono dalla missione con ON DELETE CASCADE:
+//   mission_id INTEGER NOT NULL REFERENCES missions(id) ON DELETE CASCADE
+// Quindi questa DELETE non toglieva solo la missione, si portava via TUTTE le
+// prove mandate dai giocatori per quella missione. E i punti in classifica non
+// sono un numero salvato da qualche parte: sono la somma delle prove approvate.
+// Sparite le prove, spariti i punti.
+//
+// E' successo davvero: cancellata una missione dal pannello, di notte in
+// classifica sono scesi anche i primi, di migliaia di punti, senza che nessuno
+// avesse fatto niente. Il pulsante non chiedeva conferma e non diceva niente,
+// e il danno si vedeva solo il giorno dopo dai giocatori che si lamentavano.
+//
+// Ora si rifiuta e propone la cosa giusta: ARCHIVIARLA. Una missione archiviata
+// sparisce dall'elenco esattamente come se fosse cancellata, ma le prove
+// restano al loro posto e i punti di chi l'aveva fatta non si toccano.
+// Si cancellano per davvero solo quelle che non ha ancora giocato nessuno.
 app.post('/admin/missioni/:id/elimina', auth.requireStaff, (req, res) => {
   const m = db.prepare('SELECT title FROM missions WHERE id = ?').get(req.params.id);
+  if (!m) {
+    flash(req, 'error', 'Missione non trovata.');
+    return res.redirect('/admin');
+  }
+  const prove = db.prepare('SELECT COUNT(*) c FROM submissions WHERE mission_id = ?')
+    .get(req.params.id).c;
+  if (prove) {
+    audit(req, 'missione.elimina.rifiutata', `#${req.params.id} ${m.title} · ${prove} prove`);
+    flash(req, 'error', `"${m.title}" ha ${prove} prove gia' inviate: eliminarla `
+      + `cancellerebbe anche quelle e toglierebbe i punti a chi l'ha fatta. `
+      + `Per toglierla dall'elenco usa «Archivia»: sparisce dalla pagina e i punti restano.`);
+    return res.redirect('/admin');
+  }
   db.prepare('DELETE FROM missions WHERE id = ?').run(req.params.id);
   // Si segna che è stata tolta a mano, se no patch_missioni.js la ricrea al
   // primo lancio: quello guarda l'elenco e rimette tutto ciò che manca, e
   // senza questa riga una missione cancellata apposta tornava da sola.
-  if (m) {
-    const nudo = String(m.title).replace(/^[^\p{L}\p{N}"'«(]+/u, '').trim();
-    db.prepare('INSERT OR REPLACE INTO missioni_rimosse (nome, titolo) VALUES (?, ?)').run(nudo, m.title);
-  }
-  audit(req, 'missione.elimina', `#${req.params.id} ${m ? m.title : ''}`);
+  const nudo = String(m.title).replace(/^[^\p{L}\p{N}"'«(]+/u, '').trim();
+  db.prepare('INSERT OR REPLACE INTO missioni_rimosse (nome, titolo) VALUES (?, ?)').run(nudo, m.title);
+  audit(req, 'missione.elimina', `#${req.params.id} ${m.title}`);
   flash(req, 'success', 'Missione eliminata.');
   res.redirect('/admin');
 });
