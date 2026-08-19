@@ -1,8 +1,19 @@
 <%# ── Hero ──────────────────────────────────────────────────────── %>
+<%# A giochi finiti questa pagina cambia mestiere: non è più il tabellone che
+    si muove mentre giochi, è il verbale. Lasciare scritto "Live" sopra una
+    classifica che non si muove piu' è la cosa che fa tornare la gente a
+    ricaricare per ore aspettando un aggiornamento che non arriverà. %>
 <div class="lb-hero">
-  <p class="lp-kicker">Live</p>
-  <h1 class="lb-hero-title">Classifica</h1>
-  <p class="lb-hero-sub">La gara dei premi e i record del mini-gioco, in un colpo d'occhio.</p>
+  <p class="lp-kicker"><%= locals.giochiFiniti ? 'Definitiva' : 'Live' %></p>
+  <h1 class="lb-hero-title">Classifica<%= locals.giochiFiniti ? ' finale' : '' %></h1>
+  <% if (locals.giochiFiniti) { %>
+    <p class="lb-hero-sub">
+      <strong>I giochi sono finiti.</strong> Il FantaSanRocco si è chiuso il
+      <%= fineGiochi.etichetta %>: questa è la classifica definitiva.
+    </p>
+  <% } else { %>
+    <p class="lb-hero-sub">La gara dei premi e i record del mini-gioco, in un colpo d'occhio.</p>
+  <% } %>
 </div>
 
 <%# Le tre classifiche passano tutte dallo stesso pezzo (partials/leaderboard-card):

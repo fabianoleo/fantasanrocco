@@ -147,6 +147,14 @@
     </span>
     <% if (soloIscrizioni) { %><span class="adm-tile-badge">attiva</span><% } %>
   </button>
+  <button type="button" class="adm-tile" data-panel="fine">
+    <span class="adm-tile-ico"><%- icon('trophy') %></span>
+    <span class="adm-tile-body">
+      <span class="adm-tile-title">Fine dei giochi</span>
+      <span class="adm-tile-desc">Chiude tutto e lascia solo la classifica</span>
+    </span>
+    <% if (giochiFiniti) { %><span class="adm-tile-badge">chiusi</span><% } %>
+  </button>
 
   <button type="button" class="adm-tile adm-tile-danger" data-panel="reset">
     <span class="adm-tile-ico"><%- icon('bolt') %></span>
@@ -998,6 +1006,74 @@
         <button class="btn btn-no" type="submit"><%- icon('lock') %> Attiva sole iscrizioni</button>
       </form>
     <% } %>
+  </section>
+</div>
+
+<%# ── FINE DEI GIOCHI ───────────────────────────────────────────────── %>
+<div class="adm-panel" id="p-fine" hidden>
+  <button type="button" class="adm-back" data-back><%- icon('arrow-left') %> Torna al pannello</button>
+
+  <section class="card">
+    <h2 class="staff-title"><%- icon('trophy') %> Fine dei giochi</h2>
+
+    <% if (giochiFiniti) { %>
+      <div class="iscr-stato iscr-stato-on">
+        <%- icon('trophy') %> <span><strong>GIOCHI CHIUSI</strong> — si vede solo la classifica, nessuno fa più punti.</span>
+      </div>
+    <% } else { %>
+      <div class="iscr-stato iscr-stato-off">
+        <%- icon('check') %> <span><strong>SI GIOCA</strong> — chiusura prevista il <%= fineGiochi.etichetta %>.</span>
+      </div>
+    <% } %>
+    <p class="iscr-quando">
+      <% if (fineAutomatica) { %>
+        Decide l'orologio: chiude da solo il <%= fineGiochi.etichetta %>. Nessuno deve stare qui a quell'ora.
+      <% } else { %>
+        Deciso a mano il <%= giochiFinitiQuando %> (UTC): l'orologio non conta più finché non lo rimetti in automatico.
+      <% } %>
+    </p>
+
+    <p class="muted small">A giochi chiusi restano aperte <strong>solo</strong> le pagine che si guardano:</p>
+    <ul class="iscr-elenco">
+      <li>Classifica — che diventa <strong>quella definitiva</strong></li>
+      <li>Premi, Galleria, Profilo, Programmazione, Storia, Palio</li>
+      <li>Accesso, privacy e termini</li>
+    </ul>
+    <p class="muted small">
+      Si chiudono missioni, mini-giochi, slot, ruota, sfide e codici premio: da quel momento
+      <strong>nessuno può più muovere un punto</strong>. Chi ci prova vede una pagina che dice
+      che è finita, non un errore. <strong>Lo staff passa lo stesso</strong>, così puoi finire di
+      moderare le prove arrivate prima della chiusura — quelle sono valide e vanno giudicate.
+    </p>
+    <p class="muted small">
+      È un cancello, non una cancellazione: <strong>non tocca né punti né classifica</strong>.
+      Riaprire rimette tutto esattamente com'era.
+    </p>
+
+    <div class="adm-azioni">
+      <% if (giochiFiniti) { %>
+        <form action="/admin/fine-giochi" method="post"
+              data-confirm="Riaprire i giochi? Missioni, slot e ruota tornano a dare punti e la classifica ricomincia a muoversi.">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="scelta" value="riapri">
+          <button class="btn" type="submit"><%- icon('check') %> Riapri i giochi</button>
+        </form>
+      <% } else { %>
+        <form action="/admin/fine-giochi" method="post"
+              data-confirm="Chiudere i giochi ADESSO? Da subito nessuno può più fare punti e resta visibile solo la classifica. Nessun dato viene perso.">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="scelta" value="chiudi">
+          <button class="btn btn-no" type="submit"><%- icon('trophy') %> Chiudi i giochi adesso</button>
+        </form>
+      <% } %>
+      <% if (!fineAutomatica) { %>
+        <form action="/admin/fine-giochi" method="post">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="scelta" value="automatico">
+          <button class="btn btn-ghost" type="submit"><%- icon('clock') %> Rimetti in automatico</button>
+        </form>
+      <% } %>
+    </div>
   </section>
 </div>
 

@@ -302,6 +302,30 @@ app.use((req, res, next) => {
   return res.status(200).render('chiuso', { title: `Ci vediamo il ${modalita.INIZIO_GIOCO.etichetta}` });
 });
 
+// --- I giochi sono finiti -------------------------------------------------
+// Vedi lib/fine.js per l'ora, la levetta e cosa resta aperto. Sta qui accanto
+// all'altro cancello e non dentro le rotte per la stessa ragione: una porta
+// sola invece di un controllo sparso in sessanta posti, dove prima o poi se ne
+// dimentica uno — e qui dimenticarne uno vuol dire che qualcuno fa punti dopo
+// il fischio finale, con la classifica gia' chiusa.
+//
+// Lo staff passa lo stesso: deve poter finire di moderare le prove arrivate
+// prima delle 20:00. Quelle sono state mandate quando il gioco era aperto, e
+// vanno giudicate: bloccare la moderazione qui vorrebbe dire lasciare fuori
+// dalla classifica finale delle prove valide solo perche' nessuno ha fatto in
+// tempo a guardarle.
+app.use((req, res, next) => {
+  res.locals.giochiFiniti = fine.attiva();
+  if (!res.locals.giochiFiniti) return next();
+  if (req.currentUser && (req.currentUser.role === 'admin' || req.currentUser.role === 'moderator')) return next();
+  if (fine.consentito(req.path)) return next();
+
+  if (req.method !== 'GET' || req.get('accept')?.includes('application/json')) {
+    return res.status(403).json({ ok: false, errore: 'I giochi sono finiti: la classifica è quella definitiva.' });
+  }
+  return res.status(200).render('finito', { title: 'I giochi sono finiti' });
+});
+
 // --- Utenti online — ping-based (affidabile su mobile + Cloudflare) --------
 // Il client manda GET /api/online/ping?uid=UUID ogni 20s (vedi app.js).
 // UUID generato in localStorage: stabile attraverso login/logout/refresh.
@@ -563,6 +587,7 @@ const slot5 = require('./giochi/slot');
 // vedi lib/punti.js sul perche'.
 const punti = require('./lib/punti');
 const modalita = require('./lib/modalita');
+const fine = require('./lib/fine');
 // Codici invito: chi porta un amico che si iscrive incassa il suo bonus.
 const inviti = require('./lib/inviti');
 // Email a cui e' vietato reiscriversi: vedi lib/blocco-email.js.
@@ -570,6 +595,7 @@ const bloccoEmail = require('./lib/blocco-email');
 // La data d'inizio serve a piu' viste (home, pagina di attesa): sta nei
 // locals una volta sola, cosi' nessun template la riscrive a mano.
 app.locals.inizioGioco = modalita.INIZIO_GIOCO;
+app.locals.fineGiochi = fine.FINE_GIOCHI;
 
 // La tabella `invites` non viene piu' creata da src/db.js: il sistema degli
 // inviti e' stato tolto quando le iscrizioni sono diventate libere. Ma nei
@@ -3683,6 +3709,8 @@ app.get('/admin', auth.requireStaff, async (req, res) => {
     sogliaInvito: inviti.SOGLIA_INVITO, emailBloccate,
     sezioni: SECTIONS, notifSubmissions: !!req.currentUser.notif_submissions, soloMissioni,
     iscrizioniQuando: modalita.quando(),
+    giochiFinitiQuando: fine.quando(),
+    fineAutomatica: fine.quando() === null,
     segnalazioni });
 });
 
@@ -4001,6 +4029,30 @@ app.post('/admin/iscrizioni', auth.requireAdmin, (req, res) => {
   flash(req, 'success', accendi
     ? 'Modalità sole iscrizioni ATTIVA: i giocatori vedono solo le pagine aperte.'
     : 'App aperta a tutti. I punti già fatti sono rimasti dov\'erano.');
+  res.redirect('/admin');
+});
+
+// Chiude (o riapre) i giochi a mano. Di suo la chiusura scatta da sola all'ora
+// scritta in lib/fine.js: questa levetta serve perche' la realta' slitta — se i
+// fuochi vanno lunghi si rimanda, se finisce prima si chiude prima. Una volta
+// toccata comanda lei e l'orologio non conta piu', in tutte e due le direzioni:
+// per questo c'e' anche "automatico", che glielo restituisce. Senza, chi la
+// tocca per sbaglio dovrebbe indovinare quale posizione avrebbe scelto l'ora.
+app.post('/admin/fine-giochi', auth.requireAdmin, (req, res) => {
+  const scelta = req.body.scelta;                  // 'chiudi' | 'riapri' | 'automatico'
+  if (scelta === 'automatico') {
+    const ora = fine.automatico();
+    audit(req, 'modalita.fine', 'rimessa automatica');
+    flash(req, 'success', `Decide di nuovo l'orologio: i giochi chiudono il ${fine.FINE_GIOCHI.etichetta}`
+      + ` (adesso risultano ${ora ? 'CHIUSI' : 'aperti'}).`);
+    return res.redirect('/admin');
+  }
+  const chiudi = scelta === 'chiudi';
+  fine.imposta(chiudi);
+  audit(req, 'modalita.fine', chiudi ? 'giochi chiusi a mano' : 'giochi riaperti a mano');
+  flash(req, 'success', chiudi
+    ? 'GIOCHI CHIUSI: si vede solo la classifica, e nessuno può più fare punti.'
+    : 'Giochi riaperti. Niente è andato perso: i punti sono rimasti dov\'erano.');
   res.redirect('/admin');
 });
 

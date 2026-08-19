@@ -6723,3 +6723,21 @@ a.lb-prize:hover { color: var(--gold-2); }
     animation-iteration-count: infinite !important;
   }
 }
+
+/* ---------- I giochi sono finiti ------------------------------------ */
+/* La pagina riusa tutto lo stile di .chiuso (la settimana di sole
+   iscrizioni): e' la stessa situazione girata al contrario, una porta che
+   non si apre e un invito ad andare dove si puo'. Servono solo due cose in
+   piu': il pulsante grosso verso la classifica, che qui e' LA destinazione e
+   non una fra tante, e il saluto in fondo staccato dal resto. */
+.chiuso-cta { margin: .4rem 0 1.8rem; font-size: 1.02rem; padding: .95rem 2.2rem; }
+.chiuso-saluto {
+  margin-top: 2.2rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid rgba(212, 160, 26, 0.16);
+  font-style: italic;
+  color: var(--text-2);
+}
+/* I due pulsanti del pannello "fine dei giochi" stanno in riga e vanno a capo
+   sul telefono: il secondo compare solo quando la levetta e' stata toccata. */
+.adm-azioni { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; margin-top: 1rem; }

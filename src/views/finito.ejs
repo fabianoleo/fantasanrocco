@@ -1,0 +1,44 @@
+<%# ───────────────────────────────────────────────────────────────────
+    La pagina che vede chi prova ad aprire una parte del gioco dopo che
+    è finito (vedi src/lib/fine.js).
+
+    Riusa le classi .chiuso-* della settimana di sole iscrizioni: è la
+    stessa situazione girata al contrario — una porta che non si apre e un
+    invito ad andare dove invece si può — e due stili diversi per la stessa
+    cosa vorrebbero dire due posti da correggere.
+
+    Chi arriva qui non ha sbagliato niente: ha solo premuto un tasto che
+    fino a poco fa funzionava. Quindi niente aria di errore, e la strada
+    per la classifica bella grossa.
+    ─────────────────────────────────────────────────────────────────── %>
+<section class="chiuso">
+  <span class="chiuso-ico"><%- icon('trophy') %></span>
+  <p class="chiuso-kicker">Si chiude qui</p>
+  <h1 class="chiuso-title">I giochi sono finiti</h1>
+  <p class="chiuso-testo">
+    Il FantaSanRocco si è chiuso il <strong><%= fineGiochi.etichetta %></strong>.
+    Missioni, mini-giochi, slot e ruota non accettano più niente: la classifica
+    che vedi adesso è <strong>quella definitiva</strong>.
+  </p>
+
+  <a class="btn btn-primary chiuso-cta" href="/classifica">Vai alla classifica finale</a>
+
+  <div class="chiuso-porte">
+    <a class="chiuso-porta" href="/premio">
+      <%- icon('gift') %><span>Premi</span><small>cosa si è vinto</small>
+    </a>
+    <a class="chiuso-porta" href="/galleria">
+      <%- icon('camera') %><span>Galleria</span><small>tutte le foto della festa</small>
+    </a>
+    <a class="chiuso-porta" href="/profilo">
+      <%- icon('medal') %><span>Il tuo profilo</span><small>i punti che hai fatto</small>
+    </a>
+    <a class="chiuso-porta" href="/storia">
+      <%- icon('pilgrim') %><span>Storia</span><small>com'è nata la festa</small>
+    </a>
+  </div>
+
+  <p class="chiuso-testo chiuso-saluto">
+    Grazie a tutti quelli che hanno giocato. Ci si vede l'anno prossimo.
+  </p>
+</section>
