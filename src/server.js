@@ -588,6 +588,7 @@ const slot5 = require('./giochi/slot');
 const punti = require('./lib/punti');
 const modalita = require('./lib/modalita');
 const fine = require('./lib/fine');
+const beneficenza = require('./lib/beneficenza');
 // Codici invito: chi porta un amico che si iscrive incassa il suo bonus.
 const inviti = require('./lib/inviti');
 // Email a cui e' vietato reiscriversi: vedi lib/blocco-email.js.
@@ -4038,6 +4039,40 @@ app.post('/admin/iscrizioni', auth.requireAdmin, (req, res) => {
 // toccata comanda lei e l'orologio non conta piu', in tutte e due le direzioni:
 // per questo c'e' anche "automatico", che glielo restituisce. Senza, chi la
 // tocca per sbaglio dovrebbe indovinare quale posizione avrebbe scelto l'ora.
+// Il foglio per contare la raccolta di beneficenza, servito dal sito.
+//
+// Esiste anche come strumento da riga di comando (strumenti/beneficenza.js),
+// ma quello scrive un file DENTRO il container e le foto le linka per percorso
+// relativo: per guardarlo da un altro computer bisognerebbe tirare fuori
+// l'HTML E le foto insieme, tenendoli accanto. Qui invece le foto arrivano da
+// /uploads, che e' gia' protetto da requireStaff, e il foglio si apre dal
+// telefono mentre si guardano le immagini.
+//
+// Far puntare il file locale agli indirizzi del sito NON funzionerebbe, ed e'
+// il motivo per cui serve una rotta: il cookie di sessione e' sameSite: 'lax',
+// quindi da una pagina aperta con file:// il browser non lo manda alle
+// immagini del sito e si vedrebbero solo riquadri vuoti.
+//
+// Non scrive niente: e' una lettura e una pagina. Gli importi che si digitano
+// restano nel browser di chi conta (localStorage), perche' nel database non
+// c'e' nessun posto dove metterli — la missione chiedeva una foto, non una
+// cifra.
+app.get('/admin/beneficenza', auth.requireAdmin, (req, res) => {
+  const quale = typeof req.query.missione === 'string' && req.query.missione.trim()
+    ? req.query.missione.trim()
+    : "Cuore d'Oro";
+  let dati;
+  try {
+    dati = beneficenza.raccogli(db, { missione: quale, fotoDir: UPLOADS_DIR });
+  } catch (e) {
+    flash(req, 'error', e.message + (e.missioniPresenti
+      ? ' Aggiungi ?missione=<pezzo del titolo> all\'indirizzo per sceglierne un\'altra.' : ''));
+    return res.redirect('/admin');
+  }
+  audit(req, 'beneficenza.foglio', `${dati.missione.title} · ${dati.voci.length} prove`);
+  res.type('html').send(beneficenza.foglio(dati, { baseFoto: '/uploads' }));
+});
+
 app.post('/admin/fine-giochi', auth.requireAdmin, (req, res) => {
   const scelta = req.body.scelta;                  // 'chiudi' | 'riapri' | 'automatico'
   if (scelta === 'automatico') {

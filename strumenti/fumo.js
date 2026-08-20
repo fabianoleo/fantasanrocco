@@ -153,6 +153,26 @@ function creaSessione() {
   if (fs.existsSync(vero)) fs.copyFileSync(vero, path.join(cartella, 'fantasanrocco.db'));
   fs.mkdirSync(path.join(cartella, 'uploads'), { recursive: true });
 
+  // 3. nella COPIA i giochi risultano APERTI.
+  //    Dal 19 agosto alle 20:00 la modalita' "giochi finiti" (src/lib/fine.js)
+  //    scatta da sola, e da quel momento ogni pagina di gioco risponde 200 con
+  //    la pagina di chiusura invece del 302/403 che questi controlli si
+  //    aspettano: la suite sarebbe diventata rossa per sempre senza che niente
+  //    fosse rotto, che e' il modo piu' rapido di far smettere di guardarla.
+  //    Qui la levetta si mette su "aperto" nella copia, cosi' i controlli
+  //    continuano a esaminare il sito in funzione. Il comportamento a giochi
+  //    chiusi va verificato a parte, accendendo la levetta di proposito.
+  {
+    const D = require('better-sqlite3');
+    const d = new D(path.join(cartella, 'fantasanrocco.db'));
+    d.prepare(`CREATE TABLE IF NOT EXISTS impostazioni (
+                 chiave TEXT PRIMARY KEY, valore TEXT NOT NULL,
+                 aggiornato_il TEXT NOT NULL DEFAULT (datetime('now')))`).run();
+    d.prepare(`INSERT INTO impostazioni (chiave, valore) VALUES ('giochi_finiti', '0')
+               ON CONFLICT(chiave) DO UPDATE SET valore = '0'`).run();
+    d.close();
+  }
+
   // 2. server sulla copia. SECURE_COOKIES spento: in locale si va in http e
   //    il cookie di sessione con `secure` non verrebbe mai rimandato indietro.
   // VAPID svuotate: il database di prova e' una COPIA di quello vero e si
