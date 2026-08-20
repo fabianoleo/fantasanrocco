@@ -589,6 +589,7 @@ const punti = require('./lib/punti');
 const modalita = require('./lib/modalita');
 const fine = require('./lib/fine');
 const beneficenza = require('./lib/beneficenza');
+const { spawn } = require('child_process');   // per l'archivio delle foto: vedi /admin/beneficenza/foto.tgz
 // Codici invito: chi porta un amico che si iscrive incassa il suo bonus.
 const inviti = require('./lib/inviti');
 // Email a cui e' vietato reiscriversi: vedi lib/blocco-email.js.
@@ -4071,6 +4072,60 @@ app.get('/admin/beneficenza', auth.requireAdmin, (req, res) => {
   }
   audit(req, 'beneficenza.foglio', `${dati.missione.title} · ${dati.voci.length} prove`);
   res.type('html').send(beneficenza.foglio(dati, { baseFoto: '/uploads' }));
+});
+
+// Le foto della beneficenza in un archivio solo, per portarsele via.
+//
+// Serve perche' le cifre stanno DENTRO le immagini — la missione chiedeva una
+// foto, non un numero — e per leggerle bisogna guardarle una per una. Il
+// foglio qui sopra lo fa fare a mano dal telefono; questo permette invece di
+// tirarle giu' tutte insieme e farle leggere a qualcun altro, o a qualcosa.
+//
+// Solo le foto di QUELLA missione, non tutta la cartella: /app/data/uploads
+// contiene le prove di tutti e di tutte le missioni, sono centinaia di MB e
+// non c'e' nessuna ragione di farle uscire di li'.
+//
+// Si usa `tar` di sistema invece di aggiungere una libreria: c'e' gia' nella
+// bookworm-slim, e una dipendenza in piu' per un archivio si porta dietro un
+// aggiornamento da seguire per sempre.
+//
+// I nomi dei file si passano a tar sullo STANDARD INPUT (-T -) e non come
+// argomenti: con qualche centinaio di foto la riga di comando sfonderebbe il
+// limite del sistema e il comando fallirebbe, ma solo quando le donazioni
+// sono tante — cioe' l'unica volta in cui questo serve davvero.
+app.get('/admin/beneficenza/foto.tgz', auth.requireAdmin, (req, res) => {
+  const quale = typeof req.query.missione === 'string' && req.query.missione.trim()
+    ? req.query.missione.trim()
+    : "Cuore d'Oro";
+  let dati;
+  try {
+    dati = beneficenza.raccogli(db, { missione: quale, fotoDir: UPLOADS_DIR });
+  } catch (e) {
+    flash(req, 'error', e.message);
+    return res.redirect('/admin');
+  }
+  // path.basename e' gia' applicato da raccogli: nessun nome puo' uscire
+  // dalla cartella delle foto.
+  const file = dati.voci.filter((v) => v.esiste).map((v) => v.file);
+  if (!file.length) {
+    flash(req, 'error', `Nessuna foto sul disco per «${dati.missione.title}».`);
+    return res.redirect('/admin');
+  }
+
+  audit(req, 'beneficenza.foto', `${dati.missione.title} · ${file.length} foto`);
+  res.setHeader('Content-Type', 'application/gzip');
+  res.setHeader('Content-Disposition', 'attachment; filename="beneficenza-foto.tgz"');
+
+  const tar = spawn('tar', ['-czf', '-', '-C', UPLOADS_DIR, '-T', '-']);
+  tar.stdin.on('error', () => {});          // se il client stacca, non si muore qui
+  tar.stdin.end(file.join('\n') + '\n');
+  tar.stdout.pipe(res);
+  tar.stderr.on('data', (d) => console.error('[beneficenza tar]', String(d).trim()));
+  tar.on('error', (e) => {
+    console.error('[beneficenza tar] non parte:', e.message);
+    if (!res.headersSent) res.status(500).send('Archivio non riuscito.');
+  });
+  req.on('close', () => tar.kill());
 });
 
 app.post('/admin/fine-giochi', auth.requireAdmin, (req, res) => {
